@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
         conditions.push(eq(schema.auditLog.userId, userId));
     }
     if (eventId) {
-        conditions.push(eq(schema.auditLog.eventId, eventId));
+        conditions.push(eq(schema.auditLog.organizationId, eventId));
     }
     if (status) {
         conditions.push(eq(schema.auditLog.status, status));

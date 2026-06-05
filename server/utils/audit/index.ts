@@ -41,7 +41,7 @@ export async function logAudit(
     const db = getDB()
     await db.insert(auditLog).values({
       userId,
-      eventId: opts?.eventId,
+      organizationId: opts?.organizationId,
       category,
       action,
       targetType: opts?.targetType,

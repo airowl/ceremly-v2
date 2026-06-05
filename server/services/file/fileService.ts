@@ -82,10 +82,10 @@ export class FileService {
     ]
 
     if (eventId) {
-      conditions.push(eq(fileTable.eventId, eventId))
+      conditions.push(eq(fileTable.organizationId, eventId))
     } else {
       // Global scope: only match files without an event
-      conditions.push(eq(fileTable.eventId, ''))
+      conditions.push(eq(fileTable.organizationId, ''))
     }
 
     const [existing] = await db.select()
@@ -156,7 +156,7 @@ export class FileService {
         uploadedBy,
         isActive: true,
         isPublic,
-        eventId: eventId || null,
+        organizationId: eventId || null,
         sha256,
         variantType: 'original',
       }
@@ -242,7 +242,7 @@ export class FileService {
         uploadedBy,
         isActive: true,
         isPublic: isPublic ?? true,
-        eventId: eventId || null,
+        organizationId: eventId || null,
         variantOf: parentFileId,
         variantType: variant.type,
       })
@@ -289,7 +289,7 @@ export class FileService {
       uploadStatus: 'pending',
       presignExpiresAt: expiresAt,
       isPublic,
-      eventId: eventId || null,
+      organizationId: eventId || null,
       variantType: 'original',
     }
 
@@ -410,7 +410,7 @@ export class FileService {
       const fileContent = await this.storage.download(pendingFile.path)
       sha256 = await computeSHA256(fileContent)
 
-      const duplicate = await this.findDuplicate(sha256, pendingFile.eventId ?? undefined)
+      const duplicate = await this.findDuplicate(sha256, pendingFile.organizationId ?? undefined)
       if (duplicate) {
         // Dedup match — delete the just-uploaded file, return existing
         await this.storage.delete(pendingFile.path)
@@ -445,7 +445,7 @@ export class FileService {
           pendingFile.mimeType,
           fileId,
           basePath,
-          pendingFile.eventId ?? undefined,
+          pendingFile.organizationId ?? undefined,
           uploadedBy,
           pendingFile.isPublic,
         ).catch(err => console.error('[fileService] variant generation failed:', err))

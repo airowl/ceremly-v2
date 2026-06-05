@@ -1,8 +1,7 @@
 import { relations } from 'drizzle-orm'
 import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { v7 as uuidv7 } from 'uuid'
-import { user } from './auth'
-import { events } from './event'
+import { user, organization } from './auth'
 
 export const file = pgTable('file', {
   id: uuid('id').primaryKey().$default(() => uuidv7()),
@@ -19,14 +18,14 @@ export const file = pgTable('file', {
   uploadStatus: text('upload_status').default('active').notNull(),
   presignExpiresAt: timestamp('presign_expires_at'),
   isPublic: boolean('is_public').default(true).notNull(),
-  eventId: text('event_id').references(() => events.id, { onDelete: 'set null' }),
+  organizationId: text('organization_id').references(() => organization.id, { onDelete: 'set null' }),
   sha256: text('sha256'),
   variantOf: uuid('variant_of'),
   variantType: text('variant_type'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
-  index('file_event_id_idx').on(table.eventId),
+  index('file_organization_id_idx').on(table.organizationId),
   index('file_sha256_idx').on(table.sha256),
   index('file_variant_of_idx').on(table.variantOf),
   index('file_upload_status_idx').on(table.uploadStatus),
@@ -37,9 +36,9 @@ export const fileRelations = relations(file, ({ one, many }) => ({
     fields: [file.uploadedBy],
     references: [user.id]
   }),
-  event: one(events, {
-    fields: [file.eventId],
-    references: [events.id]
+  organization: one(organization, {
+    fields: [file.organizationId],
+    references: [organization.id]
   }),
   parentFile: one(file, {
     fields: [file.variantOf],

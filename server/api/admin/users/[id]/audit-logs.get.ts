@@ -6,7 +6,7 @@ import { getDB } from "~~/server/utils/db";
 export interface AuditLogEntry {
     id: number;
     userId: string | null;
-    eventId: string | null;
+    organizationId: string | null;
     category: string;
     action: string;
     targetType: string | null;
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event): Promise<AuditLogResponse> => {
     }
 
     if (eventId) {
-        conditions.push(eq(schema.auditLog.eventId, eventId));
+        conditions.push(eq(schema.auditLog.organizationId, eventId));
     }
 
     if (startDate) {

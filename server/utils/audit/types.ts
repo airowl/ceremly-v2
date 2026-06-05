@@ -109,7 +109,7 @@ export function getCategoryFromAction(action: AuditAction): AuditCategory {
 
 export interface LogAuditOptions {
   userId?: string
-  eventId?: string
+  organizationId?: string
   targetType?: string
   targetId?: string
   ipAddress?: string
