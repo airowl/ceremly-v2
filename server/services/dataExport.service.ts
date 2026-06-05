@@ -8,14 +8,11 @@ import { getDB } from '../utils/db';
 import {
     dataExports,
     user,
-    events,
-    eventUsers,
     file,
     auditLog,
     creem_subscription,
     type ExportStatus,
 } from '../database/schema';
-import { isNull } from 'drizzle-orm';
 
 // Type for data export record
 export interface DataExportRecord {
@@ -121,44 +118,9 @@ export async function collectUserData(userId: string): Promise<ExportData> {
         throw new Error('User not found');
     }
 
-    // Get events (owned and member of)
-    const ownedEvents = await db.query.events.findMany({
-        where: and(eq(events.userId, userId), isNull(events.deletedAt)),
-    });
-
-    const memberEvents = await db.query.eventUsers.findMany({
-        where: eq(eventUsers.userId, userId),
-        with: {
-            event: true,
-        },
-    });
-
-    const allEvents: ExportEvent[] = [
-        ...ownedEvents.map((e) => ({
-            id: e.id,
-            name: e.name,
-            slug: e.slug,
-            description: e.description,
-            date: e.date,
-            location: e.location,
-            isOwner: true,
-            role: 'owner',
-            createdAt: e.createdAt,
-        })),
-        ...memberEvents
-            .filter((m) => m.event && !ownedEvents.some((o) => o.id === m.eventId))
-            .map((m) => ({
-                id: m.event!.id,
-                name: m.event!.name,
-                slug: m.event!.slug,
-                description: m.event!.description,
-                date: m.event!.date,
-                location: m.event!.location,
-                isOwner: false,
-                role: (m.role as string) || 'viewer',
-                createdAt: m.createdAt,
-            })),
-    ];
+    // STUB phase 1a — query su schema.events/eventUsers rimossa insieme alla tabella.
+    // 1c: ripristinare con organization/member lookup via Better Auth org plugin.
+    const allEvents: ExportEvent[] = [];
 
     // Get files (metadata only, no content)
     const userFiles = await db.query.file.findMany({

@@ -5,14 +5,12 @@
  * - Without eventId → plan info + events count
  * - With eventId    → plan info + events count + event-scoped (team)
  *
- * Event-scoped limits use the event OWNER's plan (not the requester's).
+ * STUB phase 1a — event/eventUsers lookup rimosso insieme a schema.events.
+ * 1c: ripristinare con organization-scoped query.
  */
-import { eq } from "drizzle-orm";
-import * as schema from "~~/server/database/schema";
 import { optionalEventIdQuerySchema } from "~~/shared/schemas/common";
 import { parseQueryParams } from "~~/server/utils/validateBody";
 import { exceedsLimit, isUnlimited } from "~~/shared/constants/pricing";
-import { getDB } from "~~/server/utils/db";
 import {
     getEffectiveLimits,
     countUserEvents,
@@ -26,7 +24,7 @@ export default defineEventHandler(async (event) => {
     // User's own plan info + events count (always returned)
     const [userEffective, eventsCount] = await Promise.all([
         getEffectiveLimits(user.id),
-        countUserEvents(user.id),
+        countUserEvents(user.id), // STUB phase 1a — ritorna 0; 1c conta le organizzazioni
     ]);
 
     const eventsMax = userEffective.limits.max_events;
@@ -44,34 +42,19 @@ export default defineEventHandler(async (event) => {
         },
     };
 
-    // Event-scoped data (only when eventId provided)
+    // Event-scoped team data (only when eventId provided)
+    // STUB phase 1a — owner lookup su schema.events rimosso; usa i limiti del requester
+    // 1c: risolvere owner via organization.member e usare i suoi limiti reali
     if (eventId) {
-        const db = getDB();
-        const eventResult = await db
-            .select({ userId: schema.events.userId })
-            .from(schema.events)
-            .where(eq(schema.events.id, eventId))
-            .limit(1);
+        const reservedSlots = await countReservedSlots(eventId); // STUB — ritorna 0
 
-        if (eventResult[0]) {
-            const ownerId = eventResult[0].userId;
+        const teamMax = userEffective.limits.team_members;
 
-            // Use event owner's limits (may differ from requester if team member)
-            const [ownerEffective, reservedSlots] = await Promise.all([
-                ownerId !== user.id
-                    ? getEffectiveLimits(ownerId)
-                    : Promise.resolve(userEffective),
-                countReservedSlots(eventId),
-            ]);
-
-            const teamMax = ownerEffective.limits.team_members;
-
-            response.usage.team = {
-                current: reservedSlots,
-                limit: isUnlimited(teamMax) ? -1 : teamMax,
-                allowed: !exceedsLimit(reservedSlots, teamMax),
-            };
-        }
+        response.usage.team = {
+            current: reservedSlots,
+            limit: isUnlimited(teamMax) ? -1 : teamMax,
+            allowed: !exceedsLimit(reservedSlots, teamMax),
+        };
     }
 
     return response;
