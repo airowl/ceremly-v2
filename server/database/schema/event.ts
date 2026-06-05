@@ -106,12 +106,6 @@ export const invitations = pgTable(
     ],
 );
 
-// Import child tables for relations
-import { guests } from "./guest";
-import { landingPages } from "./landingPage";
-import { registrationPages } from "./registrationPage";
-import { reminderTemplates } from "./reminderTemplate";
-
 export const eventsRelations = relations(events, ({ one, many }) => ({
     owner: one(user, {
         fields: [events.userId],
@@ -119,10 +113,6 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     }),
     members: many(eventUsers),
     invitations: many(invitations),
-    guests: many(guests),
-    landingPage: one(landingPages),
-    registrationPage: one(registrationPages),
-    reminderTemplates: many(reminderTemplates),
 }));
 
 export const eventUsersRelations = relations(eventUsers, ({ one }) => ({

@@ -3,16 +3,12 @@
  * Business logic for event CRUD operations.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
-import { eq, desc, count, sql, or, isNull, and } from "drizzle-orm";
-import { v7 as uuidv7 } from "uuid";
+import { eq, desc, sql, or, isNull, and } from "drizzle-orm";
 import * as schema from "../database/schema";
 import { getDB } from "../utils/db";
 import { logAudit } from "../utils/audit";
 import { canCreateEvent } from "./planLimit.service";
 import type { CreateEventInput, UpdateEventInput } from "~~/shared/schemas/event";
-import type { LandingPageData } from "~~/shared/schemas/landing";
-import type { LandingSectionType } from "~~/shared/constants/enums";
-import { getSectionDefaults } from "~~/shared/schemas/sections";
 
 // ─── Ownership & Auth ────────────────────────────────────────────────
 
@@ -86,37 +82,10 @@ export function generateEventSlug(name: string): string {
     return `${base}-${suffix}`;
 }
 
-/**
- * Build a default LandingPageData structure for a given page type.
- */
-export function getDefaultLandingData(type: "rsvp" | "registration"): LandingPageData {
-    const commonSections = ["hero", "details", "countdown", "gallery"];
-    const specificSection = type === "rsvp" ? "rsvp" : "registration_form";
-    const allSections = [...commonSections, specificSection, "map", "footer"];
-
-    return {
-        settings: {
-            primaryColor: "#6366f1",
-            secondaryColor: "#10b981",
-            backgroundColor: "#ffffff",
-            textColor: "#1f2937",
-            fontFamily: "inter",
-            borderRadius: "md",
-        },
-        sections: allSections.map((sectionType, index) => ({
-            id: uuidv7(),
-            type: sectionType as LandingSectionType,
-            enabled: true,
-            order: index,
-            values: getSectionDefaults(sectionType as LandingSectionType),
-        })),
-    };
-}
-
 // ─── CRUD ────────────────────────────────────────────────────────────
 
 /**
- * List events for a user (owned + team member) with guest status counts.
+ * List events for a user (owned + team member).
  */
 export async function getUserEvents(userId: string) {
     const db = getDB();
@@ -143,13 +112,8 @@ export async function getUserEvents(userId: string) {
             socialProofEnabled: schema.events.socialProofEnabled,
             autoConfirmRegistration: schema.events.autoConfirmRegistration,
             createdAt: schema.events.createdAt,
-            totalGuests: count(schema.guests.id),
-            confirmedGuests: sql<number>`count(case when ${schema.guests.status} = 'yes' then 1 end)`.as("confirmed_guests"),
-            pendingGuests: sql<number>`count(case when ${schema.guests.status} = 'pending' then 1 end)`.as("pending_guests"),
-            declinedGuests: sql<number>`count(case when ${schema.guests.status} = 'no' then 1 end)`.as("declined_guests"),
         })
         .from(schema.events)
-        .leftJoin(schema.guests, eq(schema.guests.eventId, schema.events.id))
         .where(
             and(
                 isNull(schema.events.deletedAt),
@@ -161,37 +125,18 @@ export async function getUserEvents(userId: string) {
                     : eq(schema.events.userId, userId)
             )
         )
-        .groupBy(schema.events.id)
         .orderBy(desc(schema.events.date));
 
     return { events: rows };
 }
 
 /**
- * Get event detail with guest status counts.
+ * Get event detail.
  */
 export async function getEventById(h3Event: H3Event<EventHandlerRequest>, eventId: string) {
     const eventRow = await requireEventOwnership(h3Event, eventId);
-    const db = getDB();
 
-    const countsResult = await db
-        .select({
-            totalGuests: count(schema.guests.id),
-            confirmedGuests: sql<number>`count(case when ${schema.guests.status} = 'yes' then 1 end)`,
-            pendingGuests: sql<number>`count(case when ${schema.guests.status} = 'pending' then 1 end)`,
-            declinedGuests: sql<number>`count(case when ${schema.guests.status} = 'no' then 1 end)`,
-        })
-        .from(schema.guests)
-        .where(eq(schema.guests.eventId, eventRow.id));
-
-    const counts = countsResult[0] ?? {
-        totalGuests: 0,
-        confirmedGuests: 0,
-        pendingGuests: 0,
-        declinedGuests: 0,
-    };
-
-    return { event: eventRow, counts };
+    return { event: eventRow };
 }
 
 /**

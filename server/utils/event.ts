@@ -5,5 +5,4 @@
 export {
     requireEventOwnership,
     generateEventSlug,
-    getDefaultLandingData,
 } from "../services/event.service";

@@ -3,7 +3,7 @@
  * Functions to get user's subscription plan and validate limits.
  * All checks are scoped to events (the primary organizational entity).
  */
-import { eq, and, count, gt, inArray, gte } from "drizzle-orm";
+import { eq, and, count, gt } from "drizzle-orm";
 import * as schema from "../database/schema";
 import { getPlanLimits, exceedsLimit, isUnlimited, type PlanLimits } from "~~/shared/constants/pricing";
 import { getDB } from "../utils/db";
@@ -186,107 +186,6 @@ export async function canCreateEvent(userId: string): Promise<{
     const effectiveInfo = await getEffectiveLimits(userId);
     const currentCount = await countUserEvents(userId);
     const limit = effectiveInfo.limits.max_events;
-
-    return {
-        allowed: !exceedsLimit(currentCount, limit),
-        current: currentCount,
-        limit: isUnlimited(limit) ? -1 : limit,
-        plan: effectiveInfo.plan,
-    };
-}
-
-// ─── Guest limit checks ─────────────────────────────────────────────
-
-/**
- * Count guests for a specific event
- */
-export async function countEventGuests(eventId: string): Promise<number> {
-    const db = getDB();
-
-    const result = await db
-        .select({ count: count() })
-        .from(schema.guests)
-        .where(eq(schema.guests.eventId, eventId));
-
-    return result[0]?.count ?? 0;
-}
-
-/**
- * Check if a guest can be added to an event based on plan limits
- */
-export async function canAddGuest(userId: string, eventId: string): Promise<{
-    allowed: boolean;
-    current: number;
-    limit: number;
-    plan: PlanName;
-}> {
-    const effectiveInfo = await getEffectiveLimits(userId);
-    const currentCount = await countEventGuests(eventId);
-    const limit = effectiveInfo.limits.max_guests_per_event;
-
-    return {
-        allowed: !exceedsLimit(currentCount, limit),
-        current: currentCount,
-        limit: isUnlimited(limit) ? -1 : limit,
-        plan: effectiveInfo.plan,
-    };
-}
-
-// ─── Email limit checks ─────────────────────────────────────────────
-
-/**
- * Count emails sent this month across all user's events
- */
-export async function countMonthlyEmails(userId: string): Promise<number> {
-    const db = getDB();
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const userEvents = await db
-        .select({ id: schema.events.id })
-        .from(schema.events)
-        .where(eq(schema.events.userId, userId));
-
-    if (userEvents.length === 0) return 0;
-
-    const eventIds = userEvents.map(e => e.id);
-
-    const eventGuests = await db
-        .select({ id: schema.guests.id })
-        .from(schema.guests)
-        .where(inArray(schema.guests.eventId, eventIds));
-
-    if (eventGuests.length === 0) return 0;
-
-    const guestIds = eventGuests.map(g => g.id);
-
-    const result = await db
-        .select({ count: count() })
-        .from(schema.emailLogs)
-        .where(
-            and(
-                inArray(schema.emailLogs.guestId, guestIds),
-                gte(schema.emailLogs.sentAt, startOfMonth)
-            )
-        );
-
-    return result[0]?.count ?? 0;
-}
-
-/**
- * Check if user can send an email based on monthly plan limits
- */
-export async function canSendEmail(userId: string): Promise<{
-    allowed: boolean;
-    current: number;
-    limit: number;
-    plan: PlanName;
-}> {
-    const effectiveInfo = await getEffectiveLimits(userId);
-    const currentCount = await countMonthlyEmails(userId);
-    const limit = effectiveInfo.limits.emails_per_month;
 
     return {
         allowed: !exceedsLimit(currentCount, limit),

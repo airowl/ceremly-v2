@@ -7,8 +7,3 @@ export * from "./subscription";
 export * from "./admin";
 export * from "./waiting-list";
 export * from "./event";
-export * from "./guest";
-export * from "./landing";
-export * from "./reminder";
-export * from "./sections";
-export * from "./eventTemplate";
