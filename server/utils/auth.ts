@@ -3,7 +3,7 @@ import type { User } from "~~/shared/utils/types";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { admin, openAPI, twoFactor } from "better-auth/plugins";
+import { admin, openAPI, organization, twoFactor } from "better-auth/plugins";
 import { v7 as uuidv7 } from "uuid";
 import * as schema from "../database/schema";
 import { type SupportedLanguage } from "../emailTemplates";
@@ -217,6 +217,7 @@ export const createBetterAuth = () =>
                 ? [openAPI()]
                 : []),
             admin(),
+            organization(),
             twoFactor({
                 issuer: runtimeConfig.public.appName || "SaaS App",
                 backupCodeOptions: { amount: 10 },
