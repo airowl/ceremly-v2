@@ -18,10 +18,6 @@ interface EventListItem {
     showGuestCount: boolean
     autoConfirmRegistration: boolean
     createdAt: string
-    totalGuests: number
-    confirmedGuests: number
-    pendingGuests: number
-    declinedGuests: number
 }
 
 definePageMeta({
