@@ -3,7 +3,7 @@
  * Functions to get user's subscription plan and validate limits.
  * All checks are scoped to events (the primary organizational entity).
  */
-import { eq, and, count, gt } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import * as schema from "../database/schema";
 import { getPlanLimits, exceedsLimit, isUnlimited, type PlanLimits } from "~~/shared/constants/pricing";
 import { getDB } from "../utils/db";
@@ -162,16 +162,10 @@ export async function getEffectiveLimits(userId: string): Promise<EffectiveLimit
 
 /**
  * Count events owned by a user
+ * STUB phase 1a — sostituito da countUserOrganizations in 1c
  */
-export async function countUserEvents(userId: string): Promise<number> {
-    const db = getDB();
-
-    const result = await db
-        .select({ count: count() })
-        .from(schema.events)
-        .where(eq(schema.events.userId, userId));
-
-    return result[0]?.count ?? 0;
+export async function countUserEvents(_userId: string): Promise<number> {
+    return 0; // STUB phase 1a — query su schema.events rimossa; 1c conta le organizzazioni
 }
 
 /**
@@ -184,12 +178,11 @@ export async function canCreateEvent(userId: string): Promise<{
     plan: PlanName;
 }> {
     const effectiveInfo = await getEffectiveLimits(userId);
-    const currentCount = await countUserEvents(userId);
     const limit = effectiveInfo.limits.max_events;
 
     return {
-        allowed: !exceedsLimit(currentCount, limit),
-        current: currentCount,
+        allowed: true, // STUB phase 1a — sempre permesso; 1c verifica contro organizationCount
+        current: 0,    // STUB phase 1a — 0 fino a countUserOrganizations in 1c
         limit: isUnlimited(limit) ? -1 : limit,
         plan: effectiveInfo.plan,
     };
@@ -199,36 +192,18 @@ export async function canCreateEvent(userId: string): Promise<{
 
 /**
  * Count team members for a specific event
+ * STUB phase 1a — sostituito da countOrgMembers in 1c
  */
-export async function countEventMembers(eventId: string): Promise<number> {
-    const db = getDB();
-
-    const result = await db
-        .select({ count: count() })
-        .from(schema.eventUsers)
-        .where(eq(schema.eventUsers.eventId, eventId));
-
-    return result[0]?.count ?? 0;
+export async function countEventMembers(_eventId: string): Promise<number> {
+    return 0; // STUB phase 1a — query su schema.eventUsers rimossa; 1c conta i membri org
 }
 
 /**
  * Count pending (non-expired) invitations for a specific event
+ * STUB phase 1a — sostituito da countPendingOrgInvitations in 1c
  */
-export async function countPendingInvitations(eventId: string): Promise<number> {
-    const db = getDB();
-
-    const result = await db
-        .select({ count: count() })
-        .from(schema.invitations)
-        .where(
-            and(
-                eq(schema.invitations.eventId, eventId),
-                eq(schema.invitations.status, "pending"),
-                gt(schema.invitations.expiresAt, new Date())
-            )
-        );
-
-    return result[0]?.count ?? 0;
+export async function countPendingInvitations(_eventId: string): Promise<number> {
+    return 0; // STUB phase 1a — query su schema.invitations rimossa; 1c conta gli inviti org
 }
 
 /**
@@ -239,7 +214,7 @@ export async function countReservedSlots(eventId: string): Promise<number> {
         countEventMembers(eventId),
         countPendingInvitations(eventId),
     ]);
-    return members + pending;
+    return members + pending; // STUB phase 1a — risulta sempre 0 (entrambi stub)
 }
 
 /**
@@ -255,12 +230,11 @@ export async function canAddTeamMember(
     plan: PlanName;
 }> {
     const effectiveInfo = await getEffectiveLimits(eventOwnerId);
-    const currentCount = await countReservedSlots(eventId);
     const limit = effectiveInfo.limits.team_members;
 
     return {
-        allowed: !exceedsLimit(currentCount, limit),
-        current: currentCount,
+        allowed: true, // STUB phase 1a — sempre permesso; 1c verifica contro org member count
+        current: 0,    // STUB phase 1a — 0 fino a countReservedSlots org-aware in 1c
         limit: isUnlimited(limit) ? -1 : limit,
         plan: effectiveInfo.plan,
     };
@@ -270,61 +244,14 @@ export async function canAddTeamMember(
 
 /**
  * Get team limit for an event.
- * Looks up event by ID or falls back to user's first event. Delegates to canAddTeamMember.
+ * STUB phase 1a — query su schema.events rimosse; 1c risolve rispetto a org membership.
  */
 export async function getTeamLimit(
     userId: string,
-    eventId?: string,
+    _eventId?: string,
 ): Promise<{ allowed: boolean; current: number; limit: number; plan: string }> {
-    const db = getDB();
-
-    let eventRecord: { id: string; userId: string };
-
-    if (eventId) {
-        const eventResult = await db
-            .select({
-                id: schema.events.id,
-                userId: schema.events.userId,
-            })
-            .from(schema.events)
-            .where(eq(schema.events.id, eventId))
-            .limit(1);
-
-        if (!eventResult.length) {
-            return {
-                allowed: true,
-                current: 0,
-                limit: 1,
-                plan: 'starter',
-            };
-        }
-
-        eventRecord = eventResult[0]!;
-    } else {
-        const userEvents = await db
-            .select({
-                id: schema.events.id,
-                userId: schema.events.userId,
-            })
-            .from(schema.events)
-            .where(eq(schema.events.userId, userId))
-            .limit(1);
-
-        if (!userEvents.length) {
-            return {
-                allowed: true,
-                current: 0,
-                limit: 1,
-                plan: 'starter',
-            };
-        }
-
-        eventRecord = userEvents[0]!;
-    }
-
-    const ownerId = eventRecord.userId;
-    const result = await canAddTeamMember(ownerId, eventRecord.id);
-
+    // STUB phase 1a — non interroga schema.events né schema.eventUsers; 1c è org-aware
+    const result = await canAddTeamMember(userId, '');
     return {
         allowed: result.allowed,
         current: result.current,
@@ -337,11 +264,12 @@ export async function getTeamLimit(
 
 /**
  * Validate if user can downgrade to a new plan.
- * Checks events and team members for violations.
+ * STUB phase 1a — query su schema.events/eventUsers/invitations rimosse;
+ * 1c reimplementa con org-scoped checks.
  */
 export async function validateDowngrade(
-    userId: string,
-    newPlan: string,
+    _userId: string,
+    _newPlan: string,
 ): Promise<{
     allowed: boolean;
     violations: Array<{
@@ -357,64 +285,13 @@ export async function validateDowngrade(
         eventsChecked: number;
     };
 }> {
-    const db = getDB();
-    const limits = getPlanLimits(newPlan);
-    const violations: Array<{
-        resource: string;
-        eventId?: string;
-        eventName?: string;
-        current: number;
-        limit: number;
-        message: string;
-    }> = [];
-
-    // Get all user's events for per-event checks
-    const userEvents = await db
-        .select({ id: schema.events.id, name: schema.events.name })
-        .from(schema.events)
-        .where(eq(schema.events.userId, userId));
-
-    // 1. Check events count (user scope)
-    const eventsCount = await countUserEvents(userId);
-    if (!isUnlimited(limits.max_events) && eventsCount > limits.max_events) {
-        violations.push({
-            resource: 'events',
-            current: eventsCount,
-            limit: limits.max_events,
-            message: `You have ${eventsCount} events but the ${newPlan} plan allows only ${limits.max_events}`,
-        });
-    }
-
-    // 2. Check team members per event
-    for (const event of userEvents) {
-        const [membersCount, pendingCount] = await Promise.all([
-            countEventMembers(event.id),
-            countPendingInvitations(event.id),
-        ]);
-
-        const totalMembers = membersCount + pendingCount;
-
-        // Team members check
-        if (!isUnlimited(limits.team_members) && totalMembers > limits.team_members) {
-            violations.push({
-                resource: 'team_members',
-                eventId: event.id,
-                eventName: event.name,
-                current: totalMembers,
-                limit: limits.team_members,
-                message: `Event "${event.name}" has ${totalMembers} team members (${membersCount} active + ${pendingCount} pending) but the ${newPlan} plan allows only ${limits.team_members}`,
-            });
-        }
-    }
-
-    const summary = {
-        totalEvents: eventsCount,
-        eventsChecked: userEvents.length,
-    };
-
+    // STUB phase 1a — nessuna violazione rilevata; 1c verifica eventi/org reali
     return {
-        allowed: violations.length === 0,
-        violations,
-        summary,
+        allowed: true,
+        violations: [],
+        summary: {
+            totalEvents: 0,   // STUB phase 1a — 0 fino a countUserOrganizations in 1c
+            eventsChecked: 0, // STUB phase 1a — 0 fino a org-scoped iteration in 1c
+        },
     };
 }

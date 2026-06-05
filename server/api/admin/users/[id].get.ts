@@ -71,57 +71,12 @@ export default defineEventHandler(async (event): Promise<AdminUserDetail> => {
         .from(schema.creem_subscription)
         .where(eq(schema.creem_subscription.referenceId, userId));
 
-    // Get events with membership info
-    const eventMemberships = await db
-        .select({
-            id: schema.events.id,
-            name: schema.events.name,
-            role: schema.eventUsers.role,
-            userId: schema.events.userId,
-        })
-        .from(schema.eventUsers)
-        .innerJoin(
-            schema.events,
-            eq(schema.eventUsers.eventId, schema.events.id)
-        )
-        .where(eq(schema.eventUsers.userId, userId));
-
-    // Also include events where user is owner but might not be in eventUsers
-    const ownedEvents = await db
-        .select({
-            id: schema.events.id,
-            name: schema.events.name,
-        })
-        .from(schema.events)
-        .where(eq(schema.events.userId, userId));
-
-    // Merge owned events
-    const eventMap = new Map<string, { id: string; name: string; isOwner: boolean; role: string }>();
-
-    for (const ev of eventMemberships) {
-        const isOwner = ev.userId === userId;
-        eventMap.set(ev.id, {
-            id: ev.id,
-            name: ev.name,
-            isOwner,
-            role: isOwner ? 'owner' : (ev.role || 'viewer'),
-        });
-    }
-
-    for (const ev of ownedEvents) {
-        if (!eventMap.has(ev.id)) {
-            eventMap.set(ev.id, {
-                id: ev.id,
-                name: ev.name,
-                isOwner: true,
-                role: 'owner',
-            });
-        }
-    }
+    // STUB phase 1a — query su schema.eventUsers + schema.events rimosse; 1c usa org membership
+    const events: Array<{ id: string; name: string; isOwner: boolean; role: string }> = [];
 
     return {
         ...user,
         subscriptions,
-        events: Array.from(eventMap.values()),
+        events,
     };
 });
