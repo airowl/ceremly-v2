@@ -186,8 +186,8 @@ Prima di scrivere o modificare codice backend, **leggere** i pattern in `docs/pa
 
 ## Git
 
-- **Mai fare commit o push automaticamente** — commit e push sono sempre manuali, eseguiti dall'utente
-- Se il lavoro è pronto, comunicare che le modifiche sono pronte per il commit, senza eseguirlo
+- **Commit automatici OK** — quando il lavoro è pronto e verificato, si può committare automaticamente
+- **Push sempre manuale** — il push sul remoto lo esegue sempre l'utente, mai automatico
 
 ## Conventions
 
