@@ -447,6 +447,7 @@ git commit -m "refactor: stub event-based consumers (admin, limits, middleware) 
 - Delete: `server/services/event.service.ts`
 - Delete: `server/services/team.service.ts`
 - Delete: `server/utils/permissions.ts`
+- Delete: `server/utils/event.ts` (re-export di backwards-compat da `event.service.ts` — `requireEventOwnership`/`generateEventSlug`; zero consumer residui, verificato in esecuzione → cade con event.service)
 - Delete: `server/api/events/` (5 file)
 - Delete: `server/api/team/` (8 file)
 
@@ -814,6 +815,14 @@ I commit per-task (Task 1-11) sono già granulari; non serve un commit finale ag
 
 ## Note di handoff per le fasi successive
 
-- **Stub `501`/neutralizzati da rimuovere in 1b/1c:** `planLimit` (canCreateEvent→canCreateOrganization), `2.events.ts`→`2.organization.ts`, `admin/stats` + `admin/users/[id]` (conteggi org), `logAudit` (passa `organizationId` reale).
+- **Stub neutralizzati da ripristinare org-aware in 1b/1c** (lista REALE, ampliata in esecuzione oltre quella del piano iniziale):
+  - `planLimit.service.ts` — `countUserEvents`/`canCreateEvent`/`countEventMembers`/`countPendingInvitations`/`countReservedSlots`/`canAddTeamMember`/`getTeamLimit`/`validateDowngrade` (tutte stub→0/neutro). `canCreateEvent`→`canCreateOrganization`.
+  - `2.events.ts` (no-op) → `2.organization.ts`.
+  - `admin/stats/index.get.ts` + `admin/users/[id].get.ts` (conteggi/liste event a 0/vuoto) → org.
+  - `admin/audit-logs/index.get.ts` + `admin/users/[id]/audit-logs.get.ts` — già rinominati `eventId`→`organizationId` (colonna); il query-param API si chiama ancora `eventId` → genericizzare in 1c.
+  - **`limits/index.get.ts`** — owner-lookup su `schema.events` rimosso, usa i limiti del requester (STUB); 1c: risolvere owner via `member` org.
+  - **`dataExport.service.ts`** (GDPR) — sezione eventi dell'export è `[]` (STUB); 1c: ripristinare con `organization`/`member` lookup. Il tipo `ExportEvent` e il campo `events` restano.
+  - `logAudit` — la chiave opts è ora `organizationId` (era `eventId`); i call-site la passeranno in 1c.
+- **⚠️ Migration `0001_easy_meltdown.sql`:** il flip `file.event_id`→`organization_id` è generato come **DROP COLUMN + ADD COLUMN** (non rename). Su DB clean-slate è corretto (modello drop+recreate della fase). Se mai applicata a un DB con file reali, perderebbe l'associazione tenant dei file → non è il caso del boilerplate.
 - **`auth.ts` activeOrganizationId:** annotato nel commit del Task 2 (colonna session vs KV Redis) — input per 1b.
 - **Frontend (`eventStore` + pagine event):** intatto o con stub di tipo `// TODO 1d` — riscrittura in 1d.
