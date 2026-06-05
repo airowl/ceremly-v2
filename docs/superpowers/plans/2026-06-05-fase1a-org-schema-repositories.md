@@ -540,9 +540,12 @@ git commit -m "feat: drop event spine, generate organization migration (phase 1a
 - [ ] **Step 1: Applica la migration su DB pulito**
 
 Run: `pnpm db:migrate`
-Expected: la migration applica senza errori. Le tabelle `events`/`event_users` non esistono più; `organization`/`member`/`invitation`/`projects` esistono.
+Expected: la migration applica senza errori, in ordine: `0000` (schema Ceremly originale) poi `0001` (la transform org). Le tabelle `events`/`event_users` non esistono più; `organization`/`member`/`invitation`/`projects` esistono.
 
-> Se fallisce per tabelle event inesistenti (DB già parzialmente migrato), parti da DB pulito: `pnpm db:reset` poi `pnpm db:migrate`.
+> ⚠️ **Precondizioni per `db:migrate`:**
+> - Il `.env` deve avere un `NUXT_DATABASE_URL` **reale** (il `.env` attuale ha un placeholder fittizio creato per `auth:schema` — va sostituito). Conferma di non puntare a un Postgres locale non voluto su 5432.
+> - Il DB deve essere **genuinamente vuoto** così `0000` crea le tabelle che `0001` poi droppa/trasforma. I `DROP` di `0001` assumono che `0000` le abbia create.
+> - **Fallback NON banale:** `pnpm db:reset` fa `DROP SCHEMA public CASCADE` + `CREATE SCHEMA` + **`pnpm db:push`** (sync diretto schema→DB, **bypassa le migration**). Quindi `reset` NON testa le migration `0000→0001`: porta il DB allo schema finale via push. Per testare le migration vere: svuota lo schema (`db:reset` o drop manuale) e poi `db:migrate` (non lasciare che `reset` faccia il push). Leggi `server/database/seed/reset.ts` prima di affidartici.
 
 - [ ] **Step 2: Scrivi il seeder**
 
