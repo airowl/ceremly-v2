@@ -1,0 +1,274 @@
+/* app/assets/css/main.css */
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* ════════════════════════════════════════════════════════
+   Ceremly Design System for Nuxt UI 4
+   Warm earthy palette · Soft corners · Light mode
+   ════════════════════════════════════════════════════════ */
+
+@theme static {
+    /* ── Typography ── */
+    --font-sans: "Manrope", "sans-serif";
+
+    /* ── Primary Scale (Light Bronze #d4a373) ── */
+    --color-primary-50: #faf6f0;
+    --color-primary-100: #f6ede3;
+    --color-primary-200: #eedac7;
+    --color-primary-300: #e5c8ab;
+    --color-primary-400: #dcb68f;
+    --color-primary-500: #d4a373;
+    --color-primary-600: #c58341;
+    --color-primary-700: #96622e;
+    --color-primary-800: #64411f;
+    --color-primary-900: #32210f;
+    --color-primary-950: #1f1509;
+
+    /* ── Secondary Scale (Tea Green #ccd5ae) ── */
+    --color-secondary-50: #fafbf7;
+    --color-secondary-100: #f5f7ef;
+    --color-secondary-200: #ebeedf;
+    --color-secondary-300: #e1e6cf;
+    --color-secondary-400: #d6debe;
+    --color-secondary-500: #ccd5ae;
+    --color-secondary-600: #acbb7b;
+    --color-secondary-700: #88994f;
+    --color-secondary-800: #5b6635;
+    --color-secondary-900: #2d331a;
+    --color-secondary-950: #1a1e0f;
+
+    /* ── Palette Accents ── */
+    --color-beige-50: #fbfbf4;
+    --color-beige-100: #f6f8ea;
+    --color-beige-200: #f2f4df;
+    --color-beige-300: #edf1d4;
+    --color-beige-400: #e9edc9;
+    --color-beige-500: #ced788;
+    --color-beige-600: #b3c146;
+    --color-beige-700: #79842c;
+    --color-beige-800: #3d4216;
+    --color-beige-900: #22250c;
+
+    --color-cornsilk-50: #fffef9;
+    --color-cornsilk-100: #fffdf3;
+    --color-cornsilk-200: #fefced;
+    --color-cornsilk-300: #fefbe7;
+    --color-cornsilk-400: #fefae0;
+    --color-cornsilk-500: #fbeb84;
+    --color-cornsilk-600: #f8dc27;
+    --color-cornsilk-700: #baa206;
+    --color-cornsilk-800: #5d5103;
+    --color-cornsilk-900: #333001;
+
+    --color-papaya-50: #fefbf5;
+    --color-papaya-100: #fdf8eb;
+    --color-papaya-200: #fcf4e0;
+    --color-papaya-300: #fbf1d6;
+    --color-papaya-400: #faedcd;
+    --color-papaya-500: #f2d079;
+    --color-papaya-600: #eab227;
+    --color-papaya-700: #a57b10;
+    --color-papaya-800: #533e08;
+    --color-papaya-900: #302404;
+}
+
+/* ── Light Mode Design Tokens ── */
+:root {
+    --ui-radius: 0.5rem;
+    --ui-bg: #FAF9F6;
+}
+
+/* ── Dark Mode Disabled ── */
+
+/* ── Animations ── */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(2rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slide-in-bottom {
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-in-bottom {
+    animation: slide-in-bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Hero Entrance Animations (CSS-only, no JS) ── */
+.hero-fade-up {
+    animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-fade-in {
+    animation: fade-in 0.6s ease-out both;
+}
+
+.hero-scale-in {
+    animation: scale-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.anim-delay-100 { animation-delay: 0.1s; }
+.anim-delay-200 { animation-delay: 0.2s; }
+.anim-delay-300 { animation-delay: 0.3s; }
+.anim-delay-400 { animation-delay: 0.4s; }
+.anim-delay-500 { animation-delay: 0.5s; }
+.anim-delay-600 { animation-delay: 0.6s; }
+
+/* ── Scroll Reveal System ── */
+.reveal {
+    opacity: 0;
+    will-change: transform, opacity;
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+.reveal-up {
+    transform: translateY(3rem);
+}
+
+.reveal-down {
+    transform: translateY(-2rem);
+}
+
+.reveal-left {
+    transform: translateX(-3rem);
+}
+
+.reveal-right {
+    transform: translateX(3rem);
+}
+
+.reveal-scale {
+    transform: scale(0.92);
+}
+
+/* Stagger children within a reveal container */
+.reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(2rem);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-stagger.is-visible > * {
+    opacity: 1;
+    transform: none;
+}
+
+.reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0s; }
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.15s; }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 0.3s; }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 0.45s; }
+
+/* Reveal transition delays */
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ── Floating Animations ── */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes float-rotate {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(-1deg); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-rotate {
+    animation: float-rotate 4s ease-in-out infinite;
+}
+
+/* ── Enhanced Hover Micro-interactions ── */
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12);
+}
+
+/* ════════════════════════════════════════════════════════
+   Landing Page Design Tokens
+   Independent from the dashboard DaisyUI theme.
+   All Nuxt UI components within .landing-page inherit these.
+   Uncomment and customize any variable as needed.
+   ════════════════════════════════════════════════════════ */
+
+/* ── Landing: Light Mode ── */
+.landing-page {
+    /* Background */
+    /* --ui-bg: #ffffff; */
+    /* --ui-bg-muted: ; */
+    /* --ui-bg-elevated: ; */
+    /* --ui-bg-accented: ; */
+    /* --ui-bg-inverted: ; */
+
+    /* Border Radius */
+    /* --ui-radius: 0.25rem; */
+
+    /* Text */
+    /* --ui-text-dimmed: ; */
+    /* --ui-text-muted: ; */
+    /* --ui-text-toned: ; */
+    /* --ui-text: ; */
+    /* --ui-text-highlighted: ; */
+    /* --ui-text-inverted: ; */
+
+    /* Borders */
+    /* --ui-border: ; */
+    /* --ui-border-muted: ; */
+    /* --ui-border-accented: ; */
+    /* --ui-border-inverted: ; */
+}
+
+/* ── Dark Mode Disabled for Landing ── */

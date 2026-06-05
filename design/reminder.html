@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Configura Reminder - RSVPnow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#19baf0",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#101d22",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .variable-tag {
+            background-color: rgba(25, 186, 240, 0.1);
+            color: #19baf0;
+            border: 1px solid rgba(25, 186, 240, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Header / Navigation -->
+<header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<a class="text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">arrow_back</span>
+</a>
+<div class="flex flex-col">
+<nav class="flex gap-2 text-sm text-slate-500 dark:text-slate-400 mb-0.5">
+<a class="hover:text-primary" href="#">Dashboard</a>
+<span>/</span>
+<a class="hover:text-primary" href="#">Reminder</a>
+<span>/</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Nuovo Reminder</span>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">
+                    Annulla
+                </button>
+<button class="px-6 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm shadow-primary/20 transition-all">
+                    Salva Reminder
+                </button>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Configuration Form -->
+<div class="lg:col-span-7 space-y-8">
+<section>
+<h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">Configura Reminder</h1>
+<p class="text-slate-500 dark:text-slate-400">Personalizza il messaggio di sollecito automatico per i tuoi invitati.</p>
+</section>
+<div class="space-y-6 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<!-- Name Input -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider" for="reminder-name">Nome del Reminder</label>
+<input class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="reminder-name" placeholder="es. Secondo sollecito RSVP" type="text" value="Sollecito RSVP Finale"/>
+</div>
+<!-- Channel Selector -->
+<div class="flex flex-col gap-3">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Canale di invio</label>
+<div class="grid grid-cols-2 gap-4">
+<label class="relative flex items-center justify-center p-4 rounded-lg border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:border-primary/50 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input checked="" class="sr-only" name="channel" type="radio" value="email"/>
+<div class="flex flex-col items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 group-has-[:checked]:text-primary">mail</span>
+<span class="text-sm font-semibold text-slate-600 dark:text-slate-300 group-has-[:checked]:text-primary">Email Direct</span>
+</div>
+</label>
+<label class="relative flex items-center justify-center p-4 rounded-lg border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:border-primary/50 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input class="sr-only" name="channel" type="radio" value="whatsapp"/>
+<div class="flex flex-col items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 group-has-[:checked]:text-primary">chat</span>
+<span class="text-sm font-semibold text-slate-600 dark:text-slate-300 group-has-[:checked]:text-primary">WhatsApp Link</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Message Editor -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Corpo del Messaggio</label>
+<span class="text-xs text-slate-400">Supporta tag dinamici</span>
+</div>
+<!-- Toolbar Tags -->
+<div class="flex flex-wrap gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-t-lg border-x border-t border-slate-200 dark:border-slate-700">
+<button class="px-3 py-1.5 text-xs font-medium variable-tag rounded-full flex items-center gap-1 hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm">add</span> {nome_invitato}
+                            </button>
+<button class="px-3 py-1.5 text-xs font-medium variable-tag rounded-full flex items-center gap-1 hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm">add</span> {data_evento}
+                            </button>
+<button class="px-3 py-1.5 text-xs font-medium variable-tag rounded-full flex items-center gap-1 hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm">add</span> {link_rsvp}
+                            </button>
+</div>
+<textarea class="w-full px-4 py-4 rounded-b-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none font-display" placeholder="Scrivi qui il tuo messaggio..." rows="8">Ciao {nome_invitato}, non vediamo l'ora di festeggiare con te il prossimo {data_evento}! 🥂
+
+Ti scriviamo perché non abbiamo ancora ricevuto la tua conferma. Per aiutarci con l'organizzazione, ti chiediamo gentilmente di rispondere entro domani tramite questo link:
+
+{link_rsvp}
+
+Grazie mille! ❤️</textarea>
+</div>
+</div>
+<!-- Tips/Help Card -->
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-4">
+<span class="material-symbols-outlined text-primary">info</span>
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white">Suggerimento RSVPnow</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">I messaggi brevi e personali hanno un tasso di risposta superiore del 40%. Ricordati di includere sempre il link diretto per facilitare l'invitato.</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Preview Sidebar -->
+<div class="lg:col-span-5">
+<div class="sticky top-24">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Anteprima Real-time</h3>
+<div class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">devices</span>
+                            Mobile view
+                        </div>
+</div>
+<!-- Smartphone Mockup -->
+<div class="relative mx-auto w-[300px] h-[600px] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden ring-4 ring-slate-100 dark:ring-slate-800">
+<!-- Screen Header -->
+<div class="absolute top-0 w-full h-14 bg-slate-100 dark:bg-slate-800 flex items-end justify-center pb-2 z-10">
+<div class="w-20 h-5 bg-slate-900 rounded-full absolute -top-1"></div> <!-- Notch -->
+<span class="text-[10px] font-bold text-slate-400">RSVPnow Messenger</span>
+</div>
+<!-- Screen Content (Email View) -->
+<div class="mt-14 h-full bg-white dark:bg-slate-950 p-4 overflow-y-auto scrollbar-hide">
+<div class="mb-4">
+<div class="text-[10px] text-slate-400 uppercase font-bold mb-1">Oggetto:</div>
+<div class="text-xs font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                    Sollecito RSVP Finale - Il nostro matrimonio
+                                </div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="text-primary font-bold text-[10px]">RN</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-slate-800 dark:text-white">RSVPnow</span>
+<span class="text-[8px] text-slate-400">a: Marco Rossi</span>
+</div>
+</div>
+<p class="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    Ciao <span class="bg-primary/10 text-primary px-1 rounded">Marco</span>, non vediamo l'ora di festeggiare con te il prossimo <span class="bg-primary/10 text-primary px-1 rounded">15 Giugno</span>! 🥂
+                                </p>
+<p class="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    Ti scriviamo perché non abbiamo ancora ricevuto la tua conferma. Per aiutarci con l'organizzazione, ti chiediamo gentilmente di rispondere entro domani tramite questo link:
+                                </p>
+<div class="py-4">
+<div class="w-full bg-primary text-white text-[11px] font-bold py-3 rounded-lg text-center shadow-md">
+                                        Conferma la tua presenza
+                                    </div>
+<div class="text-[9px] text-primary mt-2 text-center underline truncate">
+                                        rsvpnow.app/e/matrimonio-2024
+                                    </div>
+</div>
+<p class="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    Grazie mille! ❤️
+                                </p>
+</div>
+</div>
+<!-- Fake Home Indicator -->
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Mobile Actions (Visible on small screens only) -->
+<div class="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-3 z-20">
+<button class="flex-1 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            Annulla
+        </button>
+<button class="flex-1 py-3 text-sm font-semibold text-white bg-primary rounded-lg shadow-lg shadow-primary/30">
+            Salva
+        </button>
+</div>
+</body></html>

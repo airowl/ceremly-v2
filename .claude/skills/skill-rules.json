@@ -1,0 +1,281 @@
+{
+    "version": "1.0",
+    "description": "Skill activation triggers for Claude Code. Controls when skills automatically suggest or block actions.",
+    "skills": {
+        "skill-developer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Meta-skill for creating and managing Claude Code skills",
+            "promptTriggers": {
+                "keywords": [
+                    "skill system",
+                    "create skill",
+                    "add skill",
+                    "skill triggers",
+                    "skill rules",
+                    "hook system",
+                    "skill development",
+                    "skill-rules.json"
+                ],
+                "intentPatterns": [
+                    "(how do|how does|explain).*?skill",
+                    "(create|add|modify|build).*?skill",
+                    "skill.*?(work|trigger|activate|system)"
+                ]
+            }
+        },
+        "supabase-edge-functions": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Supabase Edge Functions development with Deno/TypeScript and Hono framework",
+            "promptTriggers": {
+                "keywords": [
+                    "edge function",
+                    "supabase function",
+                    "deno function",
+                    "hono",
+                    "supabase edge",
+                    "edge functions",
+                    "serverless function",
+                    "authenticateUser",
+                    "authenticateWithClient",
+                    "checkPlanLimit",
+                    "rateLimit",
+                    "softDelete",
+                    "RLS",
+                    "row level security",
+                    "workspace isolation",
+                    "multi-tenancy",
+                    "plan limits",
+                    "subscription limits"
+                ],
+                "intentPatterns": [
+                    "(create|add|implement|build).*?(edge function|supabase function|serverless)",
+                    "(fix|handle|debug).*?(edge function|supabase|deno)",
+                    "(add|implement).*?(authentication|rate limit|plan limit|soft delete)",
+                    "(how to|best practice).*?(edge function|supabase|deno|hono)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "be/supabase/functions/**/*.ts",
+                    "supabase/functions/**/*.ts"
+                ],
+                "pathExclusions": [
+                    "**/*.test.ts",
+                    "**/*.spec.ts"
+                ],
+                "contentPatterns": [
+                    "Deno\\.serve",
+                    "import.*Hono",
+                    "authenticateUser",
+                    "authenticateWithClient",
+                    "checkPlanLimit",
+                    "from.*_shared/lib"
+                ]
+            }
+        },
+        "nuxt-frontend": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Nuxt 4 + Vue 3 + TypeScript frontend development patterns for YourSaaS",
+            "promptTriggers": {
+                "keywords": [
+                    "nuxt",
+                    "vue",
+                    "frontend",
+                    "component",
+                    "composable",
+                    "pinia",
+                    "store",
+                    "middleware",
+                    "page",
+                    "layout",
+                    "nuxt ui",
+                    "UButton",
+                    "UModal",
+                    "UForm",
+                    "site mode",
+                    "waitinglist",
+                    "dashboard",
+                    "landing page",
+                    "client component",
+                    ".client.vue",
+                    "useNuxtApp",
+                    "definePageMeta",
+                    "useUserStore",
+                    "useWorkspaceStore",
+                    "useSiteMode"
+                ],
+                "intentPatterns": [
+                    "(create|add|implement|build).*?(component|page|composable|store|middleware)",
+                    "(fix|handle|debug).*?(vue|nuxt|frontend|component)",
+                    "(add|implement).*?(form|modal|validation|route guard)",
+                    "(how to|best practice).*?(nuxt|vue|pinia|composable)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "fe/app/**/*.vue",
+                    "fe/app/**/*.ts",
+                    "fe/app/composables/**/*",
+                    "fe/app/stores/**/*",
+                    "fe/app/middleware/**/*",
+                    "fe/app/pages/**/*",
+                    "fe/app/components/**/*",
+                    "fe/app/layouts/**/*",
+                    "fe/app/plugins/**/*"
+                ],
+                "pathExclusions": [
+                    "**/*.test.ts",
+                    "**/*.spec.ts",
+                    "**/node_modules/**"
+                ],
+                "contentPatterns": [
+                    "<script setup",
+                    "defineStore",
+                    "useNuxtApp",
+                    "definePageMeta",
+                    "defineNuxtRouteMiddleware",
+                    "from '~/stores/",
+                    "from '~/composables/"
+                ]
+            }
+        },
+        "pinia-stores": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Pinia store development patterns for Nuxt 4 + TypeScript + Supabase multi-tenant SaaS",
+            "promptTriggers": {
+                "keywords": [
+                    "pinia",
+                    "store",
+                    "state management",
+                    "defineStore",
+                    "userStore",
+                    "workspaceStore",
+                    "eventsStore",
+                    "guestsStore",
+                    "billingStore",
+                    "workspace context",
+                    "store action",
+                    "store getter",
+                    "store composition",
+                    "plan limits frontend",
+                    "resource usage frontend",
+                    "multi-tenancy frontend",
+                    "auth state",
+                    "subscription state",
+                    "store reset",
+                    "store persistence",
+                    "pinia persist",
+                    "store SSR"
+                ],
+                "intentPatterns": [
+                    "(create|add|implement|build).*?(store|state management|pinia)",
+                    "(fix|handle|debug).*?(store|state|pinia)",
+                    "(add|implement).*?(action|getter|state).*?store",
+                    "(how to|best practice).*?(store|pinia|state management)",
+                    "(organize|structure).*?store"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "fe/app/stores/**/*.ts"
+                ],
+                "pathExclusions": [
+                    "**/*.test.ts",
+                    "**/*.spec.ts"
+                ],
+                "contentPatterns": [
+                    "defineStore",
+                    "import.*pinia",
+                    "useUserStore",
+                    "useWorkspaceStore"
+                ]
+            }
+        },
+        "supabase-database": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Supabase PostgreSQL database patterns: schema, RLS, multi-tenancy, soft delete, plan limits",
+            "promptTriggers": {
+                "keywords": [
+                    "database",
+                    "migration",
+                    "schema",
+                    "table",
+                    "column",
+                    "RLS",
+                    "row level security",
+                    "policy",
+                    "soft delete",
+                    "deleted_at",
+                    "plan limits",
+                    "workspace isolation",
+                    "multi-tenancy",
+                    "base schema",
+                    "active view",
+                    "trigger",
+                    "function",
+                    "constraint",
+                    "index",
+                    "foreign key",
+                    "user_has_permissions",
+                    "get_effective_limit",
+                    "cascade",
+                    "JWT claims",
+                    "app_metadata"
+                ],
+                "intentPatterns": [
+                    "(create|add|modify|alter).*?(table|column|migration|schema)",
+                    "(create|add|implement).*?(RLS|policy|trigger|function)",
+                    "(fix|debug|troubleshoot).*?(database|query|RLS|permission)",
+                    "(how to|best practice).*?(database|migration|RLS|soft delete)",
+                    "(implement|add).*?(soft delete|plan limit|multi-tenant)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "be/supabase/migrations/**/*.sql",
+                    "supabase/migrations/**/*.sql"
+                ],
+                "pathExclusions": [],
+                "contentPatterns": [
+                    "CREATE TABLE base\\.",
+                    "ALTER TABLE base\\.",
+                    "CREATE POLICY",
+                    "CREATE OR REPLACE FUNCTION base\\.",
+                    "CREATE TRIGGER",
+                    "ENABLE ROW LEVEL SECURITY",
+                    "deleted_at",
+                    "user_has_permissions",
+                    "workspace_id.*auth\\.jwt"
+                ]
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched",
+            "high": "Important - Trigger for most matches",
+            "medium": "Moderate - Trigger for clear matches",
+            "low": "Optional - Trigger only for explicit matches"
+        },
+        "customization": {
+            "pathPatterns": "Adjust to match your project structure (blog-api, auth-service, etc.)",
+            "keywords": "Add domain-specific terms relevant to your project",
+            "intentPatterns": "Use regex for flexible user intent matching"
+        }
+    }
+}

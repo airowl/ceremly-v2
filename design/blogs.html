@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Blog - Ceremly</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#19baf0",
+                        "primary-dark": "#0ea5d6",
+                        "secondary-green": "#25D366", 
+                        "background-light": "#f8fbfc",
+                        "background-dark": "#101d22",
+                        "text-main": "#0d181c",
+                        "text-sub": "#4b879b",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200 flex flex-col min-h-screen">
+<nav class="sticky top-0 z-50 w-full border-b border-[#e7f0f3] bg-[#f8fbfc]/80 backdrop-blur-md dark:border-gray-800 dark:bg-[#101d22]/80">
+<div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+<div class="flex items-center gap-2">
+<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">mark_email_read</span>
+</div>
+<a class="text-xl font-bold tracking-tight text-text-main dark:text-white" href="#">Ceremly</a>
+</div>
+<div class="hidden items-center gap-8 md:flex">
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">Funzionalità</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">Prezzi</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">Clienti</a>
+<a class="text-sm font-medium text-primary hover:text-primary-dark font-bold transition-colors" href="#">Blog</a>
+</div>
+<div class="flex items-center gap-3">
+<button class="hidden h-10 rounded-lg bg-[#e7f0f3] px-5 text-sm font-bold text-text-main hover:bg-[#dbe6ea] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:block transition-colors">
+                Accedi
+            </button>
+<button class="h-10 rounded-lg bg-primary px-5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary-dark transition-all">
+                Unisciti alla lista
+            </button>
+</div>
+</div>
+</nav>
+<main class="flex-grow">
+<section class="relative pt-16 pb-12 sm:pt-24 lg:pb-20">
+<div class="mx-auto max-w-7xl px-6 lg:px-8 text-center">
+<div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary dark:bg-primary/10">
+<span class="material-symbols-outlined text-[18px]">tips_and_updates</span>
+                Idee &amp; Risorse
+            </div>
+<h1 class="text-4xl font-extrabold tracking-tight text-text-main dark:text-white sm:text-5xl mb-6">
+                Il nostro Blog
+            </h1>
+<p class="mx-auto max-w-2xl text-lg text-text-sub dark:text-gray-400">
+                Consigli pratici, guide e ispirazioni per organizzare eventi indimenticabili. <br class="hidden sm:block"/>Dalla gestione degli invitati ai dettagli che fanno la differenza.
+            </p>
+</div>
+</section>
+<section class="sticky top-20 z-40 bg-background-light/95 backdrop-blur dark:bg-background-dark/95 border-b border-gray-100 dark:border-gray-800 py-4">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
+<a class="whitespace-nowrap rounded-full bg-text-main px-4 py-2 text-sm font-bold text-white shadow-md dark:bg-white dark:text-text-main" href="#">
+                    Tutti
+                </a>
+<a class="whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-medium text-text-sub hover:bg-gray-50 hover:text-primary border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors" href="#">
+                    Matrimoni
+                </a>
+<a class="whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-medium text-text-sub hover:bg-gray-50 hover:text-primary border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors" href="#">
+                    Compleanni
+                </a>
+<a class="whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-medium text-text-sub hover:bg-gray-50 hover:text-primary border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors" href="#">
+                    Eventi Aziendali
+                </a>
+<a class="whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-medium text-text-sub hover:bg-gray-50 hover:text-primary border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors" href="#">
+                    Guide RSVP
+                </a>
+</div>
+</div>
+</section>
+<section class="py-12 lg:py-16">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="relative mb-16 overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 group">
+<div class="grid lg:grid-cols-5 h-full">
+<div class="lg:col-span-3 relative h-64 lg:h-auto overflow-hidden">
+<img alt="Wedding planning" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Close up of a beautiful wedding table setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfA8Vj8pwyVVHF-j6bu_uN2oDbWFuRmExLCk_WH5w12hZ1NSc4qO6mGN79-BAyGAJSXF8vHYza7aV3Zvtit4Uupcy-sB2W4KpE4_re0fk6GR3tfxrMqJjbrktLFGEJNkLZ_twrLck_zliz8FW3Rfb2JIiIBd4LLmlgr5GPuH1HWT05_cJdxU2chsNW-3rzuVQBwxeqcLXOm0-8r5HYrQhaucy9-G5b4eGJxdKF4c7-7RlIqzv175ErJXZTxL4JJTTLdQgOWCNa62Og"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent lg:hidden"></div>
+</div>
+<div class="lg:col-span-2 p-8 lg:p-12 flex flex-col justify-center">
+<div class="flex items-center gap-3 mb-4">
+<span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+                                Consigli Matrimonio
+                            </span>
+<span class="text-xs font-medium text-gray-500">5 min lettura</span>
+</div>
+<h2 class="text-2xl font-bold tracking-tight text-text-main dark:text-white sm:text-3xl mb-4 group-hover:text-primary transition-colors">
+                            Come gestire gli RSVP del tuo matrimonio senza impazzire
+                        </h2>
+<p class="mb-8 text-text-sub dark:text-gray-400">
+                            Scopri le migliori strategie per raccogliere le conferme degli invitati, gestire le intolleranze alimentari e organizzare i tavoli senza stress dell'ultimo minuto.
+                        </p>
+<a class="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors" href="#">
+                            Leggi l'articolo completo 
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden">
+<img alt="Corporate event" class="h-full w-full object-cover transition-transform duration-300 hover:scale-110" data-alt="People networking at a corporate event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT5mQCsIHPKkJGXPJtYrR-5pqJ8TJz8GmxKzUFnCRovk7rFToP6qAXTupAMqZUEl42V148WaapElCwODHrVRmCm-1ytIHmnmCxBfSVkkilngK5JTimE-dAhUD0jFKJEV779ALA_kkrHczVpne7kyPVKdGSuNFyyk8R2oC97S25VHb3J49jdpMb7X0NT3PgkwURVs8b3kYx4KP7XqmjXVdS3GWlo9pzFhKwNqkaZv0adheJRhxNtc7DHn_7jM-_KJ2-4LRoK9V8hSMj"/>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Eventi Aziendali
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            12 Ottobre 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            L'importanza del follow-up post evento aziendale
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            Non lasciare che i contatti si raffreddino. Ecco come strutturare una strategia di follow-up efficace per massimizzare il ROI del tuo evento.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden">
+<img alt="Birthday Party" class="h-full w-full object-cover transition-transform duration-300 hover:scale-110" data-alt="Happy people celebrating with cake" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqpMxulcYENMknYcJAls1MR2HmqH-QeFCo9OuutPoxQDT6ideD7cjme_PjiRIfVruTbkyMqc37TlSrhkp8E1OaHthGFO-808M-_-VdEVYGfK5vvm4a9OYC8nyPOtNXf96PL4FkKSfKK-SEyxDix4b1rYT-AZlsQb8y0p9akAUfzcFx7qFxCmWja2Sqpbgpv_wIcaE0zBLFtog0X9DEv1ldjt7zBsNB6leWR7S75YGfFit9OVxBH19Ow-iIudTxkHeH-ctsGBpDYPQA"/>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Compleanni
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            28 Settembre 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            5 idee originali per una festa a sorpresa
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            Organizzare una festa a sorpresa non è mai facile. Ecco 5 idee creative per lasciare il festeggiato a bocca aperta senza svelare il segreto.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden bg-gray-100 flex items-center justify-center">
+<div class="text-primary opacity-20">
+<span class="material-symbols-outlined text-6xl">rsvp</span>
+</div>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Guide RSVP
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            15 Settembre 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            WhatsApp vs Email: quale scegliere per i tuoi inviti?
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            Analizziamo i pro e i contro dei due canali più utilizzati per inviare inviti e raccogliere conferme per i tuoi eventi privati.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-5xl text-blue-200 dark:text-gray-600">restaurant</span>
+</div>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Consigli Generali
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            02 Settembre 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            Catering: come calcolare le quantità giuste
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            Evita sprechi e assicurati che nessuno rimanga a stomaco vuoto. Una guida pratica per stimare cibo e bevande per ogni tipo di evento.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-800 dark:to-gray-700"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-5xl text-rose-200 dark:text-gray-600">volunteer_activism</span>
+</div>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Matrimoni
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            20 Agosto 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            Tendenze Matrimonio 2024: Colori e Decorazioni
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            Dalle tonalità pastello ai materiali ecosostenibili. Scopri quali saranno i trend che domineranno la prossima stagione dei matrimoni.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 dark:bg-gray-900 dark:ring-gray-800">
+<div class="relative h-56 overflow-hidden bg-gray-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-5xl text-gray-300">library_music</span>
+<div class="absolute top-4 left-4">
+<span class="rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-bold text-text-main shadow-sm">
+                                Intrattenimento
+                            </span>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-6">
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            10 Agosto 2023
+                        </div>
+<h3 class="text-xl font-bold text-text-main dark:text-white mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                            DJ Set o Band dal vivo? Come scegliere la musica
+                        </h3>
+<p class="mb-4 flex-1 text-sm text-text-sub dark:text-gray-400 line-clamp-3">
+                            La musica è l'anima della festa. Ecco come valutare quale opzione di intrattenimento si adatta meglio allo stile del tuo evento e al tuo budget.
+                        </p>
+<a class="mt-auto text-sm font-bold text-primary hover:text-primary-dark" href="#">Leggi di più</a>
+</div>
+</article>
+</div>
+<div class="relative rounded-2xl bg-gradient-to-r from-primary to-primary-dark p-8 md:p-12 shadow-2xl shadow-primary/20 overflow-hidden">
+<div class="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
+<div class="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-secondary-green/20 blur-3xl"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
+<div class="text-white md:w-1/2">
+<h3 class="text-2xl font-bold mb-3">Non perderti i nostri consigli</h3>
+<p class="text-white/90 text-sm md:text-base leading-relaxed">
+                            Iscriviti alla newsletter per ricevere guide esclusive sull'organizzazione eventi e aggiornamenti su Ceremly.
+                        </p>
+</div>
+<div class="w-full md:w-1/2">
+<form class="flex flex-col sm:flex-row gap-3">
+<input class="w-full rounded-lg border-0 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6" placeholder="La tua email migliore" required="" type="email"/>
+<button class="whitespace-nowrap rounded-lg bg-white px-6 py-3 text-sm font-bold text-primary shadow-lg hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all transform hover:scale-105" type="submit">
+                                Iscriviti ora
+                            </button>
+</form>
+<p class="mt-3 text-xs text-white/70 text-center sm:text-left flex items-center gap-1 sm:justify-start justify-center">
+<span class="material-symbols-outlined text-xs">lock</span> 
+                            Zero spam, disiscriviti quando vuoi.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-white border-t border-[#e7f0f3] dark:bg-[#101d22] dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="flex h-6 w-6 items-center justify-center rounded bg-primary text-white">
+<span class="material-symbols-outlined text-sm">mark_email_read</span>
+</div>
+<span class="text-lg font-bold text-text-main dark:text-white">Ceremly</span>
+</div>
+<div class="flex gap-8">
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Privacy Policy</a>
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Termini di Servizio</a>
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Contatti</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 dark:border-gray-700 dark:bg-gray-800">
+<span class="material-symbols-outlined text-xs text-gray-500">language</span>
+<select class="bg-transparent text-sm text-gray-600 dark:text-gray-300 outline-none border-none p-0 cursor-pointer">
+<option value="it">Italiano</option>
+<option value="en">English</option>
+</select>
+</div>
+</div>
+</div>
+<div class="mt-8 border-t border-gray-100 pt-8 dark:border-gray-800 text-center md:text-left">
+<p class="text-xs text-gray-500">© 2023 Ceremly Italia. Tutti i diritti riservati.</p>
+</div>
+</div>
+</footer>
+
+</body></html>

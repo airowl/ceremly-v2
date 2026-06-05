@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ceremly - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#19baf0",
+                "background-light": "#f6f8f8",
+                "background-dark": "#101d22",
+              },
+              fontFamily: {
+                "display": ["Manrope"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-10">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary rounded-lg p-2 text-white flex items-center justify-center">
+<span class="material-symbols-outlined fill-1">celebration</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Ceremly</h1>
+<p class="text-xs text-slate-500 font-medium">SaaS Dashboard</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary group" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-semibold text-sm">Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-medium text-sm">Eventi</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-medium text-sm">Profilo</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="font-medium text-sm">Subscription</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+<span class="material-symbols-outlined">language</span>
+<span class="text-sm font-medium">Italiano (IT)</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Impostazioni</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-64 p-8">
+<!-- Top Bar -->
+<header class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-3xl font-extrabold text-slate-900 dark:text-white">Bentornato, Marco</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Ecco cosa sta succedendo ai tuoi eventi oggi.</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:ring-primary focus:border-primary w-64 transition-all" placeholder="Cerca eventi..." type="text"/>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-base">add</span>
+                    Nuovo Evento
+                </button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
+<div class="relative">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400 cursor-pointer">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-background-light dark:border-background-dark"></span>
+</div>
+<img alt="Marco" class="w-10 h-10 rounded-full ring-2 ring-primary/20" data-alt="User profile avatar of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3ysZMJGgyRziS2FxnSojGpsdE81lKZh3T3wNB7mlupsBiUQdTMmLhkuvZ8OIK3oQ7F1gIn--GtePk_gTN0A9rYP1CMaaTBz-EqrZgy0t0HZR2yL9FuhD2FhpC1m0VKDgg94y30Gi1t-YXLclJTcGQPnTM8NZ6IsccoAMG79WuWLKjIJbwxQx0omm936TPpyiIs6k7yU6mbKnd9ydH7zgJZTe2fbLcJM-JLu6snrF147_n_lruu4wmy14iyY3Q9lKXRLJoUorcg8ed"/>
+</div>
+</div>
+</header>
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.02]">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">event</span>
+</div>
+<span class="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">+2% vs ieri</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Events</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white mt-1">24</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.02]">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<span class="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">+15% vs ieri</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Invitations</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white mt-1">1,200</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.02]">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-purple-500">
+<span class="material-symbols-outlined">query_stats</span>
+</div>
+<span class="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">+5% vs ieri</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Avg. Response Rate</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white mt-1">85%</p>
+</div>
+</div>
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- Line Chart Card -->
+<div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Risposte nel tempo</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Andamento delle conferme negli ultimi 30 giorni</p>
+</div>
+<select class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-primary">
+<option>Ultimi 30 giorni</option>
+<option>Ultimi 7 giorni</option>
+</select>
+</div>
+<div class="relative h-64 w-full">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 500 150">
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="5%" stop-color="#19baf0" stop-opacity="0.3"></stop>
+<stop offset="95%" stop-color="#19baf0" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Area -->
+<path d="M0 100 Q 50 80, 100 90 T 200 60 T 300 110 T 400 40 T 500 20 L 500 150 L 0 150 Z" fill="url(#chartGradient)"></path>
+<!-- Line -->
+<path d="M0 100 Q 50 80, 100 90 T 200 60 T 300 110 T 400 40 T 500 20" fill="none" stroke="#19baf0" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="flex justify-between mt-4 text-xs text-slate-400 font-bold px-2">
+<span>1 Mag</span>
+<span>10 Mag</span>
+<span>20 Mag</span>
+<span>30 Mag</span>
+</div>
+</div>
+</div>
+<!-- Distribution Chart Card -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Stato Invitati</h3>
+<div class="relative flex flex-col items-center">
+<!-- Placeholder Donut SVG -->
+<svg class="w-48 h-48 -rotate-90">
+<circle cx="96" cy="96" fill="transparent" r="80" stroke="#f1f5f9" stroke-width="20"></circle>
+<!-- Accettati (Primary) -->
+<circle cx="96" cy="96" fill="transparent" r="80" stroke="#19baf0" stroke-dasharray="502" stroke-dashoffset="150" stroke-linecap="round" stroke-width="20"></circle>
+<!-- Rifiutati (Red-ish Gray) -->
+<circle cx="96" cy="96" fill="transparent" r="80" stroke="#64748b" stroke-dasharray="502" stroke-dashoffset="450" stroke-linecap="round" stroke-width="20"></circle>
+<!-- In Attesa (Light Blue) -->
+<circle cx="96" cy="96" fill="transparent" r="80" stroke="#bae6fd" stroke-dasharray="502" stroke-dashoffset="480" stroke-linecap="round" stroke-width="20"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
+<span class="text-2xl font-black text-slate-900 dark:text-white">1,200</span>
+<span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Totali</span>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Accettati</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">840 (70%)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-slate-500"></span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Rifiutati</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">120 (10%)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-sky-200"></span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">In Attesa</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">240 (20%)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Table Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Prossimi Eventi</h3>
+<a class="text-primary text-sm font-bold hover:underline" href="#">Vedi tutti</a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50 dark:bg-slate-800/50">
+<tr>
+<th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Evento</th>
+<th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Data</th>
+<th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Progress RSVP</th>
+<th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Azioni</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-500">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">Matrimonio Luca &amp; Sofia</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">15 Giu 2024</td>
+<td class="px-6 py-4">
+<div class="w-full max-w-xs">
+<div class="flex justify-between mb-1 text-xs font-bold">
+<span class="text-primary">85%</span>
+<span class="text-slate-400">170/200</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">business_center</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">Corporate Gala 2024</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">22 Lug 2024</td>
+<td class="px-6 py-4">
+<div class="w-full max-w-xs">
+<div class="flex justify-between mb-1 text-xs font-bold">
+<span class="text-primary">42%</span>
+<span class="text-slate-400">210/500</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 42%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
+<span class="material-symbols-outlined">cake</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">Compleanno Andrea</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">05 Set 2024</td>
+<td class="px-6 py-4">
+<div class="w-full max-w-xs">
+<div class="flex justify-between mb-1 text-xs font-bold">
+<span class="text-primary">12%</span>
+<span class="text-slate-400">6/50</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 12%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</body></html>

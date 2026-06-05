@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ceremly - Gestione RSVP Automatica per Eventi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#19baf0",
+                        "primary-dark": "#0ea5d6",
+                        "secondary-green": "#25D366", 
+                        "background-light": "#f8fbfc",
+                        "background-dark": "#101d22",
+                        "text-main": "#0d181c",
+                        "text-sub": "#4b879b",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .clip-path-slant {
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+<nav class="sticky top-0 z-50 w-full border-b border-[#e7f0f3] bg-[#f8fbfc]/80 backdrop-blur-md dark:border-gray-800 dark:bg-[#101d22]/80">
+<div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+<div class="flex items-center gap-2">
+<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">mark_email_read</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-text-main dark:text-white">Ceremly</span>
+</div>
+<div class="hidden items-center gap-8 md:flex">
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#features">Funzionalità</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#pricing">Prezzi</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#testimonials">Clienti</a>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden items-center gap-1 text-sm font-medium text-text-sub md:flex">
+<span class="cursor-pointer text-text-main dark:text-white">IT</span>
+<span class="select-none text-gray-300">/</span>
+<span class="cursor-pointer hover:text-text-main dark:hover:text-white">EN</span>
+</div>
+<button class="hidden h-10 rounded-lg bg-[#e7f0f3] px-5 text-sm font-bold text-text-main hover:bg-[#dbe6ea] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:block transition-colors">
+                Accedi
+            </button>
+<button class="h-10 rounded-lg bg-primary px-5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary-dark transition-all" onclick="document.getElementById('waitlist-hero').scrollIntoView({behavior: 'smooth'})">
+                Unisciti alla lista
+            </button>
+</div>
+</div>
+</nav>
+<section class="relative overflow-hidden pt-16 pb-20 sm:pt-24 lg:pb-32">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="grid gap-16 lg:grid-cols-2 lg:items-center">
+<div class="relative z-10 max-w-2xl">
+<div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary dark:bg-primary/10">
+<span class="flex h-2 w-2 rounded-full bg-primary"></span>
+                    Accesso anticipato in arrivo
+                </div>
+<h1 class="text-4xl font-extrabold tracking-tight text-text-main dark:text-white sm:text-6xl mb-6 leading-[1.15]">
+                    Smetti di rincorrere gli invitati. Ottieni risposte in <span class="text-primary">1 minuto</span>.
+                </h1>
+<p class="mb-8 text-lg text-text-sub dark:text-gray-400">
+                    La piattaforma automatica per gestire RSVP di eventi privati tramite Email e Deep Link WhatsApp senza stress. Niente più fogli Excel o chat di gruppo infinite.
+                </p>
+<div class="flex flex-col gap-4 sm:flex-row items-start">
+<button class="h-12 w-full sm:w-auto rounded-lg bg-primary px-8 text-base font-bold text-white shadow-xl shadow-primary/20 hover:bg-primary-dark transition-all" onclick="document.getElementById('waitlist-hero').scrollIntoView({behavior: 'smooth'})">
+                        Entra in Waitlist
+                    </button>
+<button class="h-12 w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-[#cfe2e8] bg-white px-6 text-base font-bold text-text-main hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined text-primary">play_circle</span>
+                        Guarda come funziona
+                    </button>
+</div>
+<div class="mt-10 flex items-center gap-4 animate-fade-in-up">
+<div class="flex -space-x-3">
+<img alt="Avatar utente" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-[#101d22] object-cover" data-alt="portrait of a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfA8Vj8pwyVVHF-j6bu_uN2oDbWFuRmExLCk_WH5w12hZ1NSc4qO6mGN79-BAyGAJSXF8vHYza7aV3Zvtit4Uupcy-sB2W4KpE4_re0fk6GR3tfxrMqJjbrktLFGEJNkLZ_twrLck_zliz8FW3Rfb2JIiIBd4LLmlgr5GPuH1HWT05_cJdxU2chsNW-3rzuVQBwxeqcLXOm0-8r5HYrQhaucy9-G5b4eGJxdKF4c7-7RlIqzv175ErJXZTxL4JJTTLdQgOWCNa62Og"/>
+<img alt="Avatar utente" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-[#101d22] object-cover" data-alt="portrait of a man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT5mQCsIHPKkJGXPJtYrR-5pqJ8TJz8GmxKzUFnCRovk7rFToP6qAXTupAMqZUEl42V148WaapElCwODHrVRmCm-1ytIHmnmCxBfSVkkilngK5JTimE-dAhUD0jFKJEV779ALA_kkrHczVpne7kyPVKdGSuNFyyk8R2oC97S25VHb3J49jdpMb7X0NT3PgkwURVs8b3kYx4KP7XqmjXVdS3GWlo9pzFhKwNqkaZv0adheJRhxNtc7DHn_7jM-_KJ2-4LRoK9V8hSMj"/>
+<img alt="Avatar utente" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-[#101d22] object-cover" data-alt="portrait of a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqpMxulcYENMknYcJAls1MR2HmqH-QeFCo9OuutPoxQDT6ideD7cjme_PjiRIfVruTbkyMqc37TlSrhkp8E1OaHthGFO-808M-_-VdEVYGfK5vvm4a9OYC8nyPOtNXf96PL4FkKSfKK-SEyxDix4b1rYT-AZlsQb8y0p9akAUfzcFx7qFxCmWja2Sqpbgpv_wIcaE0zBLFtog0X9DEv1ldjt7zBsNB6leWR7S75YGfFit9OVxBH19Ow-iIudTxkHeH-ctsGBpDYPQA"/>
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-green ring-2 ring-white dark:ring-[#101d22] text-xs font-bold text-white">
+                            +400
+                        </div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-yellow-400 filled" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-yellow-400 filled" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-yellow-400 filled" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-yellow-400 filled" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-yellow-400 filled" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="text-sm font-medium text-text-main dark:text-gray-200">
+<span class="font-bold text-secondary-green">400+ utenti</span> in attesa del lancio!
+                        </p>
+</div>
+</div>
+</div>
+<div class="relative lg:ml-auto">
+<div class="absolute -top-20 -right-20 -z-10 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl dark:bg-primary/5"></div>
+<div class="absolute top-40 -left-20 -z-10 h-[400px] w-[400px] rounded-full bg-secondary-green/10 blur-3xl dark:bg-secondary-green/5"></div>
+<div class="relative rounded-2xl border border-gray-100 bg-white p-2 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+<div class="relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-800">
+<div class="absolute top-0 w-full h-full bg-gradient-to-br from-primary/5 to-transparent"></div>
+<div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-red-400"></div>
+<div class="h-3 w-3 rounded-full bg-yellow-400"></div>
+<div class="h-3 w-3 rounded-full bg-green-400"></div>
+</div>
+<div class="h-2 w-32 rounded-full bg-gray-100 dark:bg-gray-700"></div>
+</div>
+<div class="p-6 grid gap-6">
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 animate-[pulse_3s_infinite]">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-secondary-green">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-gray-900 dark:text-white">Nuova conferma WhatsApp</p>
+<p class="text-xs text-gray-500">Marco Rossi ha confermato via link</p>
+</div>
+<span class="text-xs font-medium text-gray-400">Adesso</span>
+</div>
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 opacity-60">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-primary">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-gray-900 dark:text-white">Invito Email Aperto</p>
+<p class="text-xs text-gray-500">Giulia Bianchi ha visualizzato l'invito</p>
+</div>
+<span class="text-xs font-medium text-gray-400">2m fa</span>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-6 -left-6 rounded-xl bg-white p-4 shadow-xl border border-gray-100 dark:bg-gray-800 dark:border-gray-700 max-w-[200px]">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary-green">check_circle</span>
+<span class="text-sm font-bold text-gray-900 dark:text-white">RSVP Completato</span>
+</div>
+<div class="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+<div class="h-full w-[85%] rounded-full bg-secondary-green"></div>
+</div>
+<div class="mt-1 flex justify-between text-xs text-gray-500">
+<span>85% Risposte</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="relative -mt-10 mb-16 px-6 lg:px-8 z-20" id="waitlist-hero">
+<div class="mx-auto max-w-4xl rounded-2xl bg-gradient-to-r from-primary to-primary-dark p-8 md:p-12 shadow-2xl shadow-primary/30">
+<div class="flex flex-col md:flex-row items-center gap-8 justify-between">
+<div class="text-white md:w-1/2">
+<h3 class="text-2xl font-bold mb-2">Iscriviti alla lista d'attesa</h3>
+<p class="text-white/90 text-sm md:text-base">Sii il primo a provare Ceremly e ottieni l'accesso prioritario con uno sconto a vita.</p>
+</div>
+<div class="w-full md:w-1/2">
+<form class="flex flex-col sm:flex-row gap-3">
+<input class="w-full rounded-lg border-0 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6" placeholder="La tua email migliore" required="" type="email"/>
+<button class="whitespace-nowrap rounded-lg bg-white px-5 py-3 text-sm font-bold text-primary shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all" type="submit">
+                        Unisciti alla lista d'attesa
+                    </button>
+</form>
+<p class="mt-2 text-xs text-white/70 text-center sm:text-left">🔒 Nessuno spam, solo aggiornamenti importanti.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-white py-24 dark:bg-gray-900" id="features">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="mx-auto max-w-2xl text-center mb-16">
+<h2 class="text-base font-semibold leading-7 text-primary">Perché scegliere Ceremly?</h2>
+<p class="mt-2 text-3xl font-bold tracking-tight text-text-main dark:text-white sm:text-4xl">
+                Tutto ciò che ti serve per gestire le conferme senza impazzire
+            </p>
+<p class="mt-6 text-lg leading-8 text-text-sub dark:text-gray-400">
+                Semplifica la vita ai tuoi invitati e a te stesso con strumenti progettati per la massima conversione.
+            </p>
+</div>
+<div class="mx-auto grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+<div class="relative flex flex-col gap-4 rounded-2xl border border-gray-100 bg-[#f8fbfc] p-8 transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-background-dark">
+<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-3xl">mark_email_unread</span>
+</div>
+<h3 class="text-xl font-bold text-text-main dark:text-white">Email 1-click</h3>
+<p class="text-text-sub dark:text-gray-400">
+                    Gli invitati confermano la loro presenza direttamente dalla mail, senza dover fare login o compilare form complessi.
+                </p>
+</div>
+<div class="relative flex flex-col gap-4 rounded-2xl border border-gray-100 bg-[#f8fbfc] p-8 transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-background-dark">
+<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary-green/10 text-secondary-green">
+<span class="material-symbols-outlined text-3xl">chat</span>
+</div>
+<h3 class="text-xl font-bold text-text-main dark:text-white">Deep Link WhatsApp</h3>
+<p class="text-text-sub dark:text-gray-400">
+                    Nessun bot invasivo. Genera un link WhatsApp per ogni invitato con messaggio precompilato da inviare con un click.
+                </p>
+</div>
+<div class="relative flex flex-col gap-4 rounded-2xl border border-gray-100 bg-[#f8fbfc] p-8 transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-background-dark">
+<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+<span class="material-symbols-outlined text-3xl">groups</span>
+</div>
+<h3 class="text-xl font-bold text-text-main dark:text-white">Social Proof Dinamico</h3>
+<p class="text-text-sub dark:text-gray-400">
+                    Mostra chi ha già partecipato per incentivare gli altri a rispondere più velocemente.
+                </p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 overflow-hidden">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+<div class="order-2 lg:order-1">
+<div class="relative rounded-2xl bg-gray-100 p-2 dark:bg-gray-800 shadow-lg rotate-1 transform transition-transform hover:rotate-0 duration-500">
+<div class="overflow-hidden rounded-xl bg-white dark:bg-[#101d22]">
+<div class="flex flex-col h-[350px] w-full bg-cover bg-center" style="background-image: linear-gradient(135deg, #f0f4f8 0%, #eef2f3 100%);">
+<div class="p-6 flex flex-col h-full justify-center items-center">
+<div class="w-full max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-bold text-gray-800 dark:text-white">Matrimonio Luca &amp; Sofia</h4>
+<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Attivo</span>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="text-gray-600 dark:text-gray-400">Confermati</span>
+<span class="font-bold text-gray-900 dark:text-white">84% (126)</span>
+</div>
+<div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[84%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="text-gray-600 dark:text-gray-400">In attesa</span>
+<span class="font-bold text-gray-900 dark:text-white">12% (18)</span>
+</div>
+<div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-yellow-400 w-[12%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="text-gray-600 dark:text-gray-400">Non verranno</span>
+<span class="font-bold text-gray-900 dark:text-white">4% (6)</span>
+</div>
+<div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-red-400 w-[4%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="order-1 lg:order-2">
+<div class="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-primary dark:border-blue-900 dark:bg-blue-900/30">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+                    Dashboard Real-time
+                </div>
+<h2 class="text-3xl font-bold tracking-tight text-text-main dark:text-white sm:text-4xl mb-6">
+                    Monitora tutto in tempo reale
+                </h2>
+<p class="text-lg text-text-sub dark:text-gray-400 mb-8">
+                    Una dashboard chiara che ti mostra percentuali di risposta, chi ha visualizzato e chi deve ancora rispondere. Esporta la lista invitati in un click.
+                </p>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="text-text-main dark:text-gray-300">Tracciamento aperture email</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="text-text-main dark:text-gray-300">Export PDF e Excel per catering</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="text-text-main dark:text-gray-300">Alert per intolleranze alimentari</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white dark:bg-gray-900 overflow-hidden">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+<div>
+<div class="mb-4 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-secondary-green dark:border-green-900 dark:bg-green-900/30">
+<span class="material-symbols-outlined text-[18px]">send</span>
+                    Deep Link Assistiti
+                </div>
+<h2 class="text-3xl font-bold tracking-tight text-text-main dark:text-white sm:text-4xl mb-6">
+                    Inviti WhatsApp senza automazioni invasive
+                </h2>
+<p class="text-lg text-text-sub dark:text-gray-400 mb-8">
+                    Il sistema genera un "Deep Link" univoco per ogni ospite. Tu clicchi un bottone nella dashboard, si apre la tua app WhatsApp con un messaggio precompilato e personalizzato. Tu premi invio. Semplice, sicuro e personale.
+                </p>
+<div class="flex gap-4">
+<button class="flex items-center gap-2 text-primary font-bold hover:text-primary-dark transition-colors">
+                        Vedi esempio
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="relative">
+<div class="mx-auto w-[280px] h-[550px] bg-gray-800 rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative">
+<div class="absolute top-0 w-full h-full bg-[#E5DDD5]"> 
+<div class="bg-[#075E54] h-16 w-full flex items-center px-4 text-white gap-3 pt-4">
+<span class="material-symbols-outlined">arrow_back</span>
+<div class="flex items-center gap-2">
+<div class="h-8 w-8 rounded-full bg-gray-300"></div>
+<span class="font-bold text-sm">Luca &amp; Sofia</span>
+</div>
+</div>
+<div class="p-4 space-y-4">
+<div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm max-w-[85%] text-sm text-gray-800">
+<p>Ciao Marco! 👋 Ecco il link personale per il nostro matrimonio:</p>
+<p class="mt-2 text-xs text-gray-500">12:30</p>
+</div>
+<div class="bg-white p-2 rounded-lg rounded-tl-none shadow-sm max-w-[85%] text-sm text-gray-800">
+<div class="bg-gray-100 rounded p-2 mb-2 flex gap-2 items-center">
+<div class="h-10 w-10 bg-primary rounded flex items-center justify-center text-white font-bold text-xs">RSVP</div>
+<div>
+<div class="font-bold text-xs">Ceremly - Conferma</div>
+<div class="text-[10px] text-gray-500">ceremly.it/u/xyz123</div>
+</div>
+</div>
+<p class="text-blue-500 text-xs">Clicca qui per confermare 👇</p>
+</div>
+<div class="flex justify-end">
+<div class="bg-[#DCF8C6] p-3 rounded-lg rounded-tr-none shadow-sm max-w-[85%] text-sm text-gray-800">
+<p>Grazie! Fatto in un secondo! 😍</p>
+<p class="mt-2 text-xs text-gray-500 text-right">12:35</p>
+</div>
+</div>
+</div>
+<div class="absolute bottom-0 w-full bg-white p-3 flex gap-2 items-center">
+<span class="material-symbols-outlined text-gray-400">add</span>
+<div class="flex-1 bg-gray-100 rounded-full h-8 px-3 text-sm flex items-center text-gray-500">Scrivi un messaggio</div>
+<span class="material-symbols-outlined text-[#075E54]">mic</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-[#f8fbfc] dark:bg-background-dark" id="pricing">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="mx-auto max-w-2xl text-center mb-16">
+<h2 class="text-base font-semibold leading-7 text-primary">Prezzi previsti</h2>
+<p class="mt-2 text-3xl font-bold tracking-tight text-text-main dark:text-white sm:text-4xl">
+                Iscriviti alla waitlist per accedere a queste tariffe
+            </p>
+</div>
+<div class="grid max-w-lg grid-cols-1 gap-8 mx-auto lg:max-w-none lg:grid-cols-3">
+<div class="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200 xl:p-10 dark:bg-gray-900 dark:ring-gray-700">
+<div>
+<div class="flex items-center justify-between gap-x-4">
+<h3 class="text-lg font-bold leading-8 text-text-main dark:text-white">Starter</h3>
+</div>
+<p class="mt-4 text-sm leading-6 text-text-sub dark:text-gray-400">Ideale per cene, feste di compleanno o piccoli eventi.</p>
+<p class="mt-6 flex items-baseline gap-x-1">
+<span class="text-4xl font-bold tracking-tight text-text-main dark:text-white">€19</span>
+<span class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-400">/evento</span>
+</p>
+<ul class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-300" role="list">
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> <strong>Accesso prioritario Waitlist</strong></li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Fino a 50 invitati</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Email Illimitate</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Pagina RSVP base</li>
+<li class="flex gap-x-3 text-gray-400"><span class="material-symbols-outlined text-gray-300 text-sm pt-1">close</span> Deep Link WhatsApp</li>
+</ul>
+</div>
+<a class="mt-8 block rounded-md bg-[#e7f0f3] px-3 py-2 text-center text-sm font-bold leading-6 text-text-main hover:bg-[#dbe6ea] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700" href="#waitlist-hero">Unisciti alla lista</a>
+</div>
+<div class="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-2 ring-primary xl:p-10 dark:bg-gray-900 relative">
+<div class="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-primary py-1 text-center text-xs font-bold text-white uppercase tracking-wide">
+                    Consigliato
+                </div>
+<div>
+<div class="flex items-center justify-between gap-x-4">
+<h3 class="text-lg font-bold leading-8 text-text-main dark:text-white">Pro</h3>
+</div>
+<p class="mt-4 text-sm leading-6 text-text-sub dark:text-gray-400">Perfetto per matrimoni e grandi celebrazioni.</p>
+<p class="mt-6 flex items-baseline gap-x-1">
+<span class="text-4xl font-bold tracking-tight text-text-main dark:text-white">€39</span>
+<span class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-400">/evento</span>
+</p>
+<ul class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-300" role="list">
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> <strong>Accesso prioritario Waitlist</strong></li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Fino a 250 invitati</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Email + WhatsApp Link</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Dashboard Avanzata</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Gestione +1 e bambini</li>
+</ul>
+</div>
+<a class="mt-8 block rounded-md bg-primary px-3 py-2 text-center text-sm font-bold leading-6 text-white shadow-sm hover:bg-primary-dark" href="#waitlist-hero">Unisciti alla lista</a>
+</div>
+<div class="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200 xl:p-10 dark:bg-gray-900 dark:ring-gray-700">
+<div>
+<div class="flex items-center justify-between gap-x-4">
+<h3 class="text-lg font-bold leading-8 text-text-main dark:text-white">Agency</h3>
+</div>
+<p class="mt-4 text-sm leading-6 text-text-sub dark:text-gray-400">Per Wedding Planner e Organizzatori.</p>
+<p class="mt-6 flex items-baseline gap-x-1">
+<span class="text-4xl font-bold tracking-tight text-text-main dark:text-white">€79</span>
+<span class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-400">/mese</span>
+</p>
+<ul class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-300" role="list">
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> <strong>Accesso prioritario Waitlist</strong></li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Eventi illimitati</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> White Label (No logo Ceremly)</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Supporto Prioritario</li>
+<li class="flex gap-x-3"><span class="material-symbols-outlined text-primary text-sm pt-1">check</span> Team Multi-utente</li>
+</ul>
+</div>
+<a class="mt-8 block rounded-md bg-[#e7f0f3] px-3 py-2 text-center text-sm font-bold leading-6 text-text-main hover:bg-[#dbe6ea] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700" href="#waitlist-hero">Unisciti alla lista</a>
+</div>
+</div>
+</div>
+</section>
+<section class="relative bg-white dark:bg-[#101d22] py-24 border-t border-gray-100 dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-6 lg:px-8 text-center">
+<h2 class="text-3xl font-bold tracking-tight text-text-main dark:text-white sm:text-4xl">Pronto a semplificare il tuo prossimo evento?</h2>
+<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-text-sub dark:text-gray-400">
+            Iscriviti alla waitlist oggi e ricevi un mese di piano Pro gratuito al lancio ufficiale.
+        </p>
+<div class="mt-10 flex items-center justify-center">
+<form class="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+<input class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-gray-800 dark:ring-gray-700 dark:text-white dark:placeholder:text-gray-500 sm:text-sm sm:leading-6" placeholder="Inserisci la tua email" required="" type="email"/>
+<button class="whitespace-nowrap rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary-dark transition-all" type="submit">
+                    Unisciti alla lista d'attesa
+                </button>
+</form>
+</div>
+</div>
+</section>
+<footer class="bg-white border-t border-[#e7f0f3] dark:bg-[#101d22] dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="flex h-6 w-6 items-center justify-center rounded bg-primary text-white">
+<span class="material-symbols-outlined text-sm">mark_email_read</span>
+</div>
+<span class="text-lg font-bold text-text-main dark:text-white">Ceremly</span>
+</div>
+<div class="flex gap-8">
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Privacy Policy</a>
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Termini di Servizio</a>
+<a class="text-sm leading-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" href="#">Contatti</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 dark:border-gray-700 dark:bg-gray-800">
+<span class="material-symbols-outlined text-xs text-gray-500">language</span>
+<select class="bg-transparent text-sm text-gray-600 dark:text-gray-300 outline-none border-none p-0 cursor-pointer">
+<option value="it">Italiano</option>
+<option value="en">English</option>
+</select>
+</div>
+</div>
+</div>
+<div class="mt-8 border-t border-gray-100 pt-8 dark:border-gray-800 text-center md:text-left">
+<p class="text-xs text-gray-500">© 2023 Ceremly Italia. Tutti i diritti riservati.</p>
+</div>
+</div>
+</footer>
+
+</body></html>
