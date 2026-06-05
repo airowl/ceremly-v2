@@ -33,6 +33,12 @@ permessi sul ruolo `member`, il middleware carica l'org attiva in `event.context
   `/api/organizations/*` equivalenti, thin controller che delegano (CRUD org via plugin/repository).
   Risolvere il destino delle `/api/team/*` lasciato aperto in 1b (deleganti al plugin sotto
   `/api/organizations/[id]/members` o rimosse a favore del client plugin).
+- **Route admin.** `server/api/admin/stats/index.get.ts` (conta `totalEvents`) e
+  `server/api/admin/users/[id].get.ts` (lista eventi dell'utente) interrogano `events`/`eventUsers`.
+  In 1a vengono **stubbate** (i conteggi event azzerati) perché lo schema events cade; **1c le ripunta
+  a `organizations`/`member`** (admin conta organizations, non eventi). *(Lacuna di decomposizione
+  emersa in fase di planning 1a: queste route admin non rientravano in nessuno scope — assegnate qui
+  perché 1c possiede le route-rewrite.)*
 - **planLimit.** `canCreateEvent(userId)` → `canCreateOrganization(userId)`; conteggio su
   `organization`/`member`. Rinominare le costanti `pricing.ts`: `max_events` → `max_organizations`
   (o naming neutro), `team_members` invariato concettualmente, `storage_mb` invariato.
@@ -56,6 +62,8 @@ permessi sul ruolo `member`, il middleware carica l'org attiva in `event.context
    `requireAuth`, carica org attiva (dalla sessione) + ruolo, popola context. 404/403 espliciti.
 3. **Route `/api/organizations/*`** — i 5 endpoint base + risoluzione `/api/team/*`. Thin controller,
    `parseBody`, delega a repository/plugin. Audit log su scrittura.
+3b. **Route admin** — `admin/stats` e `admin/users/[id]` da `events`/`eventUsers` a
+   `organizations`/`member` (rimuovere gli stub lasciati da 1a).
 4. **`planLimit` + `pricing.ts`** — rinominare funzioni/costanti event→org.
 5. **`assertOwnership`** — helper + esempio d'uso documentato (lo userà `projects` in FASE 4).
 
