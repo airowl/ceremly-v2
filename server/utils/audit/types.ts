@@ -11,16 +11,11 @@ export const AUDIT_CATEGORIES = {
   team: 'team',
   page: 'page',
   event: 'event',
-  guest: 'guest',
-  reminder: 'reminder',
-  landing: 'landing',
-  registration: 'registration',
   contact: 'contact',
   waiting_list: 'waiting_list',
   user: 'user',
   admin: 'admin',
   security: 'security',
-  template: 'template',
 } as const
 
 export type AuditCategory = typeof AUDIT_CATEGORIES[keyof typeof AUDIT_CATEGORIES]
@@ -74,25 +69,6 @@ export const AUDIT_ACTIONS = {
   'event.updated': 'event.updated',
   'event.deleted': 'event.deleted',
 
-  // Guest
-  'guest.created': 'guest.created',
-  'guest.updated': 'guest.updated',
-  'guest.deleted': 'guest.deleted',
-  'guest.imported': 'guest.imported',
-  'guest.registered': 'guest.registered',
-  'guest.rsvp_responded': 'guest.rsvp_responded',
-
-  // Reminder
-  'reminder.template_created': 'reminder.template_created',
-  'reminder.template_updated': 'reminder.template_updated',
-  'reminder.template_deleted': 'reminder.template_deleted',
-  'reminder.template_toggled': 'reminder.template_toggled',
-  'reminder.sent': 'reminder.sent',
-
-  // Landing
-  'landing.updated': 'landing.updated',
-  'registration.updated': 'registration.updated',
-
   // Contact
   'contact.sent': 'contact.sent',
 
@@ -103,13 +79,6 @@ export const AUDIT_ACTIONS = {
   'user.profile_updated': 'user.profile_updated',
   'user.account_deleted': 'user.account_deleted',
   'user.data_export_requested': 'user.data_export_requested',
-
-  // Template
-  'template.created': 'template.created',
-  'template.updated': 'template.updated',
-  'template.deleted': 'template.deleted',
-  'template.applied': 'template.applied',
-  'template.ai_generated': 'template.ai_generated',
 
   // Admin
   'admin.user_role_changed': 'admin.user_role_changed',
