@@ -21,6 +21,9 @@ export const user = pgTable("user", {
   hadTrial: boolean("had_trial").default(false),
   locale: text("locale").default("it"),
   tosAcceptedAt: timestamp("tos_accepted_at"),
+  phone: text("phone"),
+  bio: text("bio"),
+  timezone: text("timezone"),
 });
 
 export const account = pgTable(
