@@ -410,12 +410,8 @@
             "subscription": "Subscription",
             "team": "Team",
             "settings": "Settings",
-            "events": "Events",
             "events": "My Events",
             "eventDashboard": "Event Dashboard",
-            "guests": "Guests",
-            "reminders": "Reminders",
-            "templates": "Templates",
             "eventSettings": "Event Settings",
             "allEvents": "All Events",
             "newEvent": "New Event",
@@ -678,125 +674,6 @@
         "retry": "Retry",
         "save": "Save"
     },
-    "eventTemplates": {
-        "title": "Event Templates",
-        "subtitle": "Choose or customize a template for your event page.",
-        "ai": {
-            "badge": "AI-Powered Designer",
-            "title": "Generate your perfect landing page with AI",
-            "subtitle": "Describe the vibe of your event (e.g., \"A neon-themed 30th birthday in a retro arcade\") and our AI will build a custom template just for you.",
-            "placeholder": "What's the vibe of your event?",
-            "generate": "Generate",
-            "generating": "Generating...",
-            "success": "Template generated successfully!",
-            "error": "Error generating template"
-        },
-        "categories": {
-            "all": "All Templates",
-            "wedding": "Wedding",
-            "birthday": "Birthday",
-            "corporate": "Corporate",
-            "conference": "Conference",
-            "networking": "Networking",
-            "party": "Party",
-            "other": "Other"
-        },
-        "createNew": "Create New Template",
-        "card": {
-            "select": "Edit Template",
-            "edit": "Edit",
-            "apply": "Apply to your event",
-            "preview": "Preview",
-            "system": "System",
-            "custom": "Custom",
-            "aiGenerated": "AI"
-        },
-        "empty": {
-            "title": "No templates found",
-            "description": "No templates in this category. Try generating one with AI!"
-        },
-        "actions": {
-            "delete": "Delete",
-            "deleteConfirm": "Are you sure you want to delete this template?",
-            "deleted": "Template deleted"
-        },
-        "applied": "Template applied successfully!",
-        "applyError": "Error applying template"
-    },
-    "landingEditor": {
-        "titleNew": "New Template",
-        "titleEdit": "Edit Template",
-        "save": "Save",
-        "saved": "Template saved successfully!",
-        "saveError": "Error saving template",
-        "unsaved": "Unsaved",
-        "selectSection": "Select a section to configure it",
-        "globalSettings": "Global Settings",
-        "mobileWarning": {
-            "title": "Desktop Editor",
-            "description": "The template editor is only available on desktop. Open this page from a computer to edit the template."
-        },
-        "sections": {
-            "title": "Sections",
-            "addSection": "Add Section"
-        },
-        "settings": {
-            "title": "Global Settings",
-            "colors": "Colors",
-            "primaryColor": "Primary Color",
-            "secondaryColor": "Secondary Color",
-            "backgroundColor": "Background Color",
-            "textColor": "Text Color",
-            "font": "Font",
-            "borderRadius": "Border Radius",
-            "fonts": {
-                "inter": "Inter",
-                "playfair": "Playfair Display",
-                "montserrat": "Montserrat",
-                "lora": "Lora",
-                "roboto": "Roboto"
-            },
-            "radius": {
-                "none": "None",
-                "sm": "Small",
-                "md": "Medium",
-                "lg": "Large",
-                "full": "Full"
-            }
-        },
-        "addSection": {
-            "title": "Add a Section",
-            "allAdded": "All sections are already added to the template."
-        },
-        "preview": {
-            "empty": "No active sections. Enable at least one section from the sidebar."
-        },
-        "upload": {
-            "uploading": "Uploading...",
-            "click": "Click to upload an image",
-            "invalidType": "Invalid file type. Use JPG, PNG, GIF, or WebP.",
-            "tooLarge": "File is too large. Maximum 5MB.",
-            "error": "Error uploading image"
-        },
-        "ai": {
-            "button": "Generate with AI",
-            "title": "Generate with Artificial Intelligence",
-            "description": "Describe the style and theme of your event. The AI will generate a complete template with custom colors, sections, and content.",
-            "placeholder": "E.g.: An elegant boho-style wedding with pastel colors...",
-            "generate": "Generate Template",
-            "generating": "Generating...",
-            "success": "Template generated successfully!",
-            "error": "Error generating template"
-        },
-        "saveModal": {
-            "title": "Save Template",
-            "name": "Name",
-            "namePlaceholder": "E.g.: Elegant Wedding Template",
-            "description": "Description",
-            "descriptionPlaceholder": "A brief description of the template...",
-            "category": "Category"
-        }
-    },
     "event": {
         "settings": {
             "title": "Event Settings",
@@ -851,10 +728,6 @@
                     "title": "2. Logistics",
                     "description": "Event location and address."
                 },
-                "landing": {
-                    "title": "3. Landing & Customization",
-                    "description": "RSVP deadline, theme color and display options."
-                },
                 "automation": {
                     "title": "4. Automation",
                     "description": "Auto-confirmation and notifications."
@@ -869,19 +742,8 @@
                 "location": "Venue Name",
                 "locationPlaceholder": "e.g. The Grand Hotel",
                 "address": "Full Address",
-                "addressPlaceholder": "123 Main Street, New York, NY 10001",
-                "deadline": "RSVP Deadline",
-                "primaryColor": "Landing Theme Color",
-                "maxGuests": "Maximum Guests",
-                "maxGuestsDescription": "The maximum number of guests that can register for the event.",
-                "showGuestCount": "Show guest count",
-                "showGuestCountDescription": "Display the total number of confirmed guests to visitors.",
-                "socialProof": "Social Proof active",
-                "socialProofDescription": "Show notifications like \"John Doe confirmed 5 min ago\".",
-                "autoConfirm": "Auto confirmation",
-                "autoConfirmDescription": "Immediately send a thank-you email and calendar save to guests who confirm."
+                "addressPlaceholder": "123 Main Street, New York, NY 10001"
             },
-            "viewLanding": "View Landing",
             "badge": {
                 "live": "Live",
                 "draft": "Draft"
@@ -1747,23 +1609,14 @@
     "plan": {
         "starter": {
             "events": "2 events",
-            "guests": "50 guests per event",
-            "emails": "200 emails per month",
-            "landing": "RSVP + Registration Landing",
             "support": "Email support"
         },
         "premium": {
             "events": "5 events",
-            "guests": "350 guests per event",
-            "emails": "2,000 emails per month",
-            "landing": "RSVP + Registration Landing",
             "support": "Priority support"
         },
         "agency": {
             "events": "Unlimited events",
-            "guests": "Unlimited guests",
-            "emails": "Unlimited emails",
-            "landing": "RSVP + Registration Landing",
             "support": "24/7 support",
             "api": "API access"
         }

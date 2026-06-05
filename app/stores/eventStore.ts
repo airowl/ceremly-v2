@@ -15,10 +15,6 @@ interface EventListItem {
     socialProofEnabled: boolean;
     autoConfirmRegistration: boolean;
     createdAt: string;
-    totalGuests: number;
-    confirmedGuests: number;
-    pendingGuests: number;
-    declinedGuests: number;
 }
 
 interface EventDetail {
@@ -39,13 +35,6 @@ interface EventDetail {
     autoConfirmRegistration: boolean;
     createdAt: string;
     updatedAt: string;
-}
-
-interface EventCounts {
-    totalGuests: number;
-    confirmedGuests: number;
-    pendingGuests: number;
-    declinedGuests: number;
 }
 
 interface ResourceUsage {
@@ -93,7 +82,6 @@ export const useEventStore = defineStore('event', () => {
     // State
     const events = ref<EventListItem[]>([]);
     const currentEvent = ref<EventDetail | null>(null);
-    const counts = ref<EventCounts | null>(null);
     const isLoading = ref(false);
     const error = ref<string | null>(null);
 
@@ -133,7 +121,7 @@ export const useEventStore = defineStore('event', () => {
     }
 
     /**
-     * Load a single event with guest counts
+     * Load a single event
      */
     async function loadEvent(eventId: string) {
         if (import.meta.server) return;
@@ -144,11 +132,9 @@ export const useEventStore = defineStore('event', () => {
 
             const data = await $fetch<{
                 event: EventDetail;
-                counts: EventCounts;
             }>(`/api/events/${eventId}`);
 
             currentEvent.value = data.event;
-            counts.value = data.counts;
         } catch (err: any) {
             error.value = err.message || err.data?.message || 'Error loading event';
             console.error('Error loading event:', err);
@@ -258,7 +244,6 @@ export const useEventStore = defineStore('event', () => {
             // Clear currentEvent if it was the deleted one
             if (currentEvent.value?.id === eventId) {
                 currentEvent.value = null;
-                counts.value = null;
             }
 
             return { success: true };
@@ -416,7 +401,6 @@ export const useEventStore = defineStore('event', () => {
     function $reset() {
         events.value = [];
         currentEvent.value = null;
-        counts.value = null;
         isLoading.value = false;
         error.value = null;
         membersCount.value = 0;
@@ -433,7 +417,6 @@ export const useEventStore = defineStore('event', () => {
         // State
         events,
         currentEvent,
-        counts,
         isLoading,
         error,
         // Team & permissions state

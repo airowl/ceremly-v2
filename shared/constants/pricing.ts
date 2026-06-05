@@ -10,12 +10,6 @@
 export interface PlanLimits {
     /** Maximum number of events (-1 = unlimited) */
     max_events: number;
-    /** Maximum guests per event (-1 = unlimited) */
-    max_guests_per_event: number;
-    /** Maximum emails per month (-1 = unlimited) */
-    emails_per_month: number;
-    /** Whether registration landing page is available */
-    has_registration_landing: boolean;
     /** Maximum storage in MB (-1 = unlimited) */
     storage_mb: number;
     /** Maximum team members (-1 = unlimited) */
@@ -58,9 +52,6 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         description: "Per eventi singoli",
         limits: {
             max_events: 2,
-            max_guests_per_event: 50,
-            emails_per_month: 200,
-            has_registration_landing: true,
             storage_mb: 500,
             team_members: 1,
         },
@@ -87,9 +78,6 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         description: "Per organizzatori professionisti",
         limits: {
             max_events: 5,
-            max_guests_per_event: 350,
-            emails_per_month: 2000,
-            has_registration_landing: true,
             storage_mb: 2000,
             team_members: 5,
         },
@@ -116,9 +104,6 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         description: "Per agenzie e wedding planner",
         limits: {
             max_events: -1,
-            max_guests_per_event: -1,
-            emails_per_month: -1,
-            has_registration_landing: true,
             storage_mb: 10000,
             team_members: -1,
         },

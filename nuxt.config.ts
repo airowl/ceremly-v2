@@ -89,11 +89,6 @@ export default defineNuxtConfig({
         // Dashboard & Events management - client-side only
         "/dashboard/**": { ssr: false, prerender: false },
 
-        // Public event pages - SSR enabled for SEO
-        "/event/**": { ssr: true },
-        "/en/event/**": { ssr: true },
-        "/rsvp/**": { ssr: true },
-        "/en/rsvp/**": { ssr: true },
         "/login": { ssr: false, prerender: false },
         "/signup": { ssr: false, prerender: false },
         "/invite/**": { ssr: false, prerender: false },

@@ -11,12 +11,6 @@ definePageMeta({
 
 const eventId = computed(() => route.params.id as string)
 
-// Guest data (auto-loads via internal watch)
-const { guests, summary, isLoading: isLoadingGuests } = useGuests(eventId)
-
-// Recent guests for the preview table (first 5)
-const recentGuests = computed(() => guests.value?.slice(0, 5) ?? [])
-
 onMounted(async () => {
     if (!eventId.value) return
     await eventStore.loadEvent(eventId.value)
@@ -66,44 +60,12 @@ watch(eventId, async (newId) => {
                     </div>
                 </div>
 
-                <!-- ROW 2: Guest Stats Grid (4 columns) -->
-                <AdminHomeGuestStatsGrid
-                    :total="summary.total"
-                    :confirmed="summary.confirmed"
-                    :declined="summary.declined"
-                    :pending="summary.pending"
-                    :is-loading="isLoadingGuests"
-                    class="mb-6"
+                <!-- Resource Usage -->
+                <AdminEventUsageDashboard
+                    v-if="eventId && eventStore.currentEvent"
+                    :event-id="eventId"
+                    :event-name="eventStore.currentEvent.name"
                 />
-
-                <!-- ROW 3: Guest Table (3/4) + Sidebar (1/4) -->
-                <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                    <div class="xl:col-span-3">
-                        <AdminHomeRecentGuestsTable
-                            :guests="recentGuests"
-                            :is-loading="isLoadingGuests"
-                            :event-id="eventId"
-                        />
-                    </div>
-                    <div class="space-y-4">
-                        <AdminHomeDashboardSidebar
-                            :total="summary.total"
-                            :confirmed="summary.confirmed"
-                            :pending="summary.pending"
-                            :declined="summary.declined"
-                            :team-members="eventStore.teamMembers"
-                            :is-loading-team="eventStore.isLoadingTeam"
-                            :event-id="eventId"
-                        />
-
-                        <!-- Resource Usage (existing component) -->
-                        <AdminEventUsageDashboard
-                            v-if="eventId && eventStore.currentEvent"
-                            :event-id="eventId"
-                            :event-name="eventStore.currentEvent.name"
-                        />
-                    </div>
-                </div>
             </template>
         </template>
     </UDashboardPanel>

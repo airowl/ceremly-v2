@@ -410,12 +410,8 @@
             "subscription": "Abbonamento",
             "team": "Team",
             "settings": "Impostazioni",
-            "events": "Event",
             "events": "I miei Eventi",
             "eventDashboard": "Dashboard Evento",
-            "guests": "Invitati",
-            "reminders": "Promemoria",
-            "templates": "Template",
             "eventSettings": "Impostazioni Evento",
             "allEvents": "Tutti gli eventi",
             "newEvent": "Nuovo Evento",
@@ -678,125 +674,6 @@
         "retry": "Riprova",
         "save": "Salva"
     },
-    "eventTemplates": {
-        "title": "Template Evento",
-        "subtitle": "Scegli o personalizza il template per la pagina del tuo evento.",
-        "ai": {
-            "badge": "AI Designer",
-            "title": "Genera la tua landing page perfetta con l'AI",
-            "subtitle": "Descrivi lo stile del tuo evento (es. \"Un compleanno neon anni 80 in sala giochi retr\u00f2\") e l'AI creer\u00e0 un template personalizzato per te.",
-            "placeholder": "Qual \u00e8 lo stile del tuo evento?",
-            "generate": "Genera",
-            "generating": "Generazione in corso...",
-            "success": "Template generato con successo!",
-            "error": "Errore nella generazione del template"
-        },
-        "categories": {
-            "all": "Tutti i Template",
-            "wedding": "Matrimonio",
-            "birthday": "Compleanno",
-            "corporate": "Aziendale",
-            "conference": "Conferenza",
-            "networking": "Networking",
-            "party": "Festa",
-            "other": "Altro"
-        },
-        "createNew": "Crea Nuovo Template",
-        "card": {
-            "select": "Modifica Template",
-            "edit": "Modifica",
-            "apply": "Applica al tuo evento",
-            "preview": "Anteprima",
-            "system": "Sistema",
-            "custom": "Personalizzato",
-            "aiGenerated": "AI"
-        },
-        "empty": {
-            "title": "Nessun template trovato",
-            "description": "Non ci sono template in questa categoria. Prova a generarne uno con l'AI!"
-        },
-        "actions": {
-            "delete": "Elimina",
-            "deleteConfirm": "Sei sicuro di voler eliminare questo template?",
-            "deleted": "Template eliminato"
-        },
-        "applied": "Template applicato con successo!",
-        "applyError": "Errore nell'applicazione del template"
-    },
-    "landingEditor": {
-        "titleNew": "Nuovo Template",
-        "titleEdit": "Modifica Template",
-        "save": "Salva",
-        "saved": "Template salvato con successo!",
-        "saveError": "Errore nel salvataggio del template",
-        "unsaved": "Non salvato",
-        "selectSection": "Seleziona una sezione per configurarla",
-        "globalSettings": "Impostazioni Globali",
-        "mobileWarning": {
-            "title": "Editor Desktop",
-            "description": "L'editor dei template è disponibile solo su desktop. Apri questa pagina da un computer per modificare il template."
-        },
-        "sections": {
-            "title": "Sezioni",
-            "addSection": "Aggiungi Sezione"
-        },
-        "settings": {
-            "title": "Impostazioni Globali",
-            "colors": "Colori",
-            "primaryColor": "Colore Primario",
-            "secondaryColor": "Colore Secondario",
-            "backgroundColor": "Colore Sfondo",
-            "textColor": "Colore Testo",
-            "font": "Font",
-            "borderRadius": "Bordi Arrotondati",
-            "fonts": {
-                "inter": "Inter",
-                "playfair": "Playfair Display",
-                "montserrat": "Montserrat",
-                "lora": "Lora",
-                "roboto": "Roboto"
-            },
-            "radius": {
-                "none": "Nessuno",
-                "sm": "Piccolo",
-                "md": "Medio",
-                "lg": "Grande",
-                "full": "Pieno"
-            }
-        },
-        "addSection": {
-            "title": "Aggiungi una Sezione",
-            "allAdded": "Tutte le sezioni sono già presenti nel template."
-        },
-        "preview": {
-            "empty": "Nessuna sezione attiva. Attiva almeno una sezione dalla sidebar."
-        },
-        "upload": {
-            "uploading": "Caricamento...",
-            "click": "Clicca per caricare un'immagine",
-            "invalidType": "Tipo di file non valido. Usa JPG, PNG, GIF o WebP.",
-            "tooLarge": "Il file è troppo grande. Massimo 5MB.",
-            "error": "Errore nel caricamento dell'immagine"
-        },
-        "ai": {
-            "button": "Genera con AI",
-            "title": "Genera con l'Intelligenza Artificiale",
-            "description": "Descrivi lo stile e il tema del tuo evento. L'AI genererà un template completo con colori, sezioni e contenuti personalizzati.",
-            "placeholder": "Es: Un matrimonio elegante in stile boho con colori pastello...",
-            "generate": "Genera Template",
-            "generating": "Generazione in corso...",
-            "success": "Template generato con successo!",
-            "error": "Errore nella generazione del template"
-        },
-        "saveModal": {
-            "title": "Salva Template",
-            "name": "Nome",
-            "namePlaceholder": "Es: Template Matrimonio Elegante",
-            "description": "Descrizione",
-            "descriptionPlaceholder": "Una breve descrizione del template...",
-            "category": "Categoria"
-        }
-    },
     "event": {
         "settings": {
             "title": "Impostazioni Event",
@@ -851,10 +728,6 @@
                     "title": "2. Logistica",
                     "description": "Location e indirizzo dell'evento."
                 },
-                "landing": {
-                    "title": "3. Landing & Personalizzazione",
-                    "description": "Scadenza RSVP, colore tema e opzioni di visualizzazione."
-                },
                 "automation": {
                     "title": "4. Automazione",
                     "description": "Conferma automatica e notifiche."
@@ -869,19 +742,8 @@
                 "location": "Nome della Location",
                 "locationPlaceholder": "Es. Villa del Balbianello",
                 "address": "Indirizzo Completo",
-                "addressPlaceholder": "Via Roma, 123, 20121 Milano MI",
-                "deadline": "Scadenza RSVP",
-                "primaryColor": "Colore Tema Landing",
-                "maxGuests": "Numero Massimo Invitati",
-                "maxGuestsDescription": "Il numero massimo di ospiti che possono registrarsi all'evento.",
-                "showGuestCount": "Mostra conteggio invitati",
-                "showGuestCountDescription": "Visualizza il numero totale di persone che hanno già confermato.",
-                "socialProof": "Social Proof attivo",
-                "socialProofDescription": "Mostra notifiche tipo \"Mario Rossi ha confermato 5 min fa\".",
-                "autoConfirm": "Conferma automatica",
-                "autoConfirmDescription": "Invia immediatamente un'email di ringraziamento e il salvataggio nel calendario agli invitati che confermano."
+                "addressPlaceholder": "Via Roma, 123, 20121 Milano MI"
             },
-            "viewLanding": "Visualizza Landing",
             "badge": {
                 "live": "Live",
                 "draft": "Bozza"
@@ -1749,23 +1611,14 @@
     "plan": {
         "starter": {
             "events": "2 eventi",
-            "guests": "50 invitati per evento",
-            "emails": "200 email al mese",
-            "landing": "Landing RSVP + Registrazione",
             "support": "Supporto email"
         },
         "premium": {
             "events": "5 eventi",
-            "guests": "350 invitati per evento",
-            "emails": "2.000 email al mese",
-            "landing": "Landing RSVP + Registrazione",
             "support": "Supporto prioritario"
         },
         "agency": {
             "events": "Eventi illimitati",
-            "guests": "Invitati illimitati",
-            "emails": "Email illimitate",
-            "landing": "Landing RSVP + Registrazione",
             "support": "Supporto 24/7",
             "api": "Accesso API"
         }
