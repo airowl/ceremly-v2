@@ -10,6 +10,20 @@
 
 ---
 
+## ⚠️ Requisito di sicurezza #1 (in cima alla checklist — da code review 1a, commit `13d8b63`)
+
+I repository org-keyed (`findOrganizationById(orgId)`, `findMembers(orgId)`, `findPendingInvitations(orgId)`) sono **lookup puri per `organizationId`**: dato un `orgId` arbitrario dal client restituiscono i dati di quell'org **a chiunque**. È safe in 1a SOLO perché nessuna route live li chiama (solo `verify-isolation.ts`). **1c DEVE accoppiare OGNI chiamata repo con un `organizationId` proveniente dal client a un check membership/ruolo al call-site** (`getOrgRole(userId, orgId)` → 403 se `null`, prima del lookup). È ciò che trasforma "i repo filtrano per orgId" in "il sistema è isolation-safe".
+
+**Dove è soddisfatto in questo piano:**
+- `GET /api/organizations/[id]/members` (Task 8) → `getOrgRole(user.id, id)` → 403 **prima** di `listOrganizationMembers(id)` (che chiama `findMembers`/`findPendingInvitations`). ✅
+- `[id]` get/put/delete (Task 8) → authz delegata al plugin (`auth.api.*` verifica il ruolo del caller in *quell'*org). ✅
+- app-resource (projects, FASE 4) → `requireMember`/`requireWrite` risolvono l'org **dalla sessione** (il client non passa mai `orgId`) + `assertOwnership` 2° guard. ✅
+- **Gate statico (Task finale):** `grep -L "getOrgRole\|auth.api\|assertOwnership" server/api/organizations/\[id\]*` → nessuna route `[id]` org-keyed senza check al call-site.
+
+> Regola generale per ogni risorsa futura: una chiamata repo `*(orgId)` con `orgId` **dal client** è valida solo se preceduta da `getOrgRole`/`assertOwnership` nello stesso handler. Org-da-sessione (active-org) non ha questo problema (l'`orgId` non è client-controlled).
+
+---
+
 ## Prerequisiti / Gate
 
 **Questo piano dipende da 1b landed.** Stato verificato all'inizio (path:riga reali):
