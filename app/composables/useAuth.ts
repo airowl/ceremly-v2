@@ -1,7 +1,7 @@
 import type { Session } from "better-auth";
 import type { RouteLocationRaw } from "vue-router";
 import { creemClient } from "@creem_io/better-auth/client";
-import { adminClient, inferAdditionalFields, twoFactorClient } from "better-auth/client/plugins";
+import { adminClient, inferAdditionalFields, organizationClient, twoFactorClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
 
 export function useAuth() {
@@ -28,6 +28,7 @@ export function useAuth() {
             adminClient(),
             twoFactorClient(),
             creemClient(),
+            organizationClient(),
         ],
     });
 
@@ -115,5 +116,6 @@ export function useAuth() {
         client,
         creem: client.creem,
         twoFactor: client.twoFactor,
+        organization: client.organization,
     };
 }
