@@ -93,6 +93,7 @@ async function acceptInvitation() {
         toast.add({ title: t('invite.welcomeToTeam'), description: t('invite.youveJoined', { org: invitation.value?.organizationName }), color: 'success' })
         await router.push('/dashboard/organization')
     } catch (err: any) {
+        error.value = err.data?.message || err.message || t('invite.failedToAccept')
         toast.add({ title: t('invite.error'), description: err.data?.message || err.message, color: 'error' })
     } finally {
         accepting.value = false
