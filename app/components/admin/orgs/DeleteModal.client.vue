@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useToast } from '@nuxt/ui/composables'
 import { useOrganizationStore } from '~/stores/organizationStore'
 
 const props = defineProps<{ organizationId: string; organizationName: string }>()

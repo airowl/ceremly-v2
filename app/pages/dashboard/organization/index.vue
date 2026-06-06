@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, provide, h } from 'vue'
 import { resolveComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter, useAsyncData } from 'nuxt/app'
 import type { TableColumn } from '@nuxt/ui'
 import { format } from 'date-fns'
 import { it, enUS } from 'date-fns/locale'
 import { useOrganizationStore, type OrganizationListItem } from '~/stores/organizationStore'
 
+// @ts-ignore – definePageMeta is auto-imported by Nuxt at runtime; not resolvable by vue-tsc
 definePageMeta({ title: 'Organizations', layout: 'dashboard' })
 
 const { t, locale } = useI18n()
