@@ -88,9 +88,12 @@ export const createBetterAuth = () =>
                                 body: { name, slug, userId: user.id },
                             });
                         } catch (err) {
-                            // NON ingoiare: un utente senza tenant è uno stato rotto.
-                            console.error(`[signup→org] createOrganization fallita per user ${user.id}:`, err);
-                            throw err;
+                            // Best-effort: NON rilanciare. Better Auth committa l'INSERT user PRIMA
+                            // di questo hook e (sul path email/password) SENZA transazione → un throw
+                            // qui produrrebbe un 500 con l'account già creato (utente orfano comunque).
+                            // La garanzia "ogni utente ha un'org" è data dal self-heal in
+                            // databaseHooks.session.create.before (crea l'org al primo login se manca).
+                            console.error(`[signup→org] createOrganization fallita per user ${user.id} (self-heal al primo login):`, err);
                         }
                     },
                 },
@@ -100,12 +103,41 @@ export const createBetterAuth = () =>
                     before: async (session) => {
                         // Org attiva iniziale: prima membership (createdAt asc) dell'utente.
                         const db = getDB();
-                        const rows = await db
-                            .select({ organizationId: schema.member.organizationId })
-                            .from(schema.member)
-                            .where(eq(schema.member.userId, session.userId))
-                            .orderBy(asc(schema.member.createdAt))
-                            .limit(1);
+                        const findFirstOrg = async () =>
+                            db
+                                .select({ organizationId: schema.member.organizationId })
+                                .from(schema.member)
+                                .where(eq(schema.member.userId, session.userId))
+                                .orderBy(asc(schema.member.createdAt))
+                                .limit(1);
+
+                        let rows = await findFirstOrg();
+
+                        // Self-heal: se l'utente non ha org (signup→org fallito, o utente legacy
+                        // pre-1b), creane una personale ORA. È la garanzia robusta di "no utente
+                        // orfano", indipendente dall'atomicità del hook user.create.after.
+                        if (!rows[0]) {
+                            try {
+                                const users = await db
+                                    .select({ name: schema.user.name, email: schema.user.email })
+                                    .from(schema.user)
+                                    .where(eq(schema.user.id, session.userId))
+                                    .limit(1);
+                                const u = users[0];
+                                if (u) {
+                                    const name = deriveOrgNameFromUser({ name: u.name, email: u.email });
+                                    const slug = generateUniqueOrgSlug(name);
+                                    await useServerAuth().api.createOrganization({
+                                        body: { name, slug, userId: session.userId },
+                                    });
+                                    rows = await findFirstOrg();
+                                }
+                            } catch (err) {
+                                // Non bloccare il login: senza org attiva, l'app gestisce il fallback.
+                                console.error(`[session→org self-heal] createOrganization fallita per user ${session.userId}:`, err);
+                            }
+                        }
+
                         const activeOrganizationId = rows[0]?.organizationId;
                         if (!activeOrganizationId) {
                             return; // nessuna org (stato anomalo) → nessun override
