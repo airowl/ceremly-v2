@@ -128,6 +128,11 @@ non-bloccante per `/api/*`) → l'autorizzazione è la **firma QStash**, non la 
   - `"/api/jobs/**": { security: { xssValidator: false, rateLimiter: false, corsHandler: false } }` —
     `xssValidator` **muta** il body POST e invaliderebbe la firma HMAC QStash.
   - `"/api/cron/**": { security: { rateLimiter: false } }`.
+- **Esenzione middleware custom** (oltre nuxt-security): `0.site-mode.ts` (503 su tutte le `/api/*` in
+  maintenance; solo `/api/waiting-list/` in waitinglist) e `4.block-bots.ts` (filtro User-Agent, esenta
+  per path solo `/api/admin`+`/api/auth/`) devono esentare per path **`/api/jobs`** e **`/api/cron`** —
+  questi endpoint si autenticano con firma QStash / `CRON_SECRET`, non con la sessione, e devono passare
+  a prescindere dal site mode.
 - `functionRules` (o `nitro.vercel.functions`) per `/api/jobs/*`: `maxDuration`/memoria adeguati
   (export/variant possono essere lenti).
 - Webhook Creem: già esente (`nuxt.config.ts:108-115`) → confermare invariato.
