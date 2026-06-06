@@ -132,9 +132,13 @@ re-throw `statusCode` + fallback 500 (gestione `23505`). Riferimenti: `server/ap
 
 - Arricchire `server/database/seed/index.ts` con i nuovi campi (`description`/`status`) e qualche project in più.
 - **Test critico della fase (sicurezza):** oltre a `verify-isolation.ts` (livello repository), aggiungere
-  un test a **livello API** che esercita gli endpoint:
-  - `GET /api/projects` come membro di org A **non** restituisce mai projects di org B;
+  un test che asserisce l'isolamento cross-org:
+  - `GET /api/projects` (o `listProjects` service) come membro di org A **non** restituisce mai projects di org B;
   - `GET/PUT/DELETE /api/projects/:id` su un project di org B → **403** (`assertOwnership`).
+  > **Nota di realizzazione (no test framework + auth headless non testabile finché 1b non lo è):** la copertura
+  > automatica è uno script tsx a **livello service** (invariante 403) **+** un check **statico** che ogni route
+  > `server/api/projects/*` porti `requireAuth` + guard org. L'enforcement HTTP a runtime con sessione viva resta
+  > coperto da smoke manuale e dai test di 1c — limitazione dichiarata, non nascosta.
 
 ---
 
