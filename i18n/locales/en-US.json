@@ -1181,8 +1181,6 @@
         "changeRoleTitle": "Change Member Role",
         "saveRole": "Save Role",
         "removeMember": "Remove Member",
-        "removeMemberTitle": "Remove Member",
-        "removeMemberConfirm": "Are you sure you want to remove {name} from the organization?",
         "ownerProtected": "Owner cannot be removed",
         "pendingInvitations": "Pending Invitations",
         "pendingInvitationsDescription": "Invitations waiting to be accepted",
