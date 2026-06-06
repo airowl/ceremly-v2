@@ -4,8 +4,6 @@ import { useUserStore } from '~/stores/userStore'
 const { t } = useI18n()
 const userStore = useUserStore()
 
-const isModalOpen = ref(false)
-
 const userInitials = computed(() => {
     const name = userStore.user?.name || userStore.user?.email || ''
     return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -20,15 +18,6 @@ const userInitials = computed(() => {
             size="sm"
             variant="outline"
             class="w-64 hidden sm:block"
-        />
-
-        <UButton
-            :label="t('dashboard.home.newEvent')"
-            icon="i-lucide-plus"
-            color="primary"
-            size="sm"
-            class="font-bold"
-            @click="isModalOpen = true"
         />
 
         <div class="flex items-center gap-3 pl-4 border-l border-default">
@@ -51,6 +40,5 @@ const userInitials = computed(() => {
             />
         </div>
 
-        <AdminHomeCreateEventModal v-model="isModalOpen" />
     </div>
 </template>

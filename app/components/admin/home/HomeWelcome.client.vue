@@ -2,10 +2,10 @@
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
 import { useUserStore } from '~/stores/userStore'
-import { useEventStore } from '~/stores/eventStore'
+import { useOrganizationStore } from '~/stores/organizationStore'
 
 const userStore = useUserStore()
-const eventStore = useEventStore()
+const orgStore = useOrganizationStore()
 
 // User name from user object (Better Auth stores name directly)
 const userName = computed(() => {
@@ -19,9 +19,9 @@ const userName = computed(() => {
     return user.email?.split('@')[0] || 'Utente'
 })
 
-// Event name
-const eventName = computed(() => {
-    return eventStore.currentEvent?.name || 'Event'
+// Organization name
+const orgName = computed(() => {
+    return orgStore.currentOrganization?.name || 'Organization'
 })
 
 // Plan info
@@ -56,7 +56,7 @@ const formattedDate = computed(() => {
             </h1>
             <div class="flex items-center gap-2 mt-1 text-muted">
                 <UIcon name="i-lucide-building-2" class="size-4" />
-                <span>{{ eventName }}</span>
+                <span>{{ orgName }}</span>
                 <UBadge :color="planColor" variant="subtle" size="xs">
                     {{ planName }}
                 </UBadge>

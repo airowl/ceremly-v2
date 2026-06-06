@@ -1,37 +1,20 @@
 <script setup lang="ts">
-import { useEventStore } from '~/stores/eventStore'
+import { useOrganizationStore } from '~/stores/organizationStore'
 
-const eventStore = useEventStore()
+const orgStore = useOrganizationStore()
+const isLoading = computed(() => orgStore.isLoading)
+const orgId = computed(() => orgStore.currentOrganization?.id)
 
-const isLoading = computed(() => eventStore.isLoading)
-
-// Current event ID for links
-const eventId = computed(() => eventStore.currentEvent?.id)
-
-// Stats from real event data
-const stats = computed(() => {
-    const evtId = eventId.value
-
-    return [
-        {
-            title: 'Members',
-            icon: 'i-lucide-users',
-            value: eventStore.membersCount ?? 0,
-            limit: null,
-            to: evtId ? `/dashboard/event/${evtId}/team` : undefined,
-            color: 'primary'
-        },
-        {
-            title: 'Storage',
-            icon: 'i-lucide-hard-drive',
-            value: Math.round((eventStore.resourceUsage?.storage_used ?? 0) / 1024 / 1024), // Convert to MB
-            unit: 'MB',
-            limit: null,
-            to: undefined,
-            color: 'info'
-        }
-    ]
-})
+const stats = computed(() => [
+    {
+        title: 'Members',
+        icon: 'i-lucide-users',
+        value: orgStore.members.length,
+        unit: undefined as string | undefined,
+        to: orgId.value ? `/dashboard/organization/${orgId.value}/members` : undefined,
+        color: 'primary'
+    },
+])
 </script>
 
 <template>
