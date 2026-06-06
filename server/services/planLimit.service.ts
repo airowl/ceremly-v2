@@ -8,6 +8,8 @@ import * as schema from "../database/schema";
 import { getPlanLimits, exceedsLimit, isUnlimited, type PlanLimits } from "~~/shared/constants/pricing";
 import { getDB } from "../utils/db";
 import { getPlanFromProductId } from "../utils/creem";
+import { findMembers } from "../repositories/memberRepository";
+import { findPendingInvitations } from "../repositories/invitationRepository";
 
 export type PlanName = "starter" | "premium" | "agency";
 
@@ -218,23 +220,50 @@ export async function countReservedSlots(eventId: string): Promise<number> {
 }
 
 /**
- * Check if a team member can be added to an event based on plan limits
+ * Count current members of an organization (phase 1b — org-aware).
+ */
+export async function countOrgMembers(organizationId: string): Promise<number> {
+    const members = await findMembers(organizationId);
+    return members.length;
+}
+
+/**
+ * Count pending (status='pending') invitations of an organization (phase 1b — org-aware).
+ */
+export async function countPendingOrgInvitations(organizationId: string): Promise<number> {
+    const pending = await findPendingInvitations(organizationId);
+    return pending.length;
+}
+
+/**
+ * Check if a team member can be added to an organization based on plan limits.
+ * Org-aware (phase 1b): conta membri + inviti pending sull'org.
+ * Il limite è quello dell'OWNER del piano (ownerId), non dell'invitante.
+ *
+ * NOTE: la firma resta (ownerId, organizationId) per compatibilità con il
+ * re-export in server/utils/userPlan.ts. Il 2° param è ora un organizationId.
  */
 export async function canAddTeamMember(
-    eventOwnerId: string,
-    eventId: string
+    ownerId: string,
+    organizationId: string
 ): Promise<{
     allowed: boolean;
     current: number;
     limit: number;
     plan: PlanName;
 }> {
-    const effectiveInfo = await getEffectiveLimits(eventOwnerId);
+    const effectiveInfo = await getEffectiveLimits(ownerId);
     const limit = effectiveInfo.limits.team_members;
 
+    const [members, pending] = await Promise.all([
+        countOrgMembers(organizationId),
+        countPendingOrgInvitations(organizationId),
+    ]);
+    const current = members + pending;
+
     return {
-        allowed: true, // STUB phase 1a — sempre permesso; 1c verifica contro org member count
-        current: 0,    // STUB phase 1a — 0 fino a countReservedSlots org-aware in 1c
+        allowed: !exceedsLimit(current, limit),
+        current,
         limit: isUnlimited(limit) ? -1 : limit,
         plan: effectiveInfo.plan,
     };
