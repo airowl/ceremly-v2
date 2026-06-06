@@ -6,6 +6,7 @@ import { useRouter, useAsyncData } from 'nuxt/app'
 import type { TableColumn } from '@nuxt/ui'
 import { format } from 'date-fns'
 import { it, enUS } from 'date-fns/locale'
+import { useToast } from '@nuxt/ui/composables'
 import { useOrganizationStore, type OrganizationListItem } from '~/stores/organizationStore'
 
 // @ts-ignore – definePageMeta is auto-imported by Nuxt at runtime; not resolvable by vue-tsc
@@ -14,6 +15,7 @@ definePageMeta({ title: 'Organizations', layout: 'dashboard' })
 const { t, locale } = useI18n()
 const router = useRouter()
 const orgStore = useOrganizationStore()
+const toast = useToast()
 
 const UButton = resolveComponent('UButton')
 
@@ -39,7 +41,11 @@ function formatDate(s: string) {
 }
 
 async function openOrg(id: string) {
-    await orgStore.setActiveOrganization(id)
+    const result = await orgStore.setActiveOrganization(id)
+    if (!result.success) {
+        toast.add({ title: t('organization.switchError'), description: result.error, color: 'error' })
+        return
+    }
     router.push(`/dashboard/organization/${id}`)
 }
 
@@ -89,6 +95,10 @@ const columns: TableColumn<OrganizationListItem>[] = [
         <template #body>
             <div v-if="orgStore.isLoading" class="flex items-center justify-center py-12">
                 <UIcon name="i-lucide-loader-2" class="size-6 animate-spin text-primary" />
+            </div>
+            <div v-else-if="orgStore.error" class="text-center py-12">
+                <UIcon name="i-lucide-alert-circle" class="size-12 text-error mx-auto mb-4" />
+                <p class="text-muted">{{ orgStore.error }}</p>
             </div>
             <div v-else-if="!orgStore.organizations.length" class="text-center py-12">
                 <UIcon name="i-lucide-building-2" class="size-12 text-muted mx-auto mb-4" />
