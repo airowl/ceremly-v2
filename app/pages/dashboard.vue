@@ -12,16 +12,6 @@ definePageMeta({
     layout: 'dashboard',
 })
 
-const items = computed(() => [[{
-    label: t('dashboard.dropdown.newEvent'),
-    icon: 'i-lucide-building-2',
-    to: '/dashboard'
-}, {
-    label: t('dashboard.dropdown.inviteMember'),
-    icon: 'i-lucide-user-plus',
-    to: '/dashboard'
-}]] satisfies DropdownMenuItem[][])
-
 const range = shallowRef<Range>({
     start: sub(new Date(), { days: 14 }),
     end: new Date()
@@ -36,37 +26,50 @@ const links = ref<NavigationMenuItem[]>([]);
 
 const routeName = computed(() => (route.name as string).split('___')[0]);
 
+const isInsideOrganization = computed(() => {
+    const rn = routeName.value ?? '';
+    const paramsId = route.params.id as string | undefined;
+    return rn.startsWith("dashboard-organization-id") && !!paramsId;
+});
+
+const items = computed(() => [[{
+    label: t('dashboard.dropdown.newOrganization'),
+    icon: 'i-lucide-building-2',
+    to: '/dashboard/organization'
+}, {
+    label: t('dashboard.dropdown.inviteMember'),
+    icon: 'i-lucide-user-plus',
+    to: isInsideOrganization.value ? `/dashboard/organization/${route.params.id}/members` : '/dashboard/organization'
+}]] satisfies DropdownMenuItem[][])
+
 const changeLinks = () => {
     const paramsId = route.params.id as string | undefined;
     const rn = routeName.value ?? '';
 
-    // Check if we're inside a specific event (dashboard-event-id-*)
-    const isInsideEvent = rn.startsWith("dashboard-event-id") && paramsId;
-
-    if (isInsideEvent) {
-        // Event sub-navigation
+    if (isInsideOrganization.value) {
+        // Organization sub-navigation
         links.value = [
             [
                 {
-                    label: t('dashboard.nav.eventDashboard'),
+                    label: t('dashboard.nav.organizationDashboard'),
                     icon: "i-lucide-layout-dashboard",
-                    to: `/dashboard/event/${paramsId}`,
+                    to: `/dashboard/organization/${paramsId}`,
                     onSelect: () => { open.value = false; },
-                    active: rn === "dashboard-event-id",
+                    active: rn === "dashboard-organization-id",
                 },
                 {
-                    label: t('dashboard.nav.team'),
+                    label: t('dashboard.nav.members'),
                     icon: "i-lucide-user-plus",
-                    to: `/dashboard/event/${paramsId}/team`,
+                    to: `/dashboard/organization/${paramsId}/members`,
                     onSelect: () => { open.value = false; },
-                    active: rn === "dashboard-event-id-team",
+                    active: rn === "dashboard-organization-id-members",
                 },
             ],
             [
                 {
-                    label: t('dashboard.nav.allEvents'),
+                    label: t('dashboard.nav.allOrganizations'),
                     icon: "i-lucide-arrow-left",
-                    to: "/dashboard/event",
+                    to: "/dashboard/organization",
                     active: false,
                 },
             ],
@@ -83,11 +86,11 @@ const changeLinks = () => {
                     active: rn === "dashboard",
                 },
                 {
-                    label: t('dashboard.nav.events'),
-                    icon: "i-lucide-calendar-heart",
-                    to: "/dashboard/event",
+                    label: t('dashboard.nav.organizations'),
+                    icon: "i-lucide-building-2",
+                    to: "/dashboard/organization",
                     onSelect: () => { open.value = false; },
-                    active: rn.startsWith("dashboard-event"),
+                    active: rn.startsWith("dashboard-organization"),
                 },
                 {
                     label: t('profile.title'),

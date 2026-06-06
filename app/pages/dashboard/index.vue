@@ -38,8 +38,6 @@ definePageMeta({
                     </div>
                 </div>
 
-                <!-- Events Table -->
-                <AdminHomeEventsTable />
             </div>
         </template>
     </UDashboardPanel>
