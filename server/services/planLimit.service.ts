@@ -237,8 +237,12 @@ export async function countPendingOrgInvitations(organizationId: string): Promis
 
 /**
  * Check if a team member can be added to an organization based on plan limits.
- * Org-aware (phase 1b): conta membri + inviti pending sull'org.
+ * Org-aware (phase 1b): conta i membri OLTRE l'owner + inviti pending sull'org.
  * Il limite è quello dell'OWNER del piano (ownerId), non dell'invitante.
+ *
+ * SEMANTICA LIMITE: `team_members` è il numero di teammate OLTRE l'owner
+ * (l'owner non consuma uno slot). Es. starter=1 → owner + 1 teammate.
+ * current = max(0, members - 1) + pending.
  *
  * NOTE: la firma resta (ownerId, organizationId) per compatibilità con il
  * re-export in server/utils/userPlan.ts. Il 2° param è ora un organizationId.
@@ -259,7 +263,8 @@ export async function canAddTeamMember(
         countOrgMembers(organizationId),
         countPendingOrgInvitations(organizationId),
     ]);
-    const current = members + pending;
+    // L'owner non conta nel limite: i teammate sono i membri oltre l'owner.
+    const current = Math.max(0, members - 1) + pending;
 
     return {
         allowed: !exceedsLimit(current, limit),

@@ -9,7 +9,8 @@ import { canAddTeamMember, countOrgMembers, countPendingOrgInvitations } from ".
 /**
  * Gate FASE 1b: il limite team è org-aware e blocca quando superato.
  * INVARIANTE: per l'org B2B del seed (3 membri + 1 invito pending), piano starter
- * (team_members:1), canAddTeamMember deve ritornare allowed:false, current:4, limit:1.
+ * (team_members:1), canAddTeamMember deve ritornare allowed:false, current:3, limit:1.
+ * NB: l'owner NON conta nel limite → current = max(0, members-1) + pending = (3-1)+1 = 3.
  * Esegui dopo `pnpm db:seed`. Richiede un Postgres vivo.
  */
 async function main() {
@@ -51,8 +52,8 @@ async function main() {
         console.error(`[FAIL] canAddTeamMember dovrebbe essere allowed:false, è ${check.allowed}`);
         failed = true;
     }
-    if (check.current !== 4) {
-        console.error(`[FAIL] canAddTeamMember.current atteso 4, è ${check.current}`);
+    if (check.current !== 3) {
+        console.error(`[FAIL] canAddTeamMember.current atteso 3 (owner escluso: (3-1)+1), è ${check.current}`);
         failed = true;
     }
     if (check.limit !== 1) {
