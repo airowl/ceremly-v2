@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'nuxt/app'
 import { useOrganizationStore } from '~/stores/organizationStore'
 import { useOrganization } from '~/composables/useOrganization'
@@ -13,14 +13,21 @@ const { canManageOrg } = useOrganization()
 definePageMeta({ title: 'Organization', layout: 'dashboard' })
 
 const orgId = computed(() => route.params.id as string)
+const loadError = ref<string | null>(null)
+
+async function activateOrg(id: string) {
+    loadError.value = null
+    const result = await orgStore.setActiveOrganization(id)
+    if (!result.success) loadError.value = result.error ?? 'Error loading organization'
+}
 
 onMounted(async () => {
     if (!orgId.value) return
-    await orgStore.setActiveOrganization(orgId.value)
+    await activateOrg(orgId.value)
 })
 
 watch(orgId, async (id) => {
-    if (id) await orgStore.setActiveOrganization(id)
+    if (id) await activateOrg(id)
 })
 
 async function onDeleted() {
@@ -56,6 +63,11 @@ async function onDeleted() {
             <div v-if="orgStore.isLoading && !orgStore.currentOrganization" class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                 <USkeleton class="h-40 lg:col-span-2 rounded-xl" />
                 <USkeleton class="h-40 rounded-xl" />
+            </div>
+
+            <div v-else-if="loadError" class="text-center py-12">
+                <UIcon name="i-lucide-alert-circle" class="size-12 text-error mx-auto mb-4" />
+                <p class="text-muted">{{ loadError }}</p>
             </div>
 
             <template v-else-if="orgStore.currentOrganization">
