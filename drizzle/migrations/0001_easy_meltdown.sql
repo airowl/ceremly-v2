@@ -53,8 +53,6 @@ DROP TABLE "registration_pages" CASCADE;--> statement-breakpoint
 DROP TABLE "reminder_templates" CASCADE;--> statement-breakpoint
 DROP TABLE "email_logs" CASCADE;--> statement-breakpoint
 DROP TABLE "event_templates" CASCADE;--> statement-breakpoint
-ALTER TABLE "file" DROP CONSTRAINT "file_event_id_events_id_fk";
---> statement-breakpoint
 DROP INDEX "audit_log_event_id_idx";--> statement-breakpoint
 DROP INDEX "file_event_id_idx";--> statement-breakpoint
 ALTER TABLE "audit_log" ADD COLUMN "organization_id" text;--> statement-breakpoint
