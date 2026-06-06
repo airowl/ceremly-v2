@@ -816,6 +816,16 @@ I commit per-task (Task 1-11) sono già granulari; non serve un commit finale ag
 
 ---
 
+## ⚠️ Requisito di sicurezza #1 per 1c (dalla code review finale 1a)
+
+I repository org-keyed (`findOrganizationById(orgId)`, `findMembers(orgId)`, `findPendingInvitations(orgId)`) sono **lookup puri per `organizationId`**: dato un `orgId` arbitrario dal client, restituiscono i dati di quell'org **a chiunque**. È corretto per un data-access layer ed è **safe in 1a SOLO perché nessuna route live li chiama** (verificato: unici caller in `verify-isolation.ts`). **1c DEVE accoppiare ogni chiamata repo con un `organizationId` proveniente dal client a un controllo di membership/ruolo al call-site** (`findMemberRole(orgId, userId)` + `assertOwnership`). È la condizione che trasforma "i repo filtrano per orgId" (vero ora) in "il sistema è isolation-safe" (non ancora). **Tienilo in cima alla checklist di 1c.**
+
+Altri item dalla review finale 1a (non-bloccanti):
+- `validateDowngrade` è stub `allowed: true` con consumer vivo (`/api/limits/validate-downgrade.post.ts`) → enforcement downgrade OFF fino a 1c (non è confine di sicurezza, è UX billing).
+- Tipi orfani `userEvent`/`eventAccess` in `server/types/context.d.ts` → rimuovere con `2.organization.ts`.
+- `fileService.ts`: parametro ancora chiamato `eventId` (scrive in `organizationId`) + chiave R2 `evt/` → rinominare `organizationId`/`org/` in 1c/1d.
+- (pre-esistente) `findDuplicate` confronta `organizationId = ''` ma i record globali hanno `null` → mismatch dedup, da hardening futuro.
+
 ## Note di handoff per le fasi successive
 
 - **Stub neutralizzati da ripristinare org-aware in 1b/1c** (lista REALE, ampliata in esecuzione oltre quella del piano iniziale):
