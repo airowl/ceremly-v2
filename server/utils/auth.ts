@@ -12,10 +12,23 @@ import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
 import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
+import { canAddTeamMember } from "../services/planLimit.service";
+import { findMembers } from "../repositories/memberRepository";
 import { setupCreem } from "./creem";
 import { runtimeConfig } from "./runtimeConfig";
 
 console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
+
+/**
+ * Risolve l'userId dell'owner di un'org (per usarne i plan-limit).
+ * Deterministico: primo membro con role 'owner'. Fallback: primo membro.
+ */
+async function resolveOrgOwnerId(organizationId: string): Promise<string | null> {
+    const members = await findMembers(organizationId);
+    if (members.length === 0) return null;
+    const owner = members.find((m) => m.role === "owner");
+    return (owner ?? members[0]!).userId;
+}
 
 export const createBetterAuth = () =>
     betterAuth({
@@ -235,6 +248,56 @@ export const createBetterAuth = () =>
                             `[org.sendInvitationEmail] invio fallito a ${data.email}: ${result.error}`,
                         );
                     }
+                },
+                organizationHooks: {
+                    beforeCreateInvitation: async (data) => {
+                        const ownerId = await resolveOrgOwnerId(data.invitation.organizationId);
+                        if (ownerId) {
+                            const check = await canAddTeamMember(ownerId, data.invitation.organizationId);
+                            if (!check.allowed) {
+                                throw new APIError("FORBIDDEN", {
+                                    message: `Team member limit reached (${check.current}/${check.limit})`,
+                                });
+                            }
+                        }
+                    },
+                    afterCreateInvitation: async (data) => {
+                        await logAudit(null, "team.member_invited", {
+                            userId: data.inviter.id,
+                            organizationId: data.organization.id,
+                            targetType: "email",
+                            targetId: data.invitation.email,
+                            status: "success",
+                            details: { role: data.invitation.role, invitationId: data.invitation.id },
+                        });
+                    },
+                    afterAcceptInvitation: async (data) => {
+                        await logAudit(null, "team.invite_accepted", {
+                            userId: data.user.id,
+                            organizationId: data.organization.id,
+                            targetType: "user",
+                            targetId: data.user.id,
+                            status: "success",
+                            details: { role: data.member.role, invitationId: data.invitation.id },
+                        });
+                    },
+                    afterRemoveMember: async (data) => {
+                        await logAudit(null, "team.member_removed", {
+                            organizationId: data.organization.id,
+                            targetType: "user",
+                            targetId: data.member.userId,
+                            status: "success",
+                        });
+                    },
+                    afterUpdateMemberRole: async (data) => {
+                        await logAudit(null, "team.permissions_updated", {
+                            organizationId: data.organization.id,
+                            targetType: "user",
+                            targetId: data.member.userId,
+                            status: "success",
+                            details: { previousRole: data.previousRole, newRole: data.member.role },
+                        });
+                    },
                 },
             }),
             twoFactor({
