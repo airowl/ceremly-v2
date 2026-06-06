@@ -14,6 +14,7 @@ import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
 import { canAddTeamMember } from "../services/planLimit.service";
 import { findMembers } from "../repositories/memberRepository";
+import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.service";
 import { setupCreem } from "./creem";
 import { runtimeConfig } from "./runtimeConfig";
 
@@ -74,6 +75,22 @@ export const createBetterAuth = () =>
                                 tosAcceptedAt: new Date(),
                             },
                         };
+                    },
+                    after: async (user) => {
+                        // signup→org: crea l'organization personale (owner) per il nuovo utente.
+                        // Senza headers/request: createOrganization usa body.userId (no sessione).
+                        const name = deriveOrgNameFromUser({ name: user.name, email: user.email });
+                        const slug = generateUniqueOrgSlug(name);
+                        try {
+                            const serverAuth = useServerAuth();
+                            await serverAuth.api.createOrganization({
+                                body: { name, slug, userId: user.id },
+                            });
+                        } catch (err) {
+                            // NON ingoiare: un utente senza tenant è uno stato rotto.
+                            console.error(`[signup→org] createOrganization fallita per user ${user.id}:`, err);
+                            throw err;
+                        }
                     },
                 },
             },
@@ -308,7 +325,7 @@ export const createBetterAuth = () =>
         ],
     });
 
-let _auth: ReturnType<typeof betterAuth>;
+let _auth: ReturnType<typeof createBetterAuth>;
 
 // Used by npm run auth:schema only.
 const isAuthSchemaCommand = process.argv.some((arg) =>
