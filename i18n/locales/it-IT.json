@@ -1181,6 +1181,8 @@
         "changeRoleTitle": "Cambia Ruolo Membro",
         "saveRole": "Salva Ruolo",
         "removeMember": "Rimuovi Membro",
+        "removeMemberTitle": "Rimuovi Membro",
+        "removeMemberConfirm": "Sei sicuro di voler rimuovere {name} dall'organizzazione?",
         "ownerProtected": "Il proprietario non può essere rimosso",
         "pendingInvitations": "Inviti in Sospeso",
         "pendingInvitationsDescription": "Inviti in attesa di essere accettati",

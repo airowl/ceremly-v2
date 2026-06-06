@@ -22,10 +22,13 @@ definePageMeta({ title: 'Members', layout: 'dashboard' })
 const orgId = computed(() => route.params.id as string)
 const currentUserId = computed(() => userStore.user?.id)
 
+const loadError = ref<string | null>(null)
+
 const showInviteModal = ref(false)
 const showRoleModal = ref(false)
 const selectedMember = ref<OrganizationMember | null>(null)
 const selectedRole = ref<OrgRole>('member')
+const memberToRemove = ref<OrganizationMember | null>(null)
 const isInviting = ref(false)
 const isUpdatingRole = ref(false)
 const isDeletingMember = ref<string | null>(null)
@@ -42,7 +45,9 @@ const inviteFormData = reactive<Partial<InviteSchema>>({ email: undefined })
 
 onMounted(async () => {
     if (orgStore.currentOrganization?.id !== orgId.value) {
-        await orgStore.setActiveOrganization(orgId.value)
+        loadError.value = null
+        const result = await orgStore.setActiveOrganization(orgId.value)
+        if (!result.success) loadError.value = result.error ?? 'Error loading organization'
     }
 })
 
@@ -108,6 +113,7 @@ async function removeMember(m: OrganizationMember) {
         else toast.add({ title: t('common.error'), description: result.error || t('members.memberRemoveError'), color: 'error' })
     } finally {
         isDeletingMember.value = null
+        memberToRemove.value = null
     }
 }
 
@@ -140,8 +146,13 @@ async function cancelInvitation(inv: OrganizationInvitation) {
 
         <template #body>
             <div class="p-4 sm:p-6 space-y-6">
-                <div v-if="orgStore.isLoading" class="flex items-center justify-center py-12">
+                <div v-if="orgStore.isLoading && !orgStore.currentOrganization" class="flex items-center justify-center py-12">
                     <UIcon name="i-lucide-loader-2" class="w-8 h-8 animate-spin text-primary" />
+                </div>
+
+                <div v-else-if="loadError || orgStore.error" class="text-center py-8">
+                    <UIcon name="i-lucide-alert-circle" class="w-12 h-12 text-error mx-auto mb-4" />
+                    <p class="text-muted">{{ loadError || orgStore.error }}</p>
                 </div>
 
                 <template v-else>
@@ -180,7 +191,7 @@ async function cancelInvitation(inv: OrganizationInvitation) {
                                                     <UButton icon="i-lucide-shield" color="neutral" variant="ghost" size="sm" @click="openRoleModal(m)" />
                                                 </UTooltip>
                                                 <UTooltip v-if="canEditMember(m)" :text="t('members.removeMember')">
-                                                    <UButton icon="i-lucide-user-minus" color="error" variant="ghost" size="sm" :loading="isDeletingMember === m.id" @click="removeMember(m)" />
+                                                    <UButton icon="i-lucide-user-minus" color="error" variant="ghost" size="sm" :loading="isDeletingMember === m.id" @click="memberToRemove = m" />
                                                 </UTooltip>
                                             </div>
                                         </td>
@@ -217,11 +228,6 @@ async function cancelInvitation(inv: OrganizationInvitation) {
                             </table>
                         </div>
                     </UPageCard>
-
-                    <div v-if="orgStore.error" class="text-center py-8">
-                        <UIcon name="i-lucide-alert-circle" class="w-12 h-12 text-error mx-auto mb-4" />
-                        <p class="text-muted">{{ orgStore.error }}</p>
-                    </div>
                 </template>
             </div>
 
@@ -268,6 +274,23 @@ async function cancelInvitation(inv: OrganizationInvitation) {
                             <div class="flex justify-end gap-3 pt-2">
                                 <UButton :label="t('common.cancel')" variant="outline" @click="showRoleModal = false" />
                                 <UButton :label="t('members.saveRole')" :loading="isUpdatingRole" icon="i-lucide-check" @click="saveRole" />
+                            </div>
+                        </template>
+                    </UCard>
+                </template>
+            </UModal>
+
+            <UModal :open="!!memberToRemove" :ui="{ content: 'max-w-md' }" @update:open="(v: boolean) => { if (!v) memberToRemove = null }">
+                <template #content>
+                    <UCard>
+                        <template #header>
+                            <h3 class="text-lg font-semibold">{{ t('members.removeMemberTitle') }}</h3>
+                        </template>
+                        <p class="text-muted">{{ t('members.removeMemberConfirm', { name: memberToRemove?.user.name }) }}</p>
+                        <template #footer>
+                            <div class="flex justify-end gap-3 pt-2">
+                                <UButton :label="t('common.cancel')" color="neutral" variant="outline" @click="memberToRemove = null" />
+                                <UButton :label="t('members.removeMember')" color="error" :loading="isDeletingMember === memberToRemove?.id" @click="memberToRemove && removeMember(memberToRemove)" />
                             </div>
                         </template>
                     </UCard>
