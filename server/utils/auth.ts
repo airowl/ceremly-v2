@@ -6,6 +6,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin, openAPI, organization, twoFactor } from "better-auth/plugins";
 import { v7 as uuidv7 } from "uuid";
 import * as schema from "../database/schema";
+import { asc, eq } from "drizzle-orm";
 import { type SupportedLanguage } from "../emailTemplates";
 import { logAudit } from "./audit";
 import type { AuditAction } from "./audit/types";
@@ -91,6 +92,30 @@ export const createBetterAuth = () =>
                             console.error(`[signup→org] createOrganization fallita per user ${user.id}:`, err);
                             throw err;
                         }
+                    },
+                },
+            },
+            session: {
+                create: {
+                    before: async (session) => {
+                        // Org attiva iniziale: prima membership (createdAt asc) dell'utente.
+                        const db = getDB();
+                        const rows = await db
+                            .select({ organizationId: schema.member.organizationId })
+                            .from(schema.member)
+                            .where(eq(schema.member.userId, session.userId))
+                            .orderBy(asc(schema.member.createdAt))
+                            .limit(1);
+                        const activeOrganizationId = rows[0]?.organizationId;
+                        if (!activeOrganizationId) {
+                            return; // nessuna org (stato anomalo) → nessun override
+                        }
+                        return {
+                            data: {
+                                ...session,
+                                activeOrganizationId,
+                            },
+                        };
                     },
                 },
             },
