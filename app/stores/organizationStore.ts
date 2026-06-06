@@ -119,7 +119,8 @@ export const useOrganizationStore = defineStore('organization', () => {
         if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
             const { client } = useAuth();
-            await client.organization.setActive({ organizationId });
+            const { error: apiErr } = await client.organization.setActive({ organizationId });
+            if (apiErr) throw new Error(apiErr.message || 'Error switching organization');
             await loadCurrentOrganization();
             return { success: true };
         } catch (err: any) {
@@ -152,7 +153,8 @@ export const useOrganizationStore = defineStore('organization', () => {
         if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
             const { client } = useAuth();
-            await client.organization.delete({ organizationId });
+            const { error: apiErr } = await client.organization.delete({ organizationId });
+            if (apiErr) throw new Error(apiErr.message || 'Error deleting organization');
             organizations.value = organizations.value.filter(o => o.id !== organizationId);
             if (currentOrganization.value?.id === organizationId) {
                 currentOrganization.value = null;
@@ -183,7 +185,8 @@ export const useOrganizationStore = defineStore('organization', () => {
         if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
             const { client } = useAuth();
-            await client.organization.updateMemberRole({ memberId, role });
+            const { error: apiErr } = await client.organization.updateMemberRole({ memberId, role });
+            if (apiErr) throw new Error(apiErr.message || 'Error updating role');
             await loadCurrentOrganization();
             return { success: true };
         } catch (err: any) {
@@ -195,7 +198,8 @@ export const useOrganizationStore = defineStore('organization', () => {
         if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
             const { client } = useAuth();
-            await client.organization.removeMember({ memberIdOrEmail });
+            const { error: apiErr } = await client.organization.removeMember({ memberIdOrEmail });
+            if (apiErr) throw new Error(apiErr.message || 'Error removing member');
             await loadCurrentOrganization();
             return { success: true };
         } catch (err: any) {
@@ -207,7 +211,8 @@ export const useOrganizationStore = defineStore('organization', () => {
         if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
             const { client } = useAuth();
-            await client.organization.cancelInvitation({ invitationId });
+            const { error: apiErr } = await client.organization.cancelInvitation({ invitationId });
+            if (apiErr) throw new Error(apiErr.message || 'Error cancelling invitation');
             await loadCurrentOrganization();
             return { success: true };
         } catch (err: any) {
