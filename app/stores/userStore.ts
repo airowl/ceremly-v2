@@ -19,7 +19,7 @@ export interface LimitsResponse {
     plan: string;
     limits: PlanLimits;
     usage: {
-        events: ResourceLimit;
+        organizations: ResourceLimit;
         pages: ResourceLimit | null;
         team: ResourceLimit | null;
         storage: StorageLimit | null;
@@ -172,17 +172,19 @@ export const useUserStore = defineStore("user", () => {
     }
 
     /**
-     * Check if user can create a new event.
+     * Check if user can create a new organization.
      * Uses cached data if available, otherwise fetches.
      */
-    async function checkEventCreationLimit(): Promise<ResourceLimit> {
+    async function checkOrgCreationLimit(): Promise<ResourceLimit> {
         if (import.meta.server) return { allowed: false, current: 0, limit: 0 };
 
         if (!limitsData.value) {
             await fetchLimits();
         }
 
-        return limitsData.value?.usage.events ?? { allowed: false, current: 0, limit: 0 };
+        // Defensive read: 1c renames `usage.events` → `usage.organizations` server-side.
+        const usage = limitsData.value?.usage as Record<string, ResourceLimit> | undefined;
+        return usage?.organizations ?? usage?.events ?? { allowed: false, current: 0, limit: 0 };
     }
 
     // ─── Permission Helpers ──────────────────────────────────────────
@@ -250,7 +252,7 @@ export const useUserStore = defineStore("user", () => {
         fetchLimits,
         refreshLimits,
         invalidateLimits,
-        checkEventCreationLimit,
+        checkOrgCreationLimit,
         validatePlanDowngrade,
         // Permission helpers
         hasWritePermissions,

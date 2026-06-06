@@ -47,22 +47,22 @@ export function useUsageNotifications() {
         if (!user?.id) return;
 
         try {
-            // Check event limits
-            const eventLimit = await userStore.checkEventCreationLimit();
+            // Check organization limits
+            const orgLimit = await userStore.checkOrgCreationLimit();
 
-            if (!eventLimit.allowed) {
+            if (!orgLimit.allowed) {
                 addNotification({
                     type: 'error',
-                    title: 'Event Limit Reached',
-                    message: `You have reached the maximum of ${eventLimit.limit} events. Upgrade to create more.`,
+                    title: 'Organization Limit Reached',
+                    message: `You have reached the maximum of ${orgLimit.limit} organizations. Upgrade to create more.`,
                     actionUrl: '/dashboard/subscription',
                     actionText: 'Upgrade Plan'
                 });
-            } else if (eventLimit.current >= eventLimit.limit * 0.8) {
+            } else if (orgLimit.current >= orgLimit.limit * 0.8) {
                 addNotification({
                     type: 'warning',
-                    title: 'Event Limit Near',
-                    message: `You have used ${eventLimit.current} of ${eventLimit.limit} available events.`,
+                    title: 'Organization Limit Near',
+                    message: `You have used ${orgLimit.current} of ${orgLimit.limit} available organizations.`,
                     actionUrl: '/dashboard/subscription',
                     actionText: 'View Plans'
                 });
