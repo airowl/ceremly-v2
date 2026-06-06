@@ -7,6 +7,7 @@ import {
     renderVerificationEmail,
     renderResetPasswordEmail,
     renderWaitingListEmail,
+    renderOrgInviteEmail,
     emailSubjects,
     type SupportedLanguage,
 } from "../emailTemplates";
@@ -19,6 +20,7 @@ export type EmailType =
     | "verification"
     | "reset_password"
     | "waiting_list"
+    | "invitation"
     | "custom";
 
 // Base options for all emails
@@ -45,6 +47,14 @@ export interface WaitingListEmailOptions extends BaseEmailOptions {
     type: "waiting_list";
 }
 
+export interface InvitationEmailOptions extends BaseEmailOptions {
+    type: "invitation";
+    inviteUrl: string;
+    orgName: string;
+    invitedByName: string;
+    expiresInDays?: number;
+}
+
 export interface CustomEmailOptions extends BaseEmailOptions {
     type: "custom";
     subject: string;
@@ -57,6 +67,7 @@ export type EmailOptions =
     | VerificationEmailOptions
     | ResetPasswordEmailOptions
     | WaitingListEmailOptions
+    | InvitationEmailOptions
     | CustomEmailOptions;
 
 // Response type for email operations
@@ -106,6 +117,18 @@ async function buildEmailContent(
             return {
                 subject: emailSubjects.waitingList[language],
                 html: await renderWaitingListEmail({ language }),
+            };
+
+        case "invitation":
+            return {
+                subject: emailSubjects.orgInvite(options.orgName)[language],
+                html: await renderOrgInviteEmail({
+                    language,
+                    inviteUrl: options.inviteUrl,
+                    orgName: options.orgName,
+                    invitedByName: options.invitedByName,
+                    expiresInDays: options.expiresInDays,
+                }),
             };
 
         case "custom":
