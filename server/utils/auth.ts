@@ -217,7 +217,26 @@ export const createBetterAuth = () =>
                 ? [openAPI()]
                 : []),
             admin(),
-            organization(),
+            organization({
+                sendInvitationEmail: async (data) => {
+                    const inviterUser = data.inviter.user as { locale?: string; name?: string };
+                    const language = (inviterUser.locale as SupportedLanguage) || "it";
+                    const inviteUrl = `${runtimeConfig.public.baseURL}/invite/${data.id}`;
+                    const result = await sendEmail({
+                        type: "invitation",
+                        to: data.email,
+                        inviteUrl,
+                        orgName: data.organization.name,
+                        invitedByName: inviterUser.name || data.organization.name,
+                        language,
+                    });
+                    if (!result.success) {
+                        console.error(
+                            `[org.sendInvitationEmail] invio fallito a ${data.email}: ${result.error}`,
+                        );
+                    }
+                },
+            }),
             twoFactor({
                 issuer: runtimeConfig.public.appName || "SaaS App",
                 backupCodeOptions: { amount: 10 },
