@@ -9,6 +9,7 @@ import { WaitingListEmail } from './WaitingListEmail';
 import { ContactConfirmationEmail } from './ContactConfirmationEmail';
 import { ContactNotificationEmail } from './ContactNotificationEmail';
 import { EventInviteEmail } from './EventInviteEmail';
+import { OrgInviteEmail } from './OrgInviteEmail';
 
 export type SupportedLanguage = 'it' | 'en';
 
@@ -19,6 +20,7 @@ export { WaitingListEmail } from './WaitingListEmail';
 export { ContactConfirmationEmail } from './ContactConfirmationEmail';
 export { ContactNotificationEmail } from './ContactNotificationEmail';
 export { EventInviteEmail } from './EventInviteEmail';
+export { OrgInviteEmail } from './OrgInviteEmail';
 
 /**
  * Render verification email to HTML
@@ -124,6 +126,26 @@ export async function renderEventInviteEmail(options: {
     return await render(element);
 }
 
+/**
+ * Render organization invite email to HTML (phase 1b)
+ */
+export async function renderOrgInviteEmail(options: {
+    language?: SupportedLanguage;
+    inviteUrl: string;
+    orgName: string;
+    invitedByName: string;
+    expiresInDays?: number;
+}): Promise<string> {
+    const element = React.createElement(OrgInviteEmail, {
+        language: options.language || 'it',
+        inviteUrl: options.inviteUrl,
+        orgName: options.orgName,
+        invitedByName: options.invitedByName,
+        expiresInDays: options.expiresInDays || 7,
+    });
+    return await render(element);
+}
+
 // Email subject lines by language
 export const emailSubjects = {
     verification: {
@@ -146,5 +168,9 @@ export const emailSubjects = {
     eventInvite: (eventName: string) => ({
         it: `Sei stato invitato a unirti all'evento ${eventName} - Ceremly`,
         en: `You've been invited to join the event ${eventName} - Ceremly`,
+    }),
+    orgInvite: (orgName: string) => ({
+        it: `Sei stato invitato a unirti a ${orgName} - Ceremly`,
+        en: `You've been invited to join ${orgName} - Ceremly`,
     }),
 };
