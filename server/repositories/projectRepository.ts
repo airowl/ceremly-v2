@@ -57,6 +57,11 @@ export async function updateProjectScoped(
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description ?? null;
     if (data.status !== undefined) patch.status = data.status;
+    // Nessun campo da aggiornare: no-op idempotente. Evita `.set({})` che lancia
+    // "No values to set" (drizzle) → 500. Ritorna la riga corrente (scoped).
+    if (Object.keys(patch).length === 0) {
+        return findProjectByIdScoped(organizationId, id);
+    }
     const rows = await db
         .update(schema.projects)
         .set(patch)
