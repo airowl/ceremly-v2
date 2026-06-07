@@ -567,6 +567,54 @@
         }
       }
     },
+    "projects": {
+      "title": "Progetti",
+      "subtitle": "Gestisci i progetti della tua organizzazione",
+      "search": "Cerca progetti...",
+      "create": "Nuovo progetto",
+      "empty": {
+        "title": "Nessun progetto",
+        "description": "Crea il tuo primo progetto per iniziare.",
+        "createButton": "Crea progetto"
+      },
+      "columns": {
+        "name": "Nome",
+        "description": "Descrizione",
+        "status": "Stato",
+        "createdAt": "Creato il",
+        "actions": "Azioni"
+      },
+      "status": {
+        "active": "Attivo",
+        "archived": "Archiviato"
+      },
+      "modal": {
+        "createTitle": "Nuovo progetto",
+        "editTitle": "Modifica progetto",
+        "name": "Nome",
+        "namePlaceholder": "Es. Sito web aziendale",
+        "description": "Descrizione",
+        "descriptionPlaceholder": "Descrizione opzionale del progetto",
+        "status": "Stato",
+        "cancel": "Annulla",
+        "save": "Salva",
+        "saving": "Salvataggio...",
+        "createSuccess": "Progetto creato",
+        "updateSuccess": "Progetto aggiornato",
+        "error": "Operazione non riuscita",
+        "validation": {
+          "nameRequired": "Il nome è obbligatorio"
+        }
+      },
+      "delete": {
+        "title": "Elimina progetto",
+        "confirm": "Sei sicuro di voler eliminare \"{name}\"? L'azione è irreversibile.",
+        "cancel": "Annulla",
+        "confirmButton": "Elimina",
+        "success": "Progetto eliminato",
+        "error": "Eliminazione non riuscita"
+      }
+    },
     "customers": {
       "title": "Gestione Clienti",
       "searchPlaceholder": "Cerca per nome o email...",
