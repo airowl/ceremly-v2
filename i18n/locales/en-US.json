@@ -1759,7 +1759,7 @@
     "cancelInvite": "Cancel invitation",
     "inviteMemberTitle": "Invite a member",
     "emailLabel": "Email",
-    "emailPlaceholder": "name@example.com",
+    "emailPlaceholder": "name{'@'}example.com",
     "sendInvite": "Send invite",
     "changeRoleTitle": "Change role",
     "saveRole": "Save",

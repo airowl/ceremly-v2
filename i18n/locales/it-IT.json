@@ -1761,7 +1761,7 @@
     "cancelInvite": "Annulla invito",
     "inviteMemberTitle": "Invita un membro",
     "emailLabel": "Email",
-    "emailPlaceholder": "nome@esempio.com",
+    "emailPlaceholder": "nome{'@'}esempio.com",
     "sendInvite": "Invia invito",
     "changeRoleTitle": "Cambia ruolo",
     "saveRole": "Salva",

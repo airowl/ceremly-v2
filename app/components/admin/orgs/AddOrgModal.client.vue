@@ -73,7 +73,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     }
 }
 
-watch(open, async (newOpen) => {
+watch(open, async (newOpen: boolean) => {
     if (newOpen) await loadLimits()
 })
 </script>
