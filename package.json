@@ -36,6 +36,8 @@
     "@unhead/vue": "^2.1.4",
     "@unovis/ts": "^1.6.1",
     "@unovis/vue": "^1.6.1",
+    "@upstash/qstash": "^2.11.0",
+    "@upstash/redis": "^1.38.0",
     "@vueuse/core": "^14.0.0",
     "@vueuse/nuxt": "^13.9.0",
     "aws4fetch": "^1.0.20",
