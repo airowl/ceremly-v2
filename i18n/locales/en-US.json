@@ -567,6 +567,54 @@
         }
       }
     },
+    "projects": {
+      "title": "Projects",
+      "subtitle": "Manage your organization's projects",
+      "search": "Search projects...",
+      "create": "New project",
+      "empty": {
+        "title": "No projects",
+        "description": "Create your first project to get started.",
+        "createButton": "Create project"
+      },
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "status": "Status",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "modal": {
+        "createTitle": "New project",
+        "editTitle": "Edit project",
+        "name": "Name",
+        "namePlaceholder": "e.g. Company website",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional project description",
+        "status": "Status",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving...",
+        "createSuccess": "Project created",
+        "updateSuccess": "Project updated",
+        "error": "Operation failed",
+        "validation": {
+          "nameRequired": "Name is required"
+        }
+      },
+      "delete": {
+        "title": "Delete project",
+        "confirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirmButton": "Delete",
+        "success": "Project deleted",
+        "error": "Delete failed"
+      }
+    },
     "customers": {
       "title": "Customer Management",
       "searchPlaceholder": "Search by name or email...",

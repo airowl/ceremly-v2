@@ -69,11 +69,13 @@ async function seed() {
         createdAt: new Date(),
     });
 
-    // --- projects per testare l'isolamento ---
+    // --- projects per testare l'isolamento (con description nullable + status enum) ---
     await db.insert(schema.projects).values([
-        { id: uuidv7(), organizationId: orgB2C, name: "B2C Project 1" },
-        { id: uuidv7(), organizationId: orgB2B, name: "B2B Project 1" },
-        { id: uuidv7(), organizationId: orgB2B, name: "B2B Project 2" },
+        { id: uuidv7(), organizationId: orgB2C, name: "B2C Project 1", description: "Primo progetto personale", status: "active" },
+        { id: uuidv7(), organizationId: orgB2C, name: "B2C Project 2", description: null, status: "archived" },
+        { id: uuidv7(), organizationId: orgB2B, name: "B2B Project 1", description: "Progetto del team", status: "active" },
+        { id: uuidv7(), organizationId: orgB2B, name: "B2B Project 2", description: null, status: "active" },
+        { id: uuidv7(), organizationId: orgB2B, name: "B2B Project 3", description: "Progetto archiviato", status: "archived" },
     ]);
 
     console.log(`[seed] done — orgB2C=${orgB2C} orgB2B=${orgB2B}`);

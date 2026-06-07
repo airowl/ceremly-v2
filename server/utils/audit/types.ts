@@ -12,6 +12,7 @@ export const AUDIT_CATEGORIES = {
   page: 'page',
   event: 'event',
   organization: 'organization',
+  project: 'project',
   contact: 'contact',
   waiting_list: 'waiting_list',
   user: 'user',
@@ -74,6 +75,11 @@ export const AUDIT_ACTIONS = {
   'organization.created': 'organization.created',
   'organization.updated': 'organization.updated',
   'organization.deleted': 'organization.deleted',
+
+  // Project (entità-esempio multi-tenant — FASE 4)
+  'project.created': 'project.created',
+  'project.updated': 'project.updated',
+  'project.deleted': 'project.deleted',
 
   // Contact
   'contact.sent': 'contact.sent',
