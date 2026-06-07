@@ -29,11 +29,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // RAW body — the HMAC is computed over the raw payload.
-  const rawBody = await readRawBody(event)
-  if (!rawBody) {
+  // readRawBody defaults to utf8 encoding → returns the raw string as-is.
+  const body = await readRawBody(event)
+  if (!body) {
     throw createError({ statusCode: 400, statusMessage: 'Empty body' })
   }
-  const body = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8')
 
   // URL must match exactly what dispatch() published (signed into the JWT `sub`).
   const baseURL = config.public.baseURL as string | undefined

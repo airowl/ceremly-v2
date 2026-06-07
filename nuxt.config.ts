@@ -332,13 +332,12 @@ export default defineNuxtConfig({
                     },
                 ],
             },
-            // Background jobs can be slow (export/variant). Raise limits.
-            functionRules: {
-                "/api/jobs/**": {
-                    maxDuration: 300,
-                    memory: 1024,
-                },
-            },
+            // NOTE: per-route functionRules (e.g. raising maxDuration for slow
+            // export/variant jobs) are NOT applied here — this Nitro version
+            // emits a single __nitro.func catch-all, so per-glob function config
+            // can't map to it (and `functionRules` isn't a valid VercelOptions
+            // key: TS2561). Raise maxDuration on the __nitro.func / Vercel
+            // project settings at deploy time instead.
         },
     },
 
