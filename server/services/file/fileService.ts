@@ -249,6 +249,59 @@ export class FileService {
     }
   }
 
+  /**
+   * Public, idempotent entry point used by the queue consumer.
+   * Re-fetches the original file by id, downloads its buffer from storage,
+   * and generates variants. No-op if variants already exist for this file
+   * (QStash may redeliver).
+   */
+  async processVariantsForFileId(fileId: string): Promise<void> {
+    const db = await useDB()
+
+    const [record] = await db.select()
+      .from(fileTable)
+      .where(eq(fileTable.id, fileId))
+      .limit(1)
+
+    if (!record) {
+      console.warn(`[fileService] processVariantsForFileId: file ${fileId} not found, skipping`)
+      return
+    }
+
+    if (!isProcessableImage(record.mimeType)) {
+      return
+    }
+
+    // Idempotency: skip if variants already generated for this file
+    const existingVariant = await db.select({ id: fileTable.id })
+      .from(fileTable)
+      .where(eq(fileTable.variantOf, fileId))
+      .limit(1)
+
+    if (existingVariant.length > 0) {
+      return
+    }
+
+    const bytes = await this.storage.download(record.path)
+    const { Buffer: NodeBuffer } = await import('node:buffer')
+    const buffer = NodeBuffer.from(bytes)
+
+    // Reconstruct basePath: strip the filename from the storage path
+    const pathParts = record.path.split('/')
+    pathParts.pop()
+    const basePath = pathParts.join('/')
+
+    await this.generateAndStoreVariants(
+      buffer,
+      record.mimeType,
+      record.id,
+      basePath,
+      record.organizationId ?? undefined,
+      record.uploadedBy ?? undefined,
+      record.isPublic,
+    )
+  }
+
   async requestPresignedUpload(
     originalName: string,
     mimeType: string,
