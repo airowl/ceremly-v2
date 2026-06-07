@@ -43,6 +43,15 @@ export const generateRuntimeConfig = () => {
         databaseUrl: process.env.NUXT_DATABASE_URL,
         // Admin API
         adminApiKey: process.env.NUXT_ADMIN_API_KEY,
+        // QStash (background jobs)
+        qstashToken: process.env.NUXT_QSTASH_TOKEN,
+        qstashCurrentSigningKey: process.env.NUXT_QSTASH_CURRENT_SIGNING_KEY,
+        qstashNextSigningKey: process.env.NUXT_QSTASH_NEXT_SIGNING_KEY,
+        // Vercel Cron
+        cronSecret: process.env.NUXT_CRON_SECRET,
+        // Upstash Redis (HTTP cache / Better Auth secondaryStorage)
+        upstashRedisRestUrl: process.env.NUXT_UPSTASH_REDIS_REST_URL,
+        upstashRedisRestToken: process.env.NUXT_UPSTASH_REDIS_REST_TOKEN,
         // AI (Mastra - uses OpenAI-compatible provider)
         openaiApiKey: process.env.NUXT_OPENAI_API_KEY,
         // File
