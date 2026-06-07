@@ -7,3 +7,4 @@ export * from "./subscription";
 export * from "./admin";
 export * from "./waiting-list";
 export * from "./event";
+export * from "./organization";
