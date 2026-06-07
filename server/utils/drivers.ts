@@ -1,44 +1,6 @@
-import type { Hyperdrive } from "@cloudflare/workers-types";
 import Redis from "ioredis";
-import pg from "pg";
 import { Resend } from "resend";
 import { runtimeConfig } from "./runtimeConfig";
-
-// Type declaration for Cloudflare Workers globals
-declare const __env__: { HYPERDRIVE?: Hyperdrive } | undefined;
-declare const HYPERDRIVE: Hyperdrive | undefined;
-
-const getDatabaseUrl = () => {
-    const hyperdrive =
-        (process.env.HYPERDRIVE || (typeof __env__ !== 'undefined' ? __env__?.HYPERDRIVE : undefined) ||
-            (typeof HYPERDRIVE !== 'undefined' ? HYPERDRIVE : undefined)) as Hyperdrive | undefined;
-    if (runtimeConfig.preset == "node-server") {
-        return runtimeConfig.databaseUrl;
-    } else {
-        return hyperdrive?.connectionString || runtimeConfig.databaseUrl;
-    }
-};
-
-const createPgPool = () =>
-    new pg.Pool({
-        connectionString: getDatabaseUrl(),
-        max: 90,
-        idleTimeoutMillis: 30000,
-    });
-
-let pgPool: pg.Pool;
-
-// PG Pool
-export const getPgPool = () => {
-    if (runtimeConfig.preset == "node-server") {
-        if (!pgPool) {
-            pgPool = createPgPool();
-        }
-        return pgPool;
-    } else {
-        return createPgPool();
-    }
-};
 
 // Cache Client
 let redisClient: Redis | undefined;

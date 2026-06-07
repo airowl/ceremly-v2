@@ -1,42 +1,34 @@
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import type { EventHandlerRequest, H3Event } from "~~/server/types/h3";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 
 import * as schema from "../database/schema";
-import { getPgPool } from "./drivers";
 import { runtimeConfig } from "./runtimeConfig";
 
 const createDB = () => {
-    return drizzle({ client: getPgPool(), schema });
+    return drizzle({ client: neon(runtimeConfig.databaseUrl), schema });
 };
 
+// HTTP stateless → singleton module-level sempre sicuro (nessuna connessione da gestire).
 let db: ReturnType<typeof createDB>;
 
 export const getDB = () => {
-    if (runtimeConfig.preset == "node-server") {
-        if (!db) {
-            db = createDB();
-        }
-        return db;
-    } else {
-        return createDB();
+    if (!db) {
+        db = createDB();
     }
+    return db;
 };
 
-// use db with schema
+/**
+ * Alias legacy di getDB(). Con neon-http (HTTP stateless) non serve più cachare
+ * un'istanza su event.context.db: getDB() è già singleton. Mantenuto async +
+ * stessa firma per non toccare i ~9 call site (`await useDB()`) di fileService/cleanup.
+ */
 export const useDB = async (
-    event?: H3Event<EventHandlerRequest>,
-): Promise<NodePgDatabase<typeof schema>> => {
-    // If the event has a context with a db property, return it
-    if (event && event.context.db) {
-        return event.context.db;
-    }
-    // Otherwise, create a new connection to the database
-    const dbInstance = createDB();
-    if (event) {
-        event.context.db = dbInstance;
-    }
-    return dbInstance;
+    _event?: H3Event<EventHandlerRequest>,
+): Promise<NeonHttpDatabase<typeof schema>> => {
+    return getDB();
 };
 
 export type TableNames = keyof typeof schema;
