@@ -26,10 +26,10 @@ export interface AdminUserDetail {
         periodStart: Date | null;
         periodEnd: Date | null;
     }>;
-    events: Array<{
+    organizations: Array<{
         id: string;
         name: string;
-        isOwner: boolean;
+        slug: string;
         role: string;
     }>;
 }
@@ -71,12 +71,21 @@ export default defineEventHandler(async (event): Promise<AdminUserDetail> => {
         .from(schema.creem_subscription)
         .where(eq(schema.creem_subscription.referenceId, userId));
 
-    // STUB phase 1a — query su schema.eventUsers + schema.events rimosse; 1c usa org membership
-    const events: Array<{ id: string; name: string; isOwner: boolean; role: string }> = [];
+    // Org membership (FASE 1c — sostituisce lo stub event di 1a)
+    const organizations = await db
+        .select({
+            id: schema.organization.id,
+            name: schema.organization.name,
+            slug: schema.organization.slug,
+            role: schema.member.role,
+        })
+        .from(schema.member)
+        .innerJoin(schema.organization, eq(schema.member.organizationId, schema.organization.id))
+        .where(eq(schema.member.userId, userId));
 
     return {
         ...user,
         subscriptions,
-        events,
+        organizations,
     };
 });

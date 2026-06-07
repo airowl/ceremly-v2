@@ -1,5 +1,4 @@
 import { count, eq, gte, sql } from "drizzle-orm";
-// STUB phase 1a — schema.events non più usato; le query event rimaste sotto sono rimosse
 import * as schema from "~~/server/database/schema";
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { getDB } from "~~/server/utils/db";
@@ -13,7 +12,7 @@ export interface AdminStats {
         verified: number;
         banned: number;
     };
-    events: {
+    organizations: {
         total: number;
         newLast30Days: number;
     };
@@ -44,9 +43,11 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
         .from(schema.user)
         .where(eq(schema.user.banned, true));
 
-    // Event stats — STUB phase 1a: query su schema.events rimosse; 1c usa schema.organizations
-    const totalEvents = { count: 0 }; // STUB phase 1a → totalOrganizations in 1c
-    const newEvents = { count: 0 };   // STUB phase 1a → newOrganizationsLast30Days in 1c
+    // Organization stats (FASE 1c — sostituisce gli stub event di 1a)
+    const [totalOrganizations] = await db.select({ count: count() }).from(schema.organization);
+    const [newOrganizations] = await db.select({ count: count() })
+        .from(schema.organization)
+        .where(gte(schema.organization.createdAt, thirtyDaysAgo));
 
     // Subscription stats
     const [totalSubscriptions] = await db.select({ count: count() }).from(schema.creem_subscription);
@@ -88,9 +89,9 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
             verified: verifiedUsers?.count ?? 0,
             banned: bannedUsers?.count ?? 0,
         },
-        events: {
-            total: totalEvents?.count ?? 0,
-            newLast30Days: newEvents?.count ?? 0,
+        organizations: {
+            total: totalOrganizations?.count ?? 0,
+            newLast30Days: newOrganizations?.count ?? 0,
         },
         subscriptions: {
             total: totalSubscriptions?.count ?? 0,
