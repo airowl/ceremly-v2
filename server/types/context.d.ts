@@ -1,6 +1,6 @@
 /**
  * H3 Event Context type augmentation
- * Populated by server middleware (1.auth, 2.events)
+ * Populated by server middleware (1.auth, 2.organization) e dai guard RBAC.
  */
 declare module 'h3' {
     interface H3EventContext {
@@ -12,21 +12,14 @@ declare module 'h3' {
             role: string | null
             image?: string | null
         }
-        /** Event data — injected by 2.events.ts for /api/events/[id]/* routes */
-        userEvent?: {
+        /**
+         * Org attiva del membro — popolata dai guard RBAC (requireMember/requireWrite/
+         * requireOwner) o dal middleware 2.organization.ts (non-bloccante).
+         * Il service legge organizationId SOLO da qui (mai da body/query).
+         */
+        organization?: {
             id: string
-            name: string
-            slug: string
-            description: string | null
-            userId: string
-            date: string
-            createdAt: Date
-            updatedAt: Date
-        }
-        /** User access/role in event — injected by 2.events.ts */
-        eventAccess?: {
-            isOwner: boolean
-            permissions: string[]
+            role: string
         }
     }
 }

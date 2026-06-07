@@ -13,7 +13,7 @@ import { parseQueryParams } from "~~/server/utils/validateBody";
 import { exceedsLimit, isUnlimited } from "~~/shared/constants/pricing";
 import {
     getEffectiveLimits,
-    countUserEvents,
+    countUserOrganizations,
     countReservedSlots,
 } from "~~/server/services/planLimit.service";
 
@@ -21,22 +21,22 @@ export default defineEventHandler(async (event) => {
     const user = await requireAuth(event);
     const { eventId } = parseQueryParams(event, optionalEventIdQuerySchema);
 
-    // User's own plan info + events count (always returned)
-    const [userEffective, eventsCount] = await Promise.all([
+    // User's own plan info + organizations count (always returned)
+    const [userEffective, orgCount] = await Promise.all([
         getEffectiveLimits(user.id),
-        countUserEvents(user.id), // STUB phase 1a — ritorna 0; 1c conta le organizzazioni
+        countUserOrganizations(user.id),
     ]);
 
-    const eventsMax = userEffective.limits.max_events;
+    const orgsMax = userEffective.limits.max_organizations;
 
     const response = {
         plan: userEffective.plan,
         limits: userEffective.limits,
         usage: {
-            events: {
-                current: eventsCount,
-                limit: isUnlimited(eventsMax) ? -1 : eventsMax,
-                allowed: !exceedsLimit(eventsCount, eventsMax),
+            organizations: {
+                current: orgCount,
+                limit: isUnlimited(orgsMax) ? -1 : orgsMax,
+                allowed: !exceedsLimit(orgCount, orgsMax),
             },
             team: null as { current: number; limit: number; allowed: boolean } | null,
         },

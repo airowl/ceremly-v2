@@ -55,9 +55,10 @@ pnpm auth:schema            # Regenerate Better Auth schema (re-add phone/bio/ti
 1. `0.common.ts` — Common setup
 2. `0.site-mode.ts` — Enforces active/waitinglist/maintenance mode
 3. `1.auth.ts` — Attaches auth session to `event.context`
-4. `2.events.ts` — Attaches event context for scoped requests
-5. `3.rate-limit.ts` — Rate limiting (100 req/min)
-6. `4.block-bots.ts` — Blocks malicious bots
+4. `2.organization.ts` — Precarica (non-bloccante) l'org attiva in `event.context.organization` per `/api/organizations/*` (FASE 1c; l'enforcement è nei guard RBAC, non qui)
+5. `4.block-bots.ts` — Blocks malicious bots
+
+> Nota: `3.rate-limit.ts` è assente dallo stack attuale (non presente sul checkout). `2.events.ts` è stato sostituito da `2.organization.ts` in FASE 1c.
 
 ### Client Middleware
 - `auth.global.ts` — Supports `auth: { only: 'guest' }` and `auth: { only: 'user' }` per page
@@ -103,7 +104,7 @@ All business logic lives in `server/services/`. Routes are thin controllers (max
 | `reminder.service.ts` | Template interpolation, WhatsApp link generation, send logic |
 | `ai.service.ts` | Mastra agent for AI landing page generation (`gpt-4o-mini`) |
 | `eventTemplate.service.ts` | Template CRUD + apply to event |
-| `planLimit.service.ts` | Plan limit checks: `canCreateEvent()`, `canAddGuest()`, `canSendEmail()`, etc. |
+| `planLimit.service.ts` | Plan limit checks: `canCreateOrganization()` (REALE, conta org owned), `canAddTeamMember()`, etc. (`canCreateEvent`→`canCreateOrganization` in FASE 1c) |
 | `team.service.ts` | Team invitations, membership management |
 | `publicEvent.service.ts` | Public RSVP + registration APIs |
 | `file/fileService.ts` | R2 uploads (direct + presigned), dedup via SHA-256, image processing |
@@ -114,7 +115,7 @@ All business logic lives in `server/services/`. Routes are thin controllers (max
 
 ### Key Server Utilities
 - `server/utils/validateBody.ts` — `parseBody(event, schema)`, `parseQueryParams(event, schema)`
-- `server/utils/permissions.ts` — RBAC: `getUserRole()`, `requireMember()`, `requireWrite()`, `requireOwner()`
+- `server/utils/permissions.ts` — RBAC org-scoped (FASE 1c): `getOrgRole()`, `loadActiveOrganization()`, guard `requireMember()`/`requireWrite()`/`requireOwner()` (risolvono l'org attiva e popolano `event.context.organization`), `assertOwnership()` (2° guard by-id, null/mismatch → 403), pure fns `roleCanWrite()`/`roleIsOwner()`
 - `server/utils/db.ts` — `getDB()` (preferred singleton)
 - `server/utils/audit/` — `logAudit(event, action, opts)`, `AUDIT_ACTIONS`, `AUDIT_CATEGORIES`
 - `server/utils/drivers.ts` — `getPgPool()`, `cacheClient` (Redis + in-memory fallback), `getResendInstance()`
@@ -181,7 +182,7 @@ Prima di scrivere o modificare codice backend, **leggere** i pattern in `docs/pa
 - **DB**: `getDB()` preferito — mai mischiare con `useDB()`
 - **Env**: `useRuntimeConfig()` nelle route — mai `process.env`
 - **Auth**: `requireAuth(event)` come prima operazione nelle route protette
-- **RBAC**: `requireMember()` / `requireWrite()` / `requireOwner()` per il controllo accesso eventi
+- **RBAC**: `requireMember()` / `requireWrite()` / `requireOwner()` per il controllo accesso org-scoped (org attiva da sessione → `event.context.organization`); `assertOwnership()` come 2° guard sui by-id
 - **Error**: try-catch con gestione `23505` (unique constraint) + re-throw + fallback 500
 
 ## Git

@@ -15,7 +15,7 @@ export const userCustomLimits = pgTable("user_custom_limits", {
         .references(() => user.id, { onDelete: "cascade" }),
 
     // Override limits (null = use plan default)
-    maxEvents: integer("max_events"),
+    maxOrganizations: integer("max_organizations"),
     storageMb: integer("storage_mb"),
     teamMembers: integer("team_members"),
 

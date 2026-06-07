@@ -9,7 +9,7 @@ export const adminUpdateUserSchema = z.object({
 export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;
 
 export const adminUpdateLimitsSchema = z.object({
-    max_events: z.number().int().min(-1).nullable().optional(),
+    max_organizations: z.number().int().min(-1).nullable().optional(),
     storage_mb: z.number().int().min(-1).nullable().optional(),
     team_members: z.number().int().min(-1).nullable().optional(),
 note: z.string().max(500).nullable().optional(),

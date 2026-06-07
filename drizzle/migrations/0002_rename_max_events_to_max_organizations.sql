@@ -1,0 +1,1 @@
+ALTER TABLE "user_custom_limits" RENAME COLUMN "max_events" TO "max_organizations";

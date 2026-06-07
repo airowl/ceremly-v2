@@ -15,6 +15,13 @@
       "when": 1780668511282,
       "tag": "0001_easy_meltdown",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780668600000,
+      "tag": "0002_rename_max_events_to_max_organizations",
+      "breakpoints": true
     }
   ]
 }

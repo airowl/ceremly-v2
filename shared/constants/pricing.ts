@@ -8,8 +8,8 @@
  */
 
 export interface PlanLimits {
-    /** Maximum number of events (-1 = unlimited) */
-    max_events: number;
+    /** Maximum number of organizations (-1 = unlimited) */
+    max_organizations: number;
     /** Maximum storage in MB (-1 = unlimited) */
     storage_mb: number;
     /** Maximum team members (-1 = unlimited) */
@@ -51,7 +51,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         name: "Starter",
         description: "Per eventi singoli",
         limits: {
-            max_events: 2,
+            max_organizations: 2,
             storage_mb: 500,
             team_members: 1,
         },
@@ -77,7 +77,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         name: "Premium",
         description: "Per organizzatori professionisti",
         limits: {
-            max_events: 5,
+            max_organizations: 5,
             storage_mb: 2000,
             team_members: 5,
         },
@@ -103,7 +103,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
         name: "Agency",
         description: "Per agenzie e wedding planner",
         limits: {
-            max_events: -1,
+            max_organizations: -1,
             storage_mb: 10000,
             team_members: -1,
         },

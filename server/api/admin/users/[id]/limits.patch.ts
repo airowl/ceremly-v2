@@ -63,8 +63,8 @@ export default defineEventHandler(async (event) => {
     const updateData: Partial<typeof schema.userCustomLimits.$inferInsert> = {};
 
     // Handle each limit field: value = set, null = remove, undefined = no change
-    if (validatedData.max_events !== undefined) {
-        updateData.maxEvents = validatedData.max_events;
+    if (validatedData.max_organizations !== undefined) {
+        updateData.maxOrganizations = validatedData.max_organizations;
     }
     if (validatedData.storage_mb !== undefined) {
         updateData.storageMb = validatedData.storage_mb;
@@ -78,8 +78,8 @@ if (validatedData.note !== undefined) {
 
     // Track changes for audit log
     const changes: Record<string, { from: unknown; to: unknown }> = {};
-    if (validatedData.max_events !== undefined) {
-        changes.max_events = { from: existing?.maxEvents ?? 'plan default', to: validatedData.max_events ?? 'plan default' };
+    if (validatedData.max_organizations !== undefined) {
+        changes.max_organizations = { from: existing?.maxOrganizations ?? 'plan default', to: validatedData.max_organizations ?? 'plan default' };
     }
     if (validatedData.storage_mb !== undefined) {
         changes.storage_mb = { from: existing?.storageMb ?? 'plan default', to: validatedData.storage_mb ?? 'plan default' };
@@ -107,7 +107,7 @@ if (validatedData.note !== undefined) {
 
         const updated = updatedRecord[0];
         if (updated &&
-            updated.maxEvents === null &&
+            updated.maxOrganizations === null &&
             updated.storageMb === null &&
             updated.teamMembers === null &&
             updated.note === null
@@ -122,7 +122,7 @@ if (validatedData.note !== undefined) {
         await db.insert(schema.userCustomLimits).values({
             id: nanoid(),
             userId,
-            maxEvents: validatedData.max_events ?? null,
+            maxOrganizations: validatedData.max_organizations ?? null,
             storageMb: validatedData.storage_mb ?? null,
             teamMembers: validatedData.team_members ?? null,
             note: validatedData.note ?? null,
