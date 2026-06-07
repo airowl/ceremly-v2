@@ -10,6 +10,7 @@ import { logAudit } from '~~/server/utils/audit'
 import { computeSHA256 } from './hash'
 import { generateVariants, isProcessableImage } from './imageProcessor'
 import { validateMagicBytes } from './magicBytes'
+import { dispatch } from '~~/server/queue'
 
 export const useFileManagerConfig = () => {
   const config = useRuntimeConfig().fileManager
@@ -137,7 +138,7 @@ export class FileService {
     }
 
     const fileId = uuidv7()
-    const { basePath, fullKey } = generateKey(originalName, eventId)
+    const { fullKey } = generateKey(originalName, eventId)
     const fileType = getFileTypeFromMimeType(mimeType)
 
     try {
@@ -183,10 +184,15 @@ export class FileService {
         },
       })
 
-      // Generate image variants (non-blocking, best-effort)
+      // Enqueue image variant generation (QStash in prod, in-process in dev).
+      // Best-effort: an enqueue failure must NOT fail the successful upload
+      // (preserves the original fire-and-forget resilience).
       if (isProcessableImage(mimeType)) {
-        this.generateAndStoreVariants(fileBuffer, mimeType, fileRecord.id, basePath, eventId, uploadedBy, isPublic)
-          .catch(err => console.error('[fileService] variant generation failed:', err))
+        try {
+          await dispatch('image-variant', { fileId: fileRecord.id })
+        } catch (err) {
+          console.error('[fileService] variant enqueue failed:', err)
+        }
       }
 
       return fileRecord
@@ -483,25 +489,16 @@ export class FileService {
         return duplicate
       }
 
-      // Generate image variants for presigned uploads
+      // Enqueue image variant generation (QStash in prod, in-process in dev).
+      // The job re-fetches the file by id and downloads the buffer from R2.
+      // Best-effort: isolated try/catch so an enqueue failure is logged
+      // explicitly and does not get masked by the surrounding dedup catch.
       if (isProcessableImage(pendingFile.mimeType)) {
-        // Extract basePath from the full key (remove the filename part)
-        const pathParts = pendingFile.path.split('/')
-        pathParts.pop() // Remove filename
-        const basePath = pathParts.join('/')
-
-        const { Buffer: NodeBuffer } = await import('node:buffer')
-        const buffer = NodeBuffer.from(fileContent)
-
-        this.generateAndStoreVariants(
-          buffer,
-          pendingFile.mimeType,
-          fileId,
-          basePath,
-          pendingFile.organizationId ?? undefined,
-          uploadedBy,
-          pendingFile.isPublic,
-        ).catch(err => console.error('[fileService] variant generation failed:', err))
+        try {
+          await dispatch('image-variant', { fileId })
+        } catch (err) {
+          console.error('[fileService] variant enqueue failed:', err)
+        }
       }
     } catch (error) {
       console.warn('[fileService] SHA256/dedup check failed, proceeding:', error)

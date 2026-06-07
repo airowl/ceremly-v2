@@ -10,8 +10,9 @@ import { logAudit } from '../utils/audit'
 import {
   createDataExportRequest,
   hasPendingExport,
-  processExport,
+  updateExportStatus,
 } from '../utils/dataExport'
+import { dispatch } from '~~/server/queue'
 import type { UpdateProfileInput } from '~~/shared/schemas/auth'
 
 // --- User Read Operations ---
@@ -247,10 +248,20 @@ export async function requestDataExport(
   // Create export request
   const exportId = await createDataExportRequest(userId)
 
-  // Process export in background (in production, use a job queue)
-  processExport(exportId, userId).catch((error: unknown) => {
-    console.error('Export processing failed:', error)
-  })
+  // Enqueue export job (QStash in prod, in-process in dev).
+  // If enqueue fails, mark the request failed so it doesn't stay pending
+  // forever and block future requests via hasPendingExport().
+  try {
+    await dispatch('data-export', { exportId, userId })
+  } catch (error) {
+    await updateExportStatus(exportId, 'failed', {
+      errorMessage: error instanceof Error ? error.message : 'Failed to enqueue export',
+    })
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to start export. Please try again.',
+    })
+  }
 
   await logAudit(h3Event, 'user.data_export_requested', {
     targetType: 'data_export',
