@@ -4,9 +4,10 @@ import { v7 as uuidv7 } from "uuid";
 import { organization } from "./auth";
 
 /**
- * Example domain table — multi-tenant pattern reference.
+ * Example domain table — multi-tenant pattern reference (CRUD completo, FASE 4).
  * Ogni risorsa di dominio futura si modella così: organizationId NOT NULL + indice.
- * CRUD completo (service + API + pagina) → FASE 4. Qui solo lo schema per testare l'isolamento.
+ * Campi esemplari: name (NOT NULL), description (nullable), status (enum via text + Zod).
+ * Service: server/services/project.service.ts — API: server/api/projects/.
  */
 export const projects = pgTable(
     "projects",
@@ -16,6 +17,8 @@ export const projects = pgTable(
             .notNull()
             .references(() => organization.id, { onDelete: "cascade" }),
         name: text("name").notNull(),
+        description: text("description"),
+        status: text("status").default("active").notNull(),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
             .defaultNow()
