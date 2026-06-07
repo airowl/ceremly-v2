@@ -3,7 +3,12 @@ export default defineEventHandler((event) => {
     const path = event.path.toLowerCase();
 
     // Skip bot protection for admin API and auth webhooks (Creem)
-    if (path.startsWith("/api/admin") || path.startsWith("/api/auth/")) {
+    if (
+        path.startsWith("/api/admin") ||
+        path.startsWith("/api/auth/") ||
+        path.startsWith("/api/jobs") ||
+        path.startsWith("/api/cron")
+    ) {
         return;
     }
 

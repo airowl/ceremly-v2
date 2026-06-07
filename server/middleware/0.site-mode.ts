@@ -34,6 +34,8 @@ export default defineEventHandler((event) => {
         if (path?.startsWith("/api/")) {
             // API consentite in waitinglist
             if (path.startsWith("/api/waiting-list/")) return;
+            // Background jobs (QStash) e cron (Vercel) passano a prescindere dal site mode
+            if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
 
             throw createError({
                 statusCode: 503,
@@ -67,6 +69,8 @@ export default defineEventHandler((event) => {
     // === MODALITÀ MAINTENANCE ===
     if (siteMode === "maintenance") {
         if (path?.startsWith("/api/")) {
+            // Background jobs (QStash) e cron (Vercel) passano anche in maintenance
+            if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
             throw createError({
                 statusCode: 503,
                 statusMessage: "Service Unavailable",
