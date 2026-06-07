@@ -114,6 +114,24 @@ export default defineNuxtConfig({
             },
         },
 
+        // QStash job consumers — own HMAC signature verification.
+        // xssValidator MUST be off: it mutates the POST body and would
+        // invalidate the QStash signature (computed over the raw body).
+        "/api/jobs/**": {
+            security: {
+                corsHandler: false,
+                xssValidator: false,
+                rateLimiter: false,
+            },
+        },
+
+        // Vercel Cron endpoints — authorized by CRON_SECRET (GET).
+        "/api/cron/**": {
+            security: {
+                rateLimiter: false,
+            },
+        },
+
     },
 
     i18n: {
@@ -294,11 +312,33 @@ export default defineNuxtConfig({
     },
 
     nitro: {
+        preset: process.env.NUXT_NITRO_PRESET || "vercel",
         routeRules: {
             "/.env": { redirect: "/404" },
             "/.git": { redirect: "/404" },
             "/wp-*": { redirect: "/404" },
             "/config*": { redirect: "/404" },
+        },
+        // Vercel-specific Build Output API config. The authority for deploy
+        // config is .vercel/output/config.json (merged from here) — NOT a
+        // root vercel.json. Crons invoke /api/cron/* via HTTP GET.
+        vercel: {
+            config: {
+                crons: [
+                    {
+                        path: "/api/cron/cleanup-files",
+                        // Hobby plan = max 1 run/day. Pro = minute precision.
+                        schedule: "0 3 * * *",
+                    },
+                ],
+            },
+            // Background jobs can be slow (export/variant). Raise limits.
+            functionRules: {
+                "/api/jobs/**": {
+                    maxDuration: 300,
+                    memory: 1024,
+                },
+            },
         },
     },
 
