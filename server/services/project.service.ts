@@ -60,6 +60,9 @@ export async function createProject(
 ) {
     const organizationId = getOrgId(event);
     const project = await createProjectRow(organizationId, data);
+    if (!project) {
+        throw createError({ statusCode: 500, statusMessage: "Failed to create project" });
+    }
     await logAudit(event, "project.created", {
         organizationId,
         targetType: "project",
