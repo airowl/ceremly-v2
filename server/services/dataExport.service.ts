@@ -249,6 +249,17 @@ export async function getExportByToken(token: string) {
 }
 
 /**
+ * Get export request by id (used for idempotency in the queue consumer).
+ */
+export async function getExportById(exportId: string) {
+    const db = getDB();
+
+    return db.query.dataExports.findFirst({
+        where: eq(dataExports.id, exportId),
+    });
+}
+
+/**
  * Get user's export history
  */
 export async function getExportHistory(userId: string, limit = 10) {
