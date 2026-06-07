@@ -11,6 +11,7 @@ export const AUDIT_CATEGORIES = {
   team: 'team',
   page: 'page',
   event: 'event',
+  organization: 'organization',
   contact: 'contact',
   waiting_list: 'waiting_list',
   user: 'user',
@@ -68,6 +69,11 @@ export const AUDIT_ACTIONS = {
   'event.created': 'event.created',
   'event.updated': 'event.updated',
   'event.deleted': 'event.deleted',
+
+  // Organization (FASE 1c)
+  'organization.created': 'organization.created',
+  'organization.updated': 'organization.updated',
+  'organization.deleted': 'organization.deleted',
 
   // Contact
   'contact.sent': 'contact.sent',
