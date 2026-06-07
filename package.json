@@ -18,7 +18,8 @@
     "db:studio": "drizzle-kit studio --config ./server/database/drizzle.config.ts",
     "db:seed": "npx tsx server/database/seed/index.ts",
     "db:reset": "npx tsx server/database/seed/reset.ts",
-    "verify:rbac": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-rbac.ts"
+    "verify:rbac": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-rbac.ts",
+    "verify:isolation-api": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-isolation-api.ts"
   },
   "dependencies": {
     "@creem_io/better-auth": "^0.0.13",
