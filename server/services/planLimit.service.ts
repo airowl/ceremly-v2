@@ -1,7 +1,7 @@
 /**
  * Plan Limit Service
  * Functions to get user's subscription plan and validate limits.
- * All checks are scoped to events (the primary organizational entity).
+ * All checks are scoped to organizations (the primary tenant entity).
  */
 import { eq, and } from "drizzle-orm";
 import * as schema from "../database/schema";
@@ -19,7 +19,7 @@ export interface UserPlanInfo {
     subscription: typeof schema.creem_subscription.$inferSelect | null;
 }
 
-export type LimitType = 'event' | 'team'
+export type LimitType = 'organization' | 'team'
 
 export interface LimitCheck {
     allowed: boolean
@@ -119,7 +119,7 @@ export async function getUserCustomLimits(userId: string): Promise<Partial<PlanL
     if (!custom) return null;
 
     const limits: Partial<PlanLimits> = {};
-    if (custom.maxEvents !== null) limits.max_events = custom.maxEvents;
+    if (custom.maxOrganizations !== null) limits.max_organizations = custom.maxOrganizations;
     if (custom.storageMb !== null) limits.storage_mb = custom.storageMb;
     if (custom.teamMembers !== null) limits.team_members = custom.teamMembers;
 
@@ -146,7 +146,7 @@ export async function getEffectiveLimits(userId: string): Promise<EffectiveLimit
 
     const effectiveLimits: PlanLimits = {
         ...planInfo.limits,
-        max_events: customLimits.max_events ?? planInfo.limits.max_events,
+        max_organizations: customLimits.max_organizations ?? planInfo.limits.max_organizations,
         storage_mb: customLimits.storage_mb ?? planInfo.limits.storage_mb,
         team_members: customLimits.team_members ?? planInfo.limits.team_members,
     };
@@ -160,31 +160,42 @@ export async function getEffectiveLimits(userId: string): Promise<EffectiveLimit
     };
 }
 
-// ─── Event limit checks ─────────────────────────────────────────────
+// ─── Organization limit checks ──────────────────────────────────────
 
 /**
- * Count events owned by a user
- * STUB phase 1a — sostituito da countUserOrganizations in 1c
+ * Count organizations OWNED by a user (role === "owner").
+ * Essere membro/admin di org altrui NON consuma il limite di creazione.
  */
-export async function countUserEvents(_userId: string): Promise<number> {
-    return 0; // STUB phase 1a — query su schema.events rimossa; 1c conta le organizzazioni
+export async function countUserOrganizations(userId: string): Promise<number> {
+    const db = getDB();
+    const rows = await db
+        .select({ id: schema.member.organizationId })
+        .from(schema.member)
+        .where(
+            and(
+                eq(schema.member.userId, userId),
+                eq(schema.member.role, "owner"),
+            ),
+        );
+    return rows.length;
 }
 
 /**
- * Check if user can create a new event based on plan limits
+ * Check if user can create a new organization based on plan limits.
  */
-export async function canCreateEvent(userId: string): Promise<{
+export async function canCreateOrganization(userId: string): Promise<{
     allowed: boolean;
     current: number;
     limit: number;
     plan: PlanName;
 }> {
     const effectiveInfo = await getEffectiveLimits(userId);
-    const limit = effectiveInfo.limits.max_events;
+    const limit = effectiveInfo.limits.max_organizations;
+    const current = await countUserOrganizations(userId);
 
     return {
-        allowed: true, // STUB phase 1a — sempre permesso; 1c verifica contro organizationCount
-        current: 0,    // STUB phase 1a — 0 fino a countUserOrganizations in 1c
+        allowed: !exceedsLimit(current, limit),
+        current,
         limit: isUnlimited(limit) ? -1 : limit,
         plan: effectiveInfo.plan,
     };
