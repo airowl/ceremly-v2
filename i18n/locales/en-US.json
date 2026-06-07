@@ -1,1684 +1,1788 @@
 {
-    "landing": {
-        "nav": {
-            "features": "Features",
-            "pricing": "Pricing",
-            "clients": "Clients",
-            "blog": "Blog",
-            "getStarted": "Get Started"
-        },
-        "hero": {
-            "badge": "Early access coming soon",
-            "title": "Stop chasing guests. Get responses in",
-            "titleHighlight": "1 minute",
-            "subtitle": "The automatic platform for managing RSVP of private events via Email and WhatsApp Deep Link without stress. No more spreadsheets or endless group chats.",
-            "cta": "Join Waitlist",
-            "ctaSecondary": "See how it works",
-            "socialProofCount": "+400",
-            "socialProofUsers": "400+ users",
-            "socialProofText": "waiting for launch!",
-            "mockup": {
-                "whatsappTitle": "New WhatsApp confirmation",
-                "whatsappDesc": "Marco Rossi confirmed via link",
-                "whatsappTime": "Now",
-                "emailTitle": "Email Invite Opened",
-                "emailDesc": "Giulia Bianchi viewed the invite",
-                "emailTime": "2m ago",
-                "rsvpComplete": "RSVP Complete",
-                "rsvpPercent": "85% Responses"
-            }
-        },
-        "waitlistHero": {
-            "title": "Join the waiting list",
-            "description": "Be the first to try Ceremly and get priority access with a lifetime discount.",
-            "placeholder": "Your best email",
-            "cta": "Join the waiting list",
-            "privacy": "No spam, just important updates."
-        },
-        "features": {
-            "badge": "Why choose Ceremly?",
-            "title": "Everything you need to manage confirmations without going crazy",
-            "subtitle": "Simplify life for your guests and yourself with tools designed for maximum conversion.",
-            "cards": {
-                "email": {
-                    "title": "1-click Email",
-                    "description": "Guests confirm their attendance directly from the email, without having to login or fill in complex forms."
-                },
-                "whatsapp": {
-                    "title": "WhatsApp Deep Link",
-                    "description": "No invasive bots. Generate a WhatsApp link for each guest with a pre-filled message to send with one click."
-                },
-                "socialProof": {
-                    "title": "Dynamic Social Proof",
-                    "description": "Show who has already confirmed to encourage others to respond faster."
-                }
-            }
-        },
-        "dashboard": {
-            "badge": "Real-time Dashboard",
-            "title": "Monitor everything in real time",
-            "description": "A clear dashboard that shows you response rates, who viewed and who still needs to respond. Export the guest list in one click.",
-            "check1": "Email open tracking",
-            "check2": "PDF and Excel export for catering",
-            "check3": "Food allergy alerts",
-            "mockup": {
-                "eventName": "Luca & Sofia Wedding",
-                "active": "Active",
-                "confirmed": "Confirmed",
-                "confirmedValue": "84% (126)",
-                "waiting": "Pending",
-                "waitingValue": "12% (18)",
-                "declined": "Declined",
-                "declinedValue": "4% (6)"
-            }
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "clients": "Clients",
+      "blog": "Blog",
+      "getStarted": "Get Started"
+    },
+    "hero": {
+      "badge": "Early access coming soon",
+      "title": "Stop chasing guests. Get responses in",
+      "titleHighlight": "1 minute",
+      "subtitle": "The automatic platform for managing RSVP of private events via Email and WhatsApp Deep Link without stress. No more spreadsheets or endless group chats.",
+      "cta": "Join Waitlist",
+      "ctaSecondary": "See how it works",
+      "socialProofCount": "+400",
+      "socialProofUsers": "400+ users",
+      "socialProofText": "waiting for launch!",
+      "mockup": {
+        "whatsappTitle": "New WhatsApp confirmation",
+        "whatsappDesc": "Marco Rossi confirmed via link",
+        "whatsappTime": "Now",
+        "emailTitle": "Email Invite Opened",
+        "emailDesc": "Giulia Bianchi viewed the invite",
+        "emailTime": "2m ago",
+        "rsvpComplete": "RSVP Complete",
+        "rsvpPercent": "85% Responses"
+      }
+    },
+    "waitlistHero": {
+      "title": "Join the waiting list",
+      "description": "Be the first to try Ceremly and get priority access with a lifetime discount.",
+      "placeholder": "Your best email",
+      "cta": "Join the waiting list",
+      "privacy": "No spam, just important updates."
+    },
+    "features": {
+      "badge": "Why choose Ceremly?",
+      "title": "Everything you need to manage confirmations without going crazy",
+      "subtitle": "Simplify life for your guests and yourself with tools designed for maximum conversion.",
+      "cards": {
+        "email": {
+          "title": "1-click Email",
+          "description": "Guests confirm their attendance directly from the email, without having to login or fill in complex forms."
         },
         "whatsapp": {
-            "badge": "Assisted Deep Links",
-            "title": "WhatsApp invites without invasive automation",
-            "description": "The system generates a unique \"Deep Link\" for each guest. You click a button in the dashboard, your WhatsApp app opens with a pre-filled and personalized message. You press send. Simple, safe and personal.",
-            "cta": "See example",
-            "mockup": {
-                "contactName": "Luca & Sofia",
-                "message1": "Hi Marco! 👋 Here is the personal link for our wedding:",
-                "linkTitle": "Ceremly - Confirm",
-                "linkUrl": "ceremly.it/u/xyz123",
-                "linkCta": "Click here to confirm 👇",
-                "reply": "Thanks! Done in a second! 😍",
-                "inputPlaceholder": "Write a message"
-            }
+          "title": "WhatsApp Deep Link",
+          "description": "No invasive bots. Generate a WhatsApp link for each guest with a pre-filled message to send with one click."
         },
-        "pricing": {
-            "badge": "Expected pricing",
-            "title": "Join the waitlist to access these rates",
-            "description": "Choose the plan that fits you.",
-            "recommended": "Recommended",
-            "perEvent": "/event",
-            "perMonth": "/month",
-            "cta": "Join the list",
-            "note": "Monthly or annual billing. Cancel anytime.",
-            "billing": {
-                "monthly": "Monthly",
-                "yearly": "Yearly",
-                "perMonth": "/month",
-                "perYear": "/year",
-                "savings": "Save {amount} per year"
-            },
-            "tiers": {
-                "starter": {
-                    "title": "Starter",
-                    "description": "Ideal for dinners, birthday parties or small events.",
-                    "cta": "Get started"
-                },
-                "premium": {
-                    "title": "Premium",
-                    "description": "Perfect for weddings and large celebrations.",
-                    "cta": "Get started",
-                    "badge": "Recommended"
-                },
-                "agency": {
-                    "title": "Agency",
-                    "description": "For professional Wedding Planners and Event Organizers.",
-                    "cta": "Get started"
-                }
-            }
-        },
-        "finalCta": {
-            "title": "Ready to simplify your next event?",
-            "description": "Join the waitlist today and get a free month of Pro plan at official launch.",
-            "placeholder": "Enter your email",
-            "cta": "Join the waiting list"
-        },
-        "seo": {
-            "title": "Ceremly - Automatic RSVP Management for Private Events",
-            "description": "Automatic platform for managing RSVPs for private events via Email and WhatsApp Deep Link. No more spreadsheets or endless group chats. Try free.",
-            "ogTitle": "Ceremly - Guest Confirmations via Email & WhatsApp in 1 Minute",
-            "ogDescription": "Manage your private event confirmations with 1-click Email invites and WhatsApp Deep Links. Real-time dashboard, PDF export, allergy alerts.",
-            "keywords": "RSVP, guest management, event confirmation, WhatsApp invites, email invites, wedding planner, event planning, guest list"
-        },
-        "landingFooter": {
-            "privacy": "Privacy Policy",
-            "terms": "Terms of Service",
-            "contacts": "Contact",
-            "blog": "Blog",
-            "copyright": "Ceremly Italia. All rights reserved."
-        },
-        "howItWorks": {
-            "title": "Get started in 3 simple steps",
-            "subtitle": "From signup to production in minutes, not months.",
-            "step1": {
-                "title": "Step 1 - Create your event",
-                "description": "Sign up and create your first event in seconds. Add details, upload your guest list and customize messages.",
-                "highlight": "Your event is ready to use right after signup."
-            },
-            "step2": {
-                "title": "Step 2 - Send invites",
-                "description": "Send invites via email or generate personalized WhatsApp Deep Links for each guest.",
-                "highlight": "Reach every guest the way they prefer."
-            },
-            "step3": {
-                "title": "Step 3 - Monitor responses",
-                "description": "Follow in real time who confirmed, who still needs to respond and export data for catering.",
-                "highlight": "Everything under control, in one dashboard."
-            },
-            "cta": "Get Started"
-        },
-        "forWho": {
-            "title": "Built for event organizers",
-            "subtitle": "Whether you're organizing a wedding or a dinner party, Ceremly adapts to your needs.",
-            "planner": {
-                "title": "For private events",
-                "feature1": "Weddings and ceremonies",
-                "feature2": "Birthday parties",
-                "feature3": "Dinners and gatherings"
-            },
-            "couples": {
-                "title": "For professionals",
-                "feature1": "Wedding Planners",
-                "feature2": "Event organizers",
-                "feature3": "Agencies"
-            }
-        },
-        "trust": {
-            "badge": "Security & Privacy",
-            "title": "Your data is safe",
-            "subtitle": "Guest data privacy and security as top priority.",
-            "emailDelivery": {
-                "title": "Secure Emails",
-                "description": "Verified sends with SPF/DKIM for maximum deliverability.",
-                "benefit1": "No risk of ending up in spam",
-                "benefit2": "Real-time open tracking"
-            },
-            "privacy": {
-                "title": "GDPR Compliant",
-                "description": "Guest data protected and processed according to European regulations.",
-                "benefit1": "Automatic data deletion post-event",
-                "benefit2": "No sharing with third parties"
-            },
-            "cta": {
-                "description": "Ready to simplify your next event?",
-                "primary": "Join Waitlist",
-                "secondary": "Learn More"
-            }
-        },
-        "why": {
-            "badge": "Why Ceremly",
-            "title": "Why choose Ceremly",
-            "benefits": {
-                "hub": {
-                    "title": "All in one platform",
-                    "description": "Email, WhatsApp, dashboard and export in one solution."
-                },
-                "efficiency": {
-                    "title": "Faster responses",
-                    "description": "Deep Links and 1-click for response rates up to 90%."
-                },
-                "accessibility": {
-                    "title": "Super easy to use",
-                    "description": "No training needed. Ready to use in 2 minutes."
-                }
-            },
-            "mission": {
-                "badge": "Our mission",
-                "description": "We believe organizing an event should be a pleasure, not stress. Ceremly eliminates the chaos of confirmations so you can enjoy the moments that matter."
-            }
-        },
-        "faq": {
-            "title": "Frequently Asked Questions",
-            "subtitle": "Everything you need to know before getting started.",
-            "questions": {
-                "q1": {
-                    "question": "How does Ceremly work?",
-                    "answer": "Create your event, upload your guest list and choose how to send them: 1-click email or WhatsApp deep link. Guests confirm in a second and you monitor everything from the dashboard."
-                },
-                "q2": {
-                    "question": "Do I need technical skills?",
-                    "answer": "Absolutely not. The interface is designed to be intuitive. Create your event and send invites in less than 5 minutes."
-                },
-                "q3": {
-                    "question": "Do WhatsApp deep links use bots?",
-                    "answer": "No, no bots. The system generates a link that opens your WhatsApp app with a pre-filled message. You simply press send. Totally personal and safe."
-                },
-                "q4": {
-                    "question": "Is guest data safe?",
-                    "answer": "Absolutely. We use standard encryption, are GDPR compliant and data is automatically deleted after the event if requested."
-                },
-                "q5": {
-                    "question": "Can I try before paying?",
-                    "answer": "Join the waitlist for priority access and a lifetime discount. Early users will also get a free month of Pro."
-                },
-                "q6": {
-                    "question": "When will Ceremly launch?",
-                    "answer": "We're working on the launch. Join the waitlist to be among the first to try the platform and receive updates."
-                }
-            }
-        },
-        "waitingList": {
-            "badge": "Coming Soon",
-            "title": "Join the Waiting List",
-            "description": "Be among the first to get access when we launch. Early adopters get exclusive benefits.",
-            "placeholder": "Enter your email address",
-            "submitButton": "Join Waiting List",
-            "submittedButton": "You're In!",
-            "successTitle": "Welcome aboard!",
-            "successMessage": "Thank you for signing up! We've sent you a confirmation email.",
-            "successMessageNoEmail": "Thank you for signing up! We'll notify you as soon as we launch.",
-            "alreadySubscribedTitle": "Already subscribed",
-            "alreadySubscribedMessage": "This email is already on the waiting list. We'll notify you at launch!",
-            "errorTitle": "Oops!",
-            "errorMessage": "Something went wrong. Please try again later.",
-            "privacyNote": "We respect your privacy. No spam, ever.",
-            "validation": {
-                "invalidEmail": "Please enter a valid email address"
-            },
-            "features": {
-                "earlyAccess": {
-                    "title": "Early Access",
-                    "description": "Be the first to test the platform"
-                },
-                "specialBenefits": {
-                    "title": "Special Benefits",
-                    "description": "Exclusive discounts for early adopters"
-                },
-                "updates": {
-                    "title": "Priority Updates",
-                    "description": "Stay informed about every milestone"
-                }
-            }
-        },
-        "contact": {
-            "badge": "Contact Us",
-            "title": "Have questions? We're here to help",
-            "description": "Fill out the form and we'll get back to you within 24 hours.",
-            "nameLabel": "Name",
-            "emailLabel": "Email",
-            "subjectLabel": "Subject",
-            "messageLabel": "Message",
-            "namePlaceholder": "Your name",
-            "emailPlaceholder": "Your email address",
-            "subjectPlaceholder": "What would you like to discuss?",
-            "messagePlaceholder": "Write your message here...",
-            "submitButton": "Send message",
-            "submittedButton": "Message sent!",
-            "successTitle": "Message sent!",
-            "successMessage": "Thank you for contacting us. We'll get back to you as soon as possible.",
-            "errorTitle": "Oops!",
-            "errorMessage": "Something went wrong. Please try again later.",
-            "privacyNote": "Your data is safe. We only use it to respond to you.",
-            "validation": {
-                "requiredName": "Name is required",
-                "requiredEmail": "Email is required",
-                "requiredSubject": "Subject is required",
-                "requiredMessage": "Message is required",
-                "invalidName": "Name must be at least 2 characters",
-                "invalidEmail": "Please enter a valid email address",
-                "invalidSubject": "Subject must be at least 3 characters",
-                "invalidMessage": "Message must be at least 10 characters"
-            },
-            "info": {
-                "email": {
-                    "title": "Email",
-                    "value": "hello{'@'}ceremly.it"
-                },
-                "hours": {
-                    "title": "Hours",
-                    "value": "Mon-Fri, 9:00-18:00"
-                },
-                "response": {
-                    "title": "Response time",
-                    "value": "Within 24 business hours"
-                }
-            }
-        },
-        "newsletter": {
-            "badge": "Stay Updated",
-            "title": "Subscribe to Our Newsletter",
-            "description": "Get the latest updates about Ceremly directly in your inbox.",
-            "nameLabel": "Name",
-            "emailLabel": "Email",
-            "namePlaceholder": "Your name",
-            "emailPlaceholder": "Your email address",
-            "submitButton": "Subscribe",
-            "submittedButton": "Subscribed!",
-            "successTitle": "Welcome!",
-            "successMessage": "Thank you for subscribing!",
-            "errorTitle": "Oops!",
-            "errorMessage": "Something went wrong. Please try again later.",
-            "privacyNote": "We respect your privacy. No spam, ever.",
-            "validation": {
-                "invalidName": "Name must be at least 2 characters",
-                "invalidEmail": "Please enter a valid email address"
-            },
-            "features": {
-                "exclusiveContent": {
-                    "title": "Exclusive Content",
-                    "description": "Access reserved tips and guides"
-                },
-                "specialOffers": {
-                    "title": "Special Offers",
-                    "description": "Be the first to know about promotions"
-                },
-                "updates": {
-                    "title": "Latest Updates",
-                    "description": "Stay informed about new features"
-                }
-            }
+        "socialProof": {
+          "title": "Dynamic Social Proof",
+          "description": "Show who has already confirmed to encourage others to respond faster."
         }
-    },
-    "maintenance": {
-        "badge": "We're working for you",
-        "title": "Site under maintenance",
-        "description": "We're improving the platform to offer you an even better experience. We'll be back online soon!",
-        "cta": {
-            "notify": "Notify me when ready",
-            "contact": "Contact us"
-        },
-        "stats": {
-            "stat1": "Reliability",
-            "stat2": "Support",
-            "stat3": "Quick setup"
-        },
-        "features": {
-            "title": "Coming soon",
-            "description": "We're preparing new features and improvements for you.",
-            "feature1": {
-                "title": "Event Management",
-                "description": "Organize your work with flexible events and team structures."
-            },
-            "feature2": {
-                "title": "Team Collaboration",
-                "description": "Invite members, assign roles, and collaborate efficiently."
-            },
-            "feature3": {
-                "title": "Subscription Management",
-                "description": "Manage billing, upgrades, and usage all in one place."
-            }
-        },
-        "footer": {
-            "rights": "All rights reserved.",
-            "terms": "Terms and Conditions",
-            "contact": "Contact"
-        }
+      }
     },
     "dashboard": {
-        "pageTitle": "Admin Home",
-        "sidebar": {
-            "hello": "Hello"
-        },
-        "nav": {
-            "home": "Home",
-            "profile": "Profile",
-            "subscription": "Subscription",
-            "team": "Team",
-            "settings": "Settings",
-            "events": "My Events",
-            "eventDashboard": "Event Dashboard",
-            "eventSettings": "Event Settings",
-            "allEvents": "All Events",
-            "newEvent": "New Event",
-            "goTo": "Go to",
-            "code": "Code",
-            "viewSource": "View page source"
-        },
-        "dropdown": {
-            "newEvent": "New event",
-            "inviteMember": "Invite member"
-        },
-        "home": {
-            "welcome": {
-                "greeting": "Welcome back, {name}",
-                "subtitle": "Here's what's happening with your events today."
-            },
-            "search": {
-                "placeholder": "Search events..."
-            },
-            "newEvent": "New Event",
-            "stats": {
-                "totalEvents": "Total Events",
-                "activeInvitations": "Active Invitations",
-                "avgResponseRate": "Avg. Response Rate",
-                "vsYesterday": "vs yesterday"
-            },
-            "charts": {
-                "responsesOverTime": "Responses over time",
-                "responsesSubtitle": "Confirmation trends",
-                "inviteeStatus": "Invitee Status",
-                "accepted": "Accepted",
-                "declined": "Declined",
-                "pending": "Pending",
-                "total": "Total",
-                "responses": "responses",
-                "period": {
-                    "7days": "Last 7 days",
-                    "30days": "Last 30 days",
-                    "90days": "Last 90 days"
-                }
-            },
-            "eventsTable": {
-                "title": "Upcoming Events",
-                "viewAll": "View all",
-                "columns": {
-                    "event": "Event",
-                    "date": "Date",
-                    "rsvpProgress": "RSVP Progress",
-                    "actions": "Actions"
-                },
-                "noEvents": "No upcoming events"
-            },
-            "eventCards": {
-                "title": "Your Events",
-                "newEvent": "New Event",
-                "newButton": "New",
-                "modal": {
-                    "title": "New Event",
-                    "description": "Create a new event for your team",
-                    "create": "Create",
-                    "limitReached": "Limit reached",
-                    "limitReachedDescription": "You have reached the event limit for your plan.",
-                    "limitWarning": "You have reached the limit of {limit} events for your plan.",
-                    "upgrade": "Upgrade",
-                    "eventsUsed": "Events used:",
-                    "name": "Name",
-                    "namePlaceholder": "e.g. My Company",
-                    "slug": "Slug",
-                    "slugPlaceholder": "e.g. my-company",
-                    "slugHint": "URL-friendly identifier",
-                    "slugPrefix": "/org/",
-                    "cancel": "Cancel",
-                    "createEvent": "Create Event",
-                    "validation": {
-                        "nameTooShort": "Name must be at least 2 characters",
-                        "slugTooShort": "Slug must be at least 2 characters",
-                        "slugInvalid": "Only lowercase letters, numbers and dashes"
-                    },
-                    "success": "Event created",
-                    "successDescription": "Event \"{name}\" has been created successfully.",
-                    "error": "Error",
-                    "errorDescription": "An error occurred"
-                },
-                "empty": {
-                    "title": "No events",
-                    "description": "You are not part of any event. Create your first event to get started.",
-                    "button": "Create Event",
-                    "createButton": "Create Event"
-                },
-                "card": {
-                    "member": "member",
-                    "members": "members",
-                    "created": "Created",
-                    "active": "Active"
-                }
-            }
-        },
-        "eventsList": {
-            "title": "My Events",
-            "search": "Search events...",
-            "createEvent": "Create Event",
-            "stats": {
-                "total": "Total Events",
-                "active": "Active",
-                "completed": "Completed"
-            },
-            "columns": {
-                "name": "Event Name",
-                "date": "Date",
-                "time": "Time",
-                "location": "Location",
-                "status": "Status",
-                "actions": "Actions"
-            },
-            "status": {
-                "active": "Active",
-                "completed": "Completed"
-            },
-            "empty": {
-                "title": "No events",
-                "description": "You haven't created any events yet. Create your first event to get started.",
-                "createButton": "Create your first event"
-            },
-            "modal": {
-                "title": "New Event",
-                "name": "Event Name",
-                "namePlaceholder": "e.g. Gala Dinner 2024",
-                "date": "Date",
-                "time": "Time",
-                "location": "Location",
-                "locationPlaceholder": "Venue name",
-                "address": "Address",
-                "addressPlaceholder": "Street, City, Zip",
-                "cancel": "Cancel",
-                "create": "Create now",
-                "creating": "Creating...",
-                "limitReached": "Limit reached",
-                "limitWarning": "You have reached the limit of {limit} events for your plan.",
-                "upgrade": "Upgrade",
-                "eventsUsed": "Events used:",
-                "success": "Event created",
-                "successDescription": "Event \"{name}\" has been created successfully.",
-                "error": "Error",
-                "errorDescription": "An error occurred while creating the event.",
-                "validation": {
-                    "nameRequired": "Event name is required",
-                    "dateRequired": "Date is required"
-                }
-            }
-        },
-        "customers": {
-            "title": "Customer Management",
-            "searchPlaceholder": "Search by name or email...",
-            "table": {
-                "name": "Name",
-                "email": "Email",
-                "registeredAt": "Registered At",
-                "status": "Status"
-            },
-            "noData": "No customers found.",
-            "loading": "Loading customers...",
-            "createModal": {
-                "title": "New customer",
-                "description": "Add a new customer to the database",
-                "button": "New customer",
-                "name": "Name",
-                "namePlaceholder": "John Doe",
-                "email": "Email",
-                "emailPlaceholder": "john.doe{'@'}example.com",
-                "cancel": "Cancel",
-                "create": "Create",
-                "validation": {
-                    "tooShort": "Too short",
-                    "invalidEmail": "Invalid email"
-                },
-                "success": "Success",
-                "successDescription": "New customer {name} added"
-            }
-        },
-        "planUsage": {
-            "event": {
-                "title": "Event",
-                "description": "Plan usage"
-            },
-            "used": "Used",
-            "limitReached": "Limit reached -",
-            "upgrade": "upgrade",
-            "remaining": "{count} remaining",
-            "plan": {
-                "title": "Active Plan",
-                "description": "Current subscription",
-                "readOnly": "Read only -",
-                "fullAccess": "Full access"
-            },
-            "actions": {
-                "title": "Actions",
-                "description": "Quick operations",
-                "newEvent": "New Event",
-                "manageSubscription": "Manage Subscription"
-            }
-        }
-    },
-    "profile": {
-        "title": "Profile Settings",
-        "description": "Manage your personal information, security and account preferences.",
-        "personalInfo": "Personal Information",
-        "profilePhoto": "Your profile photo",
-        "photoDescription": "PNG, JPG or GIF. Max size 5MB.",
-        "uploadNew": "Upload new",
-        "removePhoto": "Remove",
-        "name": "Full Name",
-        "nameDescription": "Will appear on receipts, invoices, and other communication.",
-        "email": "Business Email",
-        "emailDescription": "Used to sign in, for email receipts and product updates.",
-        "phone": "Phone Number",
-        "phoneDescription": "Your phone number for contact purposes.",
-        "preferences": "Account Preferences",
-        "language": "Language",
-        "languageDescription": "Choose your preferred language.",
-        "timezone": "Timezone",
-        "timezoneDescription": "Your local timezone for scheduling.",
-        "security": "Security",
-        "password": "Password",
-        "passwordDescription": "Confirm your current password before setting a new one.",
-        "oauthPasswordInfo": "Password management is handled by your social login provider (Google, GitHub, etc.). To change your password, please visit your provider's account settings.",
-        "currentPassword": "Current password",
-        "newPassword": "New password",
-        "confirmPassword": "Confirm new password",
-        "updatePassword": "Update password",
-        "updateSuccess": "Your profile has been updated successfully.",
-        "updateError": "Failed to update profile. Please try again.",
-        "passwordUpdateSuccess": "Your password has been updated successfully.",
-        "passwordUpdateError": "Failed to update password. Please try again.",
-        "invalidCurrentPassword": "Current password is incorrect.",
-        "emailUpdateRequested": "Email update requested",
-        "emailConfirmationSent": "Please check your new email inbox to confirm the change.",
-        "saveAll": "Save all",
-        "validation": {
-            "nameTooShort": "Name must be at least 2 characters",
-            "invalidEmail": "Please enter a valid email address",
-            "passwordTooShort": "Password must be at least 8 characters",
-            "passwordsMustDiffer": "New password must be different from current password",
-            "passwordsMustMatch": "Passwords do not match"
-        }
-    },
-    "common": {
-        "language": "Language",
-        "continue": "Continue",
-        "back": "Back",
-        "signIn": "Sign in",
-        "signUp": "Sign up",
-        "dashboard": "Dashboard",
-        "logout": "Logout",
-        "success": "Success",
-        "error": "Error",
-        "saveChanges": "Save changes",
-        "update": "Update",
-        "cancel": "Cancel",
-        "choose": "Choose",
-        "retry": "Retry",
-        "save": "Save"
-    },
-    "event": {
-        "settings": {
-            "title": "Event Settings",
-            "description": "Manage your event configuration and preferences.",
-            "tabs": {
-                "general": "General",
-                "members": "Members",
-                "danger": "Danger Zone"
-            },
-            "general": {
-                "title": "General Information",
-                "description": "Update your event name and URL slug.",
-                "name": "Event Name",
-                "nameDescription": "The display name for your event, visible to all members.",
-                "namePlaceholder": "Enter event name",
-                "slug": "URL Slug",
-                "slugDescription": "The unique identifier for your event URL. Only lowercase letters, numbers and hyphens allowed.",
-                "slugPlaceholder": "my-event"
-            },
-            "updateSuccess": "Event settings have been updated successfully.",
-            "updateError": "Failed to update event settings. Please try again.",
-            "permissionDenied": "You don't have permission to update this event.",
-            "noChanges": "No changes to save",
-            "readOnly": {
-                "title": "Read-Only Mode",
-                "description": "You don't have permission to edit event settings.",
-                "message": "Contact your event administrator to request edit permissions."
-            },
-            "info": {
-                "title": "Event Information",
-                "description": "Read-only information about your event.",
-                "eventId": "Event ID",
-                "created": "Created",
-                "yourRole": "Your Role",
-                "owner": "Owner",
-                "member": "Member"
-            },
-            "validation": {
-                "nameTooShort": "Event name must be at least 2 characters",
-                "nameTooLong": "Event name cannot exceed 100 characters",
-                "slugTooShort": "Slug must be at least 2 characters",
-                "slugTooLong": "Slug cannot exceed 50 characters",
-                "slugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
-                "slugAlreadyTaken": "This slug is already taken"
-            },
-            "sections": {
-                "basicInfo": {
-                    "title": "1. Basic Information",
-                    "description": "Name, date, time and main details of your event."
-                },
-                "logistics": {
-                    "title": "2. Logistics",
-                    "description": "Event location and address."
-                },
-                "automation": {
-                    "title": "4. Automation",
-                    "description": "Auto-confirmation and notifications."
-                }
-            },
-            "fields": {
-                "description": "Description",
-                "descriptionPlaceholder": "Briefly describe your event...",
-                "date": "Date",
-                "time": "Start Time",
-                "timePlaceholder": "04:30 PM",
-                "location": "Venue Name",
-                "locationPlaceholder": "e.g. The Grand Hotel",
-                "address": "Full Address",
-                "addressPlaceholder": "123 Main Street, New York, NY 10001"
-            },
-            "badge": {
-                "live": "Live",
-                "draft": "Draft"
-            },
-            "lastSaved": {
-                "justNow": "Last saved: just now",
-                "minutesAgo": "Last saved: {n} min ago",
-                "hoursAgo": "Last saved: {n} hours ago"
-            },
-            "cancel": "Cancel",
-            "mapPlaceholder": {
-                "title": "Enter an address to display the map",
-                "configureKey": "Map available after Google Maps configuration"
-            },
-            "deleteEvent": {
-                "title": "Delete Event",
-                "description": "Once deleted, all guest data and landing page will no longer be accessible.",
-                "button": "Delete Event",
-                "confirmTitle": "Delete Event",
-                "confirmMessage": "Are you sure you want to delete this event? All data will be permanently removed.",
-                "confirmInput": "Type the event name to confirm",
-                "confirmLabel": "Type DELETE to confirm",
-                "confirmPlaceholder": "DELETE",
-                "successMessage": "Event deleted successfully."
-            }
-        },
-        "createModal": {
-            "title": "New Event",
-            "description": "Add a new event to the database",
-            "button": "New event",
-            "name": "Name",
-            "namePlaceholder": "My Event",
-            "slug": "Slug",
-            "slugPlaceholder": "my-event",
-            "cancel": "Cancel",
-            "create": "Create",
-            "validation": {
-                "tooShort": "Too short"
-            },
-            "limitReached": "Limit reached",
-            "limitReachedDescription": "You have reached the event limit for your plan. Upgrade to create more.",
-            "limitWarning": "You have reached the limit of {limit} events for your plan.",
-            "upgradeLink": "Upgrade",
-            "eventsUsed": "Events used:",
-            "error": "Error",
-            "failedToCreate": "Failed to create event",
-            "success": "Success",
-            "successDescription": "New event {name} added"
-        }
-    },
-    "footer": {
-        "resources": {
-            "title": "Resources",
-            "dashboard": "Dashboard",
-            "blog": "Blog"
-        },
-        "legal": {
-            "title": "Legal",
-            "privacy": "Privacy Policy",
-            "terms": "Terms of Service",
-            "dpa": "DPA"
-        },
-        "newsletter": {
-            "label": "Subscribe to our newsletter",
-            "placeholder": "Enter your email",
-            "subscribe": "Subscribe",
-            "subscribed": "Subscribed",
-            "privacy": "We respect your privacy. No spam, ever.",
-            "success": {
-                "title": "Subscribed!",
-                "description": "You've been subscribed to our newsletter."
-            }
-        },
-        "social": {
-            "github": "GitHub",
-            "linkedin": "LinkedIn"
-        },
-        "brand": {
-            "name": "Ceremly"
-        }
-    },
-    "tos": {
-        "meta": {
-            "title": "Terms and Conditions of Use",
-            "effectiveDate": "Effective from: January 1, 2025"
-        },
-        "intro": {
-            "description": "Welcome to our platform. By using our services, you accept these Terms and Conditions. Please read them carefully before using the platform."
-        },
-        "sections": {
-            "overview": {
-                "number": "1",
-                "title": "Service overview",
-                "description": "This platform provides SaaS event and team management tools. After a trial period, a subscription may be required to continue using certain features."
-            },
-            "account": {
-                "number": "2",
-                "title": "Account management",
-                "description": "You must provide accurate information during registration and keep your login credentials secure.",
-                "important": {
-                    "label": "Important",
-                    "text": "You are responsible for all activities performed with your account. Do not share your credentials with third parties."
-                }
-            },
-            "trial": {
-                "number": "3",
-                "title": "Free trial and subscriptions",
-                "trialTitle": "Free tier",
-                "trialDescription": "New users have access to a free tier with limited features: 1 event, 1 user, basic functionality.",
-                "afterTrialTitle": "Paid plans",
-                "afterTrialDescription": "To access advanced features, you must subscribe to a paid plan. Plans can be upgraded or downgraded at any time."
-            },
-            "pricing": {
-                "number": "4",
-                "title": "Plans and pricing",
-                "freelance": {
-                    "name": "Free",
-                    "price": "$0",
-                    "period": "/month",
-                    "description": "Basic features for individuals getting started."
-                },
-                "studio": {
-                    "name": "Pro",
-                    "price": "$29",
-                    "period": "/month",
-                    "description": "Advanced features for growing teams."
-                },
-                "venuePartner": {
-                    "name": "Enterprise",
-                    "price": "Custom",
-                    "period": "",
-                    "description": "Custom solutions for large organizations."
-                },
-                "fairUse": {
-                    "text": "We reserve the right to apply fair use policies on anomalous usage to ensure fair service to all users."
-                }
-            },
-            "gdpr": {
-                "number": "5",
-                "title": "Data and GDPR",
-                "description": "You are responsible for the data you store on the platform. We act as a Data Processor on your behalf.",
-                "requirement": "Use of the service requires compliance with applicable data protection laws.",
-                "dpaLink": "View the complete Data Processing Agreement (DPA) →"
-            },
-            "usage": {
-                "number": "6",
-                "title": "Permitted use of the service",
-                "description": "It is prohibited to use the service for: sending spam or unauthorized communications, illegal activities or violations of others' rights, uploading offensive or illegal content, attempts to circumvent technical limits or unauthorized access."
-            },
-            "thirdParty": {
-                "number": "7",
-                "title": "Third-party services",
-                "description": "The service relies on external providers for hosting, email, analytics and logging. We are not responsible for services we do not directly control.",
-                "subprocessorsLink": "View the complete list of sub-processors →"
-            },
-            "liability": {
-                "number": "8",
-                "title": "Warranties and liability limitations",
-                "description": "The service is provided \"as is\" without warranties of any kind, express or implied.",
-                "limitation": {
-                    "label": "Limitation of liability",
-                    "text": "Within legal limits, our total liability is limited to fees paid in the last 12 months. Indirect or special damages are excluded except in cases of willful misconduct."
-                }
-            },
-            "termination": {
-                "number": "9",
-                "title": "Suspension and termination of service",
-                "byProvider": {
-                    "title": "By us",
-                    "description": "We may suspend or terminate the account for serious violations of Terms, missed payments or security risks."
-                },
-                "byClient": {
-                    "title": "By you",
-                    "description": "You can cancel your subscription at any time from your dashboard. The service will remain active until the end of the current billing period."
-                }
-            },
-            "updates": {
-                "number": "10",
-                "title": "Updates to the Terms",
-                "description": "We may update these Terms from time to time. In case of substantial changes, we will provide advance notice via email."
-            },
-            "law": {
-                "number": "11",
-                "title": "Applicable law and jurisdiction",
-                "description": "These Terms and Conditions are governed by applicable law. Disputes will be resolved in the appropriate jurisdiction."
-            }
-        },
-        "cta": {
-            "title": "Questions about Terms and Conditions?",
-            "company": "Your Company Name",
-            "location": "Your Location",
-            "legalEmail": "Legal email",
-            "contact": "Contact us",
-            "privacy": "Privacy Policy",
-            "dpa": "DPA"
-        }
-    },
-    "privacy": {
-        "meta": {
-            "title": "Privacy Policy (GDPR)",
-            "effectiveDate": "Effective from: January 1, 2025"
-        },
-        "overview": {
-            "description": "We value your privacy. This policy explains how we process personal data as part of our service."
-        },
-        "sections": {
-            "dataCollection": {
-                "number": "1",
-                "title": "What data we collect",
-                "clientData": "Account Data",
-                "clientDataDesc": "We collect name, email, organization, and technical logs when you create an account. This data is used to manage your account and provide our services.",
-                "eventData": "Event Data",
-                "eventDataDesc": "Information and content created within your events.",
-                "guestData": "Team Member Data",
-                "guestDataDesc": "Name, email, role, and permissions for team members you invite.",
-                "nonPersonalData": "Non-Personal Data",
-                "nonPersonalDataDesc": "We collect cookies, IP, user agent for analytics and improving user experience.",
-                "gallery": "Uploaded Files",
-                "galleryDesc": "Files and media uploaded to the platform and their metadata."
-            },
-            "purposes": {
-                "number": "2",
-                "title": "Purposes and legal bases",
-                "clientData": "Account Data",
-                "clientDataDesc": "Your data is used for account management and providing platform access (art. 6.1.b GDPR - contract execution).",
-                "nonPersonalData": "Non-Personal Data",
-                "nonPersonalDataDesc": "Used for analytics and improving user experience (art. 6.1.f GDPR - legitimate interest).",
-                "communications": "Service Communications",
-                "communicationsDesc": "We may send service-related communications about your account and subscriptions.",
-                "gallery": "File Storage",
-                "galleryDesc": "Files are stored securely and processed according to your event settings."
-            },
-            "sharing": {
-                "number": "3",
-                "title": "Data sharing",
-                "description": "We do not sell or share your personal data with third parties, except when necessary to provide services or comply with legal obligations.",
-                "subprocessors": "Our sub-processors are bound by agreements compliant with Art. 28 GDPR. For details, see our",
-                "dpaLink": "Data Processing Agreement"
-            },
-            "cookies": {
-                "number": "4",
-                "title": "Cookies",
-                "description": "We use cookies to improve your experience and analyze usage patterns.",
-                "consent": "You can manage cookies in your browser settings.",
-                "link": "See the complete Cookie Policy →"
-            },
-            "security": {
-                "number": "5",
-                "title": "Security",
-                "description": "We implement industry-standard security measures including encryption, access controls, and regular security audits to protect your data."
-            },
-            "rights": {
-                "number": "6",
-                "title": "Your rights",
-                "description": "You can request access to, modification, or deletion of your personal data at any time by contacting us at",
-                "complaint": "You also have the right to file a complaint with your local",
-                "authority": "Data Protection Authority",
-                "gdprRights": "Your GDPR rights include",
-                "gdprList": "access, rectification, deletion, processing restriction, data portability and objection to processing"
-            },
-            "retention": {
-                "number": "7",
-                "title": "Data retention",
-                "description": "We retain your data for as long as your account is active. After account deletion, data is removed according to our retention policy.",
-                "accountData": "Account data",
-                "accountDataPeriod": "Contract duration + 24 months",
-                "guestData": "Event data",
-                "guestDataPeriod": "Until event deletion + 30 days",
-                "gallery": "Uploaded files",
-                "galleryPeriod": "Until deletion request",
-                "vendors": "Logs",
-                "vendorsPeriod": "12 months",
-                "note": "Deletions from backups follow technical cycles."
-            },
-            "changes": {
-                "number": "8",
-                "title": "Privacy Policy updates",
-                "description": "We may update this policy from time to time. You will be notified of changes via email."
-            },
-            "law": {
-                "number": "9",
-                "title": "Applicable law",
-                "description": "This Privacy Policy is governed by applicable law and GDPR."
-            },
-            "additionalNotes": {
-                "title": "Additional notes",
-                "transfers": "International transfers",
-                "transfersDesc": "If present, Standard Contractual Clauses apply.",
-                "minors": "Minors",
-                "minorsDesc": "This is a B2B service not intended for minors."
-            }
-        },
-        "cta": {
-            "title": "Questions about this privacy policy?",
-            "controller": "Data Controller",
-            "company": "Your Company Name",
-            "email": "Privacy email",
-            "contact": "Contact us",
-            "terms": "Terms of service",
-            "dpa": "DPA"
-        }
-    },
-    "dpa": {
-        "meta": {
-            "title": "Data Processing Agreement (DPA)",
-            "subtitle": "Data Processing Agreement (DPA) art. 28 GDPR",
-            "effectiveDate": "Effective from: January 1, 2025"
-        },
-        "intro": {
-            "description": "This Data Processing Agreement defines the roles, responsibilities and security measures for processing personal data in our service, in compliance with Art. 28 of the GDPR."
-        },
-        "summary": {
-            "title": "Summary",
-            "roles": "Roles",
-            "rolesDesc": "you are the Controller; we are the Processor",
-            "scope": "Scope",
-            "scopeDesc": "event management, team management, file storage, and analytics",
-            "toms": "Security measures (TOMs)",
-            "tomsDesc": "documented in Annex A",
-            "subprocessors": "Sub-processors",
-            "subprocessorsDesc": "listed on /legal/subprocessors"
-        },
-        "sections": {
-            "purpose": {
-                "number": "1",
-                "title": "Subject matter, duration and purpose",
-                "description": "The Processor processes personal data exclusively to provide the Service according to the Controller's documented instructions."
-            },
-            "categories": {
-                "number": "2",
-                "title": "Categories of data subjects and data",
-                "subjectsLabel": "Data subjects",
-                "subjects": "account holders, team members, event members",
-                "dataLabel": "Data",
-                "data": "identifiers, contacts, event data, files, technical metadata",
-                "note": "The Controller avoids special categories unless suitable bases exist."
-            },
-            "instructions": {
-                "number": "3",
-                "title": "Instructions and compliance",
-                "description": "The Processor processes only on instructions; informs the Controller if it considers an instruction not compliant with GDPR."
-            },
-            "confidentiality": {
-                "number": "4",
-                "title": "Confidentiality",
-                "description": "Authorized personnel bound to confidentiality, with periodic privacy training."
-            },
-            "security": {
-                "number": "5",
-                "title": "Security (Annex A TOMs)",
-                "description": "Encryption in transit and at rest; access control; strong authentication; logging/audit; patching; backup/DR; privacy by design/default."
-            },
-            "subprocessors": {
-                "number": "6",
-                "title": "Sub-processors",
-                "description": "General authorization with public list on /legal/subprocessors.",
-                "objection": "Notification of new appointments with right to objection within 15 days."
-            },
-            "assistance": {
-                "number": "7",
-                "title": "Assistance to the Controller",
-                "description": "Reasonable support for data subject requests (DSR), DPIA, and incident response."
-            },
-            "breach": {
-                "number": "8",
-                "title": "Personal data breaches",
-                "description": "Notification without undue delay with available information and cooperation."
-            },
-            "deletion": {
-                "number": "9",
-                "title": "Deletion or return",
-                "description": "Upon termination, following Controller's instructions: deletion or return of data."
-            },
-            "audit": {
-                "number": "10",
-                "title": "Audit and evidence",
-                "description": "We provide necessary information and allow reasonable audits."
-            },
-            "transfers": {
-                "number": "11",
-                "title": "International transfers",
-                "description": "If present, Standard Contractual Clauses and appropriate measures apply."
-            },
-            "hierarchy": {
-                "number": "12",
-                "title": "Hierarchy",
-                "description": "In case of conflict between DPA and Terms, DPA prevails on privacy matters."
-            }
-        },
-        "annexA": {
-            "title": "Annex A - Technical and Organizational Measures (TOMs)",
-            "encryption": "1. TLS encryption; encryption at rest; credential hashing.",
-            "accessControl": "2. Access control (roles, least privilege), 2FA admin.",
-            "monitoring": "3. Logging/monitoring, anomaly alerts, vulnerability management.",
-            "backup": "4. Encrypted backups, recovery testing.",
-            "retention": "5. Configurable data retention policies.",
-            "email": "6. Email security: SPF/DKIM/DMARC.",
-            "privacyByDesign": "7. Privacy by design: minimization, clear notices.",
-            "processes": "8. Processes: privacy training, incident register."
-        },
-        "cta": {
-            "title": "Questions about the DPA?",
-            "processor": "Data Processor",
-            "company": "Your Company Name",
-            "email": "Legal email",
-            "contact": "Contact us",
-            "privacy": "Privacy Policy",
-            "terms": "Terms of service"
-        }
-    },
-    "team": {
-        "title": "Team",
-        "inviteMember": "Invite Member",
-        "inviteMemberTitle": "Invite a new member",
-        "inviteMemberDescription": "Enter the email of the person you want to invite to the event",
-        "emailLabel": "Email Address",
-        "emailPlaceholder": "colleague{'@'}example.com",
-        "teamLabel": "Assign to Team (optional)",
-        "selectTeam": "No specific team",
-        "sendInvite": "Send Invite",
-        "noTeam": "No team",
-        "membersCount": "{count} members",
-        "members": "Members",
-        "activeMembers": "Active Members",
-        "activeMembersDescription": "People who have access to this event",
-        "noMembers": "No team members yet",
-        "member": "Member",
-        "role": "Role",
-        "joinedAt": "Joined",
-        "lastAccess": "Last Access",
-        "invitedBy": "Invited By",
-        "actions": "Actions",
-        "you": "(you)",
-        "changeRole": "Change Role",
-        "changeRoleTitle": "Change Member Role",
-        "saveRole": "Save Role",
-        "removeMember": "Remove Member",
-        "ownerProtected": "Owner cannot be removed",
-        "pendingInvitations": "Pending Invitations",
-        "pendingInvitationsDescription": "Invitations waiting to be accepted",
-        "email": "Email",
-        "invitedAt": "Invited",
-        "expiresAt": "Expires",
-        "expired": "Expired",
-        "resendInvite": "Resend",
-        "cancelInvite": "Cancel",
-        "neverLoggedIn": "Never",
-        "today": "Today",
-        "yesterday": "Yesterday",
-        "daysAgo": "{count} days ago",
-        "weeksAgo": "{count} weeks ago",
-        "roles": {
-            "owner": "Owner",
-            "admin": "Admin",
-            "editor": "Editor",
-            "viewer": "Viewer",
-            "member": "Member"
-        },
-        "roleDescriptions": {
-            "editor": "Can view, create, edit, and delete content. Can manage team.",
-            "viewer": "Can only view content. Read-only access."
-        },
-        "validation": {
-            "invalidEmail": "Please enter a valid email address",
-            "roleRequired": "Please select a role"
-        },
-        "inviteSent": "Invitation Sent",
-        "inviteSentDescription": "An invitation has been sent to {email}",
-        "memberLimitReached": "You have reached the maximum number of team members for your plan. Upgrade to add more members.",
-        "inviteError": "Failed to send invitation. Please try again.",
-        "roleUpdated": "Role Updated",
-        "roleUpdatedDescription": "{name}'s role has been updated",
-        "roleUpdateError": "Failed to update role. Please try again.",
-        "memberRemoved": "Member Removed",
-        "memberRemovedDescription": "{name} has been removed from the team",
-        "memberRemoveError": "Failed to remove member. Please try again.",
-        "inviteResent": "Invitation Resent",
-        "inviteResentDescription": "A new invitation has been sent to {email}",
-        "inviteResendError": "Failed to resend invitation. Please try again.",
-        "inviteCancelled": "Invitation Cancelled",
-        "inviteCancelledDescription": "The invitation to {email} has been cancelled",
-        "inviteCancelError": "Failed to cancel invitation. Please try again.",
-        "roleLabel": "Role",
-        "selectRole": "Select a role",
-        "teamsLabel": "Teams"
-    },
-    "twoFactor": {
-        "title": "Two-Factor Authentication",
-        "description": "Add an extra layer of security to your account by enabling two-factor authentication.",
-        "enabledStatus": "2FA is enabled",
-        "enabledDescription": "Your account is protected with two-factor authentication.",
-        "disabledStatus": "2FA is not enabled",
-        "disabledDescription": "Enable two-factor authentication to add an extra layer of security.",
-        "enable": "Enable 2FA",
-        "enableTitle": "Enable Two-Factor Authentication",
-        "enablePasswordDescription": "For security, please enter your password to enable two-factor authentication.",
-        "disable": "Disable 2FA",
-        "enabled": "Two-factor authentication has been enabled",
-        "disabled": "Two-factor authentication has been disabled",
-        "enableError": "Failed to enable two-factor authentication",
-        "disableError": "Failed to disable two-factor authentication",
-        "verifyError": "Failed to verify code",
-        "invalidCode": "Invalid verification code",
-        "invalidBackupCode": "Invalid backup code",
-        "verifyBackupError": "Failed to verify backup code",
-        "scanQRCode": "Scan QR Code",
-        "scanQRCodeDescription": "Open your authenticator app and scan this QR code to add your account.",
-        "manualEntry": "Can't scan? Enter this code manually:",
-        "enterCode": "Enter Verification Code",
-        "enterCodeDescription": "Enter the 6-digit code from your authenticator app.",
-        "verificationCode": "Verification Code",
-        "codePlaceholder": "000000",
-        "verify": "Verify",
-        "saveBackupCodes": "Save Your Backup Codes",
-        "saveBackupCodesDescription": "Store these backup codes in a safe place. You can use them to access your account if you lose your phone.",
-        "backupCodesCopied": "Backup codes copied to clipboard",
-        "backupCodesTitle": "Two-Factor Authentication Backup Codes",
-        "backupCodesWarning": "Keep these codes safe. Each code can only be used once.",
-        "copyAll": "Copy All",
-        "download": "Download",
-        "importantNote": "Important",
-        "iSavedMyCodes": "I saved my backup codes",
-        "setupComplete": "2FA Setup Complete!",
-        "setupCompleteDescription": "Your account is now protected with two-factor authentication.",
-        "disableTitle": "Disable Two-Factor Authentication",
-        "disableWarning": "Disabling 2FA will make your account less secure. You will need to set it up again if you want to re-enable it.",
-        "confirmPassword": "Confirm Password",
-        "enterPassword": "Enter your password",
-        "regenerateBackupCodes": "Regenerate Backup Codes",
-        "regenerateBackupDescription": "Generate new backup codes. This will invalidate your current backup codes.",
-        "regenerateBackupWarning": "Your existing backup codes will stop working after generating new ones.",
-        "generate": "Generate New Codes",
-        "backupCodesGenerated": "New backup codes have been generated",
-        "generateBackupError": "Failed to generate backup codes",
-        "backupCode": "Backup Code",
-        "backupCodePlaceholder": "Enter backup code",
-        "useBackupCode": "Use a backup code instead",
-        "oauthProviderTitle": "2FA managed by {provider}",
-        "oauthProviderDescription": "Your account is connected to {provider}, which already manages two-factor security.",
-        "oauthProviderInfo": "{provider} provides advanced protection for your account, including two-factor authentication, two-step verification, and suspicious activity detection.",
-        "oauthProviderFeatures": "{provider} security features:",
-        "oauthFeature1": "Built-in two-factor authentication",
-        "oauthFeature2": "Suspicious activity monitoring",
-        "oauthFeature3": "Trusted device management",
-        "oauthProviderManage": "Manage {provider} security",
-        "oauthProviderClose": "Got it",
-        "useAuthenticatorApp": "Use authenticator app instead",
-        "verifyTitle": "Two-Factor Verification",
-        "enterCodeFromApp": "Enter the 6-digit code from your authenticator app.",
-        "enterBackupCodeDescription": "Enter one of your backup codes to sign in."
-    },
-    "admin": {
-        "title": "Admin Dashboard",
-        "manageUsers": "Users",
-        "manageSubscriptions": "Subscriptions",
-        "userManagement": "User Management",
-        "userManagementDesc": "View and manage all users, roles, and account status",
-        "subscriptionManagement": "Subscription Management",
-        "subscriptionManagementDesc": "View and manage all subscriptions and billing",
-        "stats": {
-            "totalUsers": "Total Users",
-            "verifiedUsers": "Verified Users",
-            "activeSubscriptions": "Active Subscriptions",
-            "mrr": "MRR",
-            "monthlyRecurringRevenue": "Monthly Recurring Revenue",
-            "events": "Events",
-            "bannedUsers": "Banned Users",
-            "last30Days": "last 30 days",
-            "verified": "verified",
-            "total": "total",
-            "banned": "banned",
-            "subscriptionsByPlan": "Subscriptions by Plan"
-        },
-        "filters": {
-            "allRoles": "All Roles",
-            "user": "User",
-            "admin": "Admin",
-            "allStatuses": "All Statuses",
-            "active": "Active",
-            "banned": "Banned",
-            "unverified": "Unverified",
-            "allPlans": "All Plans"
-        },
-        "table": {
-            "name": "Name",
-            "email": "Email",
-            "role": "Role",
-            "status": "Status",
-            "subscription": "Subscription",
-            "createdAt": "Created At",
-            "user": "User",
-            "plan": "Plan",
-            "period": "Period",
-            "autoRenew": "Auto Renew"
-        },
-        "searchUsers": "Search users...",
-        "searchSubscriptions": "Search by user...",
-        "viewDetails": "View Details",
-        "changeRole": "Change Role",
-        "changeRoleFor": "Change role for {name}",
-        "newRole": "New Role",
-        "ban": "Ban User",
-        "unban": "Unban User",
-        "banUser": "Ban User",
-        "unbanUser": "Unban User",
-        "banConfirm": "Are you sure you want to ban {name}?",
-        "unbanConfirm": "Are you sure you want to unban {name}?",
-        "banReason": "Ban Reason",
-        "banReasonPlaceholder": "Enter reason for ban (optional)",
-        "banExpires": "Ban Expires",
-        "userBanned": "User has been banned",
-        "userUnbanned": "User has been unbanned",
-        "roleChanged": "User role has been changed",
-        "updateFailed": "Failed to update user",
+      "badge": "Real-time Dashboard",
+      "title": "Monitor everything in real time",
+      "description": "A clear dashboard that shows you response rates, who viewed and who still needs to respond. Export the guest list in one click.",
+      "check1": "Email open tracking",
+      "check2": "PDF and Excel export for catering",
+      "check3": "Food allergy alerts",
+      "mockup": {
+        "eventName": "Luca & Sofia Wedding",
         "active": "Active",
-        "banned": "Banned",
-        "noSubscription": "No subscription",
-        "unknownUser": "Unknown User",
-        "owner": "Owner",
-        "member": "Member",
-        "permissions": "permissions",
-        "userNotFound": "User not found",
-        "userDetails": {
-            "title": "User Details",
-            "details": "Details",
-            "events": "Events",
-            "subscriptions": "Subscriptions",
-            "auditLogs": "Audit Logs",
-            "userId": "User ID",
-            "phone": "Phone",
-            "locale": "Locale",
-            "createdAt": "Created At",
-            "updatedAt": "Updated At",
-            "stripeId": "Stripe Customer ID",
-            "polarId": "Polar Customer ID",
-            "bio": "Bio",
-            "noEvents": "No events",
-            "noSubscriptions": "No subscriptions",
-            "noAuditLogs": "No audit logs"
-        },
-        "subscriptionStatus": {
-            "active": "Active",
-            "trialing": "Trialing",
-            "canceled": "Canceled",
-            "pastDue": "Past Due",
-            "unpaid": "Unpaid"
-        },
-        "editSubscription": "Edit Subscription",
-        "editSubscriptionFor": "Edit subscription for {user}",
-        "cancelAtPeriodEnd": "Cancel at period end",
-        "manualEditWarning": "Manual Edit",
-        "manualEditWarningDesc": "This will manually override the subscription data. For Stripe subscriptions, consider making changes in the Stripe dashboard instead.",
-        "subscriptionUpdated": "Subscription has been updated"
+        "confirmed": "Confirmed",
+        "confirmedValue": "84% (126)",
+        "waiting": "Pending",
+        "waitingValue": "12% (18)",
+        "declined": "Declined",
+        "declinedValue": "4% (6)"
+      }
     },
-    "invite": {
-        "title": "Team Invitation",
-        "youreInvited": "You're Invited!",
-        "hasInvitedYou": "{name} has invited you to join",
-        "team": "Team",
-        "loading": "Loading invitation...",
-        "joiningEvent": "Joining event...",
-        "processingInvitation": "Processing your invitation...",
-        "invalidInvitation": "Invalid Invitation",
-        "invalidInvitationMessage": "Invalid invitation",
-        "alreadyAccepted": "This invitation has already been accepted",
-        "expired": "This invitation has expired",
-        "cancelled": "This invitation has been cancelled",
-        "failedToLoad": "Failed to load invitation",
-        "authRequired": "Authentication required",
-        "failedToAccept": "Failed to accept invitation",
-        "error": "Error",
-        "success": "Success",
-        "loggedInSuccessfully": "Logged in successfully",
-        "emailMismatch": "Email Mismatch",
-        "emailMismatchDescription": "This invitation was sent to {email}. Please log in with that email address.",
-        "logoutAndUse": "Log out and use different account",
-        "bySigningIn": "By signing in, you agree to join {event}",
-        "afterSignUp": "After signing up and verifying your email, you'll automatically join {event}",
-        "expiresOn": "This invitation expires on {date}",
-        "welcomeToTeam": "Welcome to the team!",
-        "youveJoined": "You've joined {event}",
-        "goToLogin": "Go to Login",
-        "login": "Login",
-        "signUp": "Sign Up",
-        "fullName": "Full Name",
-        "fullNamePlaceholder": "Enter your full name",
-        "email": "Email",
-        "emailPlaceholder": "Enter your email",
-        "password": "Password",
-        "passwordPlaceholder": "Enter your password",
-        "passwordPlaceholderSignup": "Choose a password (min 8 characters)",
-        "confirmPassword": "Confirm Password",
-        "confirmPasswordPlaceholder": "Confirm your password",
-        "accountCreated": "Account created",
-        "verifyEmailMessage": "Please check your email to verify your account, then return here to accept the invitation.",
-        "validation": {
-            "nameTooShort": "Name must be at least 2 characters",
-            "invalidEmail": "Please enter a valid email address",
-            "passwordTooShort": "Password must be at least 8 characters",
-            "passwordsMustMatch": "Passwords don't match"
-        }
+    "whatsapp": {
+      "badge": "Assisted Deep Links",
+      "title": "WhatsApp invites without invasive automation",
+      "description": "The system generates a unique \"Deep Link\" for each guest. You click a button in the dashboard, your WhatsApp app opens with a pre-filled and personalized message. You press send. Simple, safe and personal.",
+      "cta": "See example",
+      "mockup": {
+        "contactName": "Luca & Sofia",
+        "message1": "Hi Marco! 👋 Here is the personal link for our wedding:",
+        "linkTitle": "Ceremly - Confirm",
+        "linkUrl": "ceremly.it/u/xyz123",
+        "linkCta": "Click here to confirm 👇",
+        "reply": "Thanks! Done in a second! 😍",
+        "inputPlaceholder": "Write a message"
+      }
     },
-    "auth": {
-        "login": {
-            "pageTitle": "Login",
-            "pageDescription": "Login to your account to continue",
-            "title": "Welcome back",
-            "email": "Email",
-            "emailPlaceholder": "Enter your email",
-            "password": "Password",
-            "passwordPlaceholder": "Enter your password",
-            "rememberMe": "Remember me",
-            "forgotPassword": "Forgot password?",
-            "signIn": "Sign in",
-            "noAccount": "Don't have an account?",
-            "signUp": "Sign up",
-            "termsAgreement": "By signing in, you agree to our",
-            "termsOfService": "Terms of Service",
-            "validation": {
-                "invalidEmail": "Invalid email",
-                "passwordTooShort": "Must be at least 8 characters"
-            },
-            "errors": {
-                "title": "Error",
-                "invalidCredentials": "Invalid email or password",
-                "emailNotVerified": "Please verify your email before signing in",
-                "googleFailed": "Failed to sign in with Google",
-                "signInFailed": "Failed to sign in"
-            },
-            "success": {
-                "title": "Success",
-                "loggedIn": "Logged in successfully"
-            }
-        },
-        "signup": {
-            "pageTitle": "Sign Up",
-            "pageDescription": "Create an account to get started",
-            "title": "Create an account",
-            "name": "Full Name",
-            "namePlaceholder": "Enter your full name",
-            "email": "Email",
-            "emailPlaceholder": "Enter your email",
-            "password": "Password",
-            "passwordPlaceholder": "Choose a password (min 8 characters)",
-            "confirmPassword": "Confirm Password",
-            "confirmPasswordPlaceholder": "Confirm your password",
-            "createAccount": "Create account",
-            "haveAccount": "Already have an account?",
-            "signIn": "Sign in",
-            "termsAgreement": "By signing up, you agree to our",
-            "termsOfService": "Terms of Service",
-            "validation": {
-                "nameTooShort": "Name must be at least 2 characters",
-                "invalidEmail": "Invalid email",
-                "passwordTooShort": "Must be at least 8 characters",
-                "passwordsMustMatch": "Passwords don't match"
-            },
-            "errors": {
-                "title": "Error",
-                "emailExists": "An account with this email already exists",
-                "signUpFailed": "Failed to create account"
-            },
-            "success": {
-                "title": "Account created",
-                "verifyEmail": "Please check your email to verify your account"
-            }
-        }
-    },
-    "subscription": {
-        "title": "Subscription",
-        "sync": "Sync",
-        "synced": "Synced",
-        "syncError": "Sync error",
-        "currentPlan": "Your current plan",
-        "currentPlanLabel": "Current Plan",
-        "renewalDate": "Next renewal",
-        "recommended": "Recommended",
-        "billing": "Billing",
-        "billingMonthly": "monthly",
-        "billingYearly": "yearly",
-        "perMonth": "month",
-        "perYear": "year",
-        "otherFeatures": "+{count} more",
-        "status": {
-            "active": "Active",
-            "trialing": "Trial",
-            "canceled": "Canceled",
-            "pastDue": "Past Due"
-        },
-        "actions": {
-            "close": "Close",
-            "changePlan": "Change plan",
-            "choosePlan": "Choose a plan",
-            "choosePlanFor": "Choose {plan}",
-            "upgradePlan": "Upgrade Plan",
-            "cancelSubscription": "Cancel subscription",
-            "currentPlan": "Current Plan"
-        },
-        "changePlan": {
-            "title": "Available plans",
-            "description": "Choose the plan that best suits your needs",
-            "monthly": "Monthly",
-            "yearly": "Yearly",
-            "current": "Current",
-            "customPlan": "Need a custom plan?",
-            "contactUs": "Contact us"
-        },
-        "cancelModal": {
-            "title": "Cancel subscription",
-            "confirmMessage": "Are you sure you want to cancel your subscription",
-            "warningTitle": "Warning",
-            "warningMessage": "Cancellation is immediate. You will switch to the Free plan and lose access to premium features.",
-            "refundMessage": "You will receive a prorated refund for the unused period.",
-            "keepSubscription": "Keep subscription",
-            "confirmCancel": "Confirm cancellation"
-        },
-        "paymentMethods": {
-            "title": "Payment Methods",
-            "description": "Manage your credit cards and payment methods.",
-            "cta": "Manage payment methods"
-        },
-        "billingHistory": {
-            "title": "Billing History",
-            "description": "View and download your past invoices.",
-            "cta": "View invoices"
-        },
-        "toast": {
-            "error": "Error",
-            "errorOccurred": "An error occurred",
-            "subscriptionCanceled": "Subscription canceled",
-            "switchedToFree": "You have switched to the Free plan",
-            "cancelError": "Unable to cancel subscription",
-            "cancelProcessError": "Error during cancellation",
-            "subscriptionUpdated": "Subscription updated"
-        }
-    },
-    "dataExport": {
-        "title": "Export Your Data",
-        "description": "Download a copy of all your personal data stored in our system.",
-        "status": "Status",
-        "statuses": {
-            "pending": "Pending",
-            "processing": "Processing",
-            "completed": "Ready",
-            "failed": "Failed",
-            "expired": "Expired"
-        },
-        "processing": "Your export is being prepared. This may take a few minutes.",
-        "expiresAt": "Download available until",
-        "download": "Download",
-        "expired": "Your export has expired. Request a new one to download your data.",
-        "requestNew": "Request New Export",
-        "failed": "Export failed. Please try again.",
-        "retry": "Try Again",
-        "noExportYet": "You haven't requested a data export yet.",
-        "request": "Request Data Export",
-        "requestSuccess": "Export request submitted. We'll notify you when it's ready.",
-        "requestError": "Failed to request export. Please try again.",
-        "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, events, files metadata, and activity logs.",
-        "history": "Export History",
-        "noHistory": "No previous exports"
-    },
-    "plan": {
+    "pricing": {
+      "badge": "Expected pricing",
+      "title": "Join the waitlist to access these rates",
+      "description": "Choose the plan that fits you.",
+      "recommended": "Recommended",
+      "perEvent": "/event",
+      "perMonth": "/month",
+      "cta": "Join the list",
+      "note": "Monthly or annual billing. Cancel anytime.",
+      "billing": {
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "perMonth": "/month",
+        "perYear": "/year",
+        "savings": "Save {amount} per year"
+      },
+      "tiers": {
         "starter": {
-            "events": "2 events",
-            "support": "Email support"
+          "title": "Starter",
+          "description": "Ideal for dinners, birthday parties or small events.",
+          "cta": "Get started"
         },
         "premium": {
-            "events": "5 events",
-            "support": "Priority support"
+          "title": "Premium",
+          "description": "Perfect for weddings and large celebrations.",
+          "cta": "Get started",
+          "badge": "Recommended"
         },
         "agency": {
-            "events": "Unlimited events",
-            "support": "24/7 support",
-            "api": "API access"
+          "title": "Agency",
+          "description": "For professional Wedding Planners and Event Organizers.",
+          "cta": "Get started"
         }
+      }
     },
-    "blog": {
-        "seo": {
-            "title": "Blog - Ceremly | Guides and Tips for Your Events",
-            "description": "Discover practical guides, tips and strategies to organize perfect events and manage RSVPs efficiently."
+    "finalCta": {
+      "title": "Ready to simplify your next event?",
+      "description": "Join the waitlist today and get a free month of Pro plan at official launch.",
+      "placeholder": "Enter your email",
+      "cta": "Join the waiting list"
+    },
+    "seo": {
+      "title": "Ceremly - Automatic RSVP Management for Private Events",
+      "description": "Automatic platform for managing RSVPs for private events via Email and WhatsApp Deep Link. No more spreadsheets or endless group chats. Try free.",
+      "ogTitle": "Ceremly - Guest Confirmations via Email & WhatsApp in 1 Minute",
+      "ogDescription": "Manage your private event confirmations with 1-click Email invites and WhatsApp Deep Links. Real-time dashboard, PDF export, allergy alerts.",
+      "keywords": "RSVP, guest management, event confirmation, WhatsApp invites, email invites, wedding planner, event planning, guest list"
+    },
+    "landingFooter": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "contacts": "Contact",
+      "blog": "Blog",
+      "copyright": "Ceremly Italia. All rights reserved."
+    },
+    "howItWorks": {
+      "title": "Get started in 3 simple steps",
+      "subtitle": "From signup to production in minutes, not months.",
+      "step1": {
+        "title": "Step 1 - Create your event",
+        "description": "Sign up and create your first event in seconds. Add details, upload your guest list and customize messages.",
+        "highlight": "Your event is ready to use right after signup."
+      },
+      "step2": {
+        "title": "Step 2 - Send invites",
+        "description": "Send invites via email or generate personalized WhatsApp Deep Links for each guest.",
+        "highlight": "Reach every guest the way they prefer."
+      },
+      "step3": {
+        "title": "Step 3 - Monitor responses",
+        "description": "Follow in real time who confirmed, who still needs to respond and export data for catering.",
+        "highlight": "Everything under control, in one dashboard."
+      },
+      "cta": "Get Started"
+    },
+    "forWho": {
+      "title": "Built for event organizers",
+      "subtitle": "Whether you're organizing a wedding or a dinner party, Ceremly adapts to your needs.",
+      "planner": {
+        "title": "For private events",
+        "feature1": "Weddings and ceremonies",
+        "feature2": "Birthday parties",
+        "feature3": "Dinners and gatherings"
+      },
+      "couples": {
+        "title": "For professionals",
+        "feature1": "Wedding Planners",
+        "feature2": "Event organizers",
+        "feature3": "Agencies"
+      }
+    },
+    "trust": {
+      "badge": "Security & Privacy",
+      "title": "Your data is safe",
+      "subtitle": "Guest data privacy and security as top priority.",
+      "emailDelivery": {
+        "title": "Secure Emails",
+        "description": "Verified sends with SPF/DKIM for maximum deliverability.",
+        "benefit1": "No risk of ending up in spam",
+        "benefit2": "Real-time open tracking"
+      },
+      "privacy": {
+        "title": "GDPR Compliant",
+        "description": "Guest data protected and processed according to European regulations.",
+        "benefit1": "Automatic data deletion post-event",
+        "benefit2": "No sharing with third parties"
+      },
+      "cta": {
+        "description": "Ready to simplify your next event?",
+        "primary": "Join Waitlist",
+        "secondary": "Learn More"
+      }
+    },
+    "why": {
+      "badge": "Why Ceremly",
+      "title": "Why choose Ceremly",
+      "benefits": {
+        "hub": {
+          "title": "All in one platform",
+          "description": "Email, WhatsApp, dashboard and export in one solution."
         },
-        "hero": {
-            "badge": "Ideas & Resources",
-            "title": "Guides, Tips and Resources for Your Events",
-            "subtitle": "Practical articles to organize unforgettable events and manage RSVPs without stress."
+        "efficiency": {
+          "title": "Faster responses",
+          "description": "Deep Links and 1-click for response rates up to 90%."
         },
-        "filter": {
-            "all": "All",
-            "showing": "Articles tagged:",
-            "noResults": "No articles found for this category.",
-            "noArticlesInLocale": "No articles available in this language yet.",
-            "clearFilter": "Show all"
+        "accessibility": {
+          "title": "Super easy to use",
+          "description": "No training needed. Ready to use in 2 minutes."
+        }
+      },
+      "mission": {
+        "badge": "Our mission",
+        "description": "We believe organizing an event should be a pleasure, not stress. Ceremly eliminates the chaos of confirmations so you can enjoy the moments that matter."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know before getting started.",
+      "questions": {
+        "q1": {
+          "question": "How does Ceremly work?",
+          "answer": "Create your event, upload your guest list and choose how to send them: 1-click email or WhatsApp deep link. Guests confirm in a second and you monitor everything from the dashboard."
         },
-        "featured": {
-            "badge": "Featured",
-            "readMore": "Read the article"
+        "q2": {
+          "question": "Do I need technical skills?",
+          "answer": "Absolutely not. The interface is designed to be intuitive. Create your event and send invites in less than 5 minutes."
+        },
+        "q3": {
+          "question": "Do WhatsApp deep links use bots?",
+          "answer": "No, no bots. The system generates a link that opens your WhatsApp app with a pre-filled message. You simply press send. Totally personal and safe."
+        },
+        "q4": {
+          "question": "Is guest data safe?",
+          "answer": "Absolutely. We use standard encryption, are GDPR compliant and data is automatically deleted after the event if requested."
+        },
+        "q5": {
+          "question": "Can I try before paying?",
+          "answer": "Join the waitlist for priority access and a lifetime discount. Early users will also get a free month of Pro."
+        },
+        "q6": {
+          "question": "When will Ceremly launch?",
+          "answer": "We're working on the launch. Join the waitlist to be among the first to try the platform and receive updates."
+        }
+      }
+    },
+    "waitingList": {
+      "badge": "Coming Soon",
+      "title": "Join the Waiting List",
+      "description": "Be among the first to get access when we launch. Early adopters get exclusive benefits.",
+      "placeholder": "Enter your email address",
+      "submitButton": "Join Waiting List",
+      "submittedButton": "You're In!",
+      "successTitle": "Welcome aboard!",
+      "successMessage": "Thank you for signing up! We've sent you a confirmation email.",
+      "successMessageNoEmail": "Thank you for signing up! We'll notify you as soon as we launch.",
+      "alreadySubscribedTitle": "Already subscribed",
+      "alreadySubscribedMessage": "This email is already on the waiting list. We'll notify you at launch!",
+      "errorTitle": "Oops!",
+      "errorMessage": "Something went wrong. Please try again later.",
+      "privacyNote": "We respect your privacy. No spam, ever.",
+      "validation": {
+        "invalidEmail": "Please enter a valid email address"
+      },
+      "features": {
+        "earlyAccess": {
+          "title": "Early Access",
+          "description": "Be the first to test the platform"
+        },
+        "specialBenefits": {
+          "title": "Special Benefits",
+          "description": "Exclusive discounts for early adopters"
+        },
+        "updates": {
+          "title": "Priority Updates",
+          "description": "Stay informed about every milestone"
+        }
+      }
+    },
+    "contact": {
+      "badge": "Contact Us",
+      "title": "Have questions? We're here to help",
+      "description": "Fill out the form and we'll get back to you within 24 hours.",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "subjectLabel": "Subject",
+      "messageLabel": "Message",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "Your email address",
+      "subjectPlaceholder": "What would you like to discuss?",
+      "messagePlaceholder": "Write your message here...",
+      "submitButton": "Send message",
+      "submittedButton": "Message sent!",
+      "successTitle": "Message sent!",
+      "successMessage": "Thank you for contacting us. We'll get back to you as soon as possible.",
+      "errorTitle": "Oops!",
+      "errorMessage": "Something went wrong. Please try again later.",
+      "privacyNote": "Your data is safe. We only use it to respond to you.",
+      "validation": {
+        "requiredName": "Name is required",
+        "requiredEmail": "Email is required",
+        "requiredSubject": "Subject is required",
+        "requiredMessage": "Message is required",
+        "invalidName": "Name must be at least 2 characters",
+        "invalidEmail": "Please enter a valid email address",
+        "invalidSubject": "Subject must be at least 3 characters",
+        "invalidMessage": "Message must be at least 10 characters"
+      },
+      "info": {
+        "email": {
+          "title": "Email",
+          "value": "hello{'@'}ceremly.it"
+        },
+        "hours": {
+          "title": "Hours",
+          "value": "Mon-Fri, 9:00-18:00"
+        },
+        "response": {
+          "title": "Response time",
+          "value": "Within 24 business hours"
+        }
+      }
+    },
+    "newsletter": {
+      "badge": "Stay Updated",
+      "title": "Subscribe to Our Newsletter",
+      "description": "Get the latest updates about Ceremly directly in your inbox.",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "Your email address",
+      "submitButton": "Subscribe",
+      "submittedButton": "Subscribed!",
+      "successTitle": "Welcome!",
+      "successMessage": "Thank you for subscribing!",
+      "errorTitle": "Oops!",
+      "errorMessage": "Something went wrong. Please try again later.",
+      "privacyNote": "We respect your privacy. No spam, ever.",
+      "validation": {
+        "invalidName": "Name must be at least 2 characters",
+        "invalidEmail": "Please enter a valid email address"
+      },
+      "features": {
+        "exclusiveContent": {
+          "title": "Exclusive Content",
+          "description": "Access reserved tips and guides"
+        },
+        "specialOffers": {
+          "title": "Special Offers",
+          "description": "Be the first to know about promotions"
+        },
+        "updates": {
+          "title": "Latest Updates",
+          "description": "Stay informed about new features"
+        }
+      }
+    }
+  },
+  "maintenance": {
+    "badge": "We're working for you",
+    "title": "Site under maintenance",
+    "description": "We're improving the platform to offer you an even better experience. We'll be back online soon!",
+    "cta": {
+      "notify": "Notify me when ready",
+      "contact": "Contact us"
+    },
+    "stats": {
+      "stat1": "Reliability",
+      "stat2": "Support",
+      "stat3": "Quick setup"
+    },
+    "features": {
+      "title": "Coming soon",
+      "description": "We're preparing new features and improvements for you.",
+      "feature1": {
+        "title": "Event Management",
+        "description": "Organize your work with flexible events and team structures."
+      },
+      "feature2": {
+        "title": "Team Collaboration",
+        "description": "Invite members, assign roles, and collaborate efficiently."
+      },
+      "feature3": {
+        "title": "Subscription Management",
+        "description": "Manage billing, upgrades, and usage all in one place."
+      }
+    },
+    "footer": {
+      "rights": "All rights reserved.",
+      "terms": "Terms and Conditions",
+      "contact": "Contact"
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Admin Home",
+    "sidebar": {
+      "hello": "Hello"
+    },
+    "nav": {
+      "home": "Home",
+      "profile": "Profile",
+      "subscription": "Subscription",
+      "team": "Team",
+      "settings": "Settings",
+      "events": "My Events",
+      "eventDashboard": "Event Dashboard",
+      "eventSettings": "Event Settings",
+      "allEvents": "All Events",
+      "newEvent": "New Event",
+      "goTo": "Go to",
+      "code": "Code",
+      "viewSource": "View page source",
+      "organizationDashboard": "Organization",
+      "members": "Members",
+      "allOrganizations": "All organizations",
+      "organizations": "Organizations"
+    },
+    "dropdown": {
+      "newEvent": "New event",
+      "inviteMember": "Invite member",
+      "newOrganization": "New organization"
+    },
+    "home": {
+      "welcome": {
+        "greeting": "Welcome back, {name}",
+        "subtitle": "Here's what's happening with your events today."
+      },
+      "search": {
+        "placeholder": "Search events..."
+      },
+      "newEvent": "New Event",
+      "stats": {
+        "totalEvents": "Total Events",
+        "activeInvitations": "Active Invitations",
+        "avgResponseRate": "Avg. Response Rate",
+        "vsYesterday": "vs yesterday"
+      },
+      "charts": {
+        "responsesOverTime": "Responses over time",
+        "responsesSubtitle": "Confirmation trends",
+        "inviteeStatus": "Invitee Status",
+        "accepted": "Accepted",
+        "declined": "Declined",
+        "pending": "Pending",
+        "total": "Total",
+        "responses": "responses",
+        "period": {
+          "7days": "Last 7 days",
+          "30days": "Last 30 days",
+          "90days": "Last 90 days"
+        }
+      },
+      "eventsTable": {
+        "title": "Upcoming Events",
+        "viewAll": "View all",
+        "columns": {
+          "event": "Event",
+          "date": "Date",
+          "rsvpProgress": "RSVP Progress",
+          "actions": "Actions"
+        },
+        "noEvents": "No upcoming events"
+      },
+      "eventCards": {
+        "title": "Your Events",
+        "newEvent": "New Event",
+        "newButton": "New",
+        "modal": {
+          "title": "New Event",
+          "description": "Create a new event for your team",
+          "create": "Create",
+          "limitReached": "Limit reached",
+          "limitReachedDescription": "You have reached the event limit for your plan.",
+          "limitWarning": "You have reached the limit of {limit} events for your plan.",
+          "upgrade": "Upgrade",
+          "eventsUsed": "Events used:",
+          "name": "Name",
+          "namePlaceholder": "e.g. My Company",
+          "slug": "Slug",
+          "slugPlaceholder": "e.g. my-company",
+          "slugHint": "URL-friendly identifier",
+          "slugPrefix": "/org/",
+          "cancel": "Cancel",
+          "createEvent": "Create Event",
+          "validation": {
+            "nameTooShort": "Name must be at least 2 characters",
+            "slugTooShort": "Slug must be at least 2 characters",
+            "slugInvalid": "Only lowercase letters, numbers and dashes"
+          },
+          "success": "Event created",
+          "successDescription": "Event \"{name}\" has been created successfully.",
+          "error": "Error",
+          "errorDescription": "An error occurred"
+        },
+        "empty": {
+          "title": "No events",
+          "description": "You are not part of any event. Create your first event to get started.",
+          "button": "Create Event",
+          "createButton": "Create Event"
         },
         "card": {
-            "readMore": "Read more",
-            "minRead": "min read"
-        },
-        "pagination": {
-            "previous": "Previous",
-            "next": "Next",
-            "page": "Page"
-        },
-        "article": {
-            "breadcrumbHome": "Home",
-            "related": "Related Articles",
-            "readInEnglish": "Read this article in English:",
-            "readInItalian": "Read this article in Italian:",
-            "share": "Share",
-            "copyLink": "Copy link",
-            "linkCopied": "Link copied!",
-            "toc": "Table of Contents"
-        },
-        "sidebar": {
-            "ctaTitle": "Don't miss out",
-            "ctaDescription": "Subscribe to our newsletter to receive guides and tips directly in your inbox.",
-            "ctaButton": "Subscribe free",
-            "categoriesTitle": "Categories"
-        },
-        "newsletter": {
-            "title": "Stay up to date with the latest news",
-            "description": "Subscribe to our newsletter to receive guides, tips and resources directly in your inbox.",
-            "placeholder": "Your email",
-            "subscribe": "Subscribe",
-            "subscribed": "Subscribed!",
-            "privacy": "We respect your privacy. No spam, ever.",
-            "successTitle": "Subscribed!",
-            "successDescription": "We'll send you useful content, no spam.",
-            "errorTitle": "Error",
-            "errorDescription": "Something went wrong. Please try again later.",
-            "alreadySubscribed": "You're already subscribed to the newsletter."
+          "member": "member",
+          "members": "members",
+          "created": "Created",
+          "active": "Active"
         }
+      }
+    },
+    "eventsList": {
+      "title": "My Events",
+      "search": "Search events...",
+      "createEvent": "Create Event",
+      "stats": {
+        "total": "Total Events",
+        "active": "Active",
+        "completed": "Completed"
+      },
+      "columns": {
+        "name": "Event Name",
+        "date": "Date",
+        "time": "Time",
+        "location": "Location",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed"
+      },
+      "empty": {
+        "title": "No events",
+        "description": "You haven't created any events yet. Create your first event to get started.",
+        "createButton": "Create your first event"
+      },
+      "modal": {
+        "title": "New Event",
+        "name": "Event Name",
+        "namePlaceholder": "e.g. Gala Dinner 2024",
+        "date": "Date",
+        "time": "Time",
+        "location": "Location",
+        "locationPlaceholder": "Venue name",
+        "address": "Address",
+        "addressPlaceholder": "Street, City, Zip",
+        "cancel": "Cancel",
+        "create": "Create now",
+        "creating": "Creating...",
+        "limitReached": "Limit reached",
+        "limitWarning": "You have reached the limit of {limit} events for your plan.",
+        "upgrade": "Upgrade",
+        "eventsUsed": "Events used:",
+        "success": "Event created",
+        "successDescription": "Event \"{name}\" has been created successfully.",
+        "error": "Error",
+        "errorDescription": "An error occurred while creating the event.",
+        "validation": {
+          "nameRequired": "Event name is required",
+          "dateRequired": "Date is required"
+        }
+      }
+    },
+    "customers": {
+      "title": "Customer Management",
+      "searchPlaceholder": "Search by name or email...",
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "registeredAt": "Registered At",
+        "status": "Status"
+      },
+      "noData": "No customers found.",
+      "loading": "Loading customers...",
+      "createModal": {
+        "title": "New customer",
+        "description": "Add a new customer to the database",
+        "button": "New customer",
+        "name": "Name",
+        "namePlaceholder": "John Doe",
+        "email": "Email",
+        "emailPlaceholder": "john.doe{'@'}example.com",
+        "cancel": "Cancel",
+        "create": "Create",
+        "validation": {
+          "tooShort": "Too short",
+          "invalidEmail": "Invalid email"
+        },
+        "success": "Success",
+        "successDescription": "New customer {name} added"
+      }
+    },
+    "planUsage": {
+      "event": {
+        "title": "Event",
+        "description": "Plan usage"
+      },
+      "used": "Used",
+      "limitReached": "Limit reached -",
+      "upgrade": "upgrade",
+      "remaining": "{count} remaining",
+      "plan": {
+        "title": "Active Plan",
+        "description": "Current subscription",
+        "readOnly": "Read only -",
+        "fullAccess": "Full access"
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "Quick operations",
+        "newEvent": "New Event",
+        "manageSubscription": "Manage Subscription"
+      }
+    },
+    "organizationsList": {
+      "title": "Organizations",
+      "search": "Search organizations...",
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No organizations",
+        "description": "Create your first organization to get started."
+      }
     }
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "description": "Manage your personal information, security and account preferences.",
+    "personalInfo": "Personal Information",
+    "profilePhoto": "Your profile photo",
+    "photoDescription": "PNG, JPG or GIF. Max size 5MB.",
+    "uploadNew": "Upload new",
+    "removePhoto": "Remove",
+    "name": "Full Name",
+    "nameDescription": "Will appear on receipts, invoices, and other communication.",
+    "email": "Business Email",
+    "emailDescription": "Used to sign in, for email receipts and product updates.",
+    "phone": "Phone Number",
+    "phoneDescription": "Your phone number for contact purposes.",
+    "preferences": "Account Preferences",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language.",
+    "timezone": "Timezone",
+    "timezoneDescription": "Your local timezone for scheduling.",
+    "security": "Security",
+    "password": "Password",
+    "passwordDescription": "Confirm your current password before setting a new one.",
+    "oauthPasswordInfo": "Password management is handled by your social login provider (Google, GitHub, etc.). To change your password, please visit your provider's account settings.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "updatePassword": "Update password",
+    "updateSuccess": "Your profile has been updated successfully.",
+    "updateError": "Failed to update profile. Please try again.",
+    "passwordUpdateSuccess": "Your password has been updated successfully.",
+    "passwordUpdateError": "Failed to update password. Please try again.",
+    "invalidCurrentPassword": "Current password is incorrect.",
+    "emailUpdateRequested": "Email update requested",
+    "emailConfirmationSent": "Please check your new email inbox to confirm the change.",
+    "saveAll": "Save all",
+    "validation": {
+      "nameTooShort": "Name must be at least 2 characters",
+      "invalidEmail": "Please enter a valid email address",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordsMustDiffer": "New password must be different from current password",
+      "passwordsMustMatch": "Passwords do not match"
+    }
+  },
+  "common": {
+    "language": "Language",
+    "continue": "Continue",
+    "back": "Back",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "success": "Success",
+    "error": "Error",
+    "saveChanges": "Save changes",
+    "update": "Update",
+    "cancel": "Cancel",
+    "choose": "Choose",
+    "retry": "Retry",
+    "save": "Save"
+  },
+  "event": {
+    "settings": {
+      "title": "Event Settings",
+      "description": "Manage your event configuration and preferences.",
+      "tabs": {
+        "general": "General",
+        "members": "Members",
+        "danger": "Danger Zone"
+      },
+      "general": {
+        "title": "General Information",
+        "description": "Update your event name and URL slug.",
+        "name": "Event Name",
+        "nameDescription": "The display name for your event, visible to all members.",
+        "namePlaceholder": "Enter event name",
+        "slug": "URL Slug",
+        "slugDescription": "The unique identifier for your event URL. Only lowercase letters, numbers and hyphens allowed.",
+        "slugPlaceholder": "my-event"
+      },
+      "updateSuccess": "Event settings have been updated successfully.",
+      "updateError": "Failed to update event settings. Please try again.",
+      "permissionDenied": "You don't have permission to update this event.",
+      "noChanges": "No changes to save",
+      "readOnly": {
+        "title": "Read-Only Mode",
+        "description": "You don't have permission to edit event settings.",
+        "message": "Contact your event administrator to request edit permissions."
+      },
+      "info": {
+        "title": "Event Information",
+        "description": "Read-only information about your event.",
+        "eventId": "Event ID",
+        "created": "Created",
+        "yourRole": "Your Role",
+        "owner": "Owner",
+        "member": "Member"
+      },
+      "validation": {
+        "nameTooShort": "Event name must be at least 2 characters",
+        "nameTooLong": "Event name cannot exceed 100 characters",
+        "slugTooShort": "Slug must be at least 2 characters",
+        "slugTooLong": "Slug cannot exceed 50 characters",
+        "slugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
+        "slugAlreadyTaken": "This slug is already taken"
+      },
+      "sections": {
+        "basicInfo": {
+          "title": "1. Basic Information",
+          "description": "Name, date, time and main details of your event."
+        },
+        "logistics": {
+          "title": "2. Logistics",
+          "description": "Event location and address."
+        },
+        "automation": {
+          "title": "4. Automation",
+          "description": "Auto-confirmation and notifications."
+        }
+      },
+      "fields": {
+        "description": "Description",
+        "descriptionPlaceholder": "Briefly describe your event...",
+        "date": "Date",
+        "time": "Start Time",
+        "timePlaceholder": "04:30 PM",
+        "location": "Venue Name",
+        "locationPlaceholder": "e.g. The Grand Hotel",
+        "address": "Full Address",
+        "addressPlaceholder": "123 Main Street, New York, NY 10001"
+      },
+      "badge": {
+        "live": "Live",
+        "draft": "Draft"
+      },
+      "lastSaved": {
+        "justNow": "Last saved: just now",
+        "minutesAgo": "Last saved: {n} min ago",
+        "hoursAgo": "Last saved: {n} hours ago"
+      },
+      "cancel": "Cancel",
+      "mapPlaceholder": {
+        "title": "Enter an address to display the map",
+        "configureKey": "Map available after Google Maps configuration"
+      },
+      "deleteEvent": {
+        "title": "Delete Event",
+        "description": "Once deleted, all guest data and landing page will no longer be accessible.",
+        "button": "Delete Event",
+        "confirmTitle": "Delete Event",
+        "confirmMessage": "Are you sure you want to delete this event? All data will be permanently removed.",
+        "confirmInput": "Type the event name to confirm",
+        "confirmLabel": "Type DELETE to confirm",
+        "confirmPlaceholder": "DELETE",
+        "successMessage": "Event deleted successfully."
+      }
+    },
+    "createModal": {
+      "title": "New Event",
+      "description": "Add a new event to the database",
+      "button": "New event",
+      "name": "Name",
+      "namePlaceholder": "My Event",
+      "slug": "Slug",
+      "slugPlaceholder": "my-event",
+      "cancel": "Cancel",
+      "create": "Create",
+      "validation": {
+        "tooShort": "Too short"
+      },
+      "limitReached": "Limit reached",
+      "limitReachedDescription": "You have reached the event limit for your plan. Upgrade to create more.",
+      "limitWarning": "You have reached the limit of {limit} events for your plan.",
+      "upgradeLink": "Upgrade",
+      "eventsUsed": "Events used:",
+      "error": "Error",
+      "failedToCreate": "Failed to create event",
+      "success": "Success",
+      "successDescription": "New event {name} added"
+    }
+  },
+  "footer": {
+    "resources": {
+      "title": "Resources",
+      "dashboard": "Dashboard",
+      "blog": "Blog"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "dpa": "DPA"
+    },
+    "newsletter": {
+      "label": "Subscribe to our newsletter",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "subscribed": "Subscribed",
+      "privacy": "We respect your privacy. No spam, ever.",
+      "success": {
+        "title": "Subscribed!",
+        "description": "You've been subscribed to our newsletter."
+      }
+    },
+    "social": {
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    },
+    "brand": {
+      "name": "Ceremly"
+    }
+  },
+  "tos": {
+    "meta": {
+      "title": "Terms and Conditions of Use",
+      "effectiveDate": "Effective from: January 1, 2025"
+    },
+    "intro": {
+      "description": "Welcome to our platform. By using our services, you accept these Terms and Conditions. Please read them carefully before using the platform."
+    },
+    "sections": {
+      "overview": {
+        "number": "1",
+        "title": "Service overview",
+        "description": "This platform provides SaaS event and team management tools. After a trial period, a subscription may be required to continue using certain features."
+      },
+      "account": {
+        "number": "2",
+        "title": "Account management",
+        "description": "You must provide accurate information during registration and keep your login credentials secure.",
+        "important": {
+          "label": "Important",
+          "text": "You are responsible for all activities performed with your account. Do not share your credentials with third parties."
+        }
+      },
+      "trial": {
+        "number": "3",
+        "title": "Free trial and subscriptions",
+        "trialTitle": "Free tier",
+        "trialDescription": "New users have access to a free tier with limited features: 1 event, 1 user, basic functionality.",
+        "afterTrialTitle": "Paid plans",
+        "afterTrialDescription": "To access advanced features, you must subscribe to a paid plan. Plans can be upgraded or downgraded at any time."
+      },
+      "pricing": {
+        "number": "4",
+        "title": "Plans and pricing",
+        "freelance": {
+          "name": "Free",
+          "price": "$0",
+          "period": "/month",
+          "description": "Basic features for individuals getting started."
+        },
+        "studio": {
+          "name": "Pro",
+          "price": "$29",
+          "period": "/month",
+          "description": "Advanced features for growing teams."
+        },
+        "venuePartner": {
+          "name": "Enterprise",
+          "price": "Custom",
+          "period": "",
+          "description": "Custom solutions for large organizations."
+        },
+        "fairUse": {
+          "text": "We reserve the right to apply fair use policies on anomalous usage to ensure fair service to all users."
+        }
+      },
+      "gdpr": {
+        "number": "5",
+        "title": "Data and GDPR",
+        "description": "You are responsible for the data you store on the platform. We act as a Data Processor on your behalf.",
+        "requirement": "Use of the service requires compliance with applicable data protection laws.",
+        "dpaLink": "View the complete Data Processing Agreement (DPA) →"
+      },
+      "usage": {
+        "number": "6",
+        "title": "Permitted use of the service",
+        "description": "It is prohibited to use the service for: sending spam or unauthorized communications, illegal activities or violations of others' rights, uploading offensive or illegal content, attempts to circumvent technical limits or unauthorized access."
+      },
+      "thirdParty": {
+        "number": "7",
+        "title": "Third-party services",
+        "description": "The service relies on external providers for hosting, email, analytics and logging. We are not responsible for services we do not directly control.",
+        "subprocessorsLink": "View the complete list of sub-processors →"
+      },
+      "liability": {
+        "number": "8",
+        "title": "Warranties and liability limitations",
+        "description": "The service is provided \"as is\" without warranties of any kind, express or implied.",
+        "limitation": {
+          "label": "Limitation of liability",
+          "text": "Within legal limits, our total liability is limited to fees paid in the last 12 months. Indirect or special damages are excluded except in cases of willful misconduct."
+        }
+      },
+      "termination": {
+        "number": "9",
+        "title": "Suspension and termination of service",
+        "byProvider": {
+          "title": "By us",
+          "description": "We may suspend or terminate the account for serious violations of Terms, missed payments or security risks."
+        },
+        "byClient": {
+          "title": "By you",
+          "description": "You can cancel your subscription at any time from your dashboard. The service will remain active until the end of the current billing period."
+        }
+      },
+      "updates": {
+        "number": "10",
+        "title": "Updates to the Terms",
+        "description": "We may update these Terms from time to time. In case of substantial changes, we will provide advance notice via email."
+      },
+      "law": {
+        "number": "11",
+        "title": "Applicable law and jurisdiction",
+        "description": "These Terms and Conditions are governed by applicable law. Disputes will be resolved in the appropriate jurisdiction."
+      }
+    },
+    "cta": {
+      "title": "Questions about Terms and Conditions?",
+      "company": "Your Company Name",
+      "location": "Your Location",
+      "legalEmail": "Legal email",
+      "contact": "Contact us",
+      "privacy": "Privacy Policy",
+      "dpa": "DPA"
+    }
+  },
+  "privacy": {
+    "meta": {
+      "title": "Privacy Policy (GDPR)",
+      "effectiveDate": "Effective from: January 1, 2025"
+    },
+    "overview": {
+      "description": "We value your privacy. This policy explains how we process personal data as part of our service."
+    },
+    "sections": {
+      "dataCollection": {
+        "number": "1",
+        "title": "What data we collect",
+        "clientData": "Account Data",
+        "clientDataDesc": "We collect name, email, organization, and technical logs when you create an account. This data is used to manage your account and provide our services.",
+        "eventData": "Event Data",
+        "eventDataDesc": "Information and content created within your events.",
+        "guestData": "Team Member Data",
+        "guestDataDesc": "Name, email, role, and permissions for team members you invite.",
+        "nonPersonalData": "Non-Personal Data",
+        "nonPersonalDataDesc": "We collect cookies, IP, user agent for analytics and improving user experience.",
+        "gallery": "Uploaded Files",
+        "galleryDesc": "Files and media uploaded to the platform and their metadata."
+      },
+      "purposes": {
+        "number": "2",
+        "title": "Purposes and legal bases",
+        "clientData": "Account Data",
+        "clientDataDesc": "Your data is used for account management and providing platform access (art. 6.1.b GDPR - contract execution).",
+        "nonPersonalData": "Non-Personal Data",
+        "nonPersonalDataDesc": "Used for analytics and improving user experience (art. 6.1.f GDPR - legitimate interest).",
+        "communications": "Service Communications",
+        "communicationsDesc": "We may send service-related communications about your account and subscriptions.",
+        "gallery": "File Storage",
+        "galleryDesc": "Files are stored securely and processed according to your event settings."
+      },
+      "sharing": {
+        "number": "3",
+        "title": "Data sharing",
+        "description": "We do not sell or share your personal data with third parties, except when necessary to provide services or comply with legal obligations.",
+        "subprocessors": "Our sub-processors are bound by agreements compliant with Art. 28 GDPR. For details, see our",
+        "dpaLink": "Data Processing Agreement"
+      },
+      "cookies": {
+        "number": "4",
+        "title": "Cookies",
+        "description": "We use cookies to improve your experience and analyze usage patterns.",
+        "consent": "You can manage cookies in your browser settings.",
+        "link": "See the complete Cookie Policy →"
+      },
+      "security": {
+        "number": "5",
+        "title": "Security",
+        "description": "We implement industry-standard security measures including encryption, access controls, and regular security audits to protect your data."
+      },
+      "rights": {
+        "number": "6",
+        "title": "Your rights",
+        "description": "You can request access to, modification, or deletion of your personal data at any time by contacting us at",
+        "complaint": "You also have the right to file a complaint with your local",
+        "authority": "Data Protection Authority",
+        "gdprRights": "Your GDPR rights include",
+        "gdprList": "access, rectification, deletion, processing restriction, data portability and objection to processing"
+      },
+      "retention": {
+        "number": "7",
+        "title": "Data retention",
+        "description": "We retain your data for as long as your account is active. After account deletion, data is removed according to our retention policy.",
+        "accountData": "Account data",
+        "accountDataPeriod": "Contract duration + 24 months",
+        "guestData": "Event data",
+        "guestDataPeriod": "Until event deletion + 30 days",
+        "gallery": "Uploaded files",
+        "galleryPeriod": "Until deletion request",
+        "vendors": "Logs",
+        "vendorsPeriod": "12 months",
+        "note": "Deletions from backups follow technical cycles."
+      },
+      "changes": {
+        "number": "8",
+        "title": "Privacy Policy updates",
+        "description": "We may update this policy from time to time. You will be notified of changes via email."
+      },
+      "law": {
+        "number": "9",
+        "title": "Applicable law",
+        "description": "This Privacy Policy is governed by applicable law and GDPR."
+      },
+      "additionalNotes": {
+        "title": "Additional notes",
+        "transfers": "International transfers",
+        "transfersDesc": "If present, Standard Contractual Clauses apply.",
+        "minors": "Minors",
+        "minorsDesc": "This is a B2B service not intended for minors."
+      }
+    },
+    "cta": {
+      "title": "Questions about this privacy policy?",
+      "controller": "Data Controller",
+      "company": "Your Company Name",
+      "email": "Privacy email",
+      "contact": "Contact us",
+      "terms": "Terms of service",
+      "dpa": "DPA"
+    }
+  },
+  "dpa": {
+    "meta": {
+      "title": "Data Processing Agreement (DPA)",
+      "subtitle": "Data Processing Agreement (DPA) art. 28 GDPR",
+      "effectiveDate": "Effective from: January 1, 2025"
+    },
+    "intro": {
+      "description": "This Data Processing Agreement defines the roles, responsibilities and security measures for processing personal data in our service, in compliance with Art. 28 of the GDPR."
+    },
+    "summary": {
+      "title": "Summary",
+      "roles": "Roles",
+      "rolesDesc": "you are the Controller; we are the Processor",
+      "scope": "Scope",
+      "scopeDesc": "event management, team management, file storage, and analytics",
+      "toms": "Security measures (TOMs)",
+      "tomsDesc": "documented in Annex A",
+      "subprocessors": "Sub-processors",
+      "subprocessorsDesc": "listed on /legal/subprocessors"
+    },
+    "sections": {
+      "purpose": {
+        "number": "1",
+        "title": "Subject matter, duration and purpose",
+        "description": "The Processor processes personal data exclusively to provide the Service according to the Controller's documented instructions."
+      },
+      "categories": {
+        "number": "2",
+        "title": "Categories of data subjects and data",
+        "subjectsLabel": "Data subjects",
+        "subjects": "account holders, team members, event members",
+        "dataLabel": "Data",
+        "data": "identifiers, contacts, event data, files, technical metadata",
+        "note": "The Controller avoids special categories unless suitable bases exist."
+      },
+      "instructions": {
+        "number": "3",
+        "title": "Instructions and compliance",
+        "description": "The Processor processes only on instructions; informs the Controller if it considers an instruction not compliant with GDPR."
+      },
+      "confidentiality": {
+        "number": "4",
+        "title": "Confidentiality",
+        "description": "Authorized personnel bound to confidentiality, with periodic privacy training."
+      },
+      "security": {
+        "number": "5",
+        "title": "Security (Annex A TOMs)",
+        "description": "Encryption in transit and at rest; access control; strong authentication; logging/audit; patching; backup/DR; privacy by design/default."
+      },
+      "subprocessors": {
+        "number": "6",
+        "title": "Sub-processors",
+        "description": "General authorization with public list on /legal/subprocessors.",
+        "objection": "Notification of new appointments with right to objection within 15 days."
+      },
+      "assistance": {
+        "number": "7",
+        "title": "Assistance to the Controller",
+        "description": "Reasonable support for data subject requests (DSR), DPIA, and incident response."
+      },
+      "breach": {
+        "number": "8",
+        "title": "Personal data breaches",
+        "description": "Notification without undue delay with available information and cooperation."
+      },
+      "deletion": {
+        "number": "9",
+        "title": "Deletion or return",
+        "description": "Upon termination, following Controller's instructions: deletion or return of data."
+      },
+      "audit": {
+        "number": "10",
+        "title": "Audit and evidence",
+        "description": "We provide necessary information and allow reasonable audits."
+      },
+      "transfers": {
+        "number": "11",
+        "title": "International transfers",
+        "description": "If present, Standard Contractual Clauses and appropriate measures apply."
+      },
+      "hierarchy": {
+        "number": "12",
+        "title": "Hierarchy",
+        "description": "In case of conflict between DPA and Terms, DPA prevails on privacy matters."
+      }
+    },
+    "annexA": {
+      "title": "Annex A - Technical and Organizational Measures (TOMs)",
+      "encryption": "1. TLS encryption; encryption at rest; credential hashing.",
+      "accessControl": "2. Access control (roles, least privilege), 2FA admin.",
+      "monitoring": "3. Logging/monitoring, anomaly alerts, vulnerability management.",
+      "backup": "4. Encrypted backups, recovery testing.",
+      "retention": "5. Configurable data retention policies.",
+      "email": "6. Email security: SPF/DKIM/DMARC.",
+      "privacyByDesign": "7. Privacy by design: minimization, clear notices.",
+      "processes": "8. Processes: privacy training, incident register."
+    },
+    "cta": {
+      "title": "Questions about the DPA?",
+      "processor": "Data Processor",
+      "company": "Your Company Name",
+      "email": "Legal email",
+      "contact": "Contact us",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of service"
+    }
+  },
+  "team": {
+    "title": "Team",
+    "inviteMember": "Invite Member",
+    "inviteMemberTitle": "Invite a new member",
+    "inviteMemberDescription": "Enter the email of the person you want to invite to the event",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "colleague{'@'}example.com",
+    "teamLabel": "Assign to Team (optional)",
+    "selectTeam": "No specific team",
+    "sendInvite": "Send Invite",
+    "noTeam": "No team",
+    "membersCount": "{count} members",
+    "members": "Members",
+    "activeMembers": "Active Members",
+    "activeMembersDescription": "People who have access to this event",
+    "noMembers": "No team members yet",
+    "member": "Member",
+    "role": "Role",
+    "joinedAt": "Joined",
+    "lastAccess": "Last Access",
+    "invitedBy": "Invited By",
+    "actions": "Actions",
+    "you": "(you)",
+    "changeRole": "Change Role",
+    "changeRoleTitle": "Change Member Role",
+    "saveRole": "Save Role",
+    "removeMember": "Remove Member",
+    "ownerProtected": "Owner cannot be removed",
+    "pendingInvitations": "Pending Invitations",
+    "pendingInvitationsDescription": "Invitations waiting to be accepted",
+    "email": "Email",
+    "invitedAt": "Invited",
+    "expiresAt": "Expires",
+    "expired": "Expired",
+    "resendInvite": "Resend",
+    "cancelInvite": "Cancel",
+    "neverLoggedIn": "Never",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{count} days ago",
+    "weeksAgo": "{count} weeks ago",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "editor": "Editor",
+      "viewer": "Viewer",
+      "member": "Member"
+    },
+    "roleDescriptions": {
+      "editor": "Can view, create, edit, and delete content. Can manage team.",
+      "viewer": "Can only view content. Read-only access."
+    },
+    "validation": {
+      "invalidEmail": "Please enter a valid email address",
+      "roleRequired": "Please select a role"
+    },
+    "inviteSent": "Invitation Sent",
+    "inviteSentDescription": "An invitation has been sent to {email}",
+    "memberLimitReached": "You have reached the maximum number of team members for your plan. Upgrade to add more members.",
+    "inviteError": "Failed to send invitation. Please try again.",
+    "roleUpdated": "Role Updated",
+    "roleUpdatedDescription": "{name}'s role has been updated",
+    "roleUpdateError": "Failed to update role. Please try again.",
+    "memberRemoved": "Member Removed",
+    "memberRemovedDescription": "{name} has been removed from the team",
+    "memberRemoveError": "Failed to remove member. Please try again.",
+    "inviteResent": "Invitation Resent",
+    "inviteResentDescription": "A new invitation has been sent to {email}",
+    "inviteResendError": "Failed to resend invitation. Please try again.",
+    "inviteCancelled": "Invitation Cancelled",
+    "inviteCancelledDescription": "The invitation to {email} has been cancelled",
+    "inviteCancelError": "Failed to cancel invitation. Please try again.",
+    "roleLabel": "Role",
+    "selectRole": "Select a role",
+    "teamsLabel": "Teams"
+  },
+  "twoFactor": {
+    "title": "Two-Factor Authentication",
+    "description": "Add an extra layer of security to your account by enabling two-factor authentication.",
+    "enabledStatus": "2FA is enabled",
+    "enabledDescription": "Your account is protected with two-factor authentication.",
+    "disabledStatus": "2FA is not enabled",
+    "disabledDescription": "Enable two-factor authentication to add an extra layer of security.",
+    "enable": "Enable 2FA",
+    "enableTitle": "Enable Two-Factor Authentication",
+    "enablePasswordDescription": "For security, please enter your password to enable two-factor authentication.",
+    "disable": "Disable 2FA",
+    "enabled": "Two-factor authentication has been enabled",
+    "disabled": "Two-factor authentication has been disabled",
+    "enableError": "Failed to enable two-factor authentication",
+    "disableError": "Failed to disable two-factor authentication",
+    "verifyError": "Failed to verify code",
+    "invalidCode": "Invalid verification code",
+    "invalidBackupCode": "Invalid backup code",
+    "verifyBackupError": "Failed to verify backup code",
+    "scanQRCode": "Scan QR Code",
+    "scanQRCodeDescription": "Open your authenticator app and scan this QR code to add your account.",
+    "manualEntry": "Can't scan? Enter this code manually:",
+    "enterCode": "Enter Verification Code",
+    "enterCodeDescription": "Enter the 6-digit code from your authenticator app.",
+    "verificationCode": "Verification Code",
+    "codePlaceholder": "000000",
+    "verify": "Verify",
+    "saveBackupCodes": "Save Your Backup Codes",
+    "saveBackupCodesDescription": "Store these backup codes in a safe place. You can use them to access your account if you lose your phone.",
+    "backupCodesCopied": "Backup codes copied to clipboard",
+    "backupCodesTitle": "Two-Factor Authentication Backup Codes",
+    "backupCodesWarning": "Keep these codes safe. Each code can only be used once.",
+    "copyAll": "Copy All",
+    "download": "Download",
+    "importantNote": "Important",
+    "iSavedMyCodes": "I saved my backup codes",
+    "setupComplete": "2FA Setup Complete!",
+    "setupCompleteDescription": "Your account is now protected with two-factor authentication.",
+    "disableTitle": "Disable Two-Factor Authentication",
+    "disableWarning": "Disabling 2FA will make your account less secure. You will need to set it up again if you want to re-enable it.",
+    "confirmPassword": "Confirm Password",
+    "enterPassword": "Enter your password",
+    "regenerateBackupCodes": "Regenerate Backup Codes",
+    "regenerateBackupDescription": "Generate new backup codes. This will invalidate your current backup codes.",
+    "regenerateBackupWarning": "Your existing backup codes will stop working after generating new ones.",
+    "generate": "Generate New Codes",
+    "backupCodesGenerated": "New backup codes have been generated",
+    "generateBackupError": "Failed to generate backup codes",
+    "backupCode": "Backup Code",
+    "backupCodePlaceholder": "Enter backup code",
+    "useBackupCode": "Use a backup code instead",
+    "oauthProviderTitle": "2FA managed by {provider}",
+    "oauthProviderDescription": "Your account is connected to {provider}, which already manages two-factor security.",
+    "oauthProviderInfo": "{provider} provides advanced protection for your account, including two-factor authentication, two-step verification, and suspicious activity detection.",
+    "oauthProviderFeatures": "{provider} security features:",
+    "oauthFeature1": "Built-in two-factor authentication",
+    "oauthFeature2": "Suspicious activity monitoring",
+    "oauthFeature3": "Trusted device management",
+    "oauthProviderManage": "Manage {provider} security",
+    "oauthProviderClose": "Got it",
+    "useAuthenticatorApp": "Use authenticator app instead",
+    "verifyTitle": "Two-Factor Verification",
+    "enterCodeFromApp": "Enter the 6-digit code from your authenticator app.",
+    "enterBackupCodeDescription": "Enter one of your backup codes to sign in."
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "manageUsers": "Users",
+    "manageSubscriptions": "Subscriptions",
+    "userManagement": "User Management",
+    "userManagementDesc": "View and manage all users, roles, and account status",
+    "subscriptionManagement": "Subscription Management",
+    "subscriptionManagementDesc": "View and manage all subscriptions and billing",
+    "stats": {
+      "totalUsers": "Total Users",
+      "verifiedUsers": "Verified Users",
+      "activeSubscriptions": "Active Subscriptions",
+      "mrr": "MRR",
+      "monthlyRecurringRevenue": "Monthly Recurring Revenue",
+      "events": "Events",
+      "bannedUsers": "Banned Users",
+      "last30Days": "last 30 days",
+      "verified": "verified",
+      "total": "total",
+      "banned": "banned",
+      "subscriptionsByPlan": "Subscriptions by Plan"
+    },
+    "filters": {
+      "allRoles": "All Roles",
+      "user": "User",
+      "admin": "Admin",
+      "allStatuses": "All Statuses",
+      "active": "Active",
+      "banned": "Banned",
+      "unverified": "Unverified",
+      "allPlans": "All Plans"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "subscription": "Subscription",
+      "createdAt": "Created At",
+      "user": "User",
+      "plan": "Plan",
+      "period": "Period",
+      "autoRenew": "Auto Renew"
+    },
+    "searchUsers": "Search users...",
+    "searchSubscriptions": "Search by user...",
+    "viewDetails": "View Details",
+    "changeRole": "Change Role",
+    "changeRoleFor": "Change role for {name}",
+    "newRole": "New Role",
+    "ban": "Ban User",
+    "unban": "Unban User",
+    "banUser": "Ban User",
+    "unbanUser": "Unban User",
+    "banConfirm": "Are you sure you want to ban {name}?",
+    "unbanConfirm": "Are you sure you want to unban {name}?",
+    "banReason": "Ban Reason",
+    "banReasonPlaceholder": "Enter reason for ban (optional)",
+    "banExpires": "Ban Expires",
+    "userBanned": "User has been banned",
+    "userUnbanned": "User has been unbanned",
+    "roleChanged": "User role has been changed",
+    "updateFailed": "Failed to update user",
+    "active": "Active",
+    "banned": "Banned",
+    "noSubscription": "No subscription",
+    "unknownUser": "Unknown User",
+    "owner": "Owner",
+    "member": "Member",
+    "permissions": "permissions",
+    "userNotFound": "User not found",
+    "userDetails": {
+      "title": "User Details",
+      "details": "Details",
+      "events": "Events",
+      "subscriptions": "Subscriptions",
+      "auditLogs": "Audit Logs",
+      "userId": "User ID",
+      "phone": "Phone",
+      "locale": "Locale",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "stripeId": "Stripe Customer ID",
+      "polarId": "Polar Customer ID",
+      "bio": "Bio",
+      "noEvents": "No events",
+      "noSubscriptions": "No subscriptions",
+      "noAuditLogs": "No audit logs"
+    },
+    "subscriptionStatus": {
+      "active": "Active",
+      "trialing": "Trialing",
+      "canceled": "Canceled",
+      "pastDue": "Past Due",
+      "unpaid": "Unpaid"
+    },
+    "editSubscription": "Edit Subscription",
+    "editSubscriptionFor": "Edit subscription for {user}",
+    "cancelAtPeriodEnd": "Cancel at period end",
+    "manualEditWarning": "Manual Edit",
+    "manualEditWarningDesc": "This will manually override the subscription data. For Stripe subscriptions, consider making changes in the Stripe dashboard instead.",
+    "subscriptionUpdated": "Subscription has been updated"
+  },
+  "invite": {
+    "title": "Team Invitation",
+    "youreInvited": "You're Invited!",
+    "hasInvitedYou": "{name} has invited you to join",
+    "team": "Team",
+    "loading": "Loading invitation...",
+    "joiningEvent": "Joining event...",
+    "processingInvitation": "Processing your invitation...",
+    "invalidInvitation": "Invalid Invitation",
+    "invalidInvitationMessage": "Invalid invitation",
+    "alreadyAccepted": "This invitation has already been accepted",
+    "expired": "This invitation has expired",
+    "cancelled": "This invitation has been cancelled",
+    "failedToLoad": "Failed to load invitation",
+    "authRequired": "Authentication required",
+    "failedToAccept": "Failed to accept invitation",
+    "error": "Error",
+    "success": "Success",
+    "loggedInSuccessfully": "Logged in successfully",
+    "emailMismatch": "Email Mismatch",
+    "emailMismatchDescription": "This invitation was sent to {email}. Please log in with that email address.",
+    "logoutAndUse": "Log out and use different account",
+    "bySigningIn": "By signing in, you agree to join {event}",
+    "afterSignUp": "After signing up and verifying your email, you'll automatically join {event}",
+    "expiresOn": "This invitation expires on {date}",
+    "welcomeToTeam": "Welcome to the team!",
+    "youveJoined": "You've joined {event}",
+    "goToLogin": "Go to Login",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordPlaceholderSignup": "Choose a password (min 8 characters)",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "accountCreated": "Account created",
+    "verifyEmailMessage": "Please check your email to verify your account, then return here to accept the invitation.",
+    "validation": {
+      "nameTooShort": "Name must be at least 2 characters",
+      "invalidEmail": "Please enter a valid email address",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordsMustMatch": "Passwords don't match"
+    }
+  },
+  "auth": {
+    "login": {
+      "pageTitle": "Login",
+      "pageDescription": "Login to your account to continue",
+      "title": "Welcome back",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign in",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "termsAgreement": "By signing in, you agree to our",
+      "termsOfService": "Terms of Service",
+      "validation": {
+        "invalidEmail": "Invalid email",
+        "passwordTooShort": "Must be at least 8 characters"
+      },
+      "errors": {
+        "title": "Error",
+        "invalidCredentials": "Invalid email or password",
+        "emailNotVerified": "Please verify your email before signing in",
+        "googleFailed": "Failed to sign in with Google",
+        "signInFailed": "Failed to sign in"
+      },
+      "success": {
+        "title": "Success",
+        "loggedIn": "Logged in successfully"
+      }
+    },
+    "signup": {
+      "pageTitle": "Sign Up",
+      "pageDescription": "Create an account to get started",
+      "title": "Create an account",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Choose a password (min 8 characters)",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "createAccount": "Create account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "termsAgreement": "By signing up, you agree to our",
+      "termsOfService": "Terms of Service",
+      "validation": {
+        "nameTooShort": "Name must be at least 2 characters",
+        "invalidEmail": "Invalid email",
+        "passwordTooShort": "Must be at least 8 characters",
+        "passwordsMustMatch": "Passwords don't match"
+      },
+      "errors": {
+        "title": "Error",
+        "emailExists": "An account with this email already exists",
+        "signUpFailed": "Failed to create account"
+      },
+      "success": {
+        "title": "Account created",
+        "verifyEmail": "Please check your email to verify your account"
+      }
+    }
+  },
+  "subscription": {
+    "title": "Subscription",
+    "sync": "Sync",
+    "synced": "Synced",
+    "syncError": "Sync error",
+    "currentPlan": "Your current plan",
+    "currentPlanLabel": "Current Plan",
+    "renewalDate": "Next renewal",
+    "recommended": "Recommended",
+    "billing": "Billing",
+    "billingMonthly": "monthly",
+    "billingYearly": "yearly",
+    "perMonth": "month",
+    "perYear": "year",
+    "otherFeatures": "+{count} more",
+    "status": {
+      "active": "Active",
+      "trialing": "Trial",
+      "canceled": "Canceled",
+      "pastDue": "Past Due"
+    },
+    "actions": {
+      "close": "Close",
+      "changePlan": "Change plan",
+      "choosePlan": "Choose a plan",
+      "choosePlanFor": "Choose {plan}",
+      "upgradePlan": "Upgrade Plan",
+      "cancelSubscription": "Cancel subscription",
+      "currentPlan": "Current Plan"
+    },
+    "changePlan": {
+      "title": "Available plans",
+      "description": "Choose the plan that best suits your needs",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "current": "Current",
+      "customPlan": "Need a custom plan?",
+      "contactUs": "Contact us"
+    },
+    "cancelModal": {
+      "title": "Cancel subscription",
+      "confirmMessage": "Are you sure you want to cancel your subscription",
+      "warningTitle": "Warning",
+      "warningMessage": "Cancellation is immediate. You will switch to the Free plan and lose access to premium features.",
+      "refundMessage": "You will receive a prorated refund for the unused period.",
+      "keepSubscription": "Keep subscription",
+      "confirmCancel": "Confirm cancellation"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "description": "Manage your credit cards and payment methods.",
+      "cta": "Manage payment methods"
+    },
+    "billingHistory": {
+      "title": "Billing History",
+      "description": "View and download your past invoices.",
+      "cta": "View invoices"
+    },
+    "toast": {
+      "error": "Error",
+      "errorOccurred": "An error occurred",
+      "subscriptionCanceled": "Subscription canceled",
+      "switchedToFree": "You have switched to the Free plan",
+      "cancelError": "Unable to cancel subscription",
+      "cancelProcessError": "Error during cancellation",
+      "subscriptionUpdated": "Subscription updated"
+    }
+  },
+  "dataExport": {
+    "title": "Export Your Data",
+    "description": "Download a copy of all your personal data stored in our system.",
+    "status": "Status",
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Ready",
+      "failed": "Failed",
+      "expired": "Expired"
+    },
+    "processing": "Your export is being prepared. This may take a few minutes.",
+    "expiresAt": "Download available until",
+    "download": "Download",
+    "expired": "Your export has expired. Request a new one to download your data.",
+    "requestNew": "Request New Export",
+    "failed": "Export failed. Please try again.",
+    "retry": "Try Again",
+    "noExportYet": "You haven't requested a data export yet.",
+    "request": "Request Data Export",
+    "requestSuccess": "Export request submitted. We'll notify you when it's ready.",
+    "requestError": "Failed to request export. Please try again.",
+    "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, events, files metadata, and activity logs.",
+    "history": "Export History",
+    "noHistory": "No previous exports"
+  },
+  "plan": {
+    "starter": {
+      "events": "2 events",
+      "support": "Email support"
+    },
+    "premium": {
+      "events": "5 events",
+      "support": "Priority support"
+    },
+    "agency": {
+      "events": "Unlimited events",
+      "support": "24/7 support",
+      "api": "API access"
+    }
+  },
+  "blog": {
+    "seo": {
+      "title": "Blog - Ceremly | Guides and Tips for Your Events",
+      "description": "Discover practical guides, tips and strategies to organize perfect events and manage RSVPs efficiently."
+    },
+    "hero": {
+      "badge": "Ideas & Resources",
+      "title": "Guides, Tips and Resources for Your Events",
+      "subtitle": "Practical articles to organize unforgettable events and manage RSVPs without stress."
+    },
+    "filter": {
+      "all": "All",
+      "showing": "Articles tagged:",
+      "noResults": "No articles found for this category.",
+      "noArticlesInLocale": "No articles available in this language yet.",
+      "clearFilter": "Show all"
+    },
+    "featured": {
+      "badge": "Featured",
+      "readMore": "Read the article"
+    },
+    "card": {
+      "readMore": "Read more",
+      "minRead": "min read"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page"
+    },
+    "article": {
+      "breadcrumbHome": "Home",
+      "related": "Related Articles",
+      "readInEnglish": "Read this article in English:",
+      "readInItalian": "Read this article in Italian:",
+      "share": "Share",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied!",
+      "toc": "Table of Contents"
+    },
+    "sidebar": {
+      "ctaTitle": "Don't miss out",
+      "ctaDescription": "Subscribe to our newsletter to receive guides and tips directly in your inbox.",
+      "ctaButton": "Subscribe free",
+      "categoriesTitle": "Categories"
+    },
+    "newsletter": {
+      "title": "Stay up to date with the latest news",
+      "description": "Subscribe to our newsletter to receive guides, tips and resources directly in your inbox.",
+      "placeholder": "Your email",
+      "subscribe": "Subscribe",
+      "subscribed": "Subscribed!",
+      "privacy": "We respect your privacy. No spam, ever.",
+      "successTitle": "Subscribed!",
+      "successDescription": "We'll send you useful content, no spam.",
+      "errorTitle": "Error",
+      "errorDescription": "Something went wrong. Please try again later.",
+      "alreadySubscribed": "You're already subscribed to the newsletter."
+    }
+  },
+  "organization": {
+    "createModal": {
+      "button": "New organization",
+      "title": "Create organization",
+      "description": "Create a new organization for your team.",
+      "name": "Name",
+      "slug": "Slug",
+      "namePlaceholder": "My company",
+      "slugPlaceholder": "my-company",
+      "create": "Create",
+      "cancel": "Cancel",
+      "success": "Organization created",
+      "successDescription": "{name} has been created.",
+      "error": "Error",
+      "failedToCreate": "Failed to create",
+      "limitReached": "Limit reached",
+      "limitReachedDescription": "You have reached your plan limit.",
+      "limitWarning": "You are about to reach your plan limit.",
+      "orgsUsed": "{current} of {limit} organizations used",
+      "upgradeLink": "Upgrade your plan",
+      "validation": {
+        "tooShort": "Too short",
+        "slugFormat": "Only lowercase letters, numbers and hyphens"
+      }
+    },
+    "deleteModal": {
+      "title": "Delete {name}",
+      "description": "This action cannot be undone.",
+      "confirm": "Delete",
+      "success": "Organization deleted",
+      "error": "Failed to delete"
+    },
+    "detail": {
+      "title": "Organization",
+      "info": "Information",
+      "members": "Members",
+      "membersCount": "Members",
+      "delete": "Delete"
+    },
+    "switchError": "Error switching organization"
+  },
+  "members": {
+    "title": "Members",
+    "inviteMember": "Invite member",
+    "activeMembers": "Active members",
+    "member": "Member",
+    "roleLabel": "Role",
+    "actions": "Actions",
+    "you": "You",
+    "noMembers": "No members",
+    "changeRole": "Change role",
+    "removeMember": "Remove member",
+    "removeMemberTitle": "Remove member",
+    "removeMemberConfirm": "Are you sure you want to remove this member?",
+    "pendingInvitations": "Pending invitations",
+    "email": "Email",
+    "cancelInvite": "Cancel invitation",
+    "inviteMemberTitle": "Invite a member",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "sendInvite": "Send invite",
+    "changeRoleTitle": "Change role",
+    "saveRole": "Save",
+    "inviteSent": "Invitation sent",
+    "inviteSentDescription": "Invitation sent to {email}",
+    "inviteError": "Invite error",
+    "roleUpdated": "Role updated",
+    "roleUpdateError": "Error updating role",
+    "memberRemoved": "Member removed",
+    "memberRemoveError": "Error removing member",
+    "inviteCancelled": "Invitation cancelled",
+    "inviteCancelError": "Error cancelling invitation",
+    "validation": {
+      "invalidEmail": "Invalid email"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "roleDescriptions": {
+      "admin": "Can manage members and settings",
+      "member": "Read-only access"
+    }
+  }
 }
