@@ -1,6 +1,13 @@
 import { config } from "dotenv";
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
 
+// Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
+// tsx standalone non è globale. permissions.ts (assertOwnership/guard) lo usa senza
+// import esplicito → lo forniamo da h3 come global. Import dinamico perché il typecheck
+// Nuxt non espone createError come named export statico di "h3" (a runtime sì). Solo test.
+const h3mod = (await import("h3")) as unknown as { createError: unknown };
+(globalThis as { createError?: unknown }).createError = h3mod.createError;
+
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { eq, and } from "drizzle-orm";
