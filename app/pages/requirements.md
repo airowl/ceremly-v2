@@ -4,8 +4,8 @@
 ## Landing Page (index.vue)
 
 ### Overview
-Ceremly landing page — single-page Tailwind design for RSVP management platform.
-Manages event confirmations via Email 1-click and WhatsApp Deep Links.
+Boilerplate landing page — single-page Tailwind design for the SaaS product.
+Sections: hero, features, pricing, FAQ and a waiting-list form, all driven by i18n keys.
 
 ### Current Implementation
 - **File**: `app/pages/index.vue`
@@ -107,7 +107,7 @@ Manages event confirmations via Email 1-click and WhatsApp Deep Links.
 
 #### Architecture Notes
 - Base URL from `site.url` in nuxt.config (env: `NUXT_PUBLIC_BASE_URL`)
-- Fallback base URL: `https://ceremly.it`
+- Fallback base URL: empty string (env-driven, no hardcoded brand domain)
 - OG images must be 1200x630px for optimal social preview
 - JSON-LD managed declaratively via `nuxt-schema-org` composables
 - Landing page overrides app.vue default title with `titleTemplate: ''`

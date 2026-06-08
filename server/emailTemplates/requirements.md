@@ -9,7 +9,7 @@
 - **WaitingListEmail.ts** - Waiting list confirmation template ✅
 - **ContactConfirmationEmail.ts** - Contact form confirmation (sent to user) ✅
 - **ContactNotificationEmail.ts** - Contact form notification (sent to admin) ✅
-- **EventInviteEmail.ts** - Event invitation template ✅
+- **OrgInviteEmail.ts** - Organization invitation template ✅
 
 ### Important: Vue/React JSX Conflict Resolution
 Templates use `.ts` extension (not `.tsx`) with `React.createElement()`
@@ -19,7 +19,7 @@ instead of JSX syntax to avoid conflicts with Nuxt's Vue JSX transform.
 - Multi-language support (Italian/English) ✅
 - React Email components ✅
 - Brand colors matching landing page design ✅
-- Text-based header with Ceremly brand ✅
+- Text-based header with env-driven app name ✅
 - Footer with legal links ✅
 - CTA buttons with gradient styling ✅
 - Security warning boxes (for password reset) ✅
@@ -121,7 +121,7 @@ await resendInstance.emails.send({
 - Divider: `#e7f0f3`
 - Max width: 600px
 - Font: System fonts (-apple-system, BlinkMacSystemFont, etc.)
-- Header: Gradient `#19baf0` → `#0ea5d6` with text-based "Ceremly" brand logo
+- Header: Gradient `#19baf0` → `#0ea5d6` with text-based app-name brand logo (env-driven)
 
 ### TODOs
 - [x] Add user language preference support (uses `user.locale` field)
