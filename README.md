@@ -1,20 +1,22 @@
-# Ceremly
+# SaaS Boilerplate
 
 [![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
 
-Piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsApp. Multi-tenant SaaS built with Nuxt 4, Vue 3, TypeScript, Better Auth, and Drizzle ORM.
+A repeatable, production-ready multi-tenant SaaS boilerplate built with Nuxt 4, Vue 3, TypeScript, Better Auth, and Drizzle ORM. B2B-first organization tenancy with B2C as a degenerate case. Branding is fully env-driven — set `NUXT_PUBLIC_APP_NAME` and you are ready to clone.
 
 ## Tech Stack
 
-- **Framework**: Nuxt 4 + Vue 3 + TypeScript
+- **Framework**: Nuxt 4 + Vue 3 + TypeScript (Nitro, Vercel preset)
 - **UI**: Nuxt UI v4 + Tailwind CSS
 - **State Management**: Pinia
-- **Database**: PostgreSQL with Drizzle ORM
-- **Auth**: Better Auth (Google OAuth + Email/Password + 2FA)
+- **Database**: Neon (serverless Postgres) with Drizzle ORM (Neon HTTP driver)
+- **Auth**: Better Auth (Google OAuth + Email/Password + 2FA) with organization plugin
 - **Payments**: Creem (`@creem_io/better-auth`)
 - **Storage**: Cloudflare R2 (S3-compatible)
 - **Email**: Resend with React Email templates
-- **AI**: Mastra with OpenAI (`gpt-4o-mini`) for landing page generation
+- **Cache / Rate-limit**: Upstash Redis (HTTP)
+- **Background jobs**: Upstash QStash + Vercel Cron (HTTP, serverless)
+- **Error tracking**: Sentry
 - **Security**: nuxt-security + CSP + Rate Limiting
 - **Internationalization**: Nuxt i18n (Italian default, English)
 - **SEO**: @nuxtjs/seo (sitemap, robots, schema.org)
@@ -22,18 +24,18 @@ Piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsA
 
 ## Features
 
-- **Event Management**: Create and manage private events with RSVP tracking
-- **Guest Management**: Import guests via CSV, track RSVPs, bulk operations
-- **Landing Page Editor**: Custom drag-and-drop editor with 9 section types and AI generation
-- **Reminders**: Email and WhatsApp reminder templates with variable interpolation
-- **Registration Pages**: Public event registration with custom forms
-- **Team Collaboration**: Invite members with role-based access (owner/editor/viewer)
-- **Subscription Plans**: Starter, Premium, Agency with plan limit enforcement
+- **Organizations & Teams**: B2B-first multi-tenancy; invite members with role-based access (owner/admin/member)
+- **Projects**: Canonical org-scoped example entity — the pattern to replicate for new resources
+- **Subscription Plans**: Starter, Premium, Agency with per-organization plan limit enforcement
+- **Authentication**: Email/password, Google OAuth, two-factor authentication
+- **File Storage**: R2 uploads with SHA-256 deduplication and magic-bytes validation
+- **Background Jobs**: HTTP queue (QStash) consumers + Vercel Cron, fully serverless
+- **Transactional Email**: Resend + React Email templates, env-driven app name
 - **Waiting List**: Pre-launch mode with email collection
 - **Contact Form**: Built-in contact form with spam protection
 - **Audit Logging**: Track auth and system events
 - **GDPR Data Export**: User data export functionality
-- **Event Templates**: Reusable and AI-generated landing page templates
+- **Blog**: Markdown blog via @nuxt/content with i18n translations
 
 ## Quick Start
 
@@ -41,8 +43,8 @@ Piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsA
 
 - Node.js 22+
 - pnpm 10+
-- PostgreSQL database
-- Redis (optional, for session caching)
+- A Neon Postgres database
+- An Upstash account (Redis + QStash)
 
 ### Installation
 
@@ -71,9 +73,9 @@ pnpm dev
 See [.env.example](.env.example) for the full list. Key variables:
 
 ```env
-# App
-NUXT_NITRO_PRESET=node-server              # node-server | cloudflare-module
+# App (branding is env-driven)
 NUXT_PUBLIC_BASE_URL=http://localhost:3000
+NUXT_PUBLIC_APP_NAME=YourSaaSName
 NUXT_PUBLIC_SITE_MODE=active                # active | waitinglist | maintenance
 
 # Auth
@@ -81,16 +83,12 @@ NUXT_BETTER_AUTH_SECRET=your-secret-key
 NUXT_GOOGLE_CLIENT_ID=...
 NUXT_GOOGLE_CLIENT_SECRET=...
 
-# Database
+# Database (Neon)
 NUXT_DATABASE_URL=postgresql://...
-NUXT_REDIS_URL=redis://localhost:6379       # Optional
 
 # Payments (Creem)
 NUXT_CREEM_API_KEY=...
 NUXT_CREEM_WEBHOOK_SECRET=...
-NUXT_CREEM_PRODUCT_ID_STARTER_MONTH=...
-NUXT_CREEM_PRODUCT_ID_PREMIUM_MONTH=...
-NUXT_CREEM_PRODUCT_ID_AGENCY_MONTH=...
 
 # Storage (Cloudflare R2)
 NUXT_CF_ACCOUNT_ID=...
@@ -98,9 +96,6 @@ NUXT_CF_R2_BUCKET_NAME=...
 
 # Email
 NUXT_RESEND_API_KEY=...
-
-# AI (optional)
-NUXT_OPENAI_API_KEY=...
 
 # Admin
 NUXT_ADMIN_API_KEY=...
@@ -128,19 +123,20 @@ pnpm auth:schema            # Regenerate Better Auth schema
 
 ```
 ├── app/
-│   ├── components/         # UI components (admin/, landing/, event/, reminder/)
-│   ├── composables/        # Vue composables (useAuth, useGuests, useReminders, etc.)
+│   ├── components/         # UI components (admin/, landing/)
+│   ├── composables/        # Vue composables
 │   ├── layouts/            # Auth, dashboard, public layouts
-│   ├── middleware/          # Client middleware (auth, site-mode)
+│   ├── middleware/         # Client middleware (auth, site-mode)
 │   ├── pages/              # File-based routing
-│   ├── stores/             # Pinia stores (user, event, profile, feedback)
+│   ├── stores/             # Pinia stores
 │   └── assets/css/         # Global styles + design system
 ├── server/
-│   ├── api/                # API routes (thin controllers)
+│   ├── api/                # API routes (thin controllers); jobs/ + cron/ for serverless work
 │   ├── services/           # Business logic layer
+│   ├── repositories/       # Drizzle queries per entity (org-scoped)
 │   ├── database/schema/    # Drizzle schema files
-│   ├── emailTemplates/     # React Email templates (i18n)
-│   ├── middleware/          # Server middleware (auth, rate-limit, bot-block)
+│   ├── emailTemplates/     # React Email templates (i18n, env-driven brand)
+│   ├── middleware/         # Server middleware (auth, organization, rate-limit, bot-block)
 │   └── utils/              # Server utilities (auth, db, permissions, audit)
 ├── shared/
 │   ├── schemas/            # Zod validation schemas
@@ -148,26 +144,17 @@ pnpm auth:schema            # Regenerate Better Auth schema
 │   └── utils/              # Shared utilities
 ├── i18n/locales/           # Translation files (it-IT, en-US)
 ├── content/blogs/          # Blog posts (Markdown)
-├── docs/                   # Feature requirements + backend patterns
+├── docs/guide/             # Build guide (stack, conventions, phases)
 └── drizzle/migrations/     # Generated migration files
 ```
 
 ## Subscription Plans
 
-Configured in `shared/constants/pricing.ts`:
-
-| Plan | Events | Guests/Event | Emails/Month | Storage | Team Members |
-|------|--------|--------------|--------------|---------|--------------|
-| Starter | 2 | 50 | 200 | 500 MB | 1 |
-| Premium | 5 | 350 | 2,000 | 2 GB | 5 |
-| Agency | Unlimited | Unlimited | Unlimited | 10 GB | Unlimited |
+Configured in `shared/constants/pricing.ts`. Limits are enforced per organization; `-1` means unlimited.
 
 ## Deployment
 
-The project supports two deployment targets:
-
-- **Node.js**: `NUXT_NITRO_PRESET=node-server`
-- **Cloudflare Workers**: `NUXT_NITRO_PRESET=cloudflare-module` (requires Hyperdrive for DB connection)
+Deploy to **Vercel** (Nitro `vercel` preset). The database is **Neon** (serverless Postgres via the HTTP driver), background jobs run on **Upstash QStash** + **Vercel Cron**, and cache/rate-limiting use **Upstash Redis** (HTTP). No persistent process is required.
 
 ## License
 
