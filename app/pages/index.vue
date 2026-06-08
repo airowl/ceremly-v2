@@ -11,7 +11,7 @@ const { plans, getFormattedPrice } = usePricing()
 const { isActiveMode } = useSiteMode()
 const { createCheckoutSession } = useSubscription()
 const runtimeConfig = useRuntimeConfig()
-const baseUrl = (runtimeConfig.public.baseURL as string || 'https://ceremly.it').replace(/\/$/, '')
+const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
 // SEO Meta - i18n aware
 const seoTitle = computed(() => t('landing.seo.title'))
@@ -36,7 +36,7 @@ useSchemaOrg([
     }),
     {
         '@type': 'SoftwareApplication',
-        'name': 'Ceremly',
+        'name': (runtimeConfig.public.appName as string) || '',
         'applicationCategory': 'BusinessApplication',
         'operatingSystem': 'Web',
         'description': computed(() => t('landing.seo.description')),

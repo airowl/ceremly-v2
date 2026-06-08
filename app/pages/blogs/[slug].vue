@@ -10,7 +10,7 @@ const route = useRoute()
 const slug = route.params.slug as string
 const { formatArticleDate, calculateReadingTime, extractTags } = useBlog()
 const runtimeConfig = useRuntimeConfig()
-const baseUrl = (runtimeConfig.public.baseURL as string || 'https://ceremly.it').replace(/\/$/, '')
+const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
 const currentLocale = computed(() => locale.value.startsWith('it') ? 'it' : 'en')
 
@@ -79,14 +79,7 @@ watch(locale, (newLocale) => {
 })
 
 // SEO — prefer dedicated OG image from /og/ folder, fallback to article cover
-const knownOgSlugs = new Set([
-    'gestione-rsvp-matrimonio',
-    'wedding-rsvp-management',
-    'errori-comuni-organizzazione-eventi',
-    'common-event-planning-mistakes',
-    'whatsapp-vs-email-inviti',
-    'whatsapp-vs-email-invitations',
-])
+const knownOgSlugs = new Set<string>([])
 
 const articleOgImage = computed(() => {
     if (knownOgSlugs.has(slug)) {

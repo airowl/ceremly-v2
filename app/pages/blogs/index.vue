@@ -9,7 +9,7 @@ const localePath = useLocalePath()
 const route = useRoute()
 const { extractTags } = useBlog()
 const runtimeConfig = useRuntimeConfig()
-const baseUrl = (runtimeConfig.public.baseURL as string || 'https://ceremly.it').replace(/\/$/, '')
+const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
 const currentLocale = computed(() => locale.value.startsWith('it') ? 'it' : 'en')
 
