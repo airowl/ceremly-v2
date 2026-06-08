@@ -3,9 +3,9 @@ const { t } = useI18n()
 
 const features = computed(() => [
     {
-        title: t('landing.features.cards.guests.title'),
-        subtitle: t('landing.features.cards.guests.subtitle'),
-        description: t('landing.features.cards.guests.description'),
+        title: t('landing.features.cards.members.title'),
+        subtitle: t('landing.features.cards.members.subtitle'),
+        description: t('landing.features.cards.members.description'),
         icon: 'i-heroicons-user-group',
     },
     {

@@ -8,93 +8,119 @@
       "getStarted": "Inizia ora"
     },
     "hero": {
-      "badge": "Accesso anticipato in arrivo",
-      "title": "Basta rincorrere gli invitati. Ottieni risposte in",
-      "titleHighlight": "1 minuto",
-      "subtitle": "La piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsApp Deep Link senza stress. Basta fogli Excel e chat di gruppo infinite.",
-      "cta": "Iscriviti alla Waitlist",
-      "ctaSecondary": "Guarda come funziona",
+      "badge": "Boilerplate SaaS pronto al lancio",
+      "headline": "Lancia il tuo SaaS multi-tenant in tempo record",
+      "title": "Lancia il tuo SaaS multi-tenant in",
+      "titleHighlight": "tempo record",
+      "subtitle": "Tutto ciò che ti serve per partire: organizzazioni, team, abbonamenti, autenticazione e billing. Concentrati sul prodotto, non sull'infrastruttura.",
+      "cta": "Inizia subito",
+      "ctaSecondary": "Scopri come funziona",
+      "getStarted": "Inizia ora",
+      "learnMore": "Scopri di più",
+      "microProof": "Pronto per il deploy su Vercel in pochi minuti.",
       "socialProofCount": "+400",
-      "socialProofUsers": "400+ utenti",
-      "socialProofText": "in attesa del lancio!",
+      "socialProofUsers": "400+ team",
+      "socialProofText": "lo stanno usando!",
       "mockup": {
-        "whatsappTitle": "Nuova conferma WhatsApp",
-        "whatsappDesc": "Marco Rossi ha confermato via link",
+        "whatsappTitle": "Nuovo membro nel team",
+        "whatsappDesc": "Marco Rossi si è unito all'organizzazione",
         "whatsappTime": "Adesso",
-        "emailTitle": "Invito Email Aperto",
-        "emailDesc": "Giulia Bianchi ha visualizzato l'invito",
+        "emailTitle": "Abbonamento attivato",
+        "emailDesc": "Giulia Bianchi ha avviato il piano Premium",
         "emailTime": "2m fa",
-        "rsvpComplete": "RSVP Completato",
-        "rsvpPercent": "85% Risposte"
+        "onboardingComplete": "Onboarding completato",
+        "onboardingPercent": "85% configurato"
       }
     },
     "waitlistHero": {
       "title": "Iscriviti alla lista d'attesa",
-      "description": "Sii il primo a provare Ceremly e ottieni l'accesso prioritario con uno sconto a vita.",
+      "description": "Sii tra i primi a provare la piattaforma e ottieni accesso prioritario con uno sconto a vita.",
       "placeholder": "La tua email migliore",
       "cta": "Unisciti alla lista d'attesa",
       "privacy": "Nessuno spam, solo aggiornamenti importanti."
     },
     "features": {
-      "badge": "Perché scegliere Ceremly?",
-      "title": "Tutto ciò che ti serve per gestire le conferme senza impazzire",
-      "subtitle": "Semplifica la vita ai tuoi invitati e a te stesso con strumenti progettati per la massima conversione.",
+      "badge": "Perché sceglierci?",
+      "title": "Tutto ciò che ti serve per gestire il tuo SaaS",
+      "subtitle": "Strumenti pensati per far crescere il tuo prodotto e i tuoi team senza attriti.",
+      "mainTitle": "Tutto ciò che ti serve per gestire il tuo SaaS",
+      "mainDescription": "Strumenti pensati per far crescere il tuo prodotto e i tuoi team senza attriti.",
       "cards": {
         "email": {
-          "title": "Email 1-click",
-          "description": "Gli invitati confermano la loro presenza direttamente dalla mail, senza dover fare login o compilare form complessi."
+          "title": "Organizzazioni & Team",
+          "description": "Multi-tenancy B2B-first: ogni account è un'organizzazione con membri, ruoli e permessi pronti all'uso."
         },
         "whatsapp": {
-          "title": "Deep Link WhatsApp",
-          "description": "Nessun bot invasivo. Genera un link WhatsApp per ogni invitato con messaggio precompilato da inviare con un click."
+          "title": "Billing integrato",
+          "description": "Abbonamenti ricorrenti, piani, trial e limiti per piano già collegati: incassa dal primo giorno."
         },
         "socialProof": {
-          "title": "Social Proof Dinamico",
-          "description": "Mostra chi ha già partecipato per incentivare gli altri a rispondere più velocemente."
+          "title": "Auth completa",
+          "description": "Email/password, Google OAuth e autenticazione a due fattori, con sessioni sicure e gestione profilo."
+        },
+        "members": {
+          "title": "Membri & Ruoli",
+          "subtitle": "Controllo accessi",
+          "description": "Invita membri, assegna ruoli owner/admin/member e gestisci i permessi per ogni organizzazione."
+        },
+        "vendors": {
+          "title": "Integrazioni",
+          "subtitle": "Provider esterni",
+          "description": "Storage, email e code di lavoro dietro astrazioni pulite: sostituisci il provider senza toccare il resto."
+        },
+        "gallery": {
+          "title": "Storage file",
+          "subtitle": "Upload sicuri",
+          "description": "Upload su R2 con deduplicazione SHA-256 e validazione magic-bytes, via upload diretto o presigned URL."
+        },
+        "import": {
+          "title": "Export dati",
+          "subtitle": "GDPR-ready",
+          "description": "Export dei dati utente conforme al GDPR e audit log delle attività esportabili in un click."
         }
       }
     },
     "dashboard": {
-      "badge": "Dashboard Real-time",
-      "title": "Monitora tutto in tempo reale",
-      "description": "Una dashboard chiara che ti mostra percentuali di risposta, chi ha visualizzato e chi deve ancora rispondere. Esporta la lista invitati in un click.",
-      "check1": "Tracciamento aperture email",
-      "check2": "Export PDF e Excel per catering",
-      "check3": "Alert per intolleranze alimentari",
+      "badge": "Dashboard in tempo reale",
+      "title": "Tieni tutto sotto controllo",
+      "description": "Una dashboard chiara che mostra membri, abbonamenti e attività del tuo team. Esporta i dati quando vuoi.",
+      "check1": "Gestione membri e ruoli",
+      "check2": "Export dei dati in un click",
+      "check3": "Audit log delle attività",
       "mockup": {
-        "eventName": "Matrimonio Luca & Sofia",
-        "active": "Attivo",
-        "confirmed": "Confermati",
+        "eventName": "La tua organizzazione",
+        "active": "Attiva",
+        "confirmed": "Membri attivi",
         "confirmedValue": "84% (126)",
-        "waiting": "In attesa",
+        "waiting": "Inviti in sospeso",
         "waitingValue": "12% (18)",
-        "declined": "Non verranno",
+        "declined": "Disattivati",
         "declinedValue": "4% (6)"
       }
     },
     "whatsapp": {
-      "badge": "Deep Link Assistiti",
-      "title": "Inviti WhatsApp senza automazioni invasive",
-      "description": "Il sistema genera un \"Deep Link\" univoco per ogni ospite. Tu clicchi un bottone nella dashboard, si apre la tua app WhatsApp con un messaggio precompilato e personalizzato. Tu premi invio. Semplice, sicuro e personale.",
-      "cta": "Vedi esempio",
+      "badge": "Serverless by design",
+      "title": "Infrastruttura scalabile, zero manutenzione",
+      "description": "Deploy su Vercel, database Neon serverless, code di lavoro su QStash e cron gestiti. Nessun processo da tenere acceso: il codice si sveglia solo quando serve.",
+      "cta": "Scopri lo stack",
       "mockup": {
-        "contactName": "Luca & Sofia",
-        "message1": "Ciao Marco! 👋 Ecco il link personale per il nostro matrimonio:",
-        "linkTitle": "Ceremly - Conferma",
-        "linkUrl": "ceremly.it/u/xyz123",
-        "linkCta": "Clicca qui per confermare 👇",
-        "reply": "Grazie! Fatto in un secondo! 😍",
+        "contactName": "Il tuo team",
+        "message1": "Ciao! Ecco il riepilogo della tua organizzazione:",
+        "linkTitle": "Dashboard",
+        "linkUrl": "app.example.com",
+        "linkCta": "Apri la dashboard",
+        "reply": "Perfetto, configurato in un attimo!",
         "inputPlaceholder": "Scrivi un messaggio"
       }
     },
     "pricing": {
-      "badge": "Prezzi previsti",
-      "title": "Iscriviti alla waitlist per accedere a queste tariffe",
+      "badge": "Prezzi",
+      "title": "Scegli il piano giusto per il tuo team",
       "description": "Scegli il piano che fa per te.",
       "recommended": "Consigliato",
-      "perEvent": "/evento",
+      "perEvent": "/progetto",
       "perMonth": "/mese",
-      "cta": "Unisciti alla lista",
+      "cta": "Inizia ora",
       "note": "Fatturazione mensile o annuale. Disdici quando vuoi.",
       "billing": {
         "monthly": "Mensile",
@@ -106,82 +132,82 @@
       "tiers": {
         "starter": {
           "title": "Starter",
-          "description": "Ideale per cene, feste di compleanno o piccoli eventi.",
+          "description": "Ideale per progetti personali e piccoli team.",
           "cta": "Inizia ora"
         },
         "premium": {
           "title": "Premium",
-          "description": "Perfetto per matrimoni e grandi celebrazioni.",
+          "description": "Perfetto per team in crescita e startup.",
           "cta": "Inizia ora",
           "badge": "Consigliato"
         },
         "agency": {
           "title": "Agency",
-          "description": "Per Wedding Planner e Organizzatori professionisti.",
+          "description": "Per agenzie e aziende con più organizzazioni.",
           "cta": "Inizia ora"
         }
       }
     },
     "finalCta": {
-      "title": "Pronto a semplificare il tuo prossimo evento?",
-      "description": "Iscriviti alla waitlist oggi e ricevi un mese di piano Pro gratuito al lancio ufficiale.",
+      "title": "Pronto a lanciare il tuo SaaS?",
+      "description": "Iscriviti oggi e ricevi un mese di piano Premium gratuito al lancio ufficiale.",
       "placeholder": "Inserisci la tua email",
       "cta": "Unisciti alla lista d'attesa"
     },
     "seo": {
-      "title": "Ceremly - Gestione RSVP Automatica per Eventi Privati",
-      "description": "Piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsApp Deep Link. Basta fogli Excel e chat di gruppo. Prova gratis.",
-      "ogTitle": "Ceremly - Conferme Invitati via Email e WhatsApp in 1 Minuto",
-      "ogDescription": "Gestisci le conferme dei tuoi eventi privati con inviti Email 1-click e WhatsApp Deep Link. Dashboard real-time, export PDF, alert allergie.",
-      "keywords": "RSVP, gestione invitati, conferme evento, inviti WhatsApp, inviti email, wedding planner, organizzazione eventi, lista invitati"
+      "title": "Boilerplate SaaS multi-tenant pronto al lancio",
+      "description": "Boilerplate SaaS multi-tenant con organizzazioni, team, abbonamenti, autenticazione e billing. Lancia il tuo prodotto più velocemente.",
+      "ogTitle": "Boilerplate SaaS multi-tenant — lancia più velocemente",
+      "ogDescription": "Organizzazioni, team, billing e auth pronti all'uso. Concentrati sul prodotto, non sull'infrastruttura.",
+      "keywords": "saas boilerplate, multi-tenant, organizzazioni, team, abbonamenti, autenticazione, billing, nuxt, starter kit"
     },
     "landingFooter": {
       "privacy": "Privacy Policy",
       "terms": "Termini di Servizio",
       "contacts": "Contatti",
       "blog": "Blog",
-      "copyright": "Ceremly Italia. Tutti i diritti riservati."
+      "copyright": "Tutti i diritti riservati."
     },
     "howItWorks": {
       "title": "Inizia in 3 semplici step",
       "subtitle": "Dalla registrazione alla produzione in pochi minuti, non mesi.",
       "step1": {
-        "title": "Step 1 - Crea il tuo evento",
-        "description": "Registrati e crea il tuo primo evento in pochi secondi. Aggiungi dettagli, carica la lista invitati e personalizza i messaggi.",
-        "highlight": "Il tuo evento è pronto all'uso subito dopo la registrazione."
+        "title": "Step 1 - Crea la tua organizzazione",
+        "description": "Registrati e crea la tua organizzazione in pochi secondi. Invita il team e configura i ruoli.",
+        "highlight": "La tua organizzazione è pronta subito dopo la registrazione."
       },
       "step2": {
-        "title": "Step 2 - Invia gli inviti",
-        "description": "Invia inviti via email o genera Deep Link WhatsApp personalizzati per ogni ospite.",
-        "highlight": "Raggiungi ogni invitato nel modo che preferisce."
+        "title": "Step 2 - Configura il prodotto",
+        "description": "Collega gli abbonamenti, imposta i limiti per piano e personalizza il branding via variabili d'ambiente.",
+        "highlight": "Tutto già cablato: parti senza scrivere infrastruttura."
       },
       "step3": {
-        "title": "Step 3 - Monitora le risposte",
-        "description": "Segui in tempo reale chi ha confermato, chi deve ancora rispondere e esporta i dati per il catering.",
+        "title": "Step 3 - Lancia e cresci",
+        "description": "Deploy su Vercel, monitora le attività dalla dashboard ed esporta i dati quando serve.",
         "highlight": "Tutto sotto controllo, in un'unica dashboard."
       },
       "cta": "Inizia ora"
     },
     "forWho": {
-      "title": "Costruito per chi organizza eventi",
-      "subtitle": "Che tu stia organizzando un matrimonio o una cena tra amici, Ceremly si adatta alle tue esigenze.",
+      "title": "Costruito per chi lancia SaaS",
+      "subtitle": "Che tu stia lanciando un nuovo prodotto o gestendo più clienti, la piattaforma si adatta alle tue esigenze.",
       "planner": {
-        "title": "Per eventi privati",
-        "feature1": "Matrimoni e cerimonie",
-        "feature2": "Feste di compleanno",
-        "feature3": "Cene e raduni"
+        "title": "Per builder",
+        "feature1": "Startup e indie hacker",
+        "feature2": "Prodotti B2B",
+        "feature3": "MVP e prototipi"
       },
       "couples": {
         "title": "Per professionisti",
-        "feature1": "Wedding Planner",
-        "feature2": "Organizzatori di eventi",
-        "feature3": "Agenzie"
+        "feature1": "Agenzie di sviluppo",
+        "feature2": "Studi di consulenza",
+        "feature3": "Team di prodotto"
       }
     },
     "trust": {
       "badge": "Sicurezza & Privacy",
       "title": "I tuoi dati sono al sicuro",
-      "subtitle": "Privacy e sicurezza dei dati dei tuoi invitati come priorità assoluta.",
+      "subtitle": "Privacy e sicurezza dei dati come priorità assoluta.",
       "emailDelivery": {
         "title": "Email Sicure",
         "description": "Invii verificati con SPF/DKIM per massima deliverability.",
@@ -190,36 +216,36 @@
       },
       "privacy": {
         "title": "Conforme al GDPR",
-        "description": "Dati degli invitati protetti e trattati secondo le normative europee.",
-        "benefit1": "Cancellazione dati automatica post-evento",
+        "description": "Dati protetti e trattati secondo le normative europee.",
+        "benefit1": "Export e cancellazione dei dati su richiesta",
         "benefit2": "Nessuna condivisione con terze parti"
       },
       "cta": {
-        "description": "Pronto a semplificare il tuo prossimo evento?",
-        "primary": "Entra in Waitlist",
+        "description": "Pronto a lanciare il tuo SaaS?",
+        "primary": "Entra in lista d'attesa",
         "secondary": "Scopri di più"
       }
     },
     "why": {
-      "badge": "Perché Ceremly",
-      "title": "Perché scegliere Ceremly",
+      "badge": "Perché noi",
+      "title": "Perché sceglierci",
       "benefits": {
         "hub": {
           "title": "Tutto in un'unica piattaforma",
-          "description": "Email, WhatsApp, dashboard e export in un'unica soluzione."
+          "description": "Auth, billing, team e storage in un'unica soluzione."
         },
         "efficiency": {
-          "title": "Risposte più veloci",
-          "description": "Deep Link e 1-click per tassi di risposta fino al 90%."
+          "title": "Lancio più veloce",
+          "description": "Infrastruttura pronta: dal clone al deploy in poche ore."
         },
         "accessibility": {
-          "title": "Semplicissimo da usare",
-          "description": "Nessuna formazione necessaria. Pronto all'uso in 2 minuti."
+          "title": "Facile da personalizzare",
+          "description": "Branding env-driven e convenzioni chiare. Pronto all'uso."
         }
       },
       "mission": {
         "badge": "La nostra missione",
-        "description": "Crediamo che organizzare un evento dovrebbe essere un piacere, non uno stress. Ceremly elimina il caos delle conferme per farti godere i momenti che contano."
+        "description": "Crediamo che lanciare un SaaS dovrebbe essere veloce e piacevole. Eliminiamo il lavoro ripetitivo di setup per farti concentrare sul prodotto."
       }
     },
     "faq": {
@@ -227,28 +253,28 @@
       "subtitle": "Tutto quello che ti serve sapere prima di iniziare.",
       "questions": {
         "q1": {
-          "question": "Come funziona Ceremly?",
-          "answer": "Crei il tuo evento, carichi la lista invitati e scegli come inviarli: email 1-click o deep link WhatsApp. Gli invitati confermano in un secondo e tu monitori tutto dalla dashboard."
+          "question": "Come funziona la piattaforma?",
+          "answer": "Crei la tua organizzazione, inviti il team e configuri il prodotto. Auth, billing e multi-tenancy sono già pronti: parti dal primo giorno."
         },
         "q2": {
           "question": "Servono competenze tecniche?",
-          "answer": "Assolutamente no. L'interfaccia è progettata per essere intuitiva. Crei il tuo evento e invii gli inviti in meno di 5 minuti."
+          "answer": "Per personalizzare il branding bastano poche variabili d'ambiente. Per estendere il prodotto serve conoscere Nuxt e TypeScript."
         },
         "q3": {
-          "question": "I deep link WhatsApp usano bot?",
-          "answer": "No, nessun bot. Il sistema genera un link che apre la tua app WhatsApp con un messaggio precompilato. Tu premi semplicemente invio. Totalmente personale e sicuro."
+          "question": "È davvero multi-tenant?",
+          "answer": "Sì. Ogni account è un'organizzazione e ogni risorsa è isolata per tenant. Il modello è B2B-first con il B2C come caso particolare."
         },
         "q4": {
-          "question": "I dati degli invitati sono al sicuro?",
-          "answer": "Assolutamente. Utilizziamo crittografia standard, siamo conformi al GDPR e i dati vengono cancellati automaticamente dopo l'evento se richiesto."
+          "question": "I dati sono al sicuro?",
+          "answer": "Assolutamente. Usiamo crittografia standard, siamo conformi al GDPR e supportiamo export e cancellazione dei dati su richiesta."
         },
         "q5": {
           "question": "Posso provare prima di pagare?",
-          "answer": "Iscriviti alla waitlist per ottenere accesso prioritario e uno sconto a vita. I primi utenti avranno anche un mese Pro gratuito."
+          "answer": "Iscriviti alla lista d'attesa per ottenere accesso prioritario e uno sconto a vita. I primi utenti avranno anche un mese Premium gratuito."
         },
         "q6": {
-          "question": "Quando verrà lanciato Ceremly?",
-          "answer": "Stiamo lavorando al lancio. Iscriviti alla waitlist per essere tra i primi a provare la piattaforma e ricevere aggiornamenti."
+          "question": "Quando sarà disponibile?",
+          "answer": "Stiamo lavorando al lancio. Iscriviti alla lista d'attesa per essere tra i primi a provare la piattaforma e ricevere aggiornamenti."
         }
       }
     },
@@ -317,7 +343,7 @@
       "info": {
         "email": {
           "title": "Email",
-          "value": "hello{'@'}ceremly.it"
+          "value": "hello{'@'}example.com"
         },
         "hours": {
           "title": "Orari",
@@ -332,7 +358,7 @@
     "newsletter": {
       "badge": "Rimani Aggiornato",
       "title": "Iscriviti alla Newsletter",
-      "description": "Ricevi le ultime novità su Ceremly direttamente nella tua casella di posta.",
+      "description": "Ricevi le ultime novità direttamente nella tua casella di posta.",
       "nameLabel": "Nome",
       "emailLabel": "Email",
       "namePlaceholder": "Il tuo nome",

@@ -5,97 +5,123 @@
       "pricing": "Pricing",
       "clients": "Clients",
       "blog": "Blog",
-      "getStarted": "Get Started"
+      "getStarted": "Get started"
     },
     "hero": {
-      "badge": "Early access coming soon",
-      "title": "Stop chasing guests. Get responses in",
-      "titleHighlight": "1 minute",
-      "subtitle": "The automatic platform for managing RSVP of private events via Email and WhatsApp Deep Link without stress. No more spreadsheets or endless group chats.",
-      "cta": "Join Waitlist",
+      "badge": "SaaS boilerplate ready to ship",
+      "headline": "Launch your multi-tenant SaaS in record time",
+      "title": "Launch your multi-tenant SaaS in",
+      "titleHighlight": "record time",
+      "subtitle": "Everything you need to start: organizations, teams, subscriptions, authentication and billing. Focus on your product, not the infrastructure.",
+      "cta": "Get started",
       "ctaSecondary": "See how it works",
+      "getStarted": "Get started",
+      "learnMore": "Learn more",
+      "microProof": "Ready to deploy on Vercel in minutes.",
       "socialProofCount": "+400",
-      "socialProofUsers": "400+ users",
-      "socialProofText": "waiting for launch!",
+      "socialProofUsers": "400+ teams",
+      "socialProofText": "are using it!",
       "mockup": {
-        "whatsappTitle": "New WhatsApp confirmation",
-        "whatsappDesc": "Marco Rossi confirmed via link",
+        "whatsappTitle": "New team member",
+        "whatsappDesc": "Marco Rossi joined the organization",
         "whatsappTime": "Now",
-        "emailTitle": "Email Invite Opened",
-        "emailDesc": "Giulia Bianchi viewed the invite",
+        "emailTitle": "Subscription activated",
+        "emailDesc": "Giulia Bianchi started the Premium plan",
         "emailTime": "2m ago",
-        "rsvpComplete": "RSVP Complete",
-        "rsvpPercent": "85% Responses"
+        "onboardingComplete": "Onboarding complete",
+        "onboardingPercent": "85% configured"
       }
     },
     "waitlistHero": {
       "title": "Join the waiting list",
-      "description": "Be the first to try Ceremly and get priority access with a lifetime discount.",
+      "description": "Be among the first to try the platform and get priority access with a lifetime discount.",
       "placeholder": "Your best email",
       "cta": "Join the waiting list",
       "privacy": "No spam, just important updates."
     },
     "features": {
-      "badge": "Why choose Ceremly?",
-      "title": "Everything you need to manage confirmations without going crazy",
-      "subtitle": "Simplify life for your guests and yourself with tools designed for maximum conversion.",
+      "badge": "Why choose us?",
+      "title": "Everything you need to run your SaaS",
+      "subtitle": "Tools designed to grow your product and your teams without friction.",
+      "mainTitle": "Everything you need to run your SaaS",
+      "mainDescription": "Tools designed to grow your product and your teams without friction.",
       "cards": {
         "email": {
-          "title": "1-click Email",
-          "description": "Guests confirm their attendance directly from the email, without having to login or fill in complex forms."
+          "title": "Organizations & Teams",
+          "description": "B2B-first multi-tenancy: every account is an organization with members, roles and permissions out of the box."
         },
         "whatsapp": {
-          "title": "WhatsApp Deep Link",
-          "description": "No invasive bots. Generate a WhatsApp link for each guest with a pre-filled message to send with one click."
+          "title": "Built-in billing",
+          "description": "Recurring subscriptions, plans, trials and per-plan limits already wired: get paid from day one."
         },
         "socialProof": {
-          "title": "Dynamic Social Proof",
-          "description": "Show who has already confirmed to encourage others to respond faster."
+          "title": "Complete auth",
+          "description": "Email/password, Google OAuth and two-factor authentication, with secure sessions and profile management."
+        },
+        "members": {
+          "title": "Members & Roles",
+          "subtitle": "Access control",
+          "description": "Invite members, assign owner/admin/member roles and manage permissions for each organization."
+        },
+        "vendors": {
+          "title": "Integrations",
+          "subtitle": "External providers",
+          "description": "Storage, email and work queues behind clean abstractions: swap the provider without touching the rest."
+        },
+        "gallery": {
+          "title": "File storage",
+          "subtitle": "Secure uploads",
+          "description": "R2 uploads with SHA-256 deduplication and magic-bytes validation, via direct upload or presigned URL."
+        },
+        "import": {
+          "title": "Data export",
+          "subtitle": "GDPR-ready",
+          "description": "GDPR-compliant user data export and exportable activity audit logs in one click."
         }
       }
     },
     "dashboard": {
-      "badge": "Real-time Dashboard",
-      "title": "Monitor everything in real time",
-      "description": "A clear dashboard that shows you response rates, who viewed and who still needs to respond. Export the guest list in one click.",
-      "check1": "Email open tracking",
-      "check2": "PDF and Excel export for catering",
-      "check3": "Food allergy alerts",
+      "badge": "Real-time dashboard",
+      "title": "Keep everything under control",
+      "description": "A clear dashboard showing members, subscriptions and your team's activity. Export your data anytime.",
+      "check1": "Member and role management",
+      "check2": "One-click data export",
+      "check3": "Activity audit log",
       "mockup": {
-        "eventName": "Luca & Sofia Wedding",
+        "eventName": "Your organization",
         "active": "Active",
-        "confirmed": "Confirmed",
+        "confirmed": "Active members",
         "confirmedValue": "84% (126)",
-        "waiting": "Pending",
+        "waiting": "Pending invites",
         "waitingValue": "12% (18)",
-        "declined": "Declined",
+        "declined": "Deactivated",
         "declinedValue": "4% (6)"
       }
     },
     "whatsapp": {
-      "badge": "Assisted Deep Links",
-      "title": "WhatsApp invites without invasive automation",
-      "description": "The system generates a unique \"Deep Link\" for each guest. You click a button in the dashboard, your WhatsApp app opens with a pre-filled and personalized message. You press send. Simple, safe and personal.",
-      "cta": "See example",
+      "badge": "Serverless by design",
+      "title": "Scalable infrastructure, zero maintenance",
+      "description": "Deploy on Vercel, Neon serverless database, QStash work queues and managed cron. No process to keep running: the code wakes up only when needed.",
+      "cta": "Explore the stack",
       "mockup": {
-        "contactName": "Luca & Sofia",
-        "message1": "Hi Marco! 👋 Here is the personal link for our wedding:",
-        "linkTitle": "Ceremly - Confirm",
-        "linkUrl": "ceremly.it/u/xyz123",
-        "linkCta": "Click here to confirm 👇",
-        "reply": "Thanks! Done in a second! 😍",
-        "inputPlaceholder": "Write a message"
+        "contactName": "Your team",
+        "message1": "Hi! Here is your organization summary:",
+        "linkTitle": "Dashboard",
+        "linkUrl": "app.example.com",
+        "linkCta": "Open the dashboard",
+        "reply": "Perfect, set up in no time!",
+        "inputPlaceholder": "Type a message"
       }
     },
     "pricing": {
-      "badge": "Expected pricing",
-      "title": "Join the waitlist to access these rates",
+      "badge": "Pricing",
+      "title": "Pick the right plan for your team",
       "description": "Choose the plan that fits you.",
       "recommended": "Recommended",
-      "perEvent": "/event",
+      "perEvent": "/project",
       "perMonth": "/month",
-      "cta": "Join the list",
-      "note": "Monthly or annual billing. Cancel anytime.",
+      "cta": "Get started",
+      "note": "Monthly or yearly billing. Cancel anytime.",
       "billing": {
         "monthly": "Monthly",
         "yearly": "Yearly",
@@ -106,120 +132,120 @@
       "tiers": {
         "starter": {
           "title": "Starter",
-          "description": "Ideal for dinners, birthday parties or small events.",
+          "description": "Ideal for personal projects and small teams.",
           "cta": "Get started"
         },
         "premium": {
           "title": "Premium",
-          "description": "Perfect for weddings and large celebrations.",
+          "description": "Perfect for growing teams and startups.",
           "cta": "Get started",
           "badge": "Recommended"
         },
         "agency": {
           "title": "Agency",
-          "description": "For professional Wedding Planners and Event Organizers.",
+          "description": "For agencies and companies with multiple organizations.",
           "cta": "Get started"
         }
       }
     },
     "finalCta": {
-      "title": "Ready to simplify your next event?",
-      "description": "Join the waitlist today and get a free month of Pro plan at official launch.",
+      "title": "Ready to launch your SaaS?",
+      "description": "Sign up today and get one month of the Premium plan free at official launch.",
       "placeholder": "Enter your email",
       "cta": "Join the waiting list"
     },
     "seo": {
-      "title": "Ceremly - Automatic RSVP Management for Private Events",
-      "description": "Automatic platform for managing RSVPs for private events via Email and WhatsApp Deep Link. No more spreadsheets or endless group chats. Try free.",
-      "ogTitle": "Ceremly - Guest Confirmations via Email & WhatsApp in 1 Minute",
-      "ogDescription": "Manage your private event confirmations with 1-click Email invites and WhatsApp Deep Links. Real-time dashboard, PDF export, allergy alerts.",
-      "keywords": "RSVP, guest management, event confirmation, WhatsApp invites, email invites, wedding planner, event planning, guest list"
+      "title": "Multi-tenant SaaS boilerplate ready to ship",
+      "description": "Multi-tenant SaaS boilerplate with organizations, teams, subscriptions, authentication and billing. Launch your product faster.",
+      "ogTitle": "Multi-tenant SaaS boilerplate — launch faster",
+      "ogDescription": "Organizations, teams, billing and auth out of the box. Focus on your product, not the infrastructure.",
+      "keywords": "saas boilerplate, multi-tenant, organizations, teams, subscriptions, authentication, billing, nuxt, starter kit"
     },
     "landingFooter": {
       "privacy": "Privacy Policy",
       "terms": "Terms of Service",
       "contacts": "Contact",
       "blog": "Blog",
-      "copyright": "Ceremly Italia. All rights reserved."
+      "copyright": "All rights reserved."
     },
     "howItWorks": {
       "title": "Get started in 3 simple steps",
       "subtitle": "From signup to production in minutes, not months.",
       "step1": {
-        "title": "Step 1 - Create your event",
-        "description": "Sign up and create your first event in seconds. Add details, upload your guest list and customize messages.",
-        "highlight": "Your event is ready to use right after signup."
+        "title": "Step 1 - Create your organization",
+        "description": "Sign up and create your organization in seconds. Invite your team and set up roles.",
+        "highlight": "Your organization is ready right after signup."
       },
       "step2": {
-        "title": "Step 2 - Send invites",
-        "description": "Send invites via email or generate personalized WhatsApp Deep Links for each guest.",
-        "highlight": "Reach every guest the way they prefer."
+        "title": "Step 2 - Configure your product",
+        "description": "Wire up subscriptions, set per-plan limits and customize branding via environment variables.",
+        "highlight": "Everything pre-wired: start without writing infrastructure."
       },
       "step3": {
-        "title": "Step 3 - Monitor responses",
-        "description": "Follow in real time who confirmed, who still needs to respond and export data for catering.",
-        "highlight": "Everything under control, in one dashboard."
+        "title": "Step 3 - Launch and grow",
+        "description": "Deploy on Vercel, monitor activity from the dashboard and export data whenever you need.",
+        "highlight": "Everything under control, in a single dashboard."
       },
-      "cta": "Get Started"
+      "cta": "Get started"
     },
     "forWho": {
-      "title": "Built for event organizers",
-      "subtitle": "Whether you're organizing a wedding or a dinner party, Ceremly adapts to your needs.",
+      "title": "Built for SaaS builders",
+      "subtitle": "Whether you are launching a new product or managing multiple clients, the platform adapts to your needs.",
       "planner": {
-        "title": "For private events",
-        "feature1": "Weddings and ceremonies",
-        "feature2": "Birthday parties",
-        "feature3": "Dinners and gatherings"
+        "title": "For builders",
+        "feature1": "Startups and indie hackers",
+        "feature2": "B2B products",
+        "feature3": "MVPs and prototypes"
       },
       "couples": {
         "title": "For professionals",
-        "feature1": "Wedding Planners",
-        "feature2": "Event organizers",
-        "feature3": "Agencies"
+        "feature1": "Development agencies",
+        "feature2": "Consulting firms",
+        "feature3": "Product teams"
       }
     },
     "trust": {
       "badge": "Security & Privacy",
       "title": "Your data is safe",
-      "subtitle": "Guest data privacy and security as top priority.",
+      "subtitle": "Data privacy and security as the top priority.",
       "emailDelivery": {
-        "title": "Secure Emails",
-        "description": "Verified sends with SPF/DKIM for maximum deliverability.",
-        "benefit1": "No risk of ending up in spam",
+        "title": "Secure Email",
+        "description": "Verified delivery with SPF/DKIM for maximum deliverability.",
+        "benefit1": "No risk of landing in spam",
         "benefit2": "Real-time open tracking"
       },
       "privacy": {
         "title": "GDPR Compliant",
-        "description": "Guest data protected and processed according to European regulations.",
-        "benefit1": "Automatic data deletion post-event",
+        "description": "Data protected and handled according to European regulations.",
+        "benefit1": "Data export and deletion on request",
         "benefit2": "No sharing with third parties"
       },
       "cta": {
-        "description": "Ready to simplify your next event?",
-        "primary": "Join Waitlist",
-        "secondary": "Learn More"
+        "description": "Ready to launch your SaaS?",
+        "primary": "Join the waiting list",
+        "secondary": "Learn more"
       }
     },
     "why": {
-      "badge": "Why Ceremly",
-      "title": "Why choose Ceremly",
+      "badge": "Why us",
+      "title": "Why choose us",
       "benefits": {
         "hub": {
-          "title": "All in one platform",
-          "description": "Email, WhatsApp, dashboard and export in one solution."
+          "title": "Everything in one platform",
+          "description": "Auth, billing, teams and storage in a single solution."
         },
         "efficiency": {
-          "title": "Faster responses",
-          "description": "Deep Links and 1-click for response rates up to 90%."
+          "title": "Faster launch",
+          "description": "Ready-made infrastructure: from clone to deploy in hours."
         },
         "accessibility": {
-          "title": "Super easy to use",
-          "description": "No training needed. Ready to use in 2 minutes."
+          "title": "Easy to customize",
+          "description": "Env-driven branding and clear conventions. Ready to use."
         }
       },
       "mission": {
         "badge": "Our mission",
-        "description": "We believe organizing an event should be a pleasure, not stress. Ceremly eliminates the chaos of confirmations so you can enjoy the moments that matter."
+        "description": "We believe launching a SaaS should be fast and enjoyable. We remove the repetitive setup work so you can focus on the product."
       }
     },
     "faq": {
@@ -227,48 +253,48 @@
       "subtitle": "Everything you need to know before getting started.",
       "questions": {
         "q1": {
-          "question": "How does Ceremly work?",
-          "answer": "Create your event, upload your guest list and choose how to send them: 1-click email or WhatsApp deep link. Guests confirm in a second and you monitor everything from the dashboard."
+          "question": "How does the platform work?",
+          "answer": "You create your organization, invite your team and configure your product. Auth, billing and multi-tenancy are ready: start from day one."
         },
         "q2": {
           "question": "Do I need technical skills?",
-          "answer": "Absolutely not. The interface is designed to be intuitive. Create your event and send invites in less than 5 minutes."
+          "answer": "Customizing the branding takes a few environment variables. Extending the product requires knowing Nuxt and TypeScript."
         },
         "q3": {
-          "question": "Do WhatsApp deep links use bots?",
-          "answer": "No, no bots. The system generates a link that opens your WhatsApp app with a pre-filled message. You simply press send. Totally personal and safe."
+          "question": "Is it really multi-tenant?",
+          "answer": "Yes. Every account is an organization and every resource is isolated per tenant. The model is B2B-first with B2C as a special case."
         },
         "q4": {
-          "question": "Is guest data safe?",
-          "answer": "Absolutely. We use standard encryption, are GDPR compliant and data is automatically deleted after the event if requested."
+          "question": "Is my data safe?",
+          "answer": "Absolutely. We use standard encryption, are GDPR compliant and support data export and deletion on request."
         },
         "q5": {
           "question": "Can I try before paying?",
-          "answer": "Join the waitlist for priority access and a lifetime discount. Early users will also get a free month of Pro."
+          "answer": "Join the waiting list to get priority access and a lifetime discount. Early users also get one month of Premium free."
         },
         "q6": {
-          "question": "When will Ceremly launch?",
-          "answer": "We're working on the launch. Join the waitlist to be among the first to try the platform and receive updates."
+          "question": "When will it be available?",
+          "answer": "We are working on the launch. Join the waiting list to be among the first to try the platform and get updates."
         }
       }
     },
     "waitingList": {
       "badge": "Coming Soon",
       "title": "Join the Waiting List",
-      "description": "Be among the first to get access when we launch. Early adopters get exclusive benefits.",
+      "description": "Be among the first to get access when we launch. Early users get exclusive benefits.",
       "placeholder": "Enter your email address",
-      "submitButton": "Join Waiting List",
-      "submittedButton": "You're In!",
+      "submitButton": "Join the List",
+      "submittedButton": "You're in!",
       "successTitle": "Welcome aboard!",
-      "successMessage": "Thank you for signing up! We've sent you a confirmation email.",
-      "successMessageNoEmail": "Thank you for signing up! We'll notify you as soon as we launch.",
+      "successMessage": "Thanks for signing up! We've sent you a confirmation email.",
+      "successMessageNoEmail": "Thanks for signing up! We'll notify you as soon as we launch.",
       "alreadySubscribedTitle": "Already subscribed",
       "alreadySubscribedMessage": "This email is already on the waiting list. We'll notify you at launch!",
       "errorTitle": "Oops!",
       "errorMessage": "Something went wrong. Please try again later.",
       "privacyNote": "We respect your privacy. No spam, ever.",
       "validation": {
-        "invalidEmail": "Please enter a valid email address"
+        "invalidEmail": "Enter a valid email address"
       },
       "features": {
         "earlyAccess": {
@@ -277,16 +303,16 @@
         },
         "specialBenefits": {
           "title": "Special Benefits",
-          "description": "Exclusive discounts for early adopters"
+          "description": "Exclusive discounts for early users"
         },
         "updates": {
           "title": "Priority Updates",
-          "description": "Stay informed about every milestone"
+          "description": "Stay informed on every milestone"
         }
       }
     },
     "contact": {
-      "badge": "Contact Us",
+      "badge": "Contact us",
       "title": "Have questions? We're here to help",
       "description": "Fill out the form and we'll get back to you within 24 hours.",
       "nameLabel": "Name",
@@ -295,29 +321,29 @@
       "messageLabel": "Message",
       "namePlaceholder": "Your name",
       "emailPlaceholder": "Your email address",
-      "subjectPlaceholder": "What would you like to discuss?",
+      "subjectPlaceholder": "What do you want to talk about?",
       "messagePlaceholder": "Write your message here...",
       "submitButton": "Send message",
       "submittedButton": "Message sent!",
       "successTitle": "Message sent!",
-      "successMessage": "Thank you for contacting us. We'll get back to you as soon as possible.",
+      "successMessage": "Thanks for contacting us. We'll reply as soon as possible.",
       "errorTitle": "Oops!",
       "errorMessage": "Something went wrong. Please try again later.",
-      "privacyNote": "Your data is safe. We only use it to respond to you.",
+      "privacyNote": "Your data is safe. We only use it to reply to you.",
       "validation": {
         "requiredName": "Name is required",
         "requiredEmail": "Email is required",
         "requiredSubject": "Subject is required",
         "requiredMessage": "Message is required",
         "invalidName": "Name must be at least 2 characters",
-        "invalidEmail": "Please enter a valid email address",
+        "invalidEmail": "Enter a valid email address",
         "invalidSubject": "Subject must be at least 3 characters",
         "invalidMessage": "Message must be at least 10 characters"
       },
       "info": {
         "email": {
           "title": "Email",
-          "value": "hello{'@'}ceremly.it"
+          "value": "hello{'@'}example.com"
         },
         "hours": {
           "title": "Hours",
@@ -331,8 +357,8 @@
     },
     "newsletter": {
       "badge": "Stay Updated",
-      "title": "Subscribe to Our Newsletter",
-      "description": "Get the latest updates about Ceremly directly in your inbox.",
+      "title": "Subscribe to the Newsletter",
+      "description": "Get the latest news straight to your inbox.",
       "nameLabel": "Name",
       "emailLabel": "Email",
       "namePlaceholder": "Your name",
@@ -340,18 +366,18 @@
       "submitButton": "Subscribe",
       "submittedButton": "Subscribed!",
       "successTitle": "Welcome!",
-      "successMessage": "Thank you for subscribing!",
+      "successMessage": "Thanks for subscribing!",
       "errorTitle": "Oops!",
       "errorMessage": "Something went wrong. Please try again later.",
       "privacyNote": "We respect your privacy. No spam, ever.",
       "validation": {
         "invalidName": "Name must be at least 2 characters",
-        "invalidEmail": "Please enter a valid email address"
+        "invalidEmail": "Enter a valid email address"
       },
       "features": {
         "exclusiveContent": {
           "title": "Exclusive Content",
-          "description": "Access reserved tips and guides"
+          "description": "Access tips and reserved guides"
         },
         "specialOffers": {
           "title": "Special Offers",
@@ -359,7 +385,7 @@
         },
         "updates": {
           "title": "Latest Updates",
-          "description": "Stay informed about new features"
+          "description": "Stay informed on new features"
         }
       }
     }

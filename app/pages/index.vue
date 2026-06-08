@@ -265,13 +265,13 @@ function scrollToWaitlist() {
                         <div class="absolute -bottom-6 -left-6 rounded-xl bg-cornsilk-50 p-4 shadow-xl border border-primary-100 max-w-[200px] animate-float">
                             <div class="flex items-center gap-2 mb-2">
                                 <span class="material-symbols-outlined text-secondary-500">check_circle</span>
-                                <span class="text-sm font-bold text-gray-900">{{ t('landing.hero.mockup.rsvpComplete') }}</span>
+                                <span class="text-sm font-bold text-gray-900">{{ t('landing.hero.mockup.onboardingComplete') }}</span>
                             </div>
                             <div class="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
                                 <div class="h-full w-[85%] rounded-full bg-secondary-500" />
                             </div>
                             <div class="mt-1 flex justify-between text-xs text-gray-500">
-                                <span>{{ t('landing.hero.mockup.rsvpPercent') }}</span>
+                                <span>{{ t('landing.hero.mockup.onboardingPercent') }}</span>
                             </div>
                         </div>
                     </div>
