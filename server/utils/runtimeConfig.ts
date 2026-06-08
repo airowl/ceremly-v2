@@ -71,6 +71,7 @@ export const generateRuntimeConfig = () => {
         public: {
             baseURL: process.env.NUXT_PUBLIC_BASE_URL,
             appName: process.env.NUXT_PUBLIC_APP_NAME,
+            twitterHandle: process.env.NUXT_PUBLIC_TWITTER_HANDLE,
             appEnv: process.env.NODE_ENV,
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
             appContactEmail: process.env.NUXT_PUBLIC_APP_CONTACT_EMAIL,

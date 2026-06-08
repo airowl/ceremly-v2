@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { it, en } from '@nuxt/ui/locale'
 const { locale, t } = useI18n()
+const appName = computed(() => useRuntimeConfig().public.appName || '')
 
 const uiLocale = computed(() => locale.value === 'it' ? en : it)
 
@@ -39,12 +40,12 @@ useSeoMeta({
     ogLocale: ogLocale,
     twitterImage: ogImagePath,
     twitterCard: "summary_large_image",
-    twitterSite: "@ceremly",
+    twitterSite: useRuntimeConfig().public.twitterHandle || undefined,
 });
 
 useSchemaOrg([
     defineWebSite({
-        name: 'Ceremly',
+        name: appName.value,
         description: computed(() => t('landing.seo.description')),
         inLanguage: ['it-IT', 'en-US'],
     }),
