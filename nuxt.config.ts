@@ -5,14 +5,17 @@ import { generateRuntimeConfig } from "./server/utils/runtimeConfig";
 export default defineNuxtConfig({
     app: {
         head: {
-            script: [
-                {
-                    src: 'https://datafa.st/js/script.js',
-                    defer: true,
-                    'data-website-id': 'dfid_QH5EiOhjJIj12ptsEinDZ',
-                    'data-domain': 'ceremly.com',
-                },
-            ],
+            // Plausible/DataFast analytics: registrato solo se il dominio è configurato via env.
+            script: process.env.NUXT_PUBLIC_PLAUSIBLE_DOMAIN
+                ? [
+                    {
+                        src: 'https://datafa.st/js/script.js',
+                        defer: true,
+                        'data-website-id': process.env.NUXT_PUBLIC_PLAUSIBLE_WEBSITE_ID || '',
+                        'data-domain': process.env.NUXT_PUBLIC_PLAUSIBLE_DOMAIN,
+                    },
+                ]
+                : [],
         },
     },
 
@@ -153,9 +156,9 @@ export default defineNuxtConfig({
     },
 
     site: {
-        url: process.env.NUXT_PUBLIC_BASE_URL || "https://ceremly.it",
-        name: "Ceremly",
-        description: "Piattaforma automatica per gestire gli RSVP di eventi privati via Email e WhatsApp.",
+        url: process.env.NUXT_PUBLIC_BASE_URL || "",
+        name: process.env.NUXT_PUBLIC_APP_NAME || "",
+        description: "",
         defaultLocale: "it",
     },
 
@@ -208,8 +211,8 @@ export default defineNuxtConfig({
     schemaOrg: {
         identity: {
             type: "Organization",
-            name: "Ceremly",
-            url: process.env.NUXT_PUBLIC_BASE_URL || "https://ceremly.it",
+            name: process.env.NUXT_PUBLIC_APP_NAME || "",
+            url: process.env.NUXT_PUBLIC_BASE_URL || "",
             logo: "/icon.png",
         },
     },
@@ -349,7 +352,6 @@ export default defineNuxtConfig({
             rollupOptions: {
                 output: {
                     manualChunks(id) {
-                        if (id.includes("node_modules/grapesjs")) return "vendor-grapesjs";
                         if (id.includes("node_modules/@unovis")) return "vendor-unovis";
 
                         if (id.includes("@iconify-json")) return "vendor-icons";
