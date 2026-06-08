@@ -7,12 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Development
 pnpm dev                    # Start dev server (localhost:3000)
-pnpm build                  # Production build (uses --max-old-space-size=4096)
+pnpm build                  # Production build
 pnpm preview                # Preview production build
 pnpm typecheck              # Type checking (vue-tsc)
-pnpm lint                   # ESLint (config is missing — known issue)
+pnpm lint                   # ESLint
 
-# Database (Drizzle ORM + PostgreSQL)
+# Database (Drizzle ORM + Neon Postgres)
 pnpm db:generate            # Generate migrations (interactive — needs TTY)
 pnpm db:migrate             # Run migrations (dev)
 pnpm db:migrate:prod        # Run migrations (production)
@@ -20,94 +20,99 @@ pnpm db:push                # Push schema directly (no migration files)
 pnpm db:studio              # Drizzle Studio GUI
 pnpm db:seed                # Seed database
 pnpm db:reset               # Reset database
-pnpm auth:schema            # Regenerate Better Auth schema (re-add phone/bio/timezone fields after)
+pnpm auth:schema            # Regenerate Better Auth schema (re-add custom user fields after)
 ```
 
 ## Architecture
 
-**Multi-tenant SaaS** built with Nuxt 4 + Vue 3 + TypeScript. Users authenticate, then operate within events (organizational units) with role-based access (owner/editor/viewer).
+**Multi-tenant SaaS boilerplate** built with Nuxt 4 + Vue 3 + TypeScript. The tenancy model is **B2B-first with B2C as a degenerate case**: every account is an *organization* (Better Auth organization plugin); a B2C user is simply an organization with a single member. Every tenant resource carries an `organizationId` and every query filters by tenant. Role-based access within an organization (owner/admin/member).
+
+### Architectural principle: Strada A (event-driven serverless)
+The backend runs on **Vercel as serverless functions** — no persistent process. Consequences (mandatory):
+- No polling workers, no `while(true)`, no long-lived Redis connections.
+- Background/async work is enqueued to an **HTTP queue (Upstash QStash)**. The "worker" is an HTTP route under `server/api/jobs/...` that the queue invokes — an endpoint, not a process.
+- Scheduled tasks are **Vercel Cron** declared in `vercel.json`, hitting a `server/api/cron/...` route. Cron does no heavy work: it enqueues or processes small batches.
+- DB connections use the **Neon HTTP/serverless driver** (`@neondatabase/serverless`), not the classic TCP driver.
 
 ### Tech Stack
-- **UI**: Nuxt UI v4 + Tailwind CSS (warm earthy palette: Light Bronze primary, Tea Green secondary)
+- **Framework**: Nuxt 4 (fullstack, Nitro, preset `vercel`)
+- **UI**: Nuxt UI v4 + Tailwind CSS (warm earthy palette)
 - **State**: Pinia stores (auto-imported)
-- **DB**: PostgreSQL via Drizzle ORM, UUID v7 IDs, soft delete (`deletedAt`) on events
-- **Auth**: Better Auth v1.4.5 (email/password + Google OAuth + 2FA)
-- **Payments**: Creem only (`@creem_io/better-auth`) — Stripe/Polar fully removed
-- **Storage**: Cloudflare R2 (S3-compatible) for file uploads (SHA-256 deduplication, magic bytes validation)
+- **DB**: Neon (serverless Postgres) via Drizzle ORM + Drizzle Kit, UUID v7 IDs
+- **Auth**: Better Auth (email/password + Google OAuth + 2FA) with **organization plugin**
+- **Payments**: Creem only (`@creem_io/better-auth`)
+- **Storage**: Cloudflare R2 (S3-compatible) behind a `server/storage/` abstraction
 - **Email**: Resend + React Email templates (`server/emailTemplates/`)
-- **AI**: Mastra (`@mastra/core`) with OpenAI `gpt-4o-mini` for landing page template generation
+- **Cache / rate-limit**: Upstash Redis (HTTP)
+- **Queue**: Upstash QStash (HTTP) behind a `server/queue/` abstraction
+- **Error tracking**: Sentry
 - **i18n**: Italian default, English alternate (`prefix_except_default` strategy)
 - **Content**: @nuxt/content for blog (Markdown files in `content/blogs/`)
+- **Branding**: env-driven (`NUXT_PUBLIC_APP_NAME`, `NUXT_PUBLIC_BASE_URL`) — no hardcoded brand strings
 - **Dark mode**: Disabled
 
 ### Key Directories
 - `app/` — Frontend (pages, components, composables, stores, layouts, middleware)
 - `server/` — Backend (API routes, database schema, middleware, utils, email templates)
 - `server/services/` — Business logic layer (all domain logic lives here, routes are thin controllers)
+- `server/repositories/` — Drizzle queries encapsulated per entity (org-scoped)
+- `server/api/jobs/` — HTTP endpoints invoked by the QStash queue
+- `server/api/cron/` — HTTP endpoints hit by Vercel Cron
 - `shared/` — Shared between client/server (Zod schemas, constants, utils)
 - `i18n/locales/` — Translation files (`it-IT.json`, `en-US.json`)
 - `content/blogs/` — Blog posts (Markdown)
-- `docs/` — Feature-specific `requirements.md` files
-- `docs/pattern/` — Backend patterns (MUST READ before writing backend code)
+- `docs/guide/` — Build guide (stack, conventions, phase-by-phase reference for clones)
 - `drizzle/migrations/` — Generated migration files
 
 ### Server Middleware Stack (numbered for order)
 1. `0.common.ts` — Common setup
 2. `0.site-mode.ts` — Enforces active/waitinglist/maintenance mode
 3. `1.auth.ts` — Attaches auth session to `event.context`
-4. `2.organization.ts` — Precarica (non-bloccante) l'org attiva in `event.context.organization` per `/api/organizations/*` (FASE 1c; l'enforcement è nei guard RBAC, non qui)
-5. `4.block-bots.ts` — Blocks malicious bots
-
-> Nota: `3.rate-limit.ts` è assente dallo stack attuale (non presente sul checkout). `2.events.ts` è stato sostituito da `2.organization.ts` in FASE 1c.
+4. `2.organization.ts` — Resolves and attaches the active organization for scoped requests
+5. `3.rate-limit.ts` — Rate limiting (Upstash, 100 req/min)
+6. `4.block-bots.ts` — Blocks malicious bots
 
 ### Client Middleware
 - `auth.global.ts` — Supports `auth: { only: 'guest' }` and `auth: { only: 'user' }` per page
-- `0.site-mode.global.ts` — Client-side enforcement of site mode (active/waitinglist/maintenance)
+- `0.site-mode.global.ts` — Client-side enforcement of site mode
 
 ### Route Rules
 - **Landing/blog pages**: SSR + prerender (SEO)
 - **Dashboard + auth pages**: CSR only (`ssr: false`)
-- **Public event pages**: SSR enabled
-- Security headers exempt Creem webhook, Nuxt Icon proxy, and Pages API (accepts HTML)
+- Security headers exempt the Creem webhook and the Nuxt Icon proxy
 
 ### Payment Architecture (Creem)
-- Plans: `starter`, `premium`, `agency` (not basic/pro)
+- Plans: `starter`, `premium`, `agency`
 - Single provider, no branching logic
-- `persistSubscriptions: true` auto-manages `creem_subscription` table
-- Webhook auto-registered at `/api/auth/creem/webhook` by Better Auth plugin
+- `persistSubscriptions: true` auto-manages the `creem_subscription` table
+- Webhook auto-registered at `/api/auth/creem/webhook` by the Better Auth plugin
 - Product IDs via env: `NUXT_CREEM_PRODUCT_ID_{STARTER|PREMIUM|AGENCY}_{MONTH|YEAR}`
-- Plan limits centralized in `shared/constants/pricing.ts` (`-1` = unlimited)
+- Plan limits centralized in `shared/constants/pricing.ts` (`-1` = unlimited), enforced per organization
 - Customer portal via `creem.createPortal()` for upgrade/downgrade
 
 ### Auth Flow
 - Better Auth catch-all at `/api/auth/[...all]`
-- Session cached in Redis (`secondaryStorage`)
+- Session cached in Upstash Redis (`secondaryStorage`)
+- **Active organization** resolved from the session and attached in middleware `2.organization.ts`
 - Server: `getAuthSession(event)` / `requireAuth(event)` in `server/utils/auth.ts`
-- Client: `useAuth()` composable wraps Better Auth client
-- Custom user fields: `phone`, `bio`, `locale`, `timezone`, `tosAcceptedAt`, `creemCustomerId`, `hadTrial`, `twoFactorEnabled`, `role`, `banned`/`banReason`/`banExpires`
-- After `pnpm auth:schema`, manually re-add custom fields (`phone`, `bio`, `timezone`) to user table
+- Client: `useAuth()` composable wraps the Better Auth client
+- After `pnpm auth:schema`, manually re-add custom user fields
 
 ### Database Schema
 - Schemas in `server/database/schema/` with barrel export via `index.ts`
 - Auth tables auto-generated by Better Auth (`user`, `account`, `session`, `verification`, `two_factor`)
-- `creem_subscription` auto-managed by Creem plugin
-- Domain tables: `events`, `event_users`, `guests`, `landing_pages`, `registration_pages`, `file`, `reminder_templates`, `email_logs`, `event_templates`, `contact_messages`, `invitations`, `audit_log`, `waiting_list`, `data_exports`, `user_custom_limits`
+- Organization tables (Better Auth organization plugin): `organization`, `member`, `invitation`
+- `creem_subscription` auto-managed by the Creem plugin
+- Domain tables: `projects` (canonical org-scoped example entity), `file`, `email_logs`, `contact_messages`, `audit_log`, `waiting_list`, `data_exports`, `user_custom_limits`
 
 ### Services Layer
 All business logic lives in `server/services/`. Routes are thin controllers (max 20-25 lines) that delegate here.
 
 | Service | Purpose |
 |---------|---------|
-| `event.service.ts` | Event CRUD, ownership, slug generation |
-| `guest.service.ts` | Guest CRUD, bulk CSV import, deduplication |
-| `landing.service.ts` | Landing + registration page CRUD |
-| `reminder.service.ts` | Template interpolation, WhatsApp link generation, send logic |
-| `ai.service.ts` | Mastra agent for AI landing page generation (`gpt-4o-mini`) |
-| `eventTemplate.service.ts` | Template CRUD + apply to event |
-| `planLimit.service.ts` | Plan limit checks: `canCreateOrganization()` (REALE, conta org owned), `canAddTeamMember()`, etc. (`canCreateEvent`→`canCreateOrganization` in FASE 1c) |
-| `team.service.ts` | Team invitations, membership management |
-| `publicEvent.service.ts` | Public RSVP + registration APIs |
+| `project.service.ts` | Project CRUD, org-scoped — the canonical pattern to replicate for new entities |
 | `file/fileService.ts` | R2 uploads (direct + presigned), dedup via SHA-256, image processing |
+| `planLimit.service.ts` | Plan limit checks per organization |
 | `user.service.ts` | Profile updates, account deletion |
 | `dataExport.service.ts` | GDPR user data export |
 | `contact.service.ts` | Contact form handling |
@@ -115,40 +120,16 @@ All business logic lives in `server/services/`. Routes are thin controllers (max
 
 ### Key Server Utilities
 - `server/utils/validateBody.ts` — `parseBody(event, schema)`, `parseQueryParams(event, schema)`
-- `server/utils/permissions.ts` — RBAC org-scoped (FASE 1c): `getOrgRole()`, `loadActiveOrganization()`, guard `requireMember()`/`requireWrite()`/`requireOwner()` (risolvono l'org attiva e popolano `event.context.organization`), `assertOwnership()` (2° guard by-id, null/mismatch → 403), pure fns `roleCanWrite()`/`roleIsOwner()`
-- `server/utils/db.ts` — `getDB()` (preferred singleton)
+- `server/utils/permissions.ts` — RBAC: `getUserRole()`, `requireMember()`, `requireWrite()`, `requireOwner()` (organization-scoped)
+- `server/utils/db.ts` — `getDB()` (preferred singleton, Neon HTTP driver)
 - `server/utils/audit/` — `logAudit(event, action, opts)`, `AUDIT_ACTIONS`, `AUDIT_CATEGORIES`
-- `server/utils/drivers.ts` — `getPgPool()`, `cacheClient` (Redis + in-memory fallback), `getResendInstance()`
-- `server/utils/query.ts` — `processFilters()`, `withFilters()` reusable filter utilities
 - `server/utils/spamProtection.ts` — Disposable email check, rate limiting, honeypot, timing validation
 - `server/utils/requireAdminApiKey.ts` — Admin API key check
 
-### Key Composables
-- `useAuth.ts` — Wraps Better Auth client
-- `useGuests.ts` — Guest CRUD operations
-- `useLandingEditor.ts` — Landing page editor state (load/save/AI generate/section editing)
-- `useReminders.ts` — Reminder template CRUD + send + history + stats
-- `useSubscription.ts` — Subscription state + Creem checkout/portal
-- `useEventTemplates.ts` — Template list/delete/apply
-- `useDashboard.ts` — Dashboard data loading
-
-### Pinia Stores
-- `userStore.ts` — Auth state, subscription, plan limits/usage
-- `eventStore.ts` — Current event data, counts, permissions, team members
-- `profileStore.ts` — User profile data
-- `feedbackStore.ts` — Feedback UI state
-
-### Landing Page Editor
-Custom-built Shopify Themes-style editor (not GrapesJS). Key components in `app/components/landing-editor/`:
-- Uses `vuedraggable` for drag-and-drop section reordering
-- Section definitions driven by `shared/schemas/sections.ts` (`SECTION_DEFINITIONS`)
-- 9 section types: Hero, Details, Countdown, Gallery, RSVP, RegistrationForm, Map, Story, Footer
-- AI generation via `POST /api/events/[eventId]/landing/generate`
-
 ### Public vs Authenticated API
-- `server/api/events/` (plural) — Authenticated event management endpoints
-- `server/api/event/` (singular) — Public event data endpoints (RSVP, registration)
-- `server/api/rsvp/` — Public RSVP submission endpoints
+- `server/api/projects/` — Authenticated, org-scoped resource management endpoints (the example entity)
+- `server/api/jobs/` — QStash queue consumers (HTTP)
+- `server/api/cron/` — Vercel Cron targets (HTTP)
 
 ### Security
 - Fake server headers (`X-Powered-By: PHP/5.2.17`, `Server: Apache/2.2.15`) to misdirect bots
@@ -165,50 +146,40 @@ Custom-built Shopify Themes-style editor (not GrapesJS). Key components in `app/
 - Landing page uses pure Tailwind (no Nuxt UI components) + custom CSS animations
 - Google Material Symbols Outlined for landing page icons
 
-## Backend Pattern (MUST READ)
+## Backend conventions (MUST READ)
 
-Prima di scrivere o modificare codice backend, **leggere** i pattern in `docs/pattern/`:
+Before writing or modifying backend code, read `docs/guide/STACK-AND-CONVENTIONS.md`. Key rules:
 
-- **`docs/pattern/api-routes.md`** — Route come thin controller (max 20-25 righe), delega al service
-- **`docs/pattern/services.md`** — Logica business nei service (funzioni pure + classi singleton per SDK)
-- **`docs/pattern/validators.md`** — Schema Zod in `shared/schemas/`, tipi inferiti, enum da costanti
-- **`docs/pattern/middleware-server.md`** — Middleware numerati, cross-cutting concerns, `event.context`
-
-### Regole chiave backend
-- **Validazione body**: sempre `parseBody(event, schema)` — mai `readValidatedBody` o `readBody` + `safeParse`
-- **Validazione query**: sempre `parseQueryParams(event, schema)` — mai `getQuery` + cast `as string`
-- **Schema**: sempre da `shared/schemas/` — mai inline nella route
-- **Audit**: `logAudit()` obbligatorio su ogni operazione di scrittura
-- **DB**: `getDB()` preferito — mai mischiare con `useDB()`
-- **Env**: `useRuntimeConfig()` nelle route — mai `process.env`
-- **Auth**: `requireAuth(event)` come prima operazione nelle route protette
-- **RBAC**: `requireMember()` / `requireWrite()` / `requireOwner()` per il controllo accesso org-scoped (org attiva da sessione → `event.context.organization`); `assertOwnership()` come 2° guard sui by-id
-- **Error**: try-catch con gestione `23505` (unique constraint) + re-throw + fallback 500
+- **Thin routes**: `server/api/` routes validate input, call a service, return output. No business logic in routes.
+- **Services**: business logic in `server/services/` (pure functions + singleton classes for SDKs).
+- **Repositories**: Drizzle queries live in `server/repositories/` behind domain-named functions, not inline in routes/services.
+- **Provider abstraction**: every external SDK sits behind its own module (`server/storage/`, `server/billing/`, `server/emailTemplates/` + `server/utils/email.ts`, `server/queue/`); never call a provider SDK directly elsewhere.
+- **Body validation**: always `parseBody(event, schema)` — never `readBody` + `safeParse`.
+- **Query validation**: always `parseQueryParams(event, schema)` — never `getQuery` + cast.
+- **Schemas**: always from `shared/schemas/` — never inline in the route.
+- **Multi-tenancy**: every query on tenant resources MUST filter by `organizationId`. This is a security requirement.
+- **Audit**: `logAudit()` on every write operation.
+- **DB**: `getDB()` preferred.
+- **Env**: `useRuntimeConfig()` in routes — never `process.env`.
+- **Auth**: `requireAuth(event)` as the first operation in protected routes.
+- **RBAC**: `requireMember()` / `requireWrite()` / `requireOwner()` for organization access control.
+- **Error**: try-catch handling `23505` (unique constraint) + re-throw + 500 fallback.
 
 ## Git
 
-- **Commit automatici OK** — quando il lavoro è pronto e verificato, si può committare automaticamente
-- **Push sempre manuale** — il push sul remoto lo esegue sempre l'utente, mai automatico
+- **Commit automatici OK** — quando il lavoro è pronto e verificato, si può committare automaticamente.
+- **Push sempre manuale** — il push sul remoto lo esegue sempre l'utente, mai automatico.
 
 ## Conventions
 
 - **Environment files**: `.env` (dev), `.env.production` (prod) — see `.env.example`
 - **API pattern**: `server/api/[resource]/[action].[method].ts`
-- **Feature docs**: Each feature area has a `requirements.md` file — read before modifying, update after changes. Current areas: `auth`, `dashboard`, `events`, `guests`, `payments`, `public-api`, `reminders`, `site-mode`, `templates`
 - **i18n**: Use `const { t } = useI18n()` and `useLocalePath()` for routes
 - **Blog translations**: Linked via `translationSlug` field in content frontmatter
 - **Plan limits**: Check via `/api/limits/*` endpoints before resource-creating operations
-- **Audit logging**: Call `logAudit(event, action, options)` for significant operations
 - **File uploads**: Two paths — direct upload or presigned URL flow (presign → upload → confirm)
-- **Email templates**: React Email in `server/emailTemplates/`, support i18n via `user.locale`
+- **Email templates**: React Email in `server/emailTemplates/`, env-driven app name, i18n via `user.locale`
 
 ## Known Issues
 - `sharp-wasm32` error during Nitro build is pre-existing
-- ESLint config (`eslint.config.js`) is missing
 - `pnpm db:generate` is interactive when creating new tables (needs TTY)
-- README.md and `.github/copilot-instructions.md` are outdated (reference Supabase/Stripe/Polar)
-- `docs/auth/requirements.md` is stale (still references Stripe/Polar, marks 2FA as TODO when it's implemented)
-- GrapesJS is in `package.json` but unused in the app — the landing editor is custom-built
-
-# currentDate
-Today's date is 2026-02-23.
