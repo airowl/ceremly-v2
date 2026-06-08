@@ -59,9 +59,7 @@
 
 | Italian Article | English Translation | translationSlug |
 |----------------|---------------------|-----------------|
-| `gestione-rsvp-matrimonio.md` | `wedding-rsvp-management.md` | `rsvp-wedding-management` |
-| `whatsapp-vs-email-inviti.md` | `whatsapp-vs-email-invitations.md` | `whatsapp-vs-email-invitations` |
-| `errori-comuni-organizzazione-eventi.md` | `common-event-planning-mistakes.md` | `common-event-planning-mistakes` |
+| `come-iniziare.md` | `getting-started.md` | `getting-started` |
 
 ### Newsletter Integration
 - Connected to `/api/waiting-list/subscribe` endpoint
@@ -86,7 +84,7 @@
 
 ### Limitations / Future Improvements
 - ~~Cover images are CSS gradients (no real images yet)~~ ✅ Cover images now render from frontmatter with gradient fallback
-- Missing cover images for 2 articles: `errori-eventi.jpg`, `whatsapp-vs-email.jpg`
+- Placeholder articles ship without dedicated cover images (gradient fallback is used)
 - No search functionality
 - No RSS feed
 - No comments system
