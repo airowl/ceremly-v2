@@ -49,7 +49,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
     starter: {
         id: "starter",
         name: "Starter",
-        description: "Per eventi singoli",
+        description: "Per progetti personali e piccoli team",
         limits: {
             max_organizations: 2,
             storage_mb: 500,
@@ -60,10 +60,10 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
             yearly: 9000,
         },
         features: [
-            { key: "plan.starter.events", text: "2 eventi" },
-            { key: "plan.starter.guests", text: "50 invitati per evento" },
+            { key: "plan.starter.organizations", text: "2 organizzazioni" },
+            { key: "plan.starter.team", text: "1 membro del team" },
             { key: "plan.starter.emails", text: "200 email al mese" },
-            { key: "plan.starter.landing", text: "Landing RSVP + Registrazione" },
+            { key: "plan.starter.storage", text: "500 MB di storage" },
             { key: "plan.starter.support", text: "Supporto email" },
         ],
         order: 1,
@@ -75,7 +75,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
     premium: {
         id: "premium",
         name: "Premium",
-        description: "Per organizzatori professionisti",
+        description: "Per team in crescita e startup",
         limits: {
             max_organizations: 5,
             storage_mb: 2000,
@@ -86,10 +86,10 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
             yearly: 39000,
         },
         features: [
-            { key: "plan.premium.events", text: "5 eventi" },
-            { key: "plan.premium.guests", text: "350 invitati per evento" },
+            { key: "plan.premium.organizations", text: "5 organizzazioni" },
+            { key: "plan.premium.team", text: "5 membri del team" },
             { key: "plan.premium.emails", text: "2000 email al mese" },
-            { key: "plan.premium.landing", text: "Landing RSVP + Registrazione" },
+            { key: "plan.premium.storage", text: "2 GB di storage" },
             { key: "plan.premium.support", text: "Supporto prioritario" },
         ],
         order: 2,
@@ -101,7 +101,7 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
     agency: {
         id: "agency",
         name: "Agency",
-        description: "Per agenzie e wedding planner",
+        description: "Per agenzie e aziende con più organizzazioni",
         limits: {
             max_organizations: -1,
             storage_mb: 10000,
@@ -112,12 +112,12 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
             yearly: 49000,
         },
         features: [
-            { key: "plan.agency.events", text: "Eventi illimitati" },
-            { key: "plan.agency.guests", text: "Invitati illimitati" },
+            { key: "plan.agency.organizations", text: "Organizzazioni illimitate" },
+            { key: "plan.agency.team", text: "Membri del team illimitati" },
             { key: "plan.agency.emails", text: "Email illimitate" },
-            { key: "plan.agency.landing", text: "Landing RSVP + Registrazione" },
+            { key: "plan.agency.storage", text: "10 GB di storage" },
             { key: "plan.agency.support", text: "Supporto 24/7" },
-            { key: "plan.agency.api", text: "API access" },
+            { key: "plan.agency.api", text: "Accesso API" },
         ],
         order: 3,
         creemProductIds: {
