@@ -406,15 +406,7 @@
     },
     "nav": {
       "home": "Home",
-      "profile": "Profilo",
       "subscription": "Abbonamento",
-      "team": "Team",
-      "settings": "Impostazioni",
-      "events": "I miei Eventi",
-      "eventDashboard": "Dashboard Evento",
-      "eventSettings": "Impostazioni Evento",
-      "allEvents": "Tutti gli eventi",
-      "newEvent": "Nuovo Evento",
       "goTo": "Vai a",
       "code": "Codice",
       "viewSource": "Vedi sorgente pagina",
@@ -436,7 +428,6 @@
       "search": {
         "placeholder": "Cerca eventi..."
       },
-      "newEvent": "Nuovo Evento",
       "stats": {
         "totalEvents": "Eventi Totali",
         "activeInvitations": "Inviti Attivi",
@@ -456,114 +447,6 @@
           "7days": "Ultimi 7 giorni",
           "30days": "Ultimi 30 giorni",
           "90days": "Ultimi 90 giorni"
-        }
-      },
-      "eventsTable": {
-        "title": "Prossimi Eventi",
-        "viewAll": "Vedi tutti",
-        "columns": {
-          "event": "Evento",
-          "date": "Data",
-          "rsvpProgress": "Progresso RSVP",
-          "actions": "Azioni"
-        },
-        "noEvents": "Nessun evento in programma"
-      },
-      "eventCards": {
-        "title": "I tuoi Event",
-        "newEvent": "Nuovo Event",
-        "newButton": "Nuovo",
-        "modal": {
-          "title": "Nuovo Event",
-          "description": "Crea un nuovo event per il tuo team",
-          "create": "Crea",
-          "limitReached": "Limite raggiunto",
-          "limitReachedDescription": "Hai raggiunto il limite di event per il tuo piano.",
-          "limitWarning": "Hai raggiunto il limite di {limit} event per il tuo piano.",
-          "upgrade": "Effettua l'upgrade",
-          "eventsUsed": "Event utilizzati:",
-          "name": "Nome",
-          "namePlaceholder": "es. La Mia Azienda",
-          "slug": "Slug",
-          "slugPlaceholder": "es. la-mia-azienda",
-          "slugHint": "Identificatore URL-friendly",
-          "slugPrefix": "/org/",
-          "cancel": "Annulla",
-          "createEvent": "Crea Event",
-          "validation": {
-            "nameTooShort": "Il nome deve avere almeno 2 caratteri",
-            "slugTooShort": "Lo slug deve avere almeno 2 caratteri",
-            "slugInvalid": "Solo lettere minuscole, numeri e trattini"
-          },
-          "success": "Event creato",
-          "successDescription": "Il event \"{name}\" è stato creato con successo.",
-          "error": "Errore",
-          "errorDescription": "Si è verificato un errore"
-        },
-        "empty": {
-          "title": "Nessun event",
-          "description": "Non fai parte di nessun event. Crea il tuo primo event per iniziare.",
-          "button": "Crea Event",
-          "createButton": "Crea Event"
-        },
-        "card": {
-          "member": "membro",
-          "members": "membri",
-          "created": "Creato il",
-          "active": "Attivo"
-        }
-      }
-    },
-    "eventsList": {
-      "title": "I miei Eventi",
-      "search": "Cerca eventi...",
-      "createEvent": "Crea Evento",
-      "stats": {
-        "total": "Eventi Totali",
-        "active": "In corso",
-        "completed": "Completati"
-      },
-      "columns": {
-        "name": "Nome Evento",
-        "date": "Data",
-        "time": "Ora",
-        "location": "Luogo",
-        "status": "Stato",
-        "actions": "Azioni"
-      },
-      "status": {
-        "active": "In corso",
-        "completed": "Completato"
-      },
-      "empty": {
-        "title": "Nessun evento",
-        "description": "Non hai ancora creato nessun evento. Crea il tuo primo evento per iniziare.",
-        "createButton": "Crea il tuo primo evento"
-      },
-      "modal": {
-        "title": "Nuovo Evento",
-        "name": "Nome Evento",
-        "namePlaceholder": "Es. Cena di Gala 2024",
-        "date": "Data",
-        "time": "Ora",
-        "location": "Luogo",
-        "locationPlaceholder": "Nome della location",
-        "address": "Indirizzo",
-        "addressPlaceholder": "Via, Città, CAP",
-        "cancel": "Annulla",
-        "create": "Crea ora",
-        "creating": "Creazione...",
-        "limitReached": "Limite raggiunto",
-        "limitWarning": "Hai raggiunto il limite di {limit} eventi per il tuo piano.",
-        "upgrade": "Effettua l'upgrade",
-        "eventsUsed": "Eventi utilizzati:",
-        "success": "Evento creato",
-        "successDescription": "L'evento \"{name}\" è stato creato con successo.",
-        "error": "Errore",
-        "errorDescription": "Si è verificato un errore durante la creazione dell'evento.",
-        "validation": {
-          "nameRequired": "Il nome dell'evento è obbligatorio",
-          "dateRequired": "La data è obbligatoria"
         }
       }
     },
@@ -645,10 +528,6 @@
       }
     },
     "planUsage": {
-      "event": {
-        "title": "Event",
-        "description": "Utilizzo del piano"
-      },
       "used": "Utilizzati",
       "limitReached": "Limite raggiunto -",
       "upgrade": "upgrade",
@@ -662,7 +541,6 @@
       "actions": {
         "title": "Azioni",
         "description": "Operazioni rapide",
-        "newEvent": "Nuovo Event",
         "manageSubscription": "Gestisci Abbonamento"
       }
     },
@@ -741,126 +619,6 @@
     "retry": "Riprova",
     "save": "Salva"
   },
-  "event": {
-    "settings": {
-      "title": "Impostazioni Event",
-      "description": "Gestisci la configurazione e le preferenze del tuo event.",
-      "tabs": {
-        "general": "Generale",
-        "members": "Membri",
-        "danger": "Zona Pericolosa"
-      },
-      "general": {
-        "title": "Informazioni Generali",
-        "description": "Aggiorna il nome e lo slug URL del tuo event.",
-        "name": "Nome Event",
-        "nameDescription": "Il nome visualizzato per il tuo event, visibile a tutti i membri.",
-        "namePlaceholder": "Inserisci nome event",
-        "slug": "Slug URL",
-        "slugDescription": "L'identificatore univoco per l'URL del event. Solo lettere minuscole, numeri e trattini.",
-        "slugPlaceholder": "mio-event"
-      },
-      "updateSuccess": "Le impostazioni del event sono state aggiornate con successo.",
-      "updateError": "Impossibile aggiornare le impostazioni del event. Riprova.",
-      "permissionDenied": "Non hai i permessi per modificare questo event.",
-      "noChanges": "Nessuna modifica da salvare",
-      "readOnly": {
-        "title": "Modalità Sola Lettura",
-        "description": "Non hai i permessi per modificare le impostazioni del event.",
-        "message": "Contatta l'amministratore del event per richiedere i permessi di modifica."
-      },
-      "info": {
-        "title": "Informazioni Event",
-        "description": "Informazioni di sola lettura sul tuo event.",
-        "eventId": "ID Event",
-        "created": "Creato il",
-        "yourRole": "Il tuo ruolo",
-        "owner": "Proprietario",
-        "member": "Membro"
-      },
-      "validation": {
-        "nameTooShort": "Il nome del event deve avere almeno 2 caratteri",
-        "nameTooLong": "Il nome del event non può superare i 100 caratteri",
-        "slugTooShort": "Lo slug deve avere almeno 2 caratteri",
-        "slugTooLong": "Lo slug non può superare i 50 caratteri",
-        "slugInvalid": "Lo slug può contenere solo lettere minuscole, numeri e trattini",
-        "slugAlreadyTaken": "Questo slug è già in uso"
-      },
-      "sections": {
-        "basicInfo": {
-          "title": "1. Informazioni Base",
-          "description": "Nome, data, ora e dettagli principali del tuo evento."
-        },
-        "logistics": {
-          "title": "2. Logistica",
-          "description": "Location e indirizzo dell'evento."
-        },
-        "automation": {
-          "title": "4. Automazione",
-          "description": "Conferma automatica e notifiche."
-        }
-      },
-      "fields": {
-        "description": "Descrizione",
-        "descriptionPlaceholder": "Descrivi brevemente il tuo evento...",
-        "date": "Data",
-        "time": "Ora di inizio",
-        "timePlaceholder": "16:30",
-        "location": "Nome della Location",
-        "locationPlaceholder": "Es. Villa del Balbianello",
-        "address": "Indirizzo Completo",
-        "addressPlaceholder": "Via Roma, 123, 20121 Milano MI"
-      },
-      "badge": {
-        "live": "Live",
-        "draft": "Bozza"
-      },
-      "lastSaved": {
-        "justNow": "Ultimo salvataggio: adesso",
-        "minutesAgo": "Ultimo salvataggio: {n} min fa",
-        "hoursAgo": "Ultimo salvataggio: {n} ore fa"
-      },
-      "cancel": "Annulla",
-      "mapPlaceholder": {
-        "title": "Inserisci un indirizzo per visualizzare la mappa",
-        "configureKey": "Mappa disponibile dopo configurazione Google Maps"
-      },
-      "deleteEvent": {
-        "title": "Elimina Event",
-        "description": "Una volta eliminato, tutti i dati degli invitati e la landing non saranno più accessibili.",
-        "button": "Elimina Event",
-        "confirmTitle": "Elimina Event",
-        "confirmMessage": "Sei sicuro di voler eliminare questo event? Tutti i dati verranno rimossi permanentemente.",
-        "confirmInput": "Digita il nome dell'evento per confermare",
-        "confirmLabel": "Digita ELIMINA per confermare",
-        "confirmPlaceholder": "ELIMINA",
-        "successMessage": "Evento eliminato con successo."
-      }
-    },
-    "createModal": {
-      "title": "Nuovo Event",
-      "description": "Aggiungi un nuovo event al database",
-      "button": "Nuovo event",
-      "name": "Nome",
-      "namePlaceholder": "Il Mio Event",
-      "slug": "Slug",
-      "slugPlaceholder": "il-mio-event",
-      "cancel": "Annulla",
-      "create": "Crea",
-      "validation": {
-        "tooShort": "Troppo corto"
-      },
-      "limitReached": "Limite raggiunto",
-      "limitReachedDescription": "Hai raggiunto il limite di event per il tuo piano. Effettua l'upgrade per crearne di più.",
-      "limitWarning": "Hai raggiunto il limite di {limit} event per il tuo piano.",
-      "upgradeLink": "Effettua l'upgrade",
-      "eventsUsed": "Event utilizzati:",
-      "error": "Errore",
-      "failedToCreate": "Impossibile creare il event",
-      "success": "Successo",
-      "successDescription": "Nuovo event {name} aggiunto"
-    }
-  },
   "footer": {
     "resources": {
       "title": "Risorse",
@@ -887,9 +645,6 @@
     "social": {
       "github": "GitHub",
       "linkedin": "LinkedIn"
-    },
-    "brand": {
-      "name": "Ceremly"
     }
   },
   "tos": {
@@ -1024,8 +779,8 @@
         "clientDataDesc": "Raccogliamo nome, email, organizzazione e log tecnici quando crei un account. Questi dati sono utilizzati per gestire il tuo account e fornire i nostri servizi.",
         "eventData": "Dati Event",
         "eventDataDesc": "Informazioni e contenuti creati all'interno dei tuoi event.",
-        "guestData": "Dati Membri Team",
-        "guestDataDesc": "Nome, email, ruolo e permessi per i membri del team che inviti.",
+        "teamMemberData": "Dati Membri Team",
+        "teamMemberDataDesc": "Nome, email, ruolo e permessi per i membri del team che inviti.",
         "nonPersonalData": "Dati Non-Personali",
         "nonPersonalDataDesc": "Raccogliamo cookies, IP, user agent per analytics e migliorare l'esperienza utente.",
         "gallery": "File Caricati",
@@ -1077,8 +832,8 @@
         "description": "Conserviamo i tuoi dati finché il tuo account è attivo. Dopo la cancellazione dell'account, i dati vengono rimossi secondo la nostra policy di retention.",
         "accountData": "Dati account",
         "accountDataPeriod": "Durata contratto + 24 mesi",
-        "guestData": "Dati event",
-        "guestDataPeriod": "Fino alla cancellazione event + 30 giorni",
+        "orgData": "Dati organizzazione",
+        "orgDataPeriod": "Fino alla cancellazione dell'organizzazione + 30 giorni",
         "gallery": "File caricati",
         "galleryPeriod": "Fino alla richiesta di cancellazione",
         "vendors": "Log",
@@ -1220,82 +975,6 @@
       "privacy": "Privacy Policy",
       "terms": "Termini di servizio"
     }
-  },
-  "team": {
-    "title": "Team",
-    "inviteMember": "Invita Membro",
-    "inviteMemberTitle": "Invita un nuovo membro",
-    "inviteMemberDescription": "Inserisci l'email della persona che vuoi invitare nel event",
-    "emailLabel": "Indirizzo Email",
-    "emailPlaceholder": "collega{'@'}esempio.com",
-    "teamLabel": "Assegna a Team (opzionale)",
-    "selectTeam": "Nessun team specifico",
-    "sendInvite": "Invia Invito",
-    "noTeam": "Nessun team",
-    "membersCount": "{count} membri",
-    "members": "Membri",
-    "activeMembers": "Membri Attivi",
-    "activeMembersDescription": "Persone che hanno accesso a questo event",
-    "noMembers": "Nessun membro del team ancora",
-    "member": "Membro",
-    "role": "Ruolo",
-    "joinedAt": "Iscritto",
-    "lastAccess": "Ultimo Accesso",
-    "invitedBy": "Invitato Da",
-    "actions": "Azioni",
-    "you": "(tu)",
-    "changeRole": "Cambia Ruolo",
-    "changeRoleTitle": "Cambia Ruolo Membro",
-    "saveRole": "Salva Ruolo",
-    "removeMember": "Rimuovi Membro",
-    "ownerProtected": "Il proprietario non può essere rimosso",
-    "pendingInvitations": "Inviti in Sospeso",
-    "pendingInvitationsDescription": "Inviti in attesa di essere accettati",
-    "email": "Email",
-    "invitedAt": "Invitato",
-    "expiresAt": "Scade",
-    "expired": "Scaduto",
-    "resendInvite": "Reinvia",
-    "cancelInvite": "Annulla",
-    "neverLoggedIn": "Mai",
-    "today": "Oggi",
-    "yesterday": "Ieri",
-    "daysAgo": "{count} giorni fa",
-    "weeksAgo": "{count} settimane fa",
-    "roles": {
-      "owner": "Proprietario",
-      "admin": "Admin",
-      "editor": "Editor",
-      "viewer": "Visualizzatore",
-      "member": "Membro"
-    },
-    "roleDescriptions": {
-      "editor": "Può visualizzare, creare, modificare ed eliminare contenuti. Può gestire il team.",
-      "viewer": "Può solo visualizzare i contenuti. Accesso in sola lettura."
-    },
-    "validation": {
-      "invalidEmail": "Inserisci un indirizzo email valido",
-      "roleRequired": "Seleziona un ruolo"
-    },
-    "inviteSent": "Invito Inviato",
-    "inviteSentDescription": "Un invito è stato inviato a {email}",
-    "memberLimitReached": "Hai raggiunto il numero massimo di membri del team per il tuo piano. Effettua l'upgrade per aggiungere più membri.",
-    "inviteError": "Impossibile inviare l'invito. Riprova.",
-    "roleUpdated": "Ruolo Aggiornato",
-    "roleUpdatedDescription": "Il ruolo di {name} è stato aggiornato",
-    "roleUpdateError": "Impossibile aggiornare il ruolo. Riprova.",
-    "memberRemoved": "Membro Rimosso",
-    "memberRemovedDescription": "{name} è stato rimosso dal team",
-    "memberRemoveError": "Impossibile rimuovere il membro. Riprova.",
-    "inviteResent": "Invito Reinviato",
-    "inviteResentDescription": "Un nuovo invito è stato inviato a {email}",
-    "inviteResendError": "Impossibile reinviare l'invito. Riprova.",
-    "inviteCancelled": "Invito Annullato",
-    "inviteCancelledDescription": "L'invito a {email} è stato annullato",
-    "inviteCancelError": "Impossibile annullare l'invito. Riprova.",
-    "roleLabel": "Ruolo",
-    "selectRole": "Seleziona un ruolo",
-    "teamsLabel": "Team"
   },
   "twoFactor": {
     "title": "Autenticazione a Due Fattori",
@@ -1485,7 +1164,7 @@
     "success": "Successo",
     "loggedInSuccessfully": "Accesso effettuato con successo",
     "goToLogin": "Vai al Login",
-    "joiningEvent": "Entrando nel event...",
+    "joiningEvent": "Entrando nell'organizzazione...",
     "processingInvitation": "Elaborazione invito...",
     "login": "Accedi",
     "signUp": "Registrati",
@@ -1501,11 +1180,11 @@
     "passwordPlaceholderSignup": "Scegli una password (minimo 8 caratteri)",
     "confirmPassword": "Conferma Password",
     "confirmPasswordPlaceholder": "Conferma la tua password",
-    "bySigningIn": "Accedendo, accetti di unirti a {event}",
-    "afterSignUp": "Dopo la registrazione e la verifica dell'email, entrerai automaticamente in {event}",
+    "bySigningIn": "Accedendo, accetti di unirti a {org}",
+    "afterSignUp": "Dopo la registrazione e la verifica dell'email, entrerai automaticamente in {org}",
     "expiresOn": "Questo invito scade il {date}",
     "welcomeToTeam": "Benvenuto nel team!",
-    "youveJoined": "Sei entrato in {event}",
+    "youveJoined": "Sei entrato in {org}",
     "accountCreated": "Account creato",
     "verifyEmailMessage": "Controlla la tua email per verificare il tuo account, poi torna qui per accettare l'invito.",
     "validation": {
@@ -1671,7 +1350,7 @@
     "request": "Richiedi Export Dati",
     "requestSuccess": "Richiesta di export inviata. Ti avviseremo quando sarà pronto.",
     "requestError": "Impossibile richiedere l'export. Riprova.",
-    "gdprInfo": "Secondo il GDPR, hai il diritto di richiedere e scaricare una copia di tutti i dati personali che conserviamo su di te. L'export include il tuo profilo, event, metadati dei file e log delle attività.",
+    "gdprInfo": "Secondo il GDPR, hai il diritto di richiedere e scaricare una copia di tutti i dati personali che conserviamo su di te. L'export include il tuo profilo, le tue organizzazioni, i metadati dei file e i log delle attività.",
     "history": "Storico Export",
     "noHistory": "Nessun export precedente"
   },
@@ -1692,13 +1371,13 @@
   },
   "blog": {
     "seo": {
-      "title": "Blog - Ceremly | Guide e Consigli per i Tuoi Eventi",
-      "description": "Scopri guide pratiche, consigli e strategie per organizzare eventi perfetti e gestire gli RSVP in modo efficiente."
+      "title": "Blog | Guide e Consigli",
+      "description": "Scopri guide pratiche, consigli e strategie per lanciare e far crescere il tuo prodotto SaaS."
     },
     "hero": {
       "badge": "Idee & Risorse",
-      "title": "Guide, Consigli e Risorse per i Tuoi Eventi",
-      "subtitle": "Articoli pratici per organizzare eventi indimenticabili e gestire le conferme di partecipazione senza stress."
+      "title": "Guide, Consigli e Risorse",
+      "subtitle": "Articoli pratici per lanciare il tuo SaaS e farlo crescere senza stress."
     },
     "filter": {
       "all": "Tutti",

@@ -406,15 +406,7 @@
     },
     "nav": {
       "home": "Home",
-      "profile": "Profile",
       "subscription": "Subscription",
-      "team": "Team",
-      "settings": "Settings",
-      "events": "My Events",
-      "eventDashboard": "Event Dashboard",
-      "eventSettings": "Event Settings",
-      "allEvents": "All Events",
-      "newEvent": "New Event",
       "goTo": "Go to",
       "code": "Code",
       "viewSource": "View page source",
@@ -436,7 +428,6 @@
       "search": {
         "placeholder": "Search events..."
       },
-      "newEvent": "New Event",
       "stats": {
         "totalEvents": "Total Events",
         "activeInvitations": "Active Invitations",
@@ -456,114 +447,6 @@
           "7days": "Last 7 days",
           "30days": "Last 30 days",
           "90days": "Last 90 days"
-        }
-      },
-      "eventsTable": {
-        "title": "Upcoming Events",
-        "viewAll": "View all",
-        "columns": {
-          "event": "Event",
-          "date": "Date",
-          "rsvpProgress": "RSVP Progress",
-          "actions": "Actions"
-        },
-        "noEvents": "No upcoming events"
-      },
-      "eventCards": {
-        "title": "Your Events",
-        "newEvent": "New Event",
-        "newButton": "New",
-        "modal": {
-          "title": "New Event",
-          "description": "Create a new event for your team",
-          "create": "Create",
-          "limitReached": "Limit reached",
-          "limitReachedDescription": "You have reached the event limit for your plan.",
-          "limitWarning": "You have reached the limit of {limit} events for your plan.",
-          "upgrade": "Upgrade",
-          "eventsUsed": "Events used:",
-          "name": "Name",
-          "namePlaceholder": "e.g. My Company",
-          "slug": "Slug",
-          "slugPlaceholder": "e.g. my-company",
-          "slugHint": "URL-friendly identifier",
-          "slugPrefix": "/org/",
-          "cancel": "Cancel",
-          "createEvent": "Create Event",
-          "validation": {
-            "nameTooShort": "Name must be at least 2 characters",
-            "slugTooShort": "Slug must be at least 2 characters",
-            "slugInvalid": "Only lowercase letters, numbers and dashes"
-          },
-          "success": "Event created",
-          "successDescription": "Event \"{name}\" has been created successfully.",
-          "error": "Error",
-          "errorDescription": "An error occurred"
-        },
-        "empty": {
-          "title": "No events",
-          "description": "You are not part of any event. Create your first event to get started.",
-          "button": "Create Event",
-          "createButton": "Create Event"
-        },
-        "card": {
-          "member": "member",
-          "members": "members",
-          "created": "Created",
-          "active": "Active"
-        }
-      }
-    },
-    "eventsList": {
-      "title": "My Events",
-      "search": "Search events...",
-      "createEvent": "Create Event",
-      "stats": {
-        "total": "Total Events",
-        "active": "Active",
-        "completed": "Completed"
-      },
-      "columns": {
-        "name": "Event Name",
-        "date": "Date",
-        "time": "Time",
-        "location": "Location",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "status": {
-        "active": "Active",
-        "completed": "Completed"
-      },
-      "empty": {
-        "title": "No events",
-        "description": "You haven't created any events yet. Create your first event to get started.",
-        "createButton": "Create your first event"
-      },
-      "modal": {
-        "title": "New Event",
-        "name": "Event Name",
-        "namePlaceholder": "e.g. Gala Dinner 2024",
-        "date": "Date",
-        "time": "Time",
-        "location": "Location",
-        "locationPlaceholder": "Venue name",
-        "address": "Address",
-        "addressPlaceholder": "Street, City, Zip",
-        "cancel": "Cancel",
-        "create": "Create now",
-        "creating": "Creating...",
-        "limitReached": "Limit reached",
-        "limitWarning": "You have reached the limit of {limit} events for your plan.",
-        "upgrade": "Upgrade",
-        "eventsUsed": "Events used:",
-        "success": "Event created",
-        "successDescription": "Event \"{name}\" has been created successfully.",
-        "error": "Error",
-        "errorDescription": "An error occurred while creating the event.",
-        "validation": {
-          "nameRequired": "Event name is required",
-          "dateRequired": "Date is required"
         }
       }
     },
@@ -645,10 +528,6 @@
       }
     },
     "planUsage": {
-      "event": {
-        "title": "Event",
-        "description": "Plan usage"
-      },
       "used": "Used",
       "limitReached": "Limit reached -",
       "upgrade": "upgrade",
@@ -662,7 +541,6 @@
       "actions": {
         "title": "Actions",
         "description": "Quick operations",
-        "newEvent": "New Event",
         "manageSubscription": "Manage Subscription"
       }
     },
@@ -741,126 +619,6 @@
     "retry": "Retry",
     "save": "Save"
   },
-  "event": {
-    "settings": {
-      "title": "Event Settings",
-      "description": "Manage your event configuration and preferences.",
-      "tabs": {
-        "general": "General",
-        "members": "Members",
-        "danger": "Danger Zone"
-      },
-      "general": {
-        "title": "General Information",
-        "description": "Update your event name and URL slug.",
-        "name": "Event Name",
-        "nameDescription": "The display name for your event, visible to all members.",
-        "namePlaceholder": "Enter event name",
-        "slug": "URL Slug",
-        "slugDescription": "The unique identifier for your event URL. Only lowercase letters, numbers and hyphens allowed.",
-        "slugPlaceholder": "my-event"
-      },
-      "updateSuccess": "Event settings have been updated successfully.",
-      "updateError": "Failed to update event settings. Please try again.",
-      "permissionDenied": "You don't have permission to update this event.",
-      "noChanges": "No changes to save",
-      "readOnly": {
-        "title": "Read-Only Mode",
-        "description": "You don't have permission to edit event settings.",
-        "message": "Contact your event administrator to request edit permissions."
-      },
-      "info": {
-        "title": "Event Information",
-        "description": "Read-only information about your event.",
-        "eventId": "Event ID",
-        "created": "Created",
-        "yourRole": "Your Role",
-        "owner": "Owner",
-        "member": "Member"
-      },
-      "validation": {
-        "nameTooShort": "Event name must be at least 2 characters",
-        "nameTooLong": "Event name cannot exceed 100 characters",
-        "slugTooShort": "Slug must be at least 2 characters",
-        "slugTooLong": "Slug cannot exceed 50 characters",
-        "slugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
-        "slugAlreadyTaken": "This slug is already taken"
-      },
-      "sections": {
-        "basicInfo": {
-          "title": "1. Basic Information",
-          "description": "Name, date, time and main details of your event."
-        },
-        "logistics": {
-          "title": "2. Logistics",
-          "description": "Event location and address."
-        },
-        "automation": {
-          "title": "4. Automation",
-          "description": "Auto-confirmation and notifications."
-        }
-      },
-      "fields": {
-        "description": "Description",
-        "descriptionPlaceholder": "Briefly describe your event...",
-        "date": "Date",
-        "time": "Start Time",
-        "timePlaceholder": "04:30 PM",
-        "location": "Venue Name",
-        "locationPlaceholder": "e.g. The Grand Hotel",
-        "address": "Full Address",
-        "addressPlaceholder": "123 Main Street, New York, NY 10001"
-      },
-      "badge": {
-        "live": "Live",
-        "draft": "Draft"
-      },
-      "lastSaved": {
-        "justNow": "Last saved: just now",
-        "minutesAgo": "Last saved: {n} min ago",
-        "hoursAgo": "Last saved: {n} hours ago"
-      },
-      "cancel": "Cancel",
-      "mapPlaceholder": {
-        "title": "Enter an address to display the map",
-        "configureKey": "Map available after Google Maps configuration"
-      },
-      "deleteEvent": {
-        "title": "Delete Event",
-        "description": "Once deleted, all guest data and landing page will no longer be accessible.",
-        "button": "Delete Event",
-        "confirmTitle": "Delete Event",
-        "confirmMessage": "Are you sure you want to delete this event? All data will be permanently removed.",
-        "confirmInput": "Type the event name to confirm",
-        "confirmLabel": "Type DELETE to confirm",
-        "confirmPlaceholder": "DELETE",
-        "successMessage": "Event deleted successfully."
-      }
-    },
-    "createModal": {
-      "title": "New Event",
-      "description": "Add a new event to the database",
-      "button": "New event",
-      "name": "Name",
-      "namePlaceholder": "My Event",
-      "slug": "Slug",
-      "slugPlaceholder": "my-event",
-      "cancel": "Cancel",
-      "create": "Create",
-      "validation": {
-        "tooShort": "Too short"
-      },
-      "limitReached": "Limit reached",
-      "limitReachedDescription": "You have reached the event limit for your plan. Upgrade to create more.",
-      "limitWarning": "You have reached the limit of {limit} events for your plan.",
-      "upgradeLink": "Upgrade",
-      "eventsUsed": "Events used:",
-      "error": "Error",
-      "failedToCreate": "Failed to create event",
-      "success": "Success",
-      "successDescription": "New event {name} added"
-    }
-  },
   "footer": {
     "resources": {
       "title": "Resources",
@@ -887,9 +645,6 @@
     "social": {
       "github": "GitHub",
       "linkedin": "LinkedIn"
-    },
-    "brand": {
-      "name": "Ceremly"
     }
   },
   "tos": {
@@ -1024,8 +779,8 @@
         "clientDataDesc": "We collect name, email, organization, and technical logs when you create an account. This data is used to manage your account and provide our services.",
         "eventData": "Event Data",
         "eventDataDesc": "Information and content created within your events.",
-        "guestData": "Team Member Data",
-        "guestDataDesc": "Name, email, role, and permissions for team members you invite.",
+        "teamMemberData": "Team Member Data",
+        "teamMemberDataDesc": "Name, email, role, and permissions for team members you invite.",
         "nonPersonalData": "Non-Personal Data",
         "nonPersonalDataDesc": "We collect cookies, IP, user agent for analytics and improving user experience.",
         "gallery": "Uploaded Files",
@@ -1077,8 +832,8 @@
         "description": "We retain your data for as long as your account is active. After account deletion, data is removed according to our retention policy.",
         "accountData": "Account data",
         "accountDataPeriod": "Contract duration + 24 months",
-        "guestData": "Event data",
-        "guestDataPeriod": "Until event deletion + 30 days",
+        "orgData": "Organization data",
+        "orgDataPeriod": "Until organization deletion + 30 days",
         "gallery": "Uploaded files",
         "galleryPeriod": "Until deletion request",
         "vendors": "Logs",
@@ -1220,82 +975,6 @@
       "privacy": "Privacy Policy",
       "terms": "Terms of service"
     }
-  },
-  "team": {
-    "title": "Team",
-    "inviteMember": "Invite Member",
-    "inviteMemberTitle": "Invite a new member",
-    "inviteMemberDescription": "Enter the email of the person you want to invite to the event",
-    "emailLabel": "Email Address",
-    "emailPlaceholder": "colleague{'@'}example.com",
-    "teamLabel": "Assign to Team (optional)",
-    "selectTeam": "No specific team",
-    "sendInvite": "Send Invite",
-    "noTeam": "No team",
-    "membersCount": "{count} members",
-    "members": "Members",
-    "activeMembers": "Active Members",
-    "activeMembersDescription": "People who have access to this event",
-    "noMembers": "No team members yet",
-    "member": "Member",
-    "role": "Role",
-    "joinedAt": "Joined",
-    "lastAccess": "Last Access",
-    "invitedBy": "Invited By",
-    "actions": "Actions",
-    "you": "(you)",
-    "changeRole": "Change Role",
-    "changeRoleTitle": "Change Member Role",
-    "saveRole": "Save Role",
-    "removeMember": "Remove Member",
-    "ownerProtected": "Owner cannot be removed",
-    "pendingInvitations": "Pending Invitations",
-    "pendingInvitationsDescription": "Invitations waiting to be accepted",
-    "email": "Email",
-    "invitedAt": "Invited",
-    "expiresAt": "Expires",
-    "expired": "Expired",
-    "resendInvite": "Resend",
-    "cancelInvite": "Cancel",
-    "neverLoggedIn": "Never",
-    "today": "Today",
-    "yesterday": "Yesterday",
-    "daysAgo": "{count} days ago",
-    "weeksAgo": "{count} weeks ago",
-    "roles": {
-      "owner": "Owner",
-      "admin": "Admin",
-      "editor": "Editor",
-      "viewer": "Viewer",
-      "member": "Member"
-    },
-    "roleDescriptions": {
-      "editor": "Can view, create, edit, and delete content. Can manage team.",
-      "viewer": "Can only view content. Read-only access."
-    },
-    "validation": {
-      "invalidEmail": "Please enter a valid email address",
-      "roleRequired": "Please select a role"
-    },
-    "inviteSent": "Invitation Sent",
-    "inviteSentDescription": "An invitation has been sent to {email}",
-    "memberLimitReached": "You have reached the maximum number of team members for your plan. Upgrade to add more members.",
-    "inviteError": "Failed to send invitation. Please try again.",
-    "roleUpdated": "Role Updated",
-    "roleUpdatedDescription": "{name}'s role has been updated",
-    "roleUpdateError": "Failed to update role. Please try again.",
-    "memberRemoved": "Member Removed",
-    "memberRemovedDescription": "{name} has been removed from the team",
-    "memberRemoveError": "Failed to remove member. Please try again.",
-    "inviteResent": "Invitation Resent",
-    "inviteResentDescription": "A new invitation has been sent to {email}",
-    "inviteResendError": "Failed to resend invitation. Please try again.",
-    "inviteCancelled": "Invitation Cancelled",
-    "inviteCancelledDescription": "The invitation to {email} has been cancelled",
-    "inviteCancelError": "Failed to cancel invitation. Please try again.",
-    "roleLabel": "Role",
-    "selectRole": "Select a role",
-    "teamsLabel": "Teams"
   },
   "twoFactor": {
     "title": "Two-Factor Authentication",
@@ -1471,7 +1150,7 @@
     "hasInvitedYou": "{name} has invited you to join",
     "team": "Team",
     "loading": "Loading invitation...",
-    "joiningEvent": "Joining event...",
+    "joiningEvent": "Joining organization...",
     "processingInvitation": "Processing your invitation...",
     "invalidInvitation": "Invalid Invitation",
     "invalidInvitationMessage": "Invalid invitation",
@@ -1487,11 +1166,11 @@
     "emailMismatch": "Email Mismatch",
     "emailMismatchDescription": "This invitation was sent to {email}. Please log in with that email address.",
     "logoutAndUse": "Log out and use different account",
-    "bySigningIn": "By signing in, you agree to join {event}",
-    "afterSignUp": "After signing up and verifying your email, you'll automatically join {event}",
+    "bySigningIn": "By signing in, you agree to join {org}",
+    "afterSignUp": "After signing up and verifying your email, you'll automatically join {org}",
     "expiresOn": "This invitation expires on {date}",
     "welcomeToTeam": "Welcome to the team!",
-    "youveJoined": "You've joined {event}",
+    "youveJoined": "You've joined {org}",
     "goToLogin": "Go to Login",
     "login": "Login",
     "signUp": "Sign Up",
@@ -1669,7 +1348,7 @@
     "request": "Request Data Export",
     "requestSuccess": "Export request submitted. We'll notify you when it's ready.",
     "requestError": "Failed to request export. Please try again.",
-    "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, events, files metadata, and activity logs.",
+    "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, your organizations, files metadata, and activity logs.",
     "history": "Export History",
     "noHistory": "No previous exports"
   },
@@ -1690,13 +1369,13 @@
   },
   "blog": {
     "seo": {
-      "title": "Blog - Ceremly | Guides and Tips for Your Events",
-      "description": "Discover practical guides, tips and strategies to organize perfect events and manage RSVPs efficiently."
+      "title": "Blog | Guides and Tips",
+      "description": "Discover practical guides, tips and strategies to launch and grow your SaaS product."
     },
     "hero": {
       "badge": "Ideas & Resources",
-      "title": "Guides, Tips and Resources for Your Events",
-      "subtitle": "Practical articles to organize unforgettable events and manage RSVPs without stress."
+      "title": "Guides, Tips and Resources",
+      "subtitle": "Practical articles to launch your SaaS and grow it without stress."
     },
     "filter": {
       "all": "All",

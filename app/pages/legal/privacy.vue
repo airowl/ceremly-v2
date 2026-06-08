@@ -43,7 +43,7 @@ const { t } = useI18n()
                 </p>
 
                 <p>
-                  <strong>{{ t('privacy.sections.dataCollection.guestData') }}:</strong> {{ t('privacy.sections.dataCollection.guestDataDesc') }}
+                  <strong>{{ t('privacy.sections.dataCollection.teamMemberData') }}:</strong> {{ t('privacy.sections.dataCollection.teamMemberDataDesc') }}
                 </p>
 
                 <p>
@@ -170,7 +170,7 @@ const { t } = useI18n()
 
               <div class="space-y-2 text-muted leading-relaxed">
                 <p><strong class="text-default">{{ t('privacy.sections.retention.accountData') }}:</strong> {{ t('privacy.sections.retention.accountDataPeriod') }}</p>
-                <p><strong class="text-default">{{ t('privacy.sections.retention.guestData') }}:</strong> {{ t('privacy.sections.retention.guestDataPeriod') }}</p>
+                <p><strong class="text-default">{{ t('privacy.sections.retention.orgData') }}:</strong> {{ t('privacy.sections.retention.orgDataPeriod') }}</p>
                 <p><strong class="text-default">{{ t('privacy.sections.retention.gallery') }}:</strong> {{ t('privacy.sections.retention.galleryPeriod') }}</p>
                 <p><strong class="text-default">{{ t('privacy.sections.retention.vendors') }}:</strong> {{ t('privacy.sections.retention.vendorsPeriod') }}</p>
               </div>
