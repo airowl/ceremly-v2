@@ -22,54 +22,53 @@ interface OrgInviteEmailProps {
     orgName: string;
     invitedByName: string;
     expiresInDays?: number;
+    appName: string;
 }
 
-const translations = {
+const buildTranslations = (appName: string) => ({
     it: {
-        preview: (org: string) => `Sei stato invitato a unirti a ${org} su Ceremly`,
+        preview: (org: string) => `Sei stato invitato a unirti a ${org} su ${appName}`,
         title: 'Sei stato invitato!',
         greeting: 'Ciao,',
         intro: (invitedBy: string, org: string) =>
-            `${invitedBy} ti ha invitato a unirti all'organizzazione "${org}" su Ceremly.`,
+            `${invitedBy} ti ha invitato a unirti all'organizzazione "${org}" su ${appName}.`,
         joinTitle: 'Unisciti al team',
         joinText: 'Clicca il pulsante qui sotto per accettare l\'invito e unirti all\'organizzazione.',
         ctaButton: 'Accetta Invito',
         expiryNote: (days: number) => `Questo invito scadrà tra ${days} giorni.`,
         alternativeText: 'Se il pulsante non funziona, copia e incolla questo link nel tuo browser:',
-        accountNote: 'Se non hai ancora un account su Ceremly, potrai crearne uno gratuitamente.',
+        accountNote: `Se non hai ancora un account su ${appName}, potrai crearne uno gratuitamente.`,
         ignoreText: 'Se non ti aspettavi questo invito o non vuoi unirti, puoi semplicemente ignorare questa email.',
         signature: 'Cordiali saluti,',
-        team: 'Il Team di Ceremly',
-        copyright: '© 2026 Ceremly. Tutti i diritti riservati.',
+        team: `Il Team di ${appName}`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
         privacy: 'Privacy Policy',
         terms: 'Termini di Servizio',
         dpa: 'Data Processing Agreement',
-        footer: 'Hai ricevuto questa email perché qualcuno ti ha invitato su Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Roma, Italia',
+        footer: `Hai ricevuto questa email perché qualcuno ti ha invitato su ${appName}.`,
     },
     en: {
-        preview: (org: string) => `You've been invited to join ${org} on Ceremly`,
+        preview: (org: string) => `You've been invited to join ${org} on ${appName}`,
         title: "You've been invited!",
         greeting: 'Hi,',
         intro: (invitedBy: string, org: string) =>
-            `${invitedBy} has invited you to join the "${org}" organization on Ceremly.`,
+            `${invitedBy} has invited you to join the "${org}" organization on ${appName}.`,
         joinTitle: 'Join the team',
         joinText: 'Click the button below to accept the invitation and join the organization.',
         ctaButton: 'Accept Invitation',
         expiryNote: (days: number) => `This invitation will expire in ${days} days.`,
         alternativeText: "If the button doesn't work, copy and paste this link into your browser:",
-        accountNote: "If you don't have a Ceremly account yet, you can create one for free.",
+        accountNote: `If you don't have a ${appName} account yet, you can create one for free.`,
         ignoreText: "If you weren't expecting this invitation or don't want to join, you can simply ignore this email.",
         signature: 'Best regards,',
-        team: 'The Ceremly Team',
-        copyright: '© 2026 Ceremly. All rights reserved.',
+        team: `The ${appName} Team`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         dpa: 'Data Processing Agreement',
-        footer: 'You received this email because someone invited you to Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Rome, Italy',
+        footer: `You received this email because someone invited you to ${appName}.`,
     },
-};
+});
 
 const colors = {
     primary: '#19baf0',
@@ -166,8 +165,9 @@ export function OrgInviteEmail({
     orgName,
     invitedByName,
     expiresInDays = 7,
+    appName,
 }: OrgInviteEmailProps): React.ReactElement {
-    const t = translations[language];
+    const t = buildTranslations(appName)[language];
 
     return h(Html, { lang: language },
         h(Head),
@@ -175,7 +175,7 @@ export function OrgInviteEmail({
         h(Body, { style: styles.body },
             h(Container, { style: styles.container },
                 h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, 'Ceremly')
+                    h(Text, { style: styles.headerBrand }, appName)
                 ),
                 h(Section, { style: styles.content },
                     h(Text, { style: styles.title }, t.title),
@@ -212,9 +212,7 @@ export function OrgInviteEmail({
                     ),
                     h(Hr, { style: styles.divider }),
                     h(Text, { style: styles.footerNote },
-                        t.footer,
-                        h('br'),
-                        t.address
+                        t.footer
                     )
                 )
             )

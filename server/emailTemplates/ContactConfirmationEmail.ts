@@ -1,5 +1,5 @@
 // React Email template for contact form confirmation
-// Sent to the user after submitting the contact form (Ceremly)
+// Sent to the user after submitting the contact form
 // Uses React.createElement to avoid JSX/Vue conflicts
 
 import * as React from 'react';
@@ -20,46 +20,45 @@ interface ContactConfirmationEmailProps {
     language?: 'it' | 'en';
     userName: string;
     subject: string;
+    appName: string;
     siteUrl?: string;
 }
 
 // Translations
-const translations = {
+const buildTranslations = (appName: string) => ({
     it: {
-        preview: 'Abbiamo ricevuto il tuo messaggio - Ceremly',
+        preview: `Abbiamo ricevuto il tuo messaggio - ${appName}`,
         title: 'Messaggio ricevuto!',
         greeting: (name: string) => `Ciao ${name},`,
         intro: 'Grazie per averci contattato! Abbiamo ricevuto il tuo messaggio e il nostro team lo esaminerà al più presto.',
         subjectLabel: 'Oggetto del tuo messaggio:',
         responseNote: 'Ti risponderemo entro 24-48 ore lavorative.',
-        ctaButton: 'Visita Ceremly',
-        ctaText: 'Nel frattempo, scopri tutte le funzionalità che Ceremly può offrirti per la gestione dei tuoi eventi.',
+        ctaButton: `Visita ${appName}`,
+        ctaText: `Nel frattempo, scopri tutte le funzionalità che ${appName} ha da offrirti.`,
         signature: 'Cordiali saluti,',
-        team: 'Il Team di Ceremly',
-        copyright: '© 2026 Ceremly. Tutti i diritti riservati.',
+        team: `Il Team di ${appName}`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
         privacy: 'Privacy Policy',
         terms: 'Termini di Servizio',
         footer: 'Hai ricevuto questa email perché hai inviato un messaggio tramite il nostro modulo di contatto.',
-        address: 'Ceremly - Via Example 123, 00100 Roma, Italia',
     },
     en: {
-        preview: 'We received your message - Ceremly',
+        preview: `We received your message - ${appName}`,
         title: 'Message received!',
         greeting: (name: string) => `Hi ${name},`,
         intro: 'Thank you for contacting us! We have received your message and our team will review it as soon as possible.',
         subjectLabel: 'Subject of your message:',
         responseNote: 'We will get back to you within 24-48 business hours.',
-        ctaButton: 'Visit Ceremly',
-        ctaText: 'In the meantime, discover all the features that Ceremly can offer you for managing your events.',
+        ctaButton: `Visit ${appName}`,
+        ctaText: `In the meantime, discover all the features that ${appName} has to offer.`,
         signature: 'Best regards,',
-        team: 'The Ceremly Team',
-        copyright: '© 2026 Ceremly. All rights reserved.',
+        team: `The ${appName} Team`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         footer: 'You received this email because you sent a message through our contact form.',
-        address: 'Ceremly - Via Example 123, 00100 Rome, Italy',
     },
-};
+});
 
 // Brand colors
 const colors = {
@@ -200,9 +199,10 @@ export function ContactConfirmationEmail({
     language = 'it',
     userName,
     subject,
+    appName,
     siteUrl = 'https://example.com',
 }: ContactConfirmationEmailProps): React.ReactElement {
-    const t = translations[language];
+    const t = buildTranslations(appName)[language];
 
     return h(Html, { lang: language },
         h(Head),
@@ -211,7 +211,7 @@ export function ContactConfirmationEmail({
             h(Container, { style: styles.container },
                 // Header
                 h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, 'Ceremly')
+                    h(Text, { style: styles.headerBrand }, appName)
                 ),
                 // Content
                 h(Section, { style: styles.content },
@@ -244,9 +244,7 @@ export function ContactConfirmationEmail({
                     ),
                     h(Hr, { style: styles.divider }),
                     h(Text, { style: styles.footerNote },
-                        t.footer,
-                        h('br'),
-                        t.address
+                        t.footer
                     )
                 )
             )

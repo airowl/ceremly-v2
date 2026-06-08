@@ -1,5 +1,5 @@
 // React Email template for contact form admin notification
-// Sent to admin when someone submits the contact form (Ceremly)
+// Sent to admin when someone submits the contact form
 // Uses React.createElement to avoid JSX/Vue conflicts
 
 import * as React from 'react';
@@ -16,6 +16,7 @@ import {
 } from '@react-email/components';
 
 interface ContactNotificationEmailProps {
+    appName: string;
     senderName: string;
     senderEmail: string;
     subject: string;
@@ -156,6 +157,7 @@ const styles = {
 const h = React.createElement;
 
 export function ContactNotificationEmail({
+    appName,
     senderName,
     senderEmail,
     subject,
@@ -172,7 +174,7 @@ export function ContactNotificationEmail({
             h(Container, { style: styles.container },
                 // Header
                 h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, 'Ceremly'),
+                    h(Text, { style: styles.headerBrand }, appName),
                     h(Text, { style: styles.headerTitle }, 'Notifica Modulo Contatti')
                 ),
                 // Content
@@ -211,7 +213,7 @@ export function ContactNotificationEmail({
                 // Footer
                 h(Section, { style: styles.footer },
                     h(Hr, { style: styles.divider }),
-                    h(Text, null, 'Questa email è stata generata automaticamente dal modulo contatti di Ceremly.'),
+                    h(Text, null, `Questa email è stata generata automaticamente dal modulo contatti di ${appName}.`),
                     h(Text, null,
                         'Per rispondere, clicca su "Rispondi" oppure scrivi direttamente a ',
                         h(Link, { href: `mailto:${senderEmail}`, style: styles.emailLink }, senderEmail)

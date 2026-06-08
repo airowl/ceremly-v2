@@ -1,4 +1,4 @@
-// Email Templates - React Email based templates for Ceremly
+// Email Templates - React Email based templates
 // Export all email templates and render utility
 
 import { render } from '@react-email/render';
@@ -8,10 +8,13 @@ import { ResetPasswordEmail } from './ResetPasswordEmail';
 import { WaitingListEmail } from './WaitingListEmail';
 import { ContactConfirmationEmail } from './ContactConfirmationEmail';
 import { ContactNotificationEmail } from './ContactNotificationEmail';
-import { EventInviteEmail } from './EventInviteEmail';
 import { OrgInviteEmail } from './OrgInviteEmail';
+import { runtimeConfig } from '../utils/runtimeConfig';
 
 export type SupportedLanguage = 'it' | 'en';
+
+// Brand name from env (env-driven, fallback empty string)
+const appName = (): string => runtimeConfig.public.appName || '';
 
 // Re-export components
 export { VerificationEmail } from './VerificationEmail';
@@ -19,7 +22,6 @@ export { ResetPasswordEmail } from './ResetPasswordEmail';
 export { WaitingListEmail } from './WaitingListEmail';
 export { ContactConfirmationEmail } from './ContactConfirmationEmail';
 export { ContactNotificationEmail } from './ContactNotificationEmail';
-export { EventInviteEmail } from './EventInviteEmail';
 export { OrgInviteEmail } from './OrgInviteEmail';
 
 /**
@@ -34,6 +36,7 @@ export async function renderVerificationEmail(options: {
         language: options.language || 'it',
         verificationUrl: options.verificationUrl,
         userName: options.userName,
+        appName: appName(),
     });
     return await render(element);
 }
@@ -50,6 +53,7 @@ export async function renderResetPasswordEmail(options: {
         language: options.language || 'it',
         resetUrl: options.resetUrl,
         userName: options.userName,
+        appName: appName(),
     });
     return await render(element);
 }
@@ -62,6 +66,7 @@ export async function renderWaitingListEmail(options: {
 }): Promise<string> {
     const element = React.createElement(WaitingListEmail, {
         language: options.language || 'it',
+        appName: appName(),
     });
     return await render(element);
 }
@@ -80,6 +85,7 @@ export async function renderContactConfirmationEmail(options: {
         userName: options.userName,
         subject: options.subject,
         siteUrl: options.siteUrl,
+        appName: appName(),
     });
     return await render(element);
 }
@@ -102,26 +108,7 @@ export async function renderContactNotificationEmail(options: {
         message: options.message,
         language: options.language,
         submittedAt: options.submittedAt,
-    });
-    return await render(element);
-}
-
-/**
- * Render event invite email to HTML
- */
-export async function renderEventInviteEmail(options: {
-    language?: SupportedLanguage;
-    inviteUrl: string;
-    eventName: string;
-    invitedByName: string;
-    expiresInDays?: number;
-}): Promise<string> {
-    const element = React.createElement(EventInviteEmail, {
-        language: options.language || 'it',
-        inviteUrl: options.inviteUrl,
-        eventName: options.eventName,
-        invitedByName: options.invitedByName,
-        expiresInDays: options.expiresInDays || 7,
+        appName: appName(),
     });
     return await render(element);
 }
@@ -142,35 +129,32 @@ export async function renderOrgInviteEmail(options: {
         orgName: options.orgName,
         invitedByName: options.invitedByName,
         expiresInDays: options.expiresInDays || 7,
+        appName: appName(),
     });
     return await render(element);
 }
 
-// Email subject lines by language
+// Email subject lines by language (brand injected via appName)
 export const emailSubjects = {
     verification: {
-        it: 'Verifica il tuo indirizzo email - Ceremly',
-        en: 'Verify your email address - Ceremly',
+        it: `Verifica il tuo indirizzo email - ${appName()}`,
+        en: `Verify your email address - ${appName()}`,
     },
     resetPassword: {
-        it: 'Reimposta la tua password - Ceremly',
-        en: 'Reset your password - Ceremly',
+        it: `Reimposta la tua password - ${appName()}`,
+        en: `Reset your password - ${appName()}`,
     },
     waitingList: {
-        it: 'Benvenuto nella Waiting List di Ceremly!',
-        en: "Welcome to Ceremly's Waiting List!",
+        it: `Benvenuto nella Waiting List di ${appName()}!`,
+        en: `Welcome to ${appName()}'s Waiting List!`,
     },
     contactConfirmation: {
-        it: 'Abbiamo ricevuto il tuo messaggio - Ceremly',
-        en: 'We received your message - Ceremly',
+        it: `Abbiamo ricevuto il tuo messaggio - ${appName()}`,
+        en: `We received your message - ${appName()}`,
     },
     contactNotification: (subject: string) => `[Contatto] ${subject}`,
-    eventInvite: (eventName: string) => ({
-        it: `Sei stato invitato a unirti all'evento ${eventName} - Ceremly`,
-        en: `You've been invited to join the event ${eventName} - Ceremly`,
-    }),
     orgInvite: (orgName: string) => ({
-        it: `Sei stato invitato a unirti a ${orgName} - Ceremly`,
-        en: `You've been invited to join ${orgName} - Ceremly`,
+        it: `Sei stato invitato a unirti a ${orgName} - ${appName()}`,
+        en: `You've been invited to join ${orgName} - ${appName()}`,
     }),
 };

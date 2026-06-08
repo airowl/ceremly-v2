@@ -20,15 +20,16 @@ interface ResetPasswordEmailProps {
     language?: 'it' | 'en';
     resetUrl: string;
     userName?: string;
+    appName: string;
 }
 
 // Translations
-const translations = {
+const buildTranslations = (appName: string) => ({
     it: {
-        preview: 'Reimposta la tua password di Ceremly',
+        preview: `Reimposta la tua password di ${appName}`,
         title: 'Reimposta la tua password',
         greeting: (name?: string) => name ? `Ciao ${name},` : 'Ciao,',
-        intro: 'Abbiamo ricevuto una richiesta per reimpostare la password del tuo account Ceremly.',
+        intro: `Abbiamo ricevuto una richiesta per reimpostare la password del tuo account ${appName}.`,
         resetTitle: 'Reimposta la tua password',
         resetText: 'Clicca il pulsante qui sotto per creare una nuova password per il tuo account.',
         ctaButton: 'Reimposta Password',
@@ -37,19 +38,18 @@ const translations = {
         securityNote: 'Se non hai richiesto il reset della password, puoi ignorare questa email. La tua password rimarrà invariata.',
         securityTip: 'Per la tua sicurezza, non condividere mai questo link con nessuno.',
         signature: 'Cordiali saluti,',
-        team: 'Il Team di Ceremly',
-        copyright: '© 2026 Ceremly. Tutti i diritti riservati.',
+        team: `Il Team di ${appName}`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
         privacy: 'Privacy Policy',
         terms: 'Termini di Servizio',
         dpa: 'Data Processing Agreement',
-        footer: 'Hai ricevuto questa email perché hai richiesto il reset della password su Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Roma, Italia',
+        footer: `Hai ricevuto questa email perché hai richiesto il reset della password su ${appName}.`,
     },
     en: {
-        preview: 'Reset your Ceremly password',
+        preview: `Reset your ${appName} password`,
         title: 'Reset your password',
         greeting: (name?: string) => name ? `Hi ${name},` : 'Hi,',
-        intro: 'We received a request to reset the password for your Ceremly account.',
+        intro: `We received a request to reset the password for your ${appName} account.`,
         resetTitle: 'Reset your password',
         resetText: 'Click the button below to create a new password for your account.',
         ctaButton: 'Reset Password',
@@ -58,15 +58,14 @@ const translations = {
         securityNote: "If you didn't request a password reset, you can ignore this email. Your password will remain unchanged.",
         securityTip: 'For your security, never share this link with anyone.',
         signature: 'Best regards,',
-        team: 'The Ceremly Team',
-        copyright: '© 2026 Ceremly. All rights reserved.',
+        team: `The ${appName} Team`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         dpa: 'Data Processing Agreement',
-        footer: 'You received this email because you requested a password reset on Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Rome, Italy',
+        footer: `You received this email because you requested a password reset on ${appName}.`,
     },
-};
+});
 
 // Brand colors
 const colors = {
@@ -226,8 +225,9 @@ export function ResetPasswordEmail({
     language = 'it',
     resetUrl,
     userName,
+    appName,
 }: ResetPasswordEmailProps): React.ReactElement {
-    const t = translations[language];
+    const t = buildTranslations(appName)[language];
 
     return h(Html, { lang: language },
         h(Head),
@@ -236,16 +236,14 @@ export function ResetPasswordEmail({
             h(Container, { style: styles.container },
                 // Header
                 h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, 'Ceremly')
+                    h(Text, { style: styles.headerBrand }, appName)
                 ),
                 // Content
                 h(Section, { style: styles.content },
                     h(Text, { style: styles.title }, t.title),
                     h(Text, { style: styles.paragraph }, t.greeting(userName)),
                     h(Text, { style: styles.paragraph },
-                        t.intro.split('Ceremly')[0],
-                        h('strong', null, 'Ceremly'),
-                        t.intro.split('Ceremly')[1]
+                        ...t.intro.split(appName).flatMap((part, i) => i === 0 ? [part] : [h('strong', { key: i }, appName), part])
                     ),
                     // Highlight Box
                     h(Section, { style: styles.highlightBox },
@@ -282,11 +280,7 @@ export function ResetPasswordEmail({
                         h(Link, { href: 'https://example.com/dpa', style: styles.footerLink }, t.dpa)
                     ),
                     h(Hr, { style: styles.divider }),
-                    h(Text, { style: styles.footerNote },
-                        t.footer,
-                        h('br'),
-                        t.address
-                    )
+                    h(Text, { style: styles.footerNote }, t.footer)
                 )
             )
         )

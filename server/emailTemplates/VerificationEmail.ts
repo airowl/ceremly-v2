@@ -20,51 +20,50 @@ interface VerificationEmailProps {
     language?: 'it' | 'en';
     verificationUrl: string;
     userName?: string;
+    appName: string;
 }
 
 // Translations
-const translations = {
+const buildTranslations = (appName: string) => ({
     it: {
-        preview: 'Verifica il tuo indirizzo email per Ceremly',
+        preview: `Verifica il tuo indirizzo email per ${appName}`,
         title: 'Verifica il tuo indirizzo email',
         greeting: (name?: string) => name ? `Ciao ${name},` : 'Ciao,',
-        intro: 'Grazie per esserti registrato su Ceremly, la piattaforma SaaS completa per la gestione degli eventi.',
+        intro: `Grazie per esserti registrato su ${appName}, il boilerplate SaaS multi-tenant.`,
         verifyTitle: 'Verifica il tuo account',
         verifyText: 'Clicca il pulsante qui sotto per verificare il tuo indirizzo email e attivare il tuo account.',
         ctaButton: 'Verifica Email',
         expiryNote: 'Questo link scadrà tra 24 ore.',
         alternativeText: 'Se il pulsante non funziona, copia e incolla questo link nel tuo browser:',
-        ignoreText: 'Se non hai creato un account su Ceremly, puoi ignorare questa email.',
+        ignoreText: `Se non hai creato un account su ${appName}, puoi ignorare questa email.`,
         signature: 'Cordiali saluti,',
-        team: 'Il Team di Ceremly',
-        copyright: '© 2026 Ceremly. Tutti i diritti riservati.',
+        team: `Il Team di ${appName}`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
         privacy: 'Privacy Policy',
         terms: 'Termini di Servizio',
         dpa: 'Data Processing Agreement',
-        footer: 'Hai ricevuto questa email perché hai creato un account su Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Roma, Italia',
+        footer: `Hai ricevuto questa email perché hai creato un account su ${appName}.`,
     },
     en: {
-        preview: 'Verify your email address for Ceremly',
+        preview: `Verify your email address for ${appName}`,
         title: 'Verify your email address',
         greeting: (name?: string) => name ? `Hi ${name},` : 'Hi,',
-        intro: 'Thank you for signing up for Ceremly, the complete SaaS platform for event management.',
+        intro: `Thank you for signing up for ${appName}, the multi-tenant SaaS boilerplate.`,
         verifyTitle: 'Verify your account',
         verifyText: 'Click the button below to verify your email address and activate your account.',
         ctaButton: 'Verify Email',
         expiryNote: 'This link will expire in 24 hours.',
         alternativeText: "If the button doesn't work, copy and paste this link into your browser:",
-        ignoreText: "If you didn't create an account on Ceremly, you can ignore this email.",
+        ignoreText: `If you didn't create an account on ${appName}, you can ignore this email.`,
         signature: 'Best regards,',
-        team: 'The Ceremly Team',
-        copyright: '© 2026 Ceremly. All rights reserved.',
+        team: `The ${appName} Team`,
+        copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         dpa: 'Data Processing Agreement',
-        footer: 'You received this email because you created an account on Ceremly.',
-        address: 'Ceremly - Via Example 123, 00100 Rome, Italy',
+        footer: `You received this email because you created an account on ${appName}.`,
     },
-};
+});
 
 // Brand colors
 const colors = {
@@ -214,8 +213,9 @@ export function VerificationEmail({
     language = 'it',
     verificationUrl,
     userName,
+    appName,
 }: VerificationEmailProps): React.ReactElement {
-    const t = translations[language];
+    const t = buildTranslations(appName)[language];
 
     return h(Html, { lang: language },
         h(Head),
@@ -224,16 +224,16 @@ export function VerificationEmail({
             h(Container, { style: styles.container },
                 // Header
                 h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, 'Ceremly')
+                    h(Text, { style: styles.headerBrand }, appName)
                 ),
                 // Content
                 h(Section, { style: styles.content },
                     h(Text, { style: styles.title }, t.title),
                     h(Text, { style: styles.paragraph }, t.greeting(userName)),
                     h(Text, { style: styles.paragraph },
-                        t.intro.split('Ceremly')[0],
-                        h('strong', null, 'Ceremly'),
-                        t.intro.split('Ceremly')[1]
+                        ...t.intro.split(appName).flatMap((part, i) =>
+                            i === 0 ? [part] : [h('strong', { key: i }, appName), part]
+                        )
                     ),
                     // Highlight Box
                     h(Section, { style: styles.highlightBox },
@@ -266,11 +266,7 @@ export function VerificationEmail({
                         h(Link, { href: 'https://example.com/dpa', style: styles.footerLink }, t.dpa)
                     ),
                     h(Hr, { style: styles.divider }),
-                    h(Text, { style: styles.footerNote },
-                        t.footer,
-                        h('br'),
-                        t.address
-                    )
+                    h(Text, { style: styles.footerNote }, t.footer)
                 )
             )
         )
