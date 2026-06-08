@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { t, locale, setLocale } = useI18n()
+const appName = computed(() => useRuntimeConfig().public.appName || '')
 </script>
 
 <template>
@@ -10,7 +11,7 @@ const { t, locale, setLocale } = useI18n()
                     <div class="flex h-6 w-6 items-center justify-center rounded bg-primary-500 text-white">
                         <span class="material-symbols-outlined text-sm">mark_email_read</span>
                     </div>
-                    <span class="text-lg font-bold">Ceremly</span>
+                    <span class="text-lg font-bold">{{ appName }}</span>
                 </NuxtLink>
 
                 <div class="flex flex-wrap justify-center gap-8">

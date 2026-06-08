@@ -2,6 +2,7 @@
 const { t, locale, setLocale } = useI18n()
 const { shouldShowAuthLinks } = useSiteMode()
 const route = useRoute()
+const appName = computed(() => useRuntimeConfig().public.appName || '')
 
 const isLandingPage = computed(() => route.path === '/' || route.path === '/en')
 
@@ -21,7 +22,7 @@ function scrollToWaitlist() {
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500 text-white">
                     <span class="material-symbols-outlined">mark_email_read</span>
                 </div>
-                <span class="text-xl font-bold tracking-tight">Ceremly</span>
+                <span class="text-xl font-bold tracking-tight">{{ appName }}</span>
             </NuxtLink>
 
             <div class="hidden items-center gap-8 md:flex">
