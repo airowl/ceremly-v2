@@ -27,9 +27,9 @@ Sections: hero, features, pricing, FAQ and a waiting-list form, all driven by i1
 1. **Navbar** — Sticky, logo + nav links + locale switcher (IT/EN) + auth link + CTA button
 2. **Hero** — Headline, subtitle, dual CTAs, social proof (avatars + stars), mockup cards (WhatsApp/Email notifications)
 3. **Waitlist Hero CTA** — Gradient banner with email form, honeypot anti-spam, UTM tracking
-4. **Features** — 3 cards (Email 1-click, WhatsApp Deep Link, Social Proof Dinamico)
-5. **Dashboard Section** — Mockup with event stats (confirmed/waiting/declined bars)
-6. **WhatsApp Section** — Phone mockup showing chat with Deep Link flow
+4. **Features** — feature cards (Organizations & Teams, Billing, Auth, Members, Integrations, Storage, Export)
+5. **Dashboard Section** — Mockup with org stats (active members / pending invites / deactivated bars)
+6. **Serverless Section** — Phone mockup showing the serverless stack (Vercel / Neon / QStash)
 7. **Pricing** — 3 dynamic plans from `usePricing()` API (Starter/Pro/Agency)
 8. **Final CTA** — Email form with waitlist signup
 9. **Footer** — Logo, legal links, locale dropdown, copyright
