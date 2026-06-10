@@ -1,66 +1,42 @@
 /**
- * Middleware globale per gestire i tre stati del sito.
- * Ha priorità '0' per essere eseguito prima di auth.global.ts
+ * Middleware globale client per i tre site mode (priorità 0, prima di auth.global).
  *
- * Comportamento per stato:
- * - waitinglist: Solo landing page e pagine legali accessibili (approccio allowlist)
- * - maintenance: Forza redirect a /maintenance per tutte le pagine tranne /maintenance
- * - active: Nessuna restrizione (comportamento normale)
+ * È solo UX (redirect lato client): la difesa reale è il middleware server. Le
+ * regole sono condivise con il server via shared/constants/siteMode, così client
+ * e server non divergono e nessuna locale è hardcodata.
+ *
+ * - maintenance: tutto → /maintenance (priorità assoluta)
+ * - waitinglist: allowlist (landing/legal/blog in ogni locale), il resto → "/"
+ * - active: nessuna restrizione
  */
+import {
+    isMaintenancePage,
+    isWaitingListAllowedPage,
+} from "~~/shared/constants/siteMode";
 
 export default defineNuxtRouteMiddleware((to) => {
-    // Esegui solo lato client per evitare errori SSR
-    if (import.meta.server) return
+    // Solo client: evita errori SSR (e il server ha già il suo enforcement).
+    if (import.meta.server) return;
 
-    const { siteMode, isMaintenanceMode, isWaitingListMode } = useSiteMode()
+    const { isMaintenanceMode, isWaitingListMode } = useSiteMode();
 
-    // ============================================
-    // MODALITÀ MANUTENZIONE - Priorità assoluta
-    // ============================================
+    // === MANUTENZIONE — priorità assoluta ===
     if (isMaintenanceMode.value) {
-        // Permetti solo accesso alla pagina di manutenzione
-        if (to.path !== '/maintenance') {
-            return navigateTo('/maintenance')
+        if (!isMaintenancePage(to.path)) {
+            return navigateTo("/maintenance");
         }
-        return
+        return;
     }
 
-    // Se NON siamo in maintenance ma stiamo cercando di accedere a /maintenance,
-    // redirect alla home
-    if (to.path === '/maintenance') {
-        return navigateTo('/')
+    // Fuori da maintenance, /maintenance non deve essere raggiungibile.
+    if (isMaintenancePage(to.path)) {
+        return navigateTo("/");
     }
 
-    // ============================================
-    // MODALITÀ WAITING LIST - Approccio allowlist
-    // Solo landing page e pagine legali accessibili
-    // ============================================
-    if (isWaitingListMode.value) {
-        // Route esatte consentite
-        const allowedPaths = [
-            '/',
-            '/en',
-        ]
-
-        // Prefissi consentiti (pagine legali e blog in tutte le lingue)
-        const allowedPrefixes = [
-            '/legal/',
-            '/en/legal/',
-            '/blogs',
-            '/en/blogs',
-        ]
-
-        const isAllowed =
-            allowedPaths.includes(to.path) ||
-            allowedPrefixes.some(prefix => to.path.startsWith(prefix))
-
-        if (!isAllowed) {
-            return navigateTo('/')
-        }
+    // === WAITING LIST — allowlist ===
+    if (isWaitingListMode.value && !isWaitingListAllowedPage(to.path)) {
+        return navigateTo("/");
     }
 
-    // ============================================
-    // MODALITÀ ACTIVE - Nessuna restrizione
-    // ============================================
-    // Lascia che il middleware auth.global.ts gestisca l'autenticazione
-})
+    // === ACTIVE — nessuna restrizione (gestisce auth.global) ===
+});

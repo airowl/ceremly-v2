@@ -5,30 +5,22 @@
  * - maintenance: Solo pagina di manutenzione accessibile
  */
 
-export type SiteMode = "waitinglist" | "active" | "maintenance";
+import { resolveSiteMode, type SiteMode } from "~~/shared/constants/siteMode";
+
+export type { SiteMode };
 
 export const useSiteMode = () => {
     const config = useRuntimeConfig();
 
     /**
-     * Ottiene la modalità corrente del sito dalla variabile d'ambiente
-     * Default: 'active' se non specificata
+     * Modalità corrente lato client, dal valore inlined in runtimeConfig.public.
+     * Best-effort: il client NON vede un eventuale override runtime (Redis) finché
+     * non ricarica; la difesa autorevole è il middleware server. La validazione/
+     * default è centralizzata in resolveSiteMode (shared).
      */
-    const siteMode = computed<SiteMode>(() => {
-        const mode = config.public.siteMode as string;
-
-        // Validazione del valore
-        if (
-            mode === "waitinglist" ||
-            mode === "active" ||
-            mode === "maintenance"
-        ) {
-            return mode;
-        }
-
-        // Default a 'active' se non specificato o valore non valido
-        return "active";
-    });
+    const siteMode = computed<SiteMode>(() =>
+        resolveSiteMode(config.public.siteMode)
+    );
 
     /**
      * Verifica se il sito è in modalità waiting list
