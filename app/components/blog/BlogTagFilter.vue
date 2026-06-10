@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlogTag } from '~/shared/utils/blog'
+import type { BlogTag } from '~~/shared/utils/blog'
 
 const { t } = useI18n()
 const route = useRoute()

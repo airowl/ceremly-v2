@@ -52,7 +52,7 @@ export function useSubscription() {
             const { data: accessData } = await creem.hasAccessGranted();
             hasAccess.value = !!accessData?.hasAccessGranted;
 
-            if (accessData?.subscription) {
+            if (accessData && 'subscription' in accessData && accessData.subscription) {
                 subscription.value = accessData.subscription;
             } else {
                 subscription.value = null;

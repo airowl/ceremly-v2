@@ -41,7 +41,7 @@
     "@upstash/qstash": "^2.11.0",
     "@upstash/redis": "^1.38.0",
     "@vueuse/core": "^14.0.0",
-    "@vueuse/nuxt": "^13.9.0",
+    "@vueuse/nuxt": "^14.3.0",
     "aws4fetch": "^1.0.20",
     "better-auth": "^1.4.5",
     "better-sqlite3": "^12.6.2",

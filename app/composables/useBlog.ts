@@ -1,4 +1,4 @@
-import type { BlogTag } from '~/shared/utils/blog'
+import type { BlogTag } from '~~/shared/utils/blog'
 
 export function useBlog() {
   /**

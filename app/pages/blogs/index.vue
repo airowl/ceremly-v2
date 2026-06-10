@@ -125,7 +125,8 @@ function goToPage(page: number) {
                     <span class="font-semibold text-gray-900">{{ activeTag }}</span>
                     ({{ filteredArticles.length }})
                 </p>
-                <button class="text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
+                <button
+class="text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
                     @click="navigateTo({ path: route.path })">
                     {{ t('blog.filter.clearFilter') }}
                 </button>
@@ -144,7 +145,8 @@ function goToPage(page: number) {
 
             <!-- Pagination -->
             <nav v-if="totalPages > 1" class="mt-12 flex items-center justify-center gap-2">
-                <button :disabled="currentPage <= 1"
+                <button
+:disabled="currentPage <= 1"
                     class="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40"
                     :class="currentPage > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400'"
                     @click="goToPage(currentPage - 1)">
@@ -153,7 +155,8 @@ function goToPage(page: number) {
                 </button>
 
                 <div class="flex gap-1">
-                    <button v-for="page in totalPages" :key="page"
+                    <button
+v-for="page in totalPages" :key="page"
                         class="h-10 w-10 rounded-lg text-sm font-medium transition-colors" :class="page === currentPage
                             ? 'bg-gray-900 text-white'
                             : 'text-gray-700 hover:bg-gray-100'" @click="goToPage(page)">
@@ -161,7 +164,8 @@ function goToPage(page: number) {
                     </button>
                 </div>
 
-                <button :disabled="currentPage >= totalPages"
+                <button
+:disabled="currentPage >= totalPages"
                     class="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40"
                     :class="currentPage < totalPages ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400'"
                     @click="goToPage(currentPage + 1)">

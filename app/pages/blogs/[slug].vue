@@ -111,8 +111,11 @@ useSchemaOrg([
             name: article.value?.author || '',
         })),
         'image': computed(() => article.value?.cover ? `${baseUrl}${article.value.cover}` : undefined),
-        'keywords': computed(() => article.value?.tags || []),
-        'inLanguage': computed(() => article.value?.locale === 'en' ? 'en-US' : 'it-IT'),
+        // Valori piani: i tipi di defineArticle non accettano getter/computed
+        // per questi campi; article è già risolto al setup (useAsyncData await)
+        // e ogni slug monta una nuova istanza della pagina.
+        'keywords': article.value?.tags || [],
+        'inLanguage': article.value?.locale === 'en' ? 'en-US' : 'it-IT',
     }),
 ])
 
@@ -171,7 +174,8 @@ useHead({
                         Blog
                     </NuxtLink>
                     <span v-if="firstTag" class="material-symbols-outlined text-xs">chevron_right</span>
-                    <NuxtLink v-if="firstTag" :to="{ path: localePath('/blogs'), query: { tag: firstTag } }"
+                    <NuxtLink
+v-if="firstTag" :to="{ path: localePath('/blogs'), query: { tag: firstTag } }"
                         class="hover:text-gray-700 transition-colors">
                         {{ firstTag }}
                     </NuxtLink>
@@ -183,7 +187,8 @@ useHead({
         <header class="border-b border-primary-200 bg-papaya-50 py-12 md:py-16">
             <div class="mx-auto max-w-3xl px-6 text-center lg:px-8">
                 <div v-if="firstTag" class="mb-4">
-                    <NuxtLink :to="{ path: localePath('/blogs'), query: { tag: firstTag } }"
+                    <NuxtLink
+:to="{ path: localePath('/blogs'), query: { tag: firstTag } }"
                         class="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm font-semibold text-primary-600 hover:bg-primary-100 transition-colors">
                         {{ firstTag }}
                     </NuxtLink>
@@ -228,9 +233,11 @@ useHead({
 
         <!-- Cover Image -->
         <div class="mx-auto -mt-1 max-w-5xl px-6 py-8 lg:px-8">
-            <div class="aspect-[21/9] overflow-hidden rounded-3xl shadow-2xl"
+            <div
+class="aspect-[21/9] overflow-hidden rounded-3xl shadow-2xl"
                 :class="{ 'bg-gradient-to-br from-primary-500 to-primary-700': !article.cover }">
-                <NuxtImg v-if="article.cover" :src="article.cover" :alt="article.coverAlt || article.title"
+                <NuxtImg
+v-if="article.cover" :src="article.cover" :alt="article.coverAlt || article.title"
                     class="h-full w-full object-cover" format="webp" quality="85"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1024px"
                     loading="eager" />

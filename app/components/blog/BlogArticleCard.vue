@@ -12,12 +12,15 @@ const props = defineProps<{
     cover?: string
     coverAlt?: string
     tags?: string[]
-    body?: { rawText?: string }
+    // BlogCollectionItem.body è un MarkdownRoot: accettiamo qualsiasi shape
+    // e leggiamo rawText (presente solo se esposto dalla query) via cast.
+    body?: unknown
   }
 }>()
 
 const readingTime = computed(() => {
-  const text = props.article.body?.rawText || props.article.description || ''
+  const text = (props.article.body as { rawText?: string } | undefined)?.rawText
+    || props.article.description || ''
   return calculateReadingTime(text)
 })
 

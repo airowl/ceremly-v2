@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlogTag } from '~/shared/utils/blog'
+import type { BlogTag } from '~~/shared/utils/blog'
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
@@ -94,7 +94,8 @@ async function onSubmit() {
             </h3>
 
             <div class="space-y-2">
-                <NuxtLink v-for="tag in tags" :key="tag.name"
+                <NuxtLink
+v-for="tag in tags" :key="tag.name"
                     :to="{ path: localePath('/blogs'), query: { tag: tag.name } }"
                     class="flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-gray-50">
                     <span class="font-medium text-gray-700">{{ tag.name }}</span>

@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     },
 
     modules: [
+        "@nuxt/eslint",
         "@nuxt/ui",
         "@vueuse/nuxt",
         "@nuxt/image",
@@ -139,7 +140,6 @@ export default defineNuxtConfig({
 
     i18n: {
         defaultLocale: "it",
-        lazy: true,
         locales: [
             { code: "en", iso: "en-US", file: "en-US.json", name: "EN" },
             { code: "it", iso: "it-IT", file: "it-IT.json", name: "IT" },
@@ -316,6 +316,22 @@ export default defineNuxtConfig({
 
     nitro: {
         preset: process.env.NUXT_NITRO_PRESET || "vercel",
+        // nitropack 2.11 mette "../**/*" nell'include del tsconfig server:
+        // senza questi exclude tutta app/ viene typecheckata nel project
+        // server (niente auto-import Vue → ~680 errori spuri).
+        typescript: {
+            tsConfig: {
+                exclude: [
+                    "../app/**/*",
+                    "../.vercel/**/*",
+                    // i config root appartengono al project node (tsconfig.node.json),
+                    // che carica i tipi dei moduli Nuxt (es. nuxt-security per
+                    // routeRules.security); il project server non li ha.
+                    "../nuxt.config.ts",
+                    "../content.config.ts",
+                ],
+            },
+        },
         routeRules: {
             "/.env": { redirect: "/404" },
             "/.git": { redirect: "/404" },

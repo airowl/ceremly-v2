@@ -12,12 +12,15 @@ const props = defineProps<{
         cover?: string
         coverAlt?: string
         tags?: string[]
-        body?: { rawText?: string }
+        // BlogCollectionItem.body è un MarkdownRoot: accettiamo qualsiasi shape
+        // e leggiamo rawText (presente solo se esposto dalla query) via cast.
+        body?: unknown
     }
 }>()
 
 const readingTime = computed(() => {
-    const text = props.article.body?.rawText || props.article.description || ''
+    const text = (props.article.body as { rawText?: string } | undefined)?.rawText
+        || props.article.description || ''
     return calculateReadingTime(text)
 })
 
@@ -27,7 +30,8 @@ const firstTag = computed(() => props.article.tags?.[0])
 </script>
 
 <template>
-    <NuxtLink :to="localePath(article.path)"
+    <NuxtLink
+:to="localePath(article.path)"
         class="group grid grid-cols-1 lg:grid-cols-5 overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-gray-100 transition-all duration-300 hover:shadow-2xl">
         <!-- Image -->
         <div class="relative lg:col-span-3 h-64 lg:h-auto overflow-hidden">
