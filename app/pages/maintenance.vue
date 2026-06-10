@@ -5,9 +5,14 @@ definePageMeta({
 });
 
 const { t } = useI18n();
+const config = useRuntimeConfig();
+const localePath = useLocalePath();
 
 const title = t("maintenance.title");
 const description = t("maintenance.description");
+const contactEmail = computed(() => config.public.appContactEmail || "");
+const appName = computed(() => config.public.appName || "");
+const currentYear = new Date().getFullYear();
 
 useSeoMeta({
     titleTemplate: "",
@@ -15,7 +20,19 @@ useSeoMeta({
     ogTitle: title,
     description,
     ogDescription: description,
+    // La pagina di manutenzione non va indicizzata (vale anche per /en/maintenance).
+    robots: "noindex, nofollow",
 });
+
+// Semantica HTTP corretta per un downtime pianificato: rispondere 503 + Retry-After
+// sul documento (non un 200), così i crawler sanno che è temporaneo. Solo SSR.
+if (import.meta.server) {
+    const event = useRequestEvent();
+    if (event) {
+        setResponseStatus(event, 503);
+        event.node.res.setHeader("Retry-After", "3600");
+    }
+}
 
 const features = computed(() => [
     {
@@ -74,7 +91,7 @@ const stats = computed(() => [
 
                         <UButton
 size="xl" color="neutral" variant="outline" icon="i-heroicons-information-circle"
-                            external to="mailto:support@example.com">
+                            external :to="`mailto:${contactEmail}`">
                             {{ $t('maintenance.cta.contact') }}
                         </UButton>
                     </div>
@@ -124,20 +141,20 @@ size="xl" color="neutral" variant="outline" icon="i-heroicons-information-circle
 
             <!-- Waiting List Section -->
             <UContainer id="waiting-list" class="py-16 lg:py-24">
-                <LandingNewsletterCTA />
+                <LandingWaitingListCTA />
             </UContainer>
 
             <!-- Footer -->
             <UContainer class="py-8 border-t border-gray-200 dark:border-gray-800">
                 <div
                     class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                    <p>© 2025 Your Company. {{ $t('maintenance.footer.rights') }}</p>
+                    <p>© {{ currentYear }} {{ appName }}. {{ $t('maintenance.footer.rights') }}</p>
                     <div class="flex gap-4">
-                        <NuxtLink to="/legal/tos" class="hover:text-primary transition-colors">
+                        <NuxtLink :to="localePath('/legal/tos')" class="hover:text-primary transition-colors">
                             {{ $t('maintenance.footer.terms') }}
                         </NuxtLink>
                         <span>•</span>
-                        <a href="mailto:support@example.com" class="hover:text-primary transition-colors">
+                        <a :href="`mailto:${contactEmail}`" class="hover:text-primary transition-colors">
                             {{ $t('maintenance.footer.contact') }}
                         </a>
                     </div>

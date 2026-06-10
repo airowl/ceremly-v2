@@ -2,14 +2,7 @@
 const config = useRuntimeConfig()
 const localePath = useLocalePath()
 
-const links = computed(() => [
-    {
-        label: 'Email',
-        icon: 'i-heroicons-envelope',
-        to: 'mailto:support@example.com',
-        external: true
-    }
-])
+const contactMailto = computed(() => `mailto:${config.public.appContactEmail || ''}`)
 </script>
 
 <template>
@@ -46,7 +39,7 @@ const links = computed(() => [
                     icon="i-heroicons-envelope"
                     color="neutral"
                     variant="ghost"
-                    to="mailto:support@example.com"
+                    :to="contactMailto"
                     external
                     class="hidden sm:inline-flex"
                 >
@@ -57,7 +50,7 @@ const links = computed(() => [
                     icon="i-heroicons-envelope"
                     color="neutral"
                     variant="ghost"
-                    to="mailto:support@example.com"
+                    :to="contactMailto"
                     external
                     class="sm:hidden"
                 />

@@ -87,7 +87,9 @@ export default defineNuxtConfig({
         // Landing page con SSR/SSG
         "/": { prerender: true },
         "/en": { prerender: true }, // English landing page
-        "/maintenance": { prerender: true },
+        // /maintenance: SSR (non prerender) per poter rispondere 503 + Retry-After
+        // sul documento durante un downtime pianificato.
+        "/maintenance": { ssr: true, prerender: false },
         // "/pricing": { prerender: true }, // Page not yet created
 
         // Dashboard & Events management - client-side only
@@ -171,6 +173,7 @@ export default defineNuxtConfig({
             "/signup",
             "/invite/**",
             "/maintenance",
+            "/en/maintenance",
             "/legal/**",
         ],
         // i18n integration: generates alternate hreflang entries
@@ -188,6 +191,8 @@ export default defineNuxtConfig({
             "/login",
             "/signup",
             "/invite/",
+            "/maintenance",
+            "/en/maintenance",
             "/_nuxt/",
             "/.env",
             "/wp-admin/",
