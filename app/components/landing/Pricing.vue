@@ -100,7 +100,8 @@ const pricingPlans = computed(() => {
 </script>
 
 <template>
-    <UPageSection id="pricing" :title="$t('landing.pricing.title')" :description="$t('landing.pricing.description')"
+    <UPageSection
+id="pricing" :title="$t('landing.pricing.title')" :description="$t('landing.pricing.description')"
         class="scroll-mt-20">
 
         <!-- Billing Toggle -->
@@ -138,7 +139,8 @@ const pricingPlans = computed(() => {
 
         <!-- Pricing Cards Grid -->
         <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-6">
-            <UCard v-for="plan in pricingPlans" :key="plan.id" :ui="{
+            <UCard
+v-for="plan in pricingPlans" :key="plan.id" :ui="{
                 body: 'p-6 sm:p-8'
             }" :class="[
                 'group relative overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col h-full',
@@ -146,7 +148,8 @@ const pricingPlans = computed(() => {
             ]">
                 <!-- Badge -->
                 <div v-if="plan.badge" class="mb-4">
-                    <UBadge color="primary" variant="subtle" size="md"
+                    <UBadge
+color="primary" variant="subtle" size="md"
                         class="animate-fade-in">
                         {{ plan.badge }}
                     </UBadge>
@@ -181,10 +184,12 @@ const pricingPlans = computed(() => {
                 <!-- Features List -->
                 <div class="mb-8 grow">
                     <ul class="space-y-4">
-                        <li v-for="(feature, index) in plan.features" :key="index"
+                        <li
+v-for="(feature, index) in plan.features" :key="index"
                             class="flex items-start gap-3 group/item animate-fade-in"
                             :style="{ animationDelay: `${index * 50}ms` }">
-                            <UIcon name="i-heroicons-check-circle-solid"
+                            <UIcon
+name="i-heroicons-check-circle-solid"
                                 class="w-5 h-5 text-primary shrink-0 mt-0.5 transition-transform group-hover/item:scale-110" />
                             <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                                 {{ feature }}
@@ -194,7 +199,8 @@ const pricingPlans = computed(() => {
                 </div>
 
                 <!-- CTA Button -->
-                <UButton :variant="plan.highlighted ? 'solid' : 'outline'"
+                <UButton
+:variant="plan.highlighted ? 'solid' : 'outline'"
                     :color="plan.highlighted ? 'primary' : 'neutral'" size="lg" block
                     class="group relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
                     :to="plan.to">

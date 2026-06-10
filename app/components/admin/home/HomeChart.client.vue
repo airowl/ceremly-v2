@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format } from 'date-fns'
+import type { Period, Range } from '~/types'
 const VisXYContainer = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisXYContainer))
 const VisLine = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisLine))
 const VisAxis = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisAxis))
 const VisArea = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisArea))
 const VisCrosshair = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisCrosshair))
 const VisTooltip = defineAsyncComponent(() => import('@unovis/vue').then(m => m.VisTooltip))
-import type { Period, Range } from '~/types'
 
 const cardRef = useTemplateRef<HTMLElement | null>('cardRef')
 

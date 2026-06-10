@@ -125,13 +125,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                     </div>
 
                     <!-- Title -->
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
+                    <h2
+class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
                         style="animation-delay: 100ms">
                         {{ t('landing.waitingList.title') }}
                     </h2>
 
                     <!-- Description -->
-                    <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
+                    <p
+class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
                         style="animation-delay: 200ms">
                         {{ t('landing.waitingList.description') }}
                     </p>
@@ -150,19 +152,22 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                                     name="website"
                                     autocomplete="off"
                                     tabindex="-1"
-                                />
+                                >
                             </div>
 
                             <UFormField name="email" class="w-full">
-                                <UFieldGroup size="xl"
+                                <UFieldGroup
+size="xl"
                                     class="transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02] w-full">
-                                    <UInput v-model="state.email" type="email"
+                                    <UInput
+v-model="state.email" type="email"
                                         :placeholder="t('landing.waitingList.placeholder')" icon="i-lucide-mail" size="xl"
                                         :disabled="loading || submitted" color="neutral" variant="outline" :ui="{
                                             base: 'transition-all duration-200',
                                             leadingIcon: 'transition-all duration-200 group-hover:scale-110'
                                         }" class="flex-1" />
-                                    <UButton type="submit" size="xl" :loading="loading" :disabled="submitted"
+                                    <UButton
+type="submit" size="xl" :loading="loading" :disabled="submitted"
                                         color="primary" :icon="submitted ? 'i-lucide-check' : 'i-lucide-arrow-right'"
                                         :trailing="!submitted"
                                         class="group relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 active:scale-95">
@@ -189,9 +194,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </div>
 
                 <!-- Features -->
-                <div class="mx-auto max-w-3xl mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up-fade"
+                <div
+class="mx-auto max-w-3xl mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up-fade"
                     style="animation-delay: 400ms">
-                    <div v-for="(feature, index) in features" :key="index"
+                    <div
+v-for="(feature, index) in features" :key="index"
                         class="flex flex-col items-center text-center p-4 rounded-xl bg-cornsilk-50/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-cornsilk-50/80 dark:hover:bg-gray-900/80">
                         <div
                             class="size-10 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110">

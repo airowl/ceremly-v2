@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { sub } from 'date-fns'
-import type { DropdownMenuItem } from '@nuxt/ui'
+import type { DropdownMenuItem, NavigationMenuItem  } from '@nuxt/ui'
 import type { Period, Range } from '~/types'
-import type { NavigationMenuItem } from "@nuxt/ui"
 import { useUserStore } from '~/stores/userStore'
 
 const userStore = useUserStore()
@@ -140,7 +139,8 @@ const groups = computed(() => [
 <template>
     <NuxtLayout name="dashboard">
         <template #sidebar>
-            <UDashboardSidebar id="default" v-model:open="open" collapsible resizable class="bg-default border-r border-default"
+            <UDashboardSidebar
+id="default" v-model:open="open" collapsible resizable class="bg-default border-r border-default"
                 :ui="{ footer: 'lg:border-t lg:border-default' }">
                 <template #header="{ collapsed }">
                     <NuxtLink to="/dashboard" class="flex items-center gap-3" :class="collapsed ? 'justify-center' : ''">

@@ -95,13 +95,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                     </div>
 
                     <!-- Title -->
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
+                    <h2
+class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
                         style="animation-delay: 100ms">
                         {{ t('landing.contact.title') }}
                     </h2>
 
                     <!-- Description -->
-                    <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
+                    <p
+class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
                         style="animation-delay: 200ms">
                         {{ t('landing.contact.description') }}
                     </p>

@@ -95,37 +95,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <UPageSection id="features" :title="$t('landing.features.mainTitle')"
+    <UPageSection
+id="features" :title="$t('landing.features.mainTitle')"
         :description="$t('landing.features.mainDescription')"
         class="scroll-mt-[calc(var(--header-height)+140px+128px+96px)]">
         <UPageGrid class="lg:grid-cols-2 gap-8">
-            <UPageCard v-for="(feature, index) in features" :key="index" :ref="(el) => { if (el) cardRefs[index] = el }"
+            <UPageCard
+v-for="(feature, index) in features" :key="index" :ref="(el) => { if (el) cardRefs[index] = el }"
                 :icon="feature.icon" class="feature-card relative overflow-hidden group cursor-default" :class="{
                     'is-visible': isVisible[index]
                 }">
                 <!-- Sfondo gradiente animato -->
-                <div class="absolute inset-0 bg-linear-to-br from-primary-500/5 via-transparent to-primary-600/5
+                <div
+class="absolute inset-0 bg-linear-to-br from-primary-500/5 via-transparent to-primary-600/5
                            opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <!-- Effetto luce che segue il mouse -->
-                <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                <div
+class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style="background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--color-primary-500), 0.1), transparent 40%)" />
 
                 <template #icon>
                     <div class="relative">
                         <!-- Icona con animazione pulse al hover -->
-                        <UIcon :name="feature.icon" class="w-8 h-8 transition-all duration-300
+                        <UIcon
+:name="feature.icon" class="w-8 h-8 transition-all duration-300
                                    group-hover:scale-110 group-hover:rotate-3
                                    text-primary-500 dark:text-primary-400" />
                         <!-- Ring animato dietro l'icona -->
-                        <div class="absolute inset-0 -z-10 rounded-full bg-primary-500/20
+                        <div
+class="absolute inset-0 -z-10 rounded-full bg-primary-500/20
                                    scale-0 group-hover:scale-150 opacity-0 group-hover:opacity-100
                                    transition-all duration-500 blur-md" />
                     </div>
                 </template>
 
                 <template #title>
-                    <span class="text-xl font-bold text-gray-900 dark:text-white
+                    <span
+class="text-xl font-bold text-gray-900 dark:text-white
                                  transition-colors duration-300
                                  group-hover:text-primary-600 dark:group-hover:text-primary-400
                                  inline-block">
@@ -135,12 +142,14 @@ onUnmounted(() => {
 
                 <template #description>
                     <div class="space-y-3 mt-2 relative z-10">
-                        <p class="text-base font-semibold text-primary-600 dark:text-primary-400
+                        <p
+class="text-base font-semibold text-primary-600 dark:text-primary-400
                                   transform transition-all duration-300
                                   group-hover:translate-x-1">
                             {{ feature.subtitle }}
                         </p>
-                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line
+                        <p
+class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line
                                   transform transition-all duration-300 delay-75">
                             {{ feature.description }}
                         </p>
@@ -148,7 +157,8 @@ onUnmounted(() => {
                 </template>
 
                 <!-- Decorazione angolo -->
-                <div class="absolute top-0 right-0 w-20 h-20 transform translate-x-10 -translate-y-10
+                <div
+class="absolute top-0 right-0 w-20 h-20 transform translate-x-10 -translate-y-10
                             bg-linear-to-br from-primary-400/20 to-transparent rounded-full
                             scale-0 group-hover:scale-100 transition-transform duration-700 blur-2xl" />
             </UPageCard>

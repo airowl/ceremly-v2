@@ -27,7 +27,7 @@ watch(() => props.uri, async (newUri) => {
         :src="qrCodeDataUrl"
         alt="2FA QR Code"
         class="w-48 h-48"
-    />
+    >
     <div v-else class="w-48 h-48 flex items-center justify-center bg-muted rounded-lg">
         <UIcon name="i-lucide-loader-2" class="w-8 h-8 animate-spin" />
     </div>

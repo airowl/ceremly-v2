@@ -240,13 +240,13 @@ onMounted(async () => {
                 <template #right>
                     <UTooltip :text="$t('subscription.sync')">
                         <UButton
-                            @click="handleSync"
                             :loading="isSyncing"
                             color="neutral"
                             variant="ghost"
                             icon="i-lucide-refresh-cw"
                             size="sm"
                             square
+                            @click="handleSync"
                         />
                     </UTooltip>
                 </template>
@@ -284,18 +284,18 @@ onMounted(async () => {
                         <div class="flex items-center gap-3">
                             <UButton
                                 v-if="isPaid"
-                                @click="showCancelModal = true"
                                 color="neutral"
                                 variant="soft"
                                 size="sm"
+                                @click="showCancelModal = true"
                             >
                                 {{ $t('subscription.actions.cancelSubscription') }}
                             </UButton>
                             <UButton
-                                @click="scrollToPricing"
                                 color="primary"
                                 size="sm"
                                 leading-icon="i-lucide-arrow-up"
+                                @click="scrollToPricing"
                             >
                                 {{ $t('subscription.actions.upgradePlan') }}
                             </UButton>
@@ -307,24 +307,24 @@ onMounted(async () => {
                 <div class="flex justify-center">
                     <div class="inline-flex items-center rounded-xl bg-muted/30 p-1">
                         <button
-                            @click="billingPeriod = 'monthly'"
                             :class="[
                                 'px-5 py-2 text-sm font-medium rounded-lg transition-colors',
                                 billingPeriod === 'monthly'
                                     ? 'bg-default text-default shadow-sm'
                                     : 'text-muted hover:text-default'
                             ]"
+                            @click="billingPeriod = 'monthly'"
                         >
                             {{ $t('subscription.changePlan.monthly') }}
                         </button>
                         <button
-                            @click="billingPeriod = 'yearly'"
                             :class="[
                                 'px-5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
                                 billingPeriod === 'yearly'
                                     ? 'bg-default text-default shadow-sm'
                                     : 'text-muted hover:text-default'
                             ]"
+                            @click="billingPeriod = 'yearly'"
                         >
                             {{ $t('subscription.changePlan.yearly') }}
                             <span v-if="plans[1]?.price.savings" class="text-xs text-success-600 font-semibold">-{{ plans[1]?.price.savings }}%</span>
@@ -398,12 +398,12 @@ onMounted(async () => {
 
                         <!-- CTA Button -->
                         <UButton
-                            @click="handleSelectPlan(plan.id)"
                             :loading="isLoading && !isCurrentPlan(plan.id)"
                             :disabled="isCurrentPlan(plan.id)"
                             :color="getPlanButtonColor(plan.id)"
                             :variant="isCurrentPlan(plan.id) ? 'soft' : plan.id === RECOMMENDED_PLAN_ID ? 'solid' : 'outline'"
                             block
+                            @click="handleSelectPlan(plan.id)"
                         >
                             {{ getPlanButtonLabel(plan.id) }}
                         </UButton>
@@ -428,12 +428,12 @@ onMounted(async () => {
                                 <span>{{ $t('subscription.paymentMethods.description') }}</span>
                             </div>
                             <UButton
-                                @click="handleOpenPortalPayment"
                                 :loading="isPortalLoadingPayment"
                                 color="neutral"
                                 variant="outline"
                                 size="sm"
                                 leading-icon="i-lucide-external-link"
+                                @click="handleOpenPortalPayment"
                             >
                                 {{ $t('subscription.paymentMethods.cta') }}
                             </UButton>
@@ -448,12 +448,12 @@ onMounted(async () => {
                                 <span>{{ $t('subscription.billingHistory.description') }}</span>
                             </div>
                             <UButton
-                                @click="handleOpenPortalBilling"
                                 :loading="isPortalLoadingBilling"
                                 color="neutral"
                                 variant="outline"
                                 size="sm"
                                 leading-icon="i-lucide-external-link"
+                                @click="handleOpenPortalBilling"
                             >
                                 {{ $t('subscription.billingHistory.cta') }}
                             </UButton>
@@ -489,10 +489,10 @@ onMounted(async () => {
 
                         <template #footer>
                             <div class="flex justify-end gap-3">
-                                <UButton @click="showCancelModal = false" variant="ghost" color="neutral">
+                                <UButton variant="ghost" color="neutral" @click="showCancelModal = false">
                                     {{ $t('subscription.cancelModal.keepSubscription') }}
                                 </UButton>
-                                <UButton @click="handleCancelSubscription" color="error" :loading="isCanceling">
+                                <UButton color="error" :loading="isCanceling" @click="handleCancelSubscription">
                                     <UIcon name="i-lucide-x-circle" class="w-4 h-4 mr-1.5" />
                                     {{ $t('subscription.cancelModal.confirmCancel') }}
                                 </UButton>

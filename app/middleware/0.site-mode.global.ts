@@ -10,7 +10,7 @@
 
 export default defineNuxtRouteMiddleware((to) => {
     // Esegui solo lato client per evitare errori SSR
-    if (process.server) return
+    if (import.meta.server) return
 
     const { siteMode, isMaintenanceMode, isWaitingListMode } = useSiteMode()
 

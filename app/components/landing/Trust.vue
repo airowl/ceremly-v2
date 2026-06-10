@@ -40,12 +40,14 @@ const features = ref([
                     </UBadge>
                 </div>
 
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 animate-fade-in-up"
+                <h2
+class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 animate-fade-in-up"
                     style="animation-delay: 0.2s">
                     {{ t('landing.trust.title') }}
                 </h2>
 
-                <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400 animate-fade-in-up"
+                <p
+class="text-lg sm:text-xl text-gray-600 dark:text-gray-400 animate-fade-in-up"
                     style="animation-delay: 0.3s">
                     {{ t('landing.trust.subtitle') }}
                 </p>
@@ -53,7 +55,8 @@ const features = ref([
 
             <!-- Features Grid -->
             <div class="grid lg:grid-cols-2 gap-8 lg:gap-12">
-                <div v-for="(feature, index) in features" :key="index" class="group relative animate-fade-in-up"
+                <div
+v-for="(feature, index) in features" :key="index" class="group relative animate-fade-in-up"
                     :style="`animation-delay: ${0.4 + index * 0.1}s`">
 
                     <!-- Card -->
@@ -63,8 +66,7 @@ const features = ref([
                             <!-- Icon -->
                             <div class="relative inline-flex">
                                 <div
-                                    class="absolute inset-0 bg-primary-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                </div>
+                                    class="absolute inset-0 bg-primary-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
                                 <div
                                     class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 group-hover:bg-primary-500 group-hover:text-white transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
                                     <UIcon :name="feature.icon" class="w-7 h-7" />
@@ -84,12 +86,14 @@ const features = ref([
 
                                 <!-- Benefits List -->
                                 <ul class="space-y-3 pt-2">
-                                    <li v-for="(benefit, bIndex) in feature.benefits" :key="bIndex"
+                                    <li
+v-for="(benefit, bIndex) in feature.benefits" :key="bIndex"
                                         class="flex items-start gap-3 text-gray-700 dark:text-gray-300 group/item">
                                         <div class="shrink-0 mt-1">
                                             <div
                                                 class="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover/item:bg-primary-500 group-hover/item:scale-125 transition-all duration-300">
-                                                <UIcon name="i-lucide-check"
+                                                <UIcon
+name="i-lucide-check"
                                                     class="w-3 h-3 text-primary-600 dark:text-primary-400 group-hover/item:text-white" />
                                             </div>
                                         </div>
@@ -102,8 +106,7 @@ const features = ref([
 
                     <!-- Decorative gradient (visible on hover) -->
                     <div
-                        class="absolute -inset-px rounded-lg bg-linear-to-r from-primary-500 to-primary-600 opacity-0 group-hover:opacity-10 blur transition-opacity duration-500 -z-10">
-                    </div>
+                        class="absolute -inset-px rounded-lg bg-linear-to-r from-primary-500 to-primary-600 opacity-0 group-hover:opacity-10 blur transition-opacity duration-500 -z-10"/>
                 </div>
             </div>
 
@@ -113,7 +116,8 @@ const features = ref([
                     {{ t('landing.trust.cta.description') }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <UButton :to="ctaLink"
+                    <UButton
+:to="ctaLink"
                         color="primary" size="lg" trailing-icon="i-lucide-arrow-right"
                         class="group relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 active:scale-95">
                         <span class="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
@@ -122,7 +126,8 @@ const features = ref([
                         <div
                             class="absolute inset-0 bg-linear-to-r from-primary-600 to-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </UButton>
-                    <UButton color="neutral" variant="subtle" size="lg" trailing-icon="i-lucide-info"
+                    <UButton
+color="neutral" variant="subtle" size="lg" trailing-icon="i-lucide-info"
                         :to="ctaLink"
                         class="group relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-neutral/25 active:scale-95">
                         <span class="relative z-10 transition-transform duration-300 group-hover:translate-x-1">

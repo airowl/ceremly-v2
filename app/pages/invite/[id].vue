@@ -177,9 +177,9 @@ onMounted(async () => {
                 <template v-else>
                     <UTabs
                         :model-value="mode"
-                        @update:model-value="mode = $event as 'login' | 'signup'"
                         :items="[{ label: $t('invite.login'), value: 'login' }, { label: $t('invite.signUp'), value: 'signup' }]"
                         class="mb-4"
+                        @update:model-value="mode = $event as 'login' | 'signup'"
                     />
                     <template v-if="mode === 'login'">
                         <UAuthForm :fields="loginFields" :schema="loginSchema" title="" :default-values="{ email: defaultEmail }" @submit="onLoginSubmit" />

@@ -98,7 +98,8 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-    <UAuthForm :fields="fields" :schema="schema" :providers="providers" :title="$t('auth.signup.title')"
+    <UAuthForm
+:fields="fields" :schema="schema" :providers="providers" :title="$t('auth.signup.title')"
         :submit="{ label: $t('auth.signup.createAccount') }" @submit="onSubmit">
         <template #description>
             {{ $t('auth.signup.alreadyHaveAccount') }} <ULink to="/login" class="text-primary font-medium">{{ $t('auth.signup.login') }}</ULink>.

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide, h } from 'vue'
-import { resolveComponent } from 'vue'
+import { ref, computed, provide, h, resolveComponent  } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useAsyncData } from 'nuxt/app'
 import type { TableColumn } from '@nuxt/ui'

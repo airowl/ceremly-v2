@@ -11,7 +11,8 @@ const {
 <template>
     <div class="space-y-3">
         <!-- Notifiche di errore (limiti raggiunti) -->
-        <div v-for="notification in errorNotifications" :key="notification.id"
+        <div
+v-for="notification in errorNotifications" :key="notification.id"
              class="p-4 border border-red-200 bg-red-50 rounded-lg">
             <div class="flex items-start gap-3">
                 <UIcon name="i-lucide-alert-triangle" class="size-5 text-red-600 shrink-0 mt-0.5" />
@@ -39,7 +40,8 @@ const {
         </div>
 
         <!-- Notifiche di avviso (limiti vicini) -->
-        <div v-for="notification in warningNotifications" :key="notification.id"
+        <div
+v-for="notification in warningNotifications" :key="notification.id"
              class="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
             <div class="flex items-start gap-3">
                 <UIcon name="i-lucide-alert-circle" class="size-5 text-yellow-600 shrink-0 mt-0.5" />

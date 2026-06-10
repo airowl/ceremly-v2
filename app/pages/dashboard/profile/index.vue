@@ -306,11 +306,13 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
                     <div class="relative group">
                         <div
                             class="size-24 rounded-full bg-default-100 overflow-hidden border-2 border-default-200 flex items-center justify-center">
-                            <img v-if="avatarUrl" :src="avatarUrl" :alt="t('profile.profilePhoto')"
-                                class="w-full h-full object-cover" />
+                            <img
+v-if="avatarUrl" :src="avatarUrl" :alt="t('profile.profilePhoto')"
+                                class="w-full h-full object-cover" >
                             <UIcon v-else name="i-lucide-user" class="size-10 text-default-400" />
                         </div>
-                        <button type="button"
+                        <button
+type="button"
                             class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-lg hover:scale-105 transition-transform"
                             :disabled="isUploading" @click="triggerFileInput">
                             <UIcon name="i-lucide-pencil" class="size-3.5" />
@@ -320,14 +322,17 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
                         <h4 class="font-semibold text-default-900">{{ t('profile.profilePhoto') }}</h4>
                         <p class="text-sm text-default-500 mb-3">{{ t('profile.photoDescription') }}</p>
                         <div class="flex gap-2">
-                            <UButton :label="t('profile.uploadNew')" color="primary" size="sm" :loading="isUploading"
+                            <UButton
+:label="t('profile.uploadNew')" color="primary" size="sm" :loading="isUploading"
                                 @click="triggerFileInput" />
-                            <UButton v-if="avatarUrl" :label="t('profile.removePhoto')" color="neutral" variant="soft"
+                            <UButton
+v-if="avatarUrl" :label="t('profile.removePhoto')" color="neutral" variant="soft"
                                 size="sm" @click="removeAvatar" />
                         </div>
                     </div>
-                    <input ref="fileInputRef" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
-                        class="hidden" @change="onFileSelected" />
+                    <input
+ref="fileInputRef" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+                        class="hidden" @change="onFileSelected" >
                 </div>
 
                 <USeparator class="mb-6" />
@@ -335,22 +340,26 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
                 <!-- Name, Email, Phone Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <UFormField name="fullName" :label="t('profile.name')" required>
-                        <UInput v-model="profile.fullName" autocomplete="off" class="w-full"
+                        <UInput
+v-model="profile.fullName" autocomplete="off" class="w-full"
                             :disabled="profileStore.isLoading" />
                     </UFormField>
 
                     <UFormField name="email" :label="t('profile.email')" required>
-                        <UInput v-model="profile.email" type="email" autocomplete="off" class="w-full"
+                        <UInput
+v-model="profile.email" type="email" autocomplete="off" class="w-full"
                             :disabled="profileStore.isLoading" />
                     </UFormField>
 
                     <UFormField name="phone" :label="t('profile.phone')">
-                        <UInput v-model="profile.phone" type="tel" autocomplete="off" class="w-full"
+                        <UInput
+v-model="profile.phone" type="tel" autocomplete="off" class="w-full"
                             :disabled="profileStore.isLoading" />
                     </UFormField>
 
                     <div class="flex items-end">
-                        <UButton :label="t('common.saveChanges')" color="primary" type="submit"
+                        <UButton
+:label="t('common.saveChanges')" color="primary" type="submit"
                             :loading="isSubmitting || profileStore.isLoading"
                             :disabled="isSubmitting || profileStore.isLoading" class="w-full sm:w-auto" />
                     </div>
@@ -362,12 +371,14 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
         <UPageCard :title="t('profile.preferences')" variant="subtle">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <UFormField :label="t('profile.language')">
-                    <USelect v-model="selectedLocale" :items="languageOptions" value-key="value" class="w-full"
+                    <USelect
+v-model="selectedLocale" :items="languageOptions" value-key="value" class="w-full"
                         @update:model-value="onLocaleChange" />
                 </UFormField>
 
                 <UFormField :label="t('profile.timezone')">
-                    <USelect v-model="selectedTimezone" :items="timezoneOptions" value-key="value" class="w-full"
+                    <USelect
+v-model="selectedTimezone" :items="timezoneOptions" value-key="value" class="w-full"
                         @update:model-value="onTimezoneChange" />
                 </UFormField>
             </div>
@@ -376,31 +387,36 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
         <!-- Section: Security -->
         <UPageCard :title="t('profile.security')" variant="subtle">
             <template v-if="!profileStore.isOAuthUser">
-                <UForm :schema="passwordSchema" :state="password" :validate="validatePassword"
+                <UForm
+:schema="passwordSchema" :state="password" :validate="validatePassword"
                     @submit="onPasswordSubmit">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <UFormField name="current" :label="t('profile.currentPassword')">
-                            <UInput v-model="password.current" type="password" placeholder="••••••••" class="w-full"
+                            <UInput
+v-model="password.current" type="password" placeholder="••••••••" class="w-full"
                                 autocomplete="current-password"
                                 :disabled="isPasswordSubmitting || profileStore.isLoading" />
                         </UFormField>
 
                         <UFormField name="new" :label="t('profile.newPassword')">
-                            <UInput v-model="password.new" type="password"
+                            <UInput
+v-model="password.new" type="password"
                                 :placeholder="t('profile.validation.passwordTooShort')" class="w-full"
                                 autocomplete="new-password"
                                 :disabled="isPasswordSubmitting || profileStore.isLoading" />
                         </UFormField>
 
                         <UFormField name="confirm" :label="t('profile.confirmPassword')">
-                            <UInput v-model="password.confirm" type="password" placeholder="••••••••" class="w-full"
+                            <UInput
+v-model="password.confirm" type="password" placeholder="••••••••" class="w-full"
                                 autocomplete="new-password"
                                 :disabled="isPasswordSubmitting || profileStore.isLoading" />
                         </UFormField>
                     </div>
 
                     <div class="flex justify-end mt-4">
-                        <UButton :label="t('profile.updatePassword')" color="neutral" type="submit"
+                        <UButton
+:label="t('profile.updatePassword')" color="neutral" type="submit"
                             :loading="isPasswordSubmitting || profileStore.isLoading"
                             :disabled="isPasswordSubmitting || profileStore.isLoading" />
                     </div>

@@ -7,7 +7,7 @@ import { admin, openAPI, organization, twoFactor } from "better-auth/plugins";
 import { v7 as uuidv7 } from "uuid";
 import * as schema from "../database/schema";
 import { asc, eq } from "drizzle-orm";
-import { type SupportedLanguage } from "../emailTemplates";
+import type { SupportedLanguage } from "../emailTemplates";
 import { logAudit } from "./audit";
 import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";

@@ -72,7 +72,8 @@ const stats = computed(() => [
                             {{ $t('maintenance.cta.notify') }}
                         </UButton>
 
-                        <UButton size="xl" color="neutral" variant="outline" icon="i-heroicons-information-circle"
+                        <UButton
+size="xl" color="neutral" variant="outline" icon="i-heroicons-information-circle"
                             external to="mailto:support@example.com">
                             {{ $t('maintenance.cta.contact') }}
                         </UButton>

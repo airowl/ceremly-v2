@@ -48,7 +48,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <UPageSection id="howItWorks" :title="t('landing.howItWorks.title')" :description="t('landing.howItWorks.subtitle')"
+    <UPageSection
+id="howItWorks" :title="t('landing.howItWorks.title')" :description="t('landing.howItWorks.subtitle')"
         :ui="{
             container: 'max-w-7xl mx-auto',
             title: 'text-4xl lg:text-5xl font-bold text-center',
@@ -62,17 +63,20 @@ onMounted(() => {
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div
                 class="absolute -top-40 -right-40 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl animate-pulse-slow" />
-            <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl animate-pulse-slow"
+            <div
+class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl animate-pulse-slow"
                 style="animation-delay: 1s;" />
         </div>
 
         <div class="mt-16 space-y-8 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8 relative">
-            <div v-for="(step, index) in steps" :key="index" :class="[
+            <div
+v-for="(step, index) in steps" :key="index" :class="[
                 'relative group transition-all duration-700 ease-out',
                 cardsVisible[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
             ]">
                 <!-- Animated Connector Line -->
-                <div v-if="index < steps.length - 1" :class="[
+                <div
+v-if="index < steps.length - 1" :class="[
                     'hidden lg:block absolute top-20 left-full w-full h-0.5 -translate-y-1/2 z-0',
                     'bg-linear-to-r from-primary-500/50 via-primary-400/30 to-transparent',
                     'transition-all duration-700',
@@ -83,7 +87,8 @@ onMounted(() => {
                         class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
                 </div>
 
-                <UCard :class="[
+                <UCard
+:class="[
                     'h-full transition-all duration-500 ease-out',
                     'hover:shadow-2xl hover:shadow-primary-500/10 hover:-translate-y-2',
                     'hover:border-primary-200 dark:hover:border-primary-800',
@@ -97,7 +102,8 @@ onMounted(() => {
                     }">
                     <!-- Step Number & Icon -->
                     <div class="flex items-start justify-between">
-                        <div :class="[
+                        <div
+:class="[
                             'flex items-center justify-center w-16 h-16 rounded-2xl',
                             'bg-primary-100 dark:bg-primary-900/20',
                             'transition-all duration-500 ease-out transform-gpu',
@@ -105,13 +111,15 @@ onMounted(() => {
                             'group-hover:scale-110 group-hover:rotate-3',
                             'group-hover:shadow-lg group-hover:shadow-primary-500/20'
                         ]">
-                            <UIcon :name="step.icon" :class="[
+                            <UIcon
+:name="step.icon" :class="[
                                 'w-8 h-8 text-primary-600 dark:text-primary-400',
                                 'transition-all duration-500',
                                 'group-hover:scale-110 group-hover:-rotate-3'
                             ]" />
                         </div>
-                        <div :class="[
+                        <div
+:class="[
                             'text-6xl font-bold leading-none select-none',
                             'text-gray-200 dark:text-gray-800',
                             'transition-all duration-500',
@@ -124,7 +132,8 @@ onMounted(() => {
 
                     <!-- Step Title -->
                     <div class="space-y-3">
-                        <h3 :class="[
+                        <h3
+:class="[
                             'text-2xl font-bold text-gray-900 dark:text-white',
                             'transition-colors duration-300',
                             'group-hover:text-primary-700 dark:group-hover:text-primary-300'
@@ -138,13 +147,15 @@ onMounted(() => {
                     </div>
 
                     <!-- Highlight/Result -->
-                    <div :class="[
+                    <div
+:class="[
                         'flex items-start gap-3 pt-4',
                         'border-t border-gray-200 dark:border-gray-700',
                         'transition-all duration-300',
                         'group-hover:border-primary-300 dark:group-hover:border-primary-700'
                     ]">
-                        <div :class="[
+                        <div
+:class="[
                             'shrink-0 mt-0.5 transition-all duration-500',
                             'group-hover:translate-x-1 group-hover:scale-110'
                         ]">
@@ -157,7 +168,8 @@ onMounted(() => {
                     </div>
 
                     <!-- Hover glow effect -->
-                    <div :class="[
+                    <div
+:class="[
                         'absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100',
                         'transition-opacity duration-500',
                         'bg-linear-to-br from-primary-500/5 via-transparent to-transparent',
@@ -168,11 +180,13 @@ onMounted(() => {
         </div>
 
         <!-- CTA Button -->
-        <div :class="[
+        <div
+:class="[
             'mt-12 flex justify-center transition-all duration-700 delay-500',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         ]">
-            <UButton :to="ctaLink" size="xl" :class="[
+            <UButton
+:to="ctaLink" size="xl" :class="[
                 'group relative overflow-hidden',
                 'transition-all duration-300 ease-out transform-gpu',
                 'hover:scale-105 hover:shadow-lg hover:shadow-primary/25',
@@ -181,7 +195,8 @@ onMounted(() => {
                 <span class="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
                     {{ t('landing.howItWorks.cta') }}
                 </span>
-                <UIcon name="i-lucide-arrow-right"
+                <UIcon
+name="i-lucide-arrow-right"
                     class="relative z-10 w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                 <div
                     class="absolute inset-0 bg-linear-to-r from-primary-600 to-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -43,9 +43,11 @@ const items = computed<DropdownMenuItem[][]>(() => {
 </script>
 
 <template>
-    <UDropdownMenu :items="items" :content="{ align: 'center', collisionPadding: 12 }"
+    <UDropdownMenu
+:items="items" :content="{ align: 'center', collisionPadding: 12 }"
         :ui="{ content: collapsed ? 'w-40' : 'w-(--reka-dropdown-menu-trigger-width)' }">
-        <UButton v-bind="{
+        <UButton
+v-bind="{
             ...selectedTeam,
             label: collapsed ? undefined : selectedTeam?.label,
             trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'

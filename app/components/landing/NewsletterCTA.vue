@@ -88,13 +88,15 @@ const features = [
                     </div>
 
                     <!-- Title -->
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
+                    <h2
+class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-4 animate-slide-up-fade"
                         style="animation-delay: 100ms">
                         {{ t('landing.newsletter.title') }}
                     </h2>
 
                     <!-- Description -->
-                    <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
+                    <p
+class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-slide-up-fade"
                         style="animation-delay: 200ms">
                         {{ t('landing.newsletter.description') }}
                     </p>
@@ -174,7 +176,8 @@ const features = [
                 </div>
 
                 <!-- Features -->
-                <div class="mx-auto max-w-3xl mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up-fade"
+                <div
+class="mx-auto max-w-3xl mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up-fade"
                     style="animation-delay: 400ms">
                     <div
                         v-for="(feature, index) in features"

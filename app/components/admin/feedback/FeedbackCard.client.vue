@@ -134,7 +134,8 @@ function truncateDescription(text: string, maxLength = 120) {
                     </div>
 
                     <!-- Admin status dropdown -->
-                    <UDropdownMenu v-if="isAdmin" :items="statusOptions.map((opt: { label: string; value: string }) => ({
+                    <UDropdownMenu
+v-if="isAdmin" :items="statusOptions.map((opt: { label: string; value: string }) => ({
                         label: opt.label,
                         onSelect: () => handleStatusChange(opt.value),
                         active: suggestion.status === opt.value,

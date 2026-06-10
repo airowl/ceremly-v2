@@ -17,7 +17,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="absolute w-full -top-px transition-all text-primary shrink-0" :class="[
+    <div
+class="absolute w-full -top-px transition-all text-primary shrink-0" :class="[
         isLoading ? 'animate-pulse' : (appear ? '' : 'opacity-0'),
         appeared ? 'duration-400' : 'duration-1000'
     ]">
@@ -39,7 +40,8 @@ onMounted(() => {
                 class="transition-all duration-700"
             />
             <defs>
-                <linearGradient id="paint0_linear_414_5526" x1="720" y1="0" x2="720" y2="181"
+                <linearGradient
+id="paint0_linear_414_5526" x1="720" y1="0" x2="720" y2="181"
                     gradientUnits="userSpaceOnUse">
                     <stop stop-color="currentColor">
                         <animate
@@ -51,7 +53,8 @@ onMounted(() => {
                     </stop>
                     <stop offset="1" stop-color="currentColor" stop-opacity="0" />
                 </linearGradient>
-                <linearGradient id="paint1_linear_414_5526" x1="0" y1="90.5" x2="1440" y2="90.5"
+                <linearGradient
+id="paint1_linear_414_5526" x1="0" y1="90.5" x2="1440" y2="90.5"
                     gradientUnits="userSpaceOnUse">
                     <stop stop-color="currentColor" stop-opacity="0" />
                     <stop offset="0.395" stop-color="currentColor">

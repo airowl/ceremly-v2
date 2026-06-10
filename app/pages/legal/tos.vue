@@ -11,7 +11,8 @@ const { t } = useI18n()
         <UPageBody>
             <UContainer>
                 <div class="max-w-4xl mx-auto">
-                    <UPageHeader headline="Legale" :title="t('tos.meta.title')"
+                    <UPageHeader
+headline="Legale" :title="t('tos.meta.title')"
                         :description="t('tos.meta.effectiveDate')" class="px-0" />
 
                     <!-- Intro -->
@@ -248,7 +249,8 @@ const { t } = useI18n()
                                 </div>
 
                                 <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
-                                    <UButton href="mailto:legal@example.com" color="primary" size="lg"
+                                    <UButton
+href="mailto:legal@example.com" color="primary" size="lg"
                                         leading-icon="i-lucide-mail">
                                         {{ t('tos.cta.contact') }}
                                     </UButton>

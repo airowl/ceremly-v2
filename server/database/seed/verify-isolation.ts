@@ -1,11 +1,11 @@
 import { config } from "dotenv";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
 
 import { findProjectsByOrg } from "../../repositories/projectRepository";
 import { findOrganizationsForUser } from "../../repositories/organizationRepository";
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { eq } from "drizzle-orm";
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
 
 /**
  * Gate di sicurezza FASE 1a: l'isolamento tenant.

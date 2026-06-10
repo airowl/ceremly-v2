@@ -1,11 +1,4 @@
 import { config } from "dotenv";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
-
-// Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
-// tsx standalone non è globale. Il service (via assertOwnership/getOrgId) lo usa senza
-// import esplicito → lo forniamo da h3 come global. Import dinamico per evitare TS2305/2352. Solo test.
-const h3mod = (await import("h3")) as unknown as { createError: unknown };
-(globalThis as { createError?: unknown }).createError = h3mod.createError;
 
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
@@ -16,6 +9,13 @@ import {
     updateProject,
     deleteProject,
 } from "../../services/project.service";
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+
+// Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
+// tsx standalone non è globale. Il service (via assertOwnership/getOrgId) lo usa senza
+// import esplicito → lo forniamo da h3 come global. Import dinamico per evitare TS2305/2352. Solo test.
+const h3mod = (await import("h3")) as unknown as { createError: unknown };
+(globalThis as { createError?: unknown }).createError = h3mod.createError;
 
 /**
  * Gate di sicurezza FASE 4: isolamento tenant a LIVELLO SERVICE (oltre il repository).

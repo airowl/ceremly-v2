@@ -1,9 +1,9 @@
 import { config } from "dotenv";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
 
 import { v7 as uuidv7 } from "uuid";
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
 
 /**
  * Seeder di sviluppo (phase 1a).
