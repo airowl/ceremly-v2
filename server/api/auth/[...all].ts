@@ -1,7 +1,7 @@
 import { useServerAuth } from "~~/server/utils/auth";
+import { getServerSiteMode } from "~~/server/utils/siteMode";
 
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig();
     const path = getRequestURL(event).pathname;
 
     // Always allow webhook requests (they come from Creem servers)
@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
         console.log(`[Creem Webhook] Received request at ${path}`);
     }
 
-    if (config.public.siteMode !== "active" && !isWebhook) {
+    // Auth disabilitata fuori da "active". Stessa authority del middleware
+    // (Redis override → env): un toggle runtime chiude/riapre auth coerentemente.
+    if (!isWebhook && (await getServerSiteMode()) !== "active") {
         return;
     }
 

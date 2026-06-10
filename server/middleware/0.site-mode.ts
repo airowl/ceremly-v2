@@ -1,87 +1,77 @@
 /**
- * Server middleware per bloccare accessi in modalità waitinglist/maintenance.
+ * Server middleware: enforcement dei site mode waitinglist/maintenance.
  *
- * Approccio blocklist mirato: blocca solo route specifiche (API + pagine app),
- * lascia passare tutto il resto (assets, interni Nuxt, HMR, payload, ecc.).
+ * È la difesa REALE (il middleware client è solo UX). Modalità autorevole letta
+ * via getServerSiteMode() — stessa authority del catch-all auth, così un toggle
+ * runtime aggiorna entrambi in modo coerente.
+ *
+ * Approccio blocklist mirato: il server vede OGNI request (asset, _nuxt, payload,
+ * API, jobs, cron), quindi blocca solo ciò che va bloccato e lascia passare il
+ * resto. Le regole locale-agnostiche vivono in shared/constants/siteMode.
  *
  * WAITINGLIST:
- *   - API bloccate: tutte tranne /api/waiting-list/**
- *   - Pagine bloccate: /login, /signup, /dashboard/**, /auth/**, /invite/**, /logout, /contactUs
- *
+ *   - API: tutte 503 tranne /api/waiting-list/** (+ jobs/cron sempre liberi)
+ *   - Pagine: /dashboard, /login, /signup, /logout, /auth, /invite, /contactUs
+ *     (in ogni locale) → redirect "/"
  * MAINTENANCE:
- *   - API: tutte bloccate
- *   - Pagine: tutte redirect a /maintenance
+ *   - API: tutte 503 (tranne jobs/cron)
+ *   - Pagine: tutte → /maintenance (che risponde 503 dal proprio setup)
  */
-let logged = false;
+import {
+    isMaintenancePage,
+    isWaitingListBlockedPage,
+} from "~~/shared/constants/siteMode";
+import { getServerSiteMode } from "../utils/siteMode";
 
-export default defineEventHandler((event) => {
-    const config = useRuntimeConfig();
-    const siteMode = config.public.siteMode;
-    const path = event.path;
+export default defineEventHandler(async (event) => {
+    // In fase di prerender (build) non c'è enforcement né Redis: le pagine
+    // statiche vanno catturate sempre nello stato "active".
+    if (import.meta.prerender) return;
 
-    // Log una sola volta all'avvio per verificare il valore
-    if (!logged) {
-        console.log(`[site-mode] siteMode = "${siteMode}" (type: ${typeof siteMode})`);
-        logged = true;
-    }
+    const path = event.path || "/";
 
-    // Nessuna restrizione in modalità active
-    if (!siteMode || siteMode === "active") return;
+    // Background jobs (QStash) e cron (Vercel): liberi a prescindere dal mode.
+    if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
 
-    // === MODALITÀ WAITING LIST ===
+    // Endpoint admin (protetti da admin API key): restano operabili anche in
+    // waitinglist/maintenance. Critico: il toggle stesso (/api/admin/site-mode)
+    // deve poter riaccendere il sito, altrimenti la maintenance è irreversibile via API.
+    if (path.startsWith("/api/admin/")) return;
+
+    // Risorse interne di Nuxt / payload prerenderizzati: mai gate
+    // (evita anche un round-trip Redis inutile sugli asset).
+    if (path.startsWith("/_")) return;
+
+    const siteMode = await getServerSiteMode();
+    if (siteMode === "active") return;
+
+    const isApi = path.startsWith("/api/");
+
+    // === WAITING LIST ===
     if (siteMode === "waitinglist") {
-        // --- Blocco API ---
-        if (path?.startsWith("/api/")) {
-            // API consentite in waitinglist
+        if (isApi) {
             if (path.startsWith("/api/waiting-list/")) return;
-            // Background jobs (QStash) e cron (Vercel) passano a prescindere dal site mode
-            if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
-
             throw createError({
                 statusCode: 503,
                 statusMessage: "Service Unavailable",
             });
         }
-
-        // --- Blocco pagine app ---
-        const blockedPagePrefixes = [
-            "/dashboard",
-            "/login",
-            "/signup",
-            "/logout",
-            "/auth",
-            "/invite",
-            "/contactUs",
-        ];
-
-        const isBlocked = blockedPagePrefixes.some(
-            (prefix) => path === prefix || path?.startsWith(`${prefix}/`)
-        );
-
-        if (isBlocked) {
+        if (isWaitingListBlockedPage(path)) {
             return sendRedirect(event, "/", 302);
         }
-
-        // Tutto il resto passa: landing, legal, assets, interni Nuxt, ecc.
         return;
     }
 
-    // === MODALITÀ MAINTENANCE ===
+    // === MAINTENANCE ===
     if (siteMode === "maintenance") {
-        if (path?.startsWith("/api/")) {
-            // Background jobs (QStash) e cron (Vercel) passano anche in maintenance
-            if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
+        if (isApi) {
             throw createError({
                 statusCode: 503,
                 statusMessage: "Service Unavailable",
             });
         }
-
-        if (path === "/maintenance") return;
-
-        // Non bloccare risorse interne di Nuxt
-        if (path?.startsWith("/_")) return;
-
+        // La pagina di manutenzione stessa (anche localizzata) passa e risponde 503.
+        if (isMaintenancePage(path)) return;
         return sendRedirect(event, "/maintenance", 302);
     }
 });
