@@ -43,7 +43,13 @@ export default defineEventHandler(async (event) => {
     if (path.startsWith("/_")) return;
 
     const siteMode = await getServerSiteMode();
-    if (siteMode === "active") return;
+    if (siteMode === "active") {
+        // La pagina /maintenance risponde 503 in SSR: fuori da maintenance non
+        // va servita. Specchia il client e la redirige a "/" (evita 503 spuri,
+        // es. un crawler che ritorna dopo Retry-After con il sito già attivo).
+        if (isMaintenancePage(path)) return sendRedirect(event, "/", 302);
+        return;
+    }
 
     const isApi = path.startsWith("/api/");
 
