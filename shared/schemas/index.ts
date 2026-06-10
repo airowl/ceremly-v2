@@ -1,6 +1,5 @@
 export * from "./common";
 export * from "./auth";
-export * from "./team";
 export * from "./file";
 export * from "./contact";
 export * from "./subscription";

@@ -16,17 +16,8 @@ import { findOrganizationsForUser } from "../repositories/organizationRepository
 import { findMembers } from "../repositories/memberRepository";
 import { findPendingInvitations } from "../repositories/invitationRepository";
 import { canCreateOrganization } from "./planLimit.service";
+import { generateUniqueOrgSlug } from "./org.service";
 import { logAudit } from "../utils/audit";
-
-/** Slug da nome: lowercase, spazi→-, solo [a-z0-9-]. */
-function slugify(name: string): string {
-    return name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 50);
-}
 
 /** Lista le org di cui l'utente è membro (con ruolo). */
 export async function listOrganizations(userId: string) {
@@ -52,7 +43,9 @@ export async function createOrganization(
     const created = await auth.api.createOrganization({
         body: {
             name: data.name,
-            slug: data.slug ?? slugify(data.name),
+            // Slug esplicito dell'utente in passthrough (409 gestito su conflitto);
+            // se omesso, slug univoco-per-costruzione (no collisione con UNIQUE).
+            slug: data.slug ?? generateUniqueOrgSlug(data.name),
             ...(data.logo ? { logo: data.logo } : {}),
         },
         headers: event.headers,

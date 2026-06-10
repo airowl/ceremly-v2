@@ -69,9 +69,14 @@ export async function sendContactMessage(
         language: language || 'it',
     });
 
-    // Get admin email from config
-    const adminEmail = (config.contactAdminEmail as string) || 'support@example.com';
-    const siteUrl = (config.public?.baseURL as string) || 'https://example.com';
+    // Admin email: nessun fallback hardcoded. Se manca la env, la notifica admin
+    // viene saltata con log rumoroso (il messaggio è già persistito in DB sopra),
+    // invece di inviare silenziosamente a un placeholder example.com.
+    const adminEmail = (config.contactAdminEmail as string) || '';
+    if (!adminEmail) {
+        console.error('[contact.service] NUXT_CONTACT_ADMIN_EMAIL non configurata: notifica admin saltata (messaggio comunque salvato in DB)');
+    }
+    const siteUrl = (config.public?.baseURL as string) || '';
     const lang = (language === 'en' ? 'en' : 'it') as SupportedLanguage;
 
     // Format date for notification
@@ -98,7 +103,7 @@ export async function sendContactMessage(
         }),
     ]);
 
-    // Send emails in parallel
+    // Send emails in parallel (notifica admin solo se l'email è configurata)
     await Promise.all([
         // Confirmation email to user
         sendEmail({
@@ -108,13 +113,15 @@ export async function sendContactMessage(
             html: confirmationHtml,
         }),
         // Notification email to admin
-        sendEmail({
-            to: adminEmail,
-            subject: emailSubjects.contactNotification(subject),
-            type: 'custom',
-            html: notificationHtml,
-            replyTo: email,
-        }),
+        ...(adminEmail
+            ? [sendEmail({
+                to: adminEmail,
+                subject: emailSubjects.contactNotification(subject),
+                type: 'custom',
+                html: notificationHtml,
+                replyTo: email,
+            })]
+            : []),
     ]);
 
     await logAudit(event, 'contact.sent', {

@@ -2,7 +2,7 @@
  * Data Export Service
  * Business logic for GDPR data export: collection, generation, and management.
  */
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { getDB } from '../utils/db';
 import {
@@ -278,10 +278,12 @@ export async function getExportHistory(userId: string, limit = 10) {
 export async function hasPendingExport(userId: string): Promise<boolean> {
     const db = getDB();
 
+    // Include 'processing': un export in lavorazione è ancora in volo, altrimenti
+    // l'utente potrebbe avviarne uno concorrente nella finestra pending→processing.
     const pending = await db.query.dataExports.findFirst({
         where: and(
             eq(dataExports.userId, userId),
-            eq(dataExports.status, 'pending'),
+            inArray(dataExports.status, ['pending', 'processing']),
         ),
     });
 

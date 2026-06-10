@@ -6,7 +6,6 @@ export {
     type PlanName,
     type UserPlanInfo,
     type EffectiveLimitsInfo,
-    getUserPlan,
     getUserPlanInfo,
     getUserCustomLimits,
     getEffectiveLimits,
@@ -16,6 +15,5 @@ export {
     countPendingInvitations,
     countReservedSlots,
     canAddTeamMember,
-    getTeamLimit,
     validateDowngrade,
 } from "../services/planLimit.service";

@@ -37,38 +37,6 @@ export interface EffectiveLimitsInfo {
 }
 
 /**
- * Get user's current plan from creem_subscription table
- * Returns 'starter' if no active subscription found
- */
-export async function getUserPlan(userId: string): Promise<PlanName> {
-    const db = getDB();
-
-    const subscriptions = await db
-        .select()
-        .from(schema.creem_subscription)
-        .where(
-            and(
-                eq(schema.creem_subscription.referenceId, userId),
-                eq(schema.creem_subscription.status, "active")
-            )
-        )
-        .limit(1);
-
-    const userSubscription = subscriptions[0];
-
-    if (!userSubscription) {
-        return "starter";
-    }
-
-    const plan = getPlanFromProductId(userSubscription.productId);
-    if (plan === "starter" || plan === "premium" || plan === "agency") {
-        return plan;
-    }
-
-    return "starter";
-}
-
-/**
  * Get user's plan info including limits
  */
 export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
@@ -282,26 +250,6 @@ export async function canAddTeamMember(
         current,
         limit: isUnlimited(limit) ? -1 : limit,
         plan: effectiveInfo.plan,
-    };
-}
-
-// ─── Route-level limit functions ─────────────────────────────────────
-
-/**
- * Get team limit for an event.
- * STUB phase 1a — query su schema.events rimosse; 1c risolve rispetto a org membership.
- */
-export async function getTeamLimit(
-    userId: string,
-    _eventId?: string,
-): Promise<{ allowed: boolean; current: number; limit: number; plan: string }> {
-    // STUB phase 1a — non interroga schema.events né schema.eventUsers; 1c è org-aware
-    const result = await canAddTeamMember(userId, '');
-    return {
-        allowed: result.allowed,
-        current: result.current,
-        limit: result.limit,
-        plan: result.plan,
     };
 }
 
