@@ -307,36 +307,91 @@ export async function getTeamLimit(
 
 // ─── Downgrade validation ────────────────────────────────────────────
 
+export interface DowngradeViolation {
+    resource: 'organizations' | 'team_members';
+    organizationId?: string;
+    organizationName?: string;
+    current: number;
+    limit: number;
+    message: string;
+}
+
 /**
- * Validate if user can downgrade to a new plan.
- * STUB phase 1a — query su schema.events/eventUsers/invitations rimosse;
- * 1c reimplementa con org-scoped checks.
+ * Validate if a user can downgrade to a new plan (org-aware).
+ * Confronta l'uso corrente con i limiti del piano di destinazione:
+ * - organizzazioni possedute vs max_organizations
+ * - membri+inviti per ogni org posseduta vs team_members
+ * Una violazione è current > limit (stare ESATTAMENTE al limite è consentito;
+ * a differenza della creazione che blocca su >=).
  */
 export async function validateDowngrade(
-    _userId: string,
-    _newPlan: string,
+    userId: string,
+    newPlan: string,
 ): Promise<{
     allowed: boolean;
-    violations: Array<{
-        resource: string;
-        eventId?: string;
-        eventName?: string;
-        current: number;
-        limit: number;
-        message: string;
-    }>;
+    violations: DowngradeViolation[];
     summary: {
-        totalEvents: number;
-        eventsChecked: number;
+        totalOrganizations: number;
+        organizationsChecked: number;
     };
 }> {
-    // STUB phase 1a — nessuna violazione rilevata; 1c verifica eventi/org reali
+    const db = getDB();
+    const targetLimits = getPlanLimits(newPlan);
+    const violations: DowngradeViolation[] = [];
+
+    // Org possedute dall'utente (owner) con nome, in una sola query.
+    const ownedOrgs = await db
+        .select({ id: schema.organization.id, name: schema.organization.name })
+        .from(schema.member)
+        .innerJoin(schema.organization, eq(schema.member.organizationId, schema.organization.id))
+        .where(and(eq(schema.member.userId, userId), eq(schema.member.role, "owner")));
+
+    const overLimit = (current: number, limit: number) => !isUnlimited(limit) && current > limit;
+
+    // 1. Limite numero di organizzazioni.
+    const orgCount = ownedOrgs.length;
+    if (overLimit(orgCount, targetLimits.max_organizations)) {
+        violations.push({
+            resource: 'organizations',
+            current: orgCount,
+            limit: targetLimits.max_organizations,
+            message: `Hai ${orgCount} organizzazioni ma il piano selezionato ne consente ${targetLimits.max_organizations}. Eliminane ${orgCount - targetLimits.max_organizations} prima del downgrade.`,
+        });
+    }
+
+    // 2. Limite membri team, per ogni org posseduta.
+    const teamLimit = targetLimits.team_members;
+    if (!isUnlimited(teamLimit)) {
+        const perOrg = await Promise.all(
+            ownedOrgs.map(async (org) => {
+                const [members, pending] = await Promise.all([
+                    countOrgMembers(org.id),
+                    countPendingOrgInvitations(org.id),
+                ]);
+                // current = teammate oltre l'owner + inviti pending (stessa semantica di canAddTeamMember).
+                return { org, current: Math.max(0, members - 1) + pending };
+            }),
+        );
+        for (const { org, current } of perOrg) {
+            if (overLimit(current, teamLimit)) {
+                violations.push({
+                    resource: 'team_members',
+                    organizationId: org.id,
+                    organizationName: org.name,
+                    current,
+                    limit: teamLimit,
+                    message: `L'organizzazione "${org.name}" ha ${current} membri/inviti ma il piano selezionato ne consente ${teamLimit}.`,
+                });
+            }
+        }
+    }
+
     return {
-        allowed: true,
-        violations: [],
+        allowed: violations.length === 0,
+        violations,
         summary: {
-            totalEvents: 0,   // STUB phase 1a — 0 fino a countUserOrganizations in 1c
-            eventsChecked: 0, // STUB phase 1a — 0 fino a org-scoped iteration in 1c
+            totalOrganizations: orgCount,
+            organizationsChecked: orgCount,
         },
     };
 }

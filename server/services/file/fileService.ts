@@ -3,7 +3,7 @@ import type { H3Event, EventHandlerRequest } from "~~/server/types/h3"
 import type { StorageProvider } from './types'
 import { extname } from 'node:path'
 import { format } from 'date-fns'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { v7 as uuidv7 } from 'uuid'
 import { file as fileTable } from '~~/server/database/schema'
 import { logAudit } from '~~/server/utils/audit'
@@ -85,8 +85,10 @@ export class FileService {
     if (eventId) {
       conditions.push(eq(fileTable.organizationId, eventId))
     } else {
-      // Global scope: only match files without an event
-      conditions.push(eq(fileTable.organizationId, ''))
+      // Scope globale: i record si inseriscono con organizationId NULL (riga
+      // `organizationId: eventId || null`), quindi serve IS NULL — `= ''` non
+      // matchava mai e la dedup era di fatto disattivata per i file globali.
+      conditions.push(isNull(fileTable.organizationId))
     }
 
     const [existing] = await db.select()
@@ -567,10 +569,12 @@ export class FileService {
       return { url: file.url }
     }
 
-    // Private file — check ownership and generate signed URL
-    if (userId && file.uploadedBy && file.uploadedBy !== userId) {
-      // If event file, permission should be checked at the API route level
-      // This is a basic ownership check for direct file access
+    // Private file — enforce ownership before signing a download URL.
+    // Criterio base uploader-only: i record legacy hanno organizationId NULL,
+    // quindi il match su uploadedBy resta il gate primario. 404 (non 403) per
+    // non fare da oracolo sull'esistenza degli id. Coerente con [id].delete.ts.
+    if (!userId || file.uploadedBy !== userId) {
+      throw createError({ statusCode: 404, message: 'File not found' })
     }
 
     const signedUrl = await this.storage.generatePresignedDownloadUrl(file.path, 300)

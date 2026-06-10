@@ -13,6 +13,7 @@ import {
   updateExportStatus,
 } from '../utils/dataExport'
 import { dispatch } from '~~/server/queue'
+import { useServerAuth } from '../utils/auth'
 import type { UpdateProfileInput } from '~~/shared/schemas/auth'
 
 // --- User Read Operations ---
@@ -208,6 +209,15 @@ export async function deleteAccount(
         updatedAt: new Date(),
       })
       .where(eq(user.id, userId))
+
+    // Revoca tutte le sessioni dell'utente corrente (DB + secondaryStorage Redis):
+    // senza questo l'account "cancellato" resta loggato fino alla scadenza della
+    // sessione cachata. revokeSessions opera sull'utente della sessione corrente.
+    try {
+      await useServerAuth().api.revokeSessions({ headers: h3Event.headers })
+    } catch (err) {
+      console.error('[user.service] deleteAccount: revoca sessioni fallita:', err)
+    }
 
     await logAudit(h3Event, 'user.account_deleted', {
       targetType: 'user',
