@@ -831,8 +831,8 @@ async function submitGroup() {
                         style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 18px; padding: 32px; border: 1.5px dashed var(--bone-300); border-radius: 12px; cursor: pointer; background: var(--bone);"
                     >
                         <CerIcon name="upload" :s="22" />
-                        <span style="font-size: 14px; font-weight: 500;">Scegli un file .csv</span>
-                        <span class="small muted">o trascinalo qui dentro</span>
+                        <span style="font-size: 14px; font-weight: 500;">{{ $t('ceremly.event.guests.importPickFile') }}</span>
+                        <span class="small muted">{{ $t('ceremly.event.guests.importDropHere') }}</span>
                         <input type="file" accept=".csv,text/csv" style="display: none;" @change="onCsvPicked">
                     </label>
                 </template>

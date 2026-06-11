@@ -854,8 +854,8 @@ async function save() {
                                 <option v-for="p in precedingQuestions" :key="p.id" :value="p.id">{{ p.label || $t('ceremly.event.rsvp.questionUntitled') }}</option>
                             </select>
                             <select v-model="selected.condition.op" class="cer-input" style="width: 90px; flex-shrink: 0;" @change="onCondOpChange">
-                                <option value="eq">è</option>
-                                <option value="neq">non è</option>
+                                <option value="eq">{{ $t('ceremly.event.rsvp.opEq') }}</option>
+                                <option value="neq">{{ $t('ceremly.event.rsvp.opNeq') }}</option>
                                 <option value="gt">&gt;</option>
                             </select>
 
