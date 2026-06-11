@@ -18,7 +18,7 @@ interface EventLookupResponse {
     type?: string;
 }
 
-const { t } = useI18n();
+const { t, locale, setLocale } = useI18n();
 const route = useRoute();
 const userStore = useUserStore();
 const { user } = useAuth();
@@ -156,6 +156,36 @@ onMounted(async () => {
                 <CerIcon name="settings" :s="15" />
                 <span>{{ $t('ceremly.layout.navSettings') }}</span>
             </NuxtLink>
+
+            <!-- Switch lingua IT/EN — raggiungibile da ogni pagina della dashboard -->
+            <div
+                class="cer-nav-item"
+                style="cursor: default; gap: 8px;"
+                :aria-label="$t('common.language')"
+            >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--ink-500); flex-shrink: 0;">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z" />
+                </svg>
+                <span
+                    role="button"
+                    tabindex="0"
+                    style="cursor: pointer;"
+                    :style="{ fontWeight: locale.startsWith('it') ? 600 : 400, color: locale.startsWith('it') ? 'var(--ink)' : 'var(--ink-500)' }"
+                    @click="setLocale('it')"
+                    @keydown.enter="setLocale('it')"
+                >IT</span>
+                <span style="color: var(--ink-300);">·</span>
+                <span
+                    role="button"
+                    tabindex="0"
+                    style="cursor: pointer;"
+                    :style="{ fontWeight: locale.startsWith('en') ? 600 : 400, color: locale.startsWith('en') ? 'var(--ink)' : 'var(--ink-500)' }"
+                    @click="setLocale('en')"
+                    @keydown.enter="setLocale('en')"
+                >EN</span>
+            </div>
 
             <div style="margin-top: 10px; padding: 10px 8px; border-top: 1px solid var(--bone-200); display: flex; align-items: center; gap: 10px;">
                 <div class="av sage">{{ initials }}</div>
