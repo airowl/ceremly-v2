@@ -1664,6 +1664,332 @@
     },
     "countdown": {
       "daysLabel": "days to go"
+    },
+    "guest": {
+      "seoInvited": "You're invited!",
+      "seoUnavailable": "Invitation not found",
+      "seoDescription": "Open your personal invitation and confirm your attendance in 30 seconds.",
+      "defaultGuestName": "guest",
+      "loadingInvite": "Opening your invitation…",
+      "errorTitle": "Invitation not found",
+      "errorHint": "Check the link you received or contact the person who invited you.",
+      "footerTagline": "made with care",
+      "bannerAnswered": "Your response:",
+      "person": "person",
+      "people": "people",
+      "edit": "Edit",
+      "summary": "Summary",
+      "saveToCalendar": "Save to calendar",
+      "editResponse": "Edit response",
+      "closeError": "Dismiss error message",
+      "attendanceYes": "I'll attend",
+      "attendanceNo": "I can't make it",
+      "attendanceMaybe": "Not sure yet",
+      "yes": "Yes",
+      "no": "No",
+      "companionFallback": "Guest {n}",
+      "summaryAttendance": "Attendance",
+      "summaryPeople": "People",
+      "summaryMessage": "Message",
+      "confirmYesTitle": "You'll be there.",
+      "confirmYesSub": "Thank you, {name}.",
+      "confirmYesQuote": "“You made us happy. See you soon.”",
+      "confirmNoTitle": "We'll miss you.",
+      "confirmNoSub": "Thank you for letting us know.",
+      "confirmNoQuote": "“We'll miss you, but you'll be with us in spirit.”",
+      "confirmMaybeTitle": "We hope to see you.",
+      "confirmMaybeSub": "Thanks! You can update your response any time.",
+      "confirmMaybeQuote": "“We're hoping for a yes. See you soon.”"
+    },
+    "home": {
+      "seo": {
+        "title": "Ceremly — Digital invitations and smart RSVPs",
+        "description": "Stop chasing confirmations on WhatsApp: one link, a digital invitation, and a dashboard that tells you who's really coming — for weddings, graduations, baptisms, and birthdays."
+      },
+      "nav": {
+        "ariaLabel": "Main navigation",
+        "howItWorks": "How it works",
+        "features": "Features",
+        "pricing": "Pricing",
+        "examples": "Examples"
+      },
+      "hero": {
+        "badge": "v0.1 · open to Italian organizers",
+        "titlePart1": "The invitations",
+        "titlePart2": "that matter",
+        "titleMark": "truly",
+        "subtitle": "Stop chasing confirmations on WhatsApp. One link, a digital invitation, a dashboard that tells you who's really coming — for weddings, graduations, baptisms, and birthdays.",
+        "ctaPrimary": "Create your first invitation — free",
+        "ctaExample": "Sample invitation",
+        "trust1": "No card required",
+        "trust2": "30 guests free",
+        "trust3": "Guests without accounts"
+      },
+      "heroVisual": {
+        "inviteDate": "12 · September · 2026",
+        "inviteMarried": "are getting married",
+        "inviteDetails": "4pm — outdoor ceremony",
+        "replyBy": "Reply by",
+        "replyDate": "July 1",
+        "confirmBtn": "Confirm",
+        "statToday": "+12 today",
+        "statDesc": "confirmations · 89% invitations opened",
+        "guestConfirmedPlusOne": "confirmed +1",
+        "tagVegetarian": "vegetarian",
+        "tagBus": "bus 4:30pm"
+      },
+      "waitingList": {
+        "emailPlaceholder": "Your email",
+        "emailAriaLabel": "Email for the waitlist",
+        "submit": "Join the waitlist",
+        "loading": "Just a moment…",
+        "subscribed": "You're on the list!",
+        "alreadySubscribed": "You're already on the list",
+        "successMessage": "We'll write to you as soon as we open.",
+        "errorInvalidEmail": "Please enter a valid email address.",
+        "errorGeneric": "Something went wrong. Please try again shortly."
+      },
+      "problem": {
+        "tag": "The problem",
+        "titlePart1": "Organizing",
+        "titlePart2": "an event is great.",
+        "titleMark": "Counting guests",
+        "titlePart3": "not so much."
+      },
+      "pains": {
+        "whatsapp": {
+          "title": "Endless WhatsApp groups",
+          "desc": "One yes, one maybe, three voice messages. The final list stays a mystery until three days before."
+        },
+        "allergies": {
+          "title": "Verbal allergy mentions",
+          "desc": "Uncle is celiac, cousin is vegetarian — and no one remembers when the catering arrives."
+        },
+        "plusOne": {
+          "title": "Ghost plus-ones",
+          "desc": "\"Can I bring my partner?\" — asked five times, forgotten twice. The count never adds up."
+        },
+        "paperInvites": {
+          "title": "Scattered paper invitations",
+          "desc": "Beautiful yes, but expensive, slow, and impossible to update if the date or venue changes."
+        }
+      },
+      "howItWorks": {
+        "titlePart1": "Four steps, from draft",
+        "titlePart2": "to the",
+        "titleMark": "final guest list"
+      },
+      "steps": {
+        "create": {
+          "title": "Create the invitation",
+          "desc": "Choose a template — wedding, graduation, baptism, birthday — and customize colors, photos, and text. Ready in 5 minutes."
+        },
+        "import": {
+          "title": "Import the guest list",
+          "desc": "Paste from Excel, from contacts, or type manually. Group by family, side of the couple, or table. Duplicates detected automatically."
+        },
+        "distribute": {
+          "title": "Distribute",
+          "desc": "One link for everyone, or personalized WhatsApp messages and emails with the guest's name. QR code for paper invitations."
+        },
+        "rsvp": {
+          "title": "Receive RSVPs",
+          "desc": "Confirmations, menu choices, plus-ones, and notes arrive in your dashboard. Automatic reminders for late responders."
+        }
+      },
+      "features": {
+        "titlePart1": "Everything",
+        "titlePart2": "you need.",
+        "titleMark": "Nothing more.",
+        "subtitle": "Ceremly doesn't aim to replace the wedding planner or photographer. It solves one problem — knowing who's coming — and solves it well."
+      },
+      "feats": {
+        "emailWhatsapp": {
+          "title": "Personalized email & WhatsApp",
+          "desc": "Every guest receives their invitation with their name and a unique link — no generic forms."
+        },
+        "reminders": {
+          "title": "Automatic reminders",
+          "desc": "Gentle nudges to guests who haven't replied yet, at the frequency you choose."
+        },
+        "qr": {
+          "title": "QR code for paper invitations",
+          "desc": "Keep the paper if you like — the QR still leads to the digital confirmation form."
+        },
+        "menu": {
+          "title": "Menu, allergies, intolerances",
+          "desc": "Collect dietary preferences in the RSVP form, export everything for the catering team."
+        },
+        "plusOne": {
+          "title": "Plus-ones and family groups",
+          "desc": "Manage companions, children, and family groups all at once."
+        },
+        "realtime": {
+          "title": "Real-time progress",
+          "desc": "Dashboard with open rates, confirmations by group, and catering cost forecasts."
+        }
+      },
+      "pricing": {
+        "titleMark": "Transparent",
+        "titlePart1": "with no",
+        "titlePart2": "per-guest fees.",
+        "subtitle": "Pay once per event, or subscribe if you organize events professionally. Never per RSVP, never per guest.",
+        "trust1": "Electronic invoicing",
+        "trust2": "EU servers · GDPR",
+        "trust3": "Cancel anytime",
+        "free": {
+          "name": "Free",
+          "sub": "forever",
+          "desc": "For small events and trials. Everything you need to get started.",
+          "feat1": "Up to 30 guests",
+          "feat2": "1 active event",
+          "feat3": "3 invitation templates",
+          "feat4": "RSVP via link",
+          "feat5": "Basic dashboard",
+          "cta": "Start for free"
+        },
+        "celebration": {
+          "name": "Celebration",
+          "sub": "one-time · per event",
+          "desc": "For weddings, graduations, and baptisms. The recommended option for most events.",
+          "feat1": "Up to 250 guests",
+          "feat2": "All templates + brand colors",
+          "feat3": "Personalized WhatsApp & email",
+          "feat4": "Menu, allergies, plus-ones",
+          "feat5": "Automatic reminders",
+          "feat6": "Export guest list for catering",
+          "cta": "Choose Celebration",
+          "tag": "Most popular"
+        },
+        "atelier": {
+          "name": "Atelier",
+          "sub": "/month · for planners",
+          "desc": "For professional event organizers. Unlimited events and custom branding.",
+          "feat1": "Unlimited events and guests",
+          "feat2": "Workspace with your logo",
+          "feat3": "Custom domains",
+          "feat4": "API & catering integrations",
+          "feat5": "Team accounts",
+          "feat6": "Priority support",
+          "cta": "Talk to us"
+        }
+      },
+      "testimonial": {
+        "tag": "Beta · 142 events managed",
+        "quotePart1": "I organized my sister's wedding without",
+        "quoteMark": "a single WhatsApp group",
+        "quotePart2": "The guest list reached the caterer three days early — complete, with all the allergies.",
+        "authorMeta": "Wedding · 168 guests · Verona"
+      },
+      "cta": {
+        "titlePart1": "Your next event",
+        "titleMark": "deserves a real guest list",
+        "subtitle": "Create your first invitation in five minutes. Thirty guests free, forever.",
+        "ctaPrimary": "Start for free",
+        "ctaTeam": "Talk to the team"
+      },
+      "footer": {
+        "tagline": "Digital invitations and smart RSVPs, for events that truly matter. Made in Italy.",
+        "copyright": "© 2026 Ceremly Srl · VAT IT12345670156",
+        "legal": "EU servers · GDPR compliant · secure payments via Creem",
+        "enSoon": "EN — soon",
+        "cols": {
+          "product": {
+            "title": "Product",
+            "inviteTemplates": "Invitation templates",
+            "realExamples": "Real examples"
+          },
+          "forWho": {
+            "title": "For who",
+            "weddings": "Weddings",
+            "graduations": "Graduations",
+            "baptisms": "Baptisms",
+            "birthdays": "Birthdays",
+            "weddingPlanners": "Wedding planners"
+          },
+          "resources": {
+            "title": "Resources",
+            "rsvpGuide": "RSVP guide",
+            "helpCenter": "Help center",
+            "serviceStatus": "Service status",
+            "changelog": "Changelog",
+            "apiPartners": "API for partners"
+          },
+          "company": {
+            "about": "About us",
+            "contact": "Contact",
+            "terms": "Terms",
+            "privacy": "Privacy & GDPR",
+            "cookies": "Cookies"
+          }
+        }
+      }
+    },
+    "login": {
+      "seoTitle": "Sign in to Ceremly",
+      "seoDescription": "Sign in to your Ceremly account to manage events, invitations and RSVPs.",
+      "validationEmail": "Please enter a valid email address",
+      "validationPassword": "Password must be at least 8 characters",
+      "validationGeneric": "Please check the fields you entered.",
+      "errorTitle": "Sign-in error",
+      "errorGoogle": "Sign in with Google failed.",
+      "errorFallback": "Sign in failed. Please try again.",
+      "errorInvalidCredentials": "Incorrect email or password.",
+      "errorEmailNotVerified": "You need to verify your email before signing in.",
+      "successTitle": "Welcome back!",
+      "successDescription": "Signed in successfully.",
+      "shellLabel": "Sign in",
+      "shellBody": "Pick up where you left off — your events, RSVPs and reminders are all here.",
+      "quoteText": "“In two weeks of RSVPs I got ten hours of my life back.”",
+      "quoteWhere": "Wedding · Cernobbio",
+      "shellFoot": "EU servers · GDPR",
+      "titleLine1": "Welcome back.",
+      "titleLine2": "Your guests",
+      "titleLine3": "are waiting",
+      "heading": "Sign in to Ceremly",
+      "newHere": "New here?",
+      "createAccount": "Create an account →",
+      "continueWithGoogle": "Continue with Google",
+      "or": "OR",
+      "emailPlaceholder": "name@example.com",
+      "forgotPassword": "Forgot password?",
+      "rememberMe": "Stay signed in on this device",
+      "signingIn": "Signing in…",
+      "e2eNotice": "Protected by end-to-end encryption on guest data"
+    },
+    "rsvpForm": {
+      "close": "close",
+      "stepCounter": "Question {current} of {total}",
+      "attendanceSubtitleYes": "we can't wait to see you",
+      "attendanceSubtitleNo": "you'll be with us in spirit",
+      "attendanceSubtitleMaybe": "you can update your answer later",
+      "attendanceOptionYes": "Yes, I'll be there",
+      "attendanceOptionNo": "No, I'm sorry",
+      "attendanceOptionMaybe": "Not sure yet",
+      "attendanceTitleWithName": "{name}, will you be with us?",
+      "attendanceTitle": "Will you be with us?",
+      "attendanceSubtitleDefault": "Your presence matters to us.",
+      "selfName": "You",
+      "companionFallbackName": "Guest {n}",
+      "companionsNoteSingular": "You've added 1 guest. We'll ask for their details in the next steps.",
+      "companionsNotePlural": "You've added {count} guests. We'll ask for their details in the next steps.",
+      "optional": "optional",
+      "optionalAnswer": "Optional answer",
+      "errorSelectAttendance": "Please select an answer to continue.",
+      "errorRequiredPerPerson": "Please fill in the answer for every person to continue.",
+      "errorRequired": "This answer is required.",
+      "tagShownBecauseYes": "shown because you answered Yes",
+      "tagPerPerson": "per person",
+      "declineTitle": "We're sorry you can't make it.",
+      "declineSubtitle": "If you'd like, leave a message — it will be read with love. It's optional.",
+      "declinePlaceholder": "Your message…",
+      "declineAriaLabel": "Message for the hosts",
+      "yes": "Yes",
+      "no": "No",
+      "textPlaceholder": "Write here…",
+      "back": "Back",
+      "submitting": "Sending…",
+      "submit": "Submit RSVP"
     }
   }
 }

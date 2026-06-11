@@ -25,6 +25,7 @@ definePageMeta({ layout: "ceremly" });
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const { t } = useI18n();
 const eventId = computed(() => String(route.params.id ?? ""));
 
 const {
@@ -36,20 +37,19 @@ interface CeremlyEventCtx { id: string; title: string; type: string }
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 
-const TYPE_LABELS: Record<string, string> = {
-    matrimonio: "Matrimonio",
-    laurea: "Laurea",
-    battesimo: "Battesimo",
-    compleanno: "Compleanno",
-};
+function getTypeLabel(type: string): string {
+    const key = `ceremly.eventType.${type}.label`;
+    const translated = t(key);
+    return translated !== key ? translated : type;
+}
 
 const eventData = ref<CeremlyEvent | null>(null);
 
 watchEffect(() => {
     const label = eventData.value
-        ? TYPE_LABELS[eventData.value.type] ?? eventData.value.title
-        : (eventCtx.value?.id === eventId.value ? TYPE_LABELS[eventCtx.value.type] ?? eventCtx.value.title : "Evento");
-    crumbs.value = ["Eventi", label, "Ospiti"];
+        ? getTypeLabel(eventData.value.type) ?? eventData.value.title
+        : (eventCtx.value?.id === eventId.value ? getTypeLabel(eventCtx.value.type) ?? eventCtx.value.title : t("ceremly.event.guests.crumbEventFallback"));
+    crumbs.value = [t("ceremly.event.guests.crumbEvents"), label, t("ceremly.event.guests.crumbGuests")];
 });
 
 // ─── Errori $fetch (shape minima, niente any) ────────────────────────
@@ -82,7 +82,7 @@ async function loadAll() {
         eventData.value = evRes.event;
         eventCtx.value = { id: evRes.event.id, title: evRes.event.title, type: evRes.event.type };
     } catch (e) {
-        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || "Errore nel caricamento degli ospiti";
+        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || t("ceremly.event.guests.loadError");
     } finally {
         loading.value = false;
     }
@@ -94,7 +94,7 @@ async function refreshGuests() {
         guests.value = res.guests;
         summary.value = res.summary;
     } catch {
-        toast.add({ title: "Errore", description: "Aggiornamento della lista non riuscito.", color: "error" });
+        toast.add({ title: t("common.error"), description: t("ceremly.event.guests.refreshError"), color: "error" });
     }
 }
 
@@ -121,11 +121,11 @@ const PAGE_SIZE = 10;
 const page = ref(1);
 
 const filterTabs = computed(() => [
-    { k: "all" as FilterKey, l: "Tutti", n: summary.value?.total ?? 0, dot: null as string | null },
-    { k: "confirmed" as FilterKey, l: "Confermati", n: summary.value?.confirmed ?? 0, dot: "var(--confirm)" },
-    { k: "pending" as FilterKey, l: "In attesa", n: summary.value?.pending ?? 0, dot: "var(--pending)" },
-    { k: "maybe" as FilterKey, l: "Forse", n: summary.value?.maybe ?? 0, dot: "var(--bone-300)" },
-    { k: "declined" as FilterKey, l: "Declinati", n: summary.value?.declined ?? 0, dot: "var(--decline)" },
+    { k: "all" as FilterKey, l: t("ceremly.event.guests.filterAll"), n: summary.value?.total ?? 0, dot: null as string | null },
+    { k: "confirmed" as FilterKey, l: t("ceremly.event.guests.filterConfirmed"), n: summary.value?.confirmed ?? 0, dot: "var(--confirm)" },
+    { k: "pending" as FilterKey, l: t("ceremly.event.guests.filterPending"), n: summary.value?.pending ?? 0, dot: "var(--pending)" },
+    { k: "maybe" as FilterKey, l: t("ceremly.event.guests.filterMaybe"), n: summary.value?.maybe ?? 0, dot: "var(--bone-300)" },
+    { k: "declined" as FilterKey, l: t("ceremly.event.guests.filterDeclined"), n: summary.value?.declined ?? 0, dot: "var(--decline)" },
 ]);
 
 function matchesFilter(g: GuestWithStatus): boolean {
@@ -205,7 +205,7 @@ function initials(g: { firstName: string; lastName: string }): string {
 
 function responseCell(g: GuestWithStatus): string {
     if (g.respondedAt) return shortDate(g.respondedAt);
-    return g.rsvpStatus === "not_opened" ? "non aperto" : "aperto, non risposto";
+    return g.rsvpStatus === "not_opened" ? t("ceremly.event.guests.responseNotOpened") : t("ceremly.event.guests.responseOpenedNoReply");
 }
 
 // ─── Drawer dettaglio ────────────────────────────────────────────────
@@ -222,7 +222,7 @@ async function openDrawer(g: GuestWithStatus) {
     try {
         drawerDetail.value = await getGuest(eventId.value, g.id);
     } catch (e) {
-        drawerError.value = errOf(e).data?.statusMessage || "Caricamento del dettaglio non riuscito.";
+        drawerError.value = errOf(e).data?.statusMessage || t("ceremly.event.guests.drawerLoadError");
     } finally {
         drawerLoading.value = false;
     }
@@ -246,17 +246,17 @@ function isPerPersonAnswer(value: unknown): value is RsvpPerPersonAnswer {
 
 function formatFlatValue(value: RsvpAnswerValue | null | undefined): string {
     if (value === null || value === undefined) return "—";
-    if (typeof value === "boolean") return value ? "Sì" : "No";
+    if (typeof value === "boolean") return value ? t("ceremly.event.guests.answerYes") : t("ceremly.event.guests.answerNo");
     if (Array.isArray(value)) return value.length ? value.join(" · ") : "—";
     const s = String(value).trim();
     return s === "" ? "—" : s;
 }
 
-const ATTENDANCE_FALLBACK: Record<string, string> = {
-    yes: "Sì, ci sarò",
-    no: "No, non riesco",
-    maybe: "Non lo so ancora",
-};
+const ATTENDANCE_FALLBACK = computed<Record<string, string>>(() => ({
+    yes: t("ceremly.event.guests.attendanceYes"),
+    no: t("ceremly.event.guests.attendanceNo"),
+    maybe: t("ceremly.event.guests.attendanceMaybe"),
+}));
 
 /** Righe q→a umanizzate per il drawer (incluse perPerson per persona). */
 const answerRows = computed<{ q: string; a: string }[]>(() => {
@@ -279,8 +279,8 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
     const attendanceQ = config.find(q => q.id === "attendance");
     const canonicalIdx = ["yes", "no", "maybe"].indexOf(response.attending);
     const attendanceLabel = attendanceQ?.options?.[canonicalIdx]
-        ?? ATTENDANCE_FALLBACK[response.attending] ?? response.attending;
-    rows.push({ q: attendanceQ?.label ?? "Partecipi?", a: attendanceLabel });
+        ?? ATTENDANCE_FALLBACK.value[response.attending] ?? response.attending;
+    rows.push({ q: attendanceQ?.label ?? t("ceremly.event.guests.attendanceQuestion"), a: attendanceLabel });
 
     // Nomi accompagnatori (per le righe perPerson e per la riga Accompagnatori).
     const rawNames = evaluation.companion_names;
@@ -291,10 +291,10 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
     if (response.attending === "yes" || response.companionsCount > 0) {
         const names = companionNames.filter(n => n !== "").join(", ");
         rows.push({
-            q: "Accompagnatori",
+            q: t("ceremly.event.guests.companions"),
             a: response.companionsCount > 0
                 ? `${response.companionsCount}${names ? ` — ${names}` : ""}`
-                : "Nessuno",
+                : t("ceremly.event.guests.companionsNone"),
         });
     }
 
@@ -309,7 +309,7 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
                 rows.push({ q: `${q.label} · ${guestName}`, a: formatFlatValue(raw.self) });
             }
             raw.companions.forEach((value, i) => {
-                const who = companionNames[i] || `Accompagnatore ${i + 1}`;
+                const who = companionNames[i] || t("ceremly.event.guests.companionN", { n: i + 1 });
                 rows.push({ q: `${q.label} · ${who}`, a: formatFlatValue(value) });
             });
         } else if (!q.perPerson) {
@@ -318,7 +318,7 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
     }
 
     if (response.declineMessage) {
-        rows.push({ q: "Messaggio", a: response.declineMessage });
+        rows.push({ q: t("ceremly.event.guests.declineMessage"), a: response.declineMessage });
     }
     return rows;
 });
@@ -326,17 +326,17 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
 function activityLabel(a: { type: string; meta: Record<string, unknown> }): string {
     switch (a.type) {
         case "invite_sent":
-            return a.meta?.channel === "whatsapp" ? "Invito inviato via WhatsApp" : "Invito inviato via email";
+            return a.meta?.channel === "whatsapp" ? t("ceremly.event.guests.activityInviteSentWhatsapp") : t("ceremly.event.guests.activityInviteSentEmail");
         case "link_opened":
-            return typeof a.meta?.nth === "number" ? `Link aperto (${a.meta.nth}ª volta)` : "Link aperto";
+            return typeof a.meta?.nth === "number" ? t("ceremly.event.guests.activityLinkOpenedNth", { n: a.meta.nth }) : t("ceremly.event.guests.activityLinkOpened");
         case "email_opened":
-            return "Email aperta";
+            return t("ceremly.event.guests.activityEmailOpened");
         case "rsvp_submitted":
-            return "Risposta completata";
+            return t("ceremly.event.guests.activityRsvpSubmitted");
         case "rsvp_updated":
-            return "Risposta aggiornata";
+            return t("ceremly.event.guests.activityRsvpUpdated");
         case "reminder_sent":
-            return "Reminder inviato";
+            return t("ceremly.event.guests.activityReminderSent");
         default:
             return a.type;
     }
@@ -351,11 +351,11 @@ async function confirmDelete() {
     deleting.value = true;
     try {
         await deleteGuest(eventId.value, drawerRow.value.id);
-        toast.add({ title: "Ospite rimosso", description: "Il link personale è ora inattivo. Le risposte restano nei conteggi.", color: "success" });
+        toast.add({ title: t("ceremly.event.guests.deleteSuccessTitle"), description: t("ceremly.event.guests.deleteSuccessDesc"), color: "success" });
         closeDrawer();
         await refreshGuests();
     } catch (e) {
-        toast.add({ title: "Errore", description: errOf(e).data?.statusMessage || "Eliminazione non riuscita.", color: "error" });
+        toast.add({ title: t("common.error"), description: errOf(e).data?.statusMessage || t("ceremly.event.guests.deleteError"), color: "error" });
     } finally {
         deleting.value = false;
     }
@@ -378,11 +378,11 @@ function openAdd() {
 async function submitAdd() {
     addError.value = null;
     if (!addForm.firstName.trim() || !addForm.lastName.trim()) {
-        addError.value = "Nome e cognome sono obbligatori.";
+        addError.value = t("ceremly.event.guests.addErrorNameRequired");
         return;
     }
     if (addForm.email.trim() && !EMAIL_RE.test(addForm.email.trim())) {
-        addError.value = "L'email non sembra valida.";
+        addError.value = t("ceremly.event.guests.addErrorEmailInvalid");
         return;
     }
     addSaving.value = true;
@@ -395,15 +395,15 @@ async function submitAdd() {
             groupName: addForm.groupName.trim() || undefined,
             notes: addForm.notes.trim() || undefined,
         });
-        toast.add({ title: "Ospite aggiunto", description: `${addForm.firstName} ${addForm.lastName} è in lista.`, color: "success" });
+        toast.add({ title: t("ceremly.event.guests.addSuccessTitle"), description: t("ceremly.event.guests.addSuccessDesc", { firstName: addForm.firstName, lastName: addForm.lastName }), color: "success" });
         addOpen.value = false;
         await refreshGuests();
     } catch (e) {
         const err = errOf(e);
         if (err.statusCode === 402) {
-            addError.value = `${err.data?.statusMessage || "Limite del piano raggiunto."} Passa a un piano superiore per aggiungere altri ospiti.`;
+            addError.value = `${err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit")} ${t("ceremly.event.guests.addErrorPlanLimitUpgrade")}`;
         } else {
-            addError.value = err.data?.statusMessage || "Creazione non riuscita. Riprova.";
+            addError.value = err.data?.statusMessage || t("ceremly.event.guests.addErrorGeneric");
         }
     } finally {
         addSaving.value = false;
@@ -459,7 +459,7 @@ async function submitImport() {
         importStep.value = "done";
         await refreshGuests();
     } catch (e) {
-        importSubmitError.value = errOf(e).data?.statusMessage || "Import non riuscito. Riprova.";
+        importSubmitError.value = errOf(e).data?.statusMessage || t("ceremly.event.guests.importError");
     } finally {
         importSaving.value = false;
     }
@@ -483,12 +483,12 @@ async function submitGroup() {
         await Promise.all([...selected.value].map(id =>
             updateGuest(eventId.value, id, { groupName: name }),
         ));
-        toast.add({ title: "Gruppo aggiornato", description: `${selected.value.size} ospiti spostati in «${name}».`, color: "success" });
+        toast.add({ title: t("ceremly.event.guests.groupSuccessTitle"), description: t("ceremly.event.guests.groupSuccessDesc", { count: selected.value.size, name }), color: "success" });
         groupOpen.value = false;
         clearSelection();
         await refreshGuests();
     } catch (e) {
-        toast.add({ title: "Errore", description: errOf(e).data?.statusMessage || "Aggiornamento del gruppo non riuscito.", color: "error" });
+        toast.add({ title: t("common.error"), description: errOf(e).data?.statusMessage || t("ceremly.event.guests.groupError"), color: "error" });
     } finally {
         groupSaving.value = false;
     }
@@ -501,10 +501,10 @@ async function submitGroup() {
             <Teleport defer to="#ceremly-topbar-actions">
                 <div class="row" style="gap: 8px;">
                     <button class="cer-btn ghost small" type="button" @click="openImport">
-                        <CerIcon name="upload" :s="14" /> Importa CSV
+                        <CerIcon name="upload" :s="14" /> {{ $t('ceremly.event.guests.importCsv') }}
                     </button>
                     <button class="cer-btn small" type="button" @click="openAdd">
-                        <CerIcon name="plus" :s="14" /> Aggiungi ospite
+                        <CerIcon name="plus" :s="14" /> {{ $t('ceremly.event.guests.addGuest') }}
                     </button>
                 </div>
             </Teleport>
@@ -513,9 +513,9 @@ async function submitGroup() {
         <!-- Header -->
         <div class="row" style="justify-content: space-between; align-items: flex-end;">
             <div>
-                <h1>Lista ospiti</h1>
+                <h1>{{ $t('ceremly.event.guests.pageTitle') }}</h1>
                 <div class="h-sub">
-                    {{ summary ? `${summary.total} ospiti totali · ${sentCount} link inviati · ${toSendCount} da inviare` : "Caricamento della lista…" }}
+                    {{ summary ? $t('ceremly.event.guests.summaryLine', { total: summary.total, sent: sentCount, toSend: toSendCount }) : $t('ceremly.event.guests.summaryLoading') }}
                 </div>
             </div>
             <div class="row" style="gap: 8px;">
@@ -547,7 +547,7 @@ async function submitGroup() {
                     v-model="search"
                     class="cer-input"
                     style="padding-left: 34px;"
-                    placeholder="Cerca per nome o cognome…"
+                    :placeholder="$t('ceremly.event.guests.searchPlaceholder')"
                 >
             </div>
         </div>
@@ -558,27 +558,27 @@ async function submitGroup() {
             class="row"
             style="margin-top: 18px; padding: 10px 16px; background: var(--ink); color: var(--bone-50); border-radius: 10px; gap: 12px;"
         >
-            <span style="font-size: 13px;">{{ selected.size }} selezionati</span>
+            <span style="font-size: 13px;">{{ $t('ceremly.event.guests.selectedCount', { count: selected.size }) }}</span>
             <div style="height: 16px; width: 1px; background: rgba(255,255,255,0.2);" />
             <button class="cer-btn small ghost bar-btn" type="button" @click="goToDistribution">
-                <CerIcon name="send" :s="12" /> Invia invito
+                <CerIcon name="send" :s="12" /> {{ $t('ceremly.event.guests.sendInvite') }}
             </button>
             <button class="cer-btn small ghost bar-btn" type="button" @click="goToReminders">
-                <CerIcon name="bell" :s="12" /> Reminder
+                <CerIcon name="bell" :s="12" /> {{ $t('ceremly.event.guests.reminder') }}
             </button>
             <button class="cer-btn small ghost bar-btn" type="button" @click="openGroupModal">
-                <CerIcon name="edit" :s="12" /> Cambia gruppo
+                <CerIcon name="edit" :s="12" /> {{ $t('ceremly.event.guests.changeGroup') }}
             </button>
             <div class="spacer" />
             <button class="cer-btn small ghost bar-btn" type="button" @click="clearSelection">
-                <CerIcon name="x" :s="12" /> Deseleziona
+                <CerIcon name="x" :s="12" /> {{ $t('ceremly.event.guests.deselect') }}
             </button>
         </div>
 
         <!-- Stato errore -->
         <div v-if="loadError" class="cer-card" style="margin-top: 18px; padding: 22px;">
             <div style="color: var(--decline); font-size: 14px;">{{ loadError }}</div>
-            <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">Riprova</button>
+            <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">{{ $t('common.retry') }}</button>
         </div>
 
         <!-- Stato loading: skeleton sobrio -->
@@ -588,13 +588,13 @@ async function submitGroup() {
 
         <!-- Empty state assoluto -->
         <div v-else-if="activeGuests.length === 0" class="cer-card" style="margin-top: 18px; padding: 48px 32px; text-align: center;">
-            <div class="serif" style="font-size: 24px;">Ancora nessun ospite</div>
+            <div class="serif" style="font-size: 24px;">{{ $t('ceremly.event.guests.emptyTitle') }}</div>
             <div class="muted" style="font-size: 14px; margin-top: 8px; max-width: 420px; margin-left: auto; margin-right: auto;">
-                Aggiungi il primo ospite a mano oppure importa la lista da un file CSV: ogni ospite riceverà un link personale all'invito.
+                {{ $t('ceremly.event.guests.emptyBody') }}
             </div>
             <div class="row" style="gap: 10px; justify-content: center; margin-top: 18px;">
-                <button class="cer-btn ghost" type="button" @click="openImport"><CerIcon name="upload" :s="14" /> Importa CSV</button>
-                <button class="cer-btn" type="button" @click="openAdd"><CerIcon name="plus" :s="14" /> Aggiungi ospite</button>
+                <button class="cer-btn ghost" type="button" @click="openImport"><CerIcon name="upload" :s="14" /> {{ $t('ceremly.event.guests.importCsv') }}</button>
+                <button class="cer-btn" type="button" @click="openAdd"><CerIcon name="plus" :s="14" /> {{ $t('ceremly.event.guests.addGuest') }}</button>
             </div>
         </div>
 
@@ -607,12 +607,12 @@ async function submitGroup() {
                             <th style="width: 32px; padding-left: 16px;">
                                 <CerCheckbox :model-value="allFilteredSelected" @update:model-value="toggleSelectAll" />
                             </th>
-                            <th>Ospite</th>
-                            <th>Stato RSVP</th>
-                            <th>Gruppo</th>
-                            <th>Canale</th>
-                            <th>Persone</th>
-                            <th>Risposta</th>
+                            <th>{{ $t('ceremly.event.guests.colGuest') }}</th>
+                            <th>{{ $t('ceremly.event.guests.colRsvpStatus') }}</th>
+                            <th>{{ $t('ceremly.event.guests.colGroup') }}</th>
+                            <th>{{ $t('ceremly.event.guests.colChannel') }}</th>
+                            <th>{{ $t('ceremly.event.guests.colPeople') }}</th>
+                            <th>{{ $t('ceremly.event.guests.colResponse') }}</th>
                             <th style="width: 40px;" />
                         </tr>
                     </thead>
@@ -650,7 +650,7 @@ async function submitGroup() {
                         </tr>
                         <tr v-if="paged.length === 0">
                             <td colspan="8" style="padding: 28px 16px; text-align: center;" class="muted">
-                                Nessun ospite trovato con questi filtri.
+                                {{ $t('ceremly.event.guests.noResults') }}
                             </td>
                         </tr>
                     </tbody>
@@ -659,7 +659,7 @@ async function submitGroup() {
 
             <!-- Paginazione -->
             <div class="row" style="margin-top: 12px; justify-content: space-between;">
-                <span class="small muted">Mostro {{ paged.length }} di {{ filtered.length }} ospiti</span>
+                <span class="small muted">{{ $t('ceremly.event.guests.showingCount', { shown: paged.length, total: filtered.length }) }}</span>
                 <div v-if="totalPages > 1" class="row" style="gap: 4px;">
                     <button class="cer-btn ghost small" type="button" style="padding: 6px;" :disabled="page === 1" @click="page--">‹</button>
                     <button
@@ -686,7 +686,7 @@ async function submitGroup() {
                         <div class="col" style="line-height: 1.2;">
                             <span style="font-size: 16px; font-weight: 500;">{{ drawerRow.firstName }} {{ drawerRow.lastName }}</span>
                             <span class="small muted">
-                                {{ drawerRow.email || drawerRow.phone || "Nessun contatto" }}{{ drawerRow.groupName ? ` · Gruppo "${drawerRow.groupName}"` : "" }}
+                                {{ drawerRow.email || drawerRow.phone || $t('ceremly.event.guests.noContact') }}{{ drawerRow.groupName ? ` · ${$t('ceremly.event.guests.groupLabel', { name: drawerRow.groupName })}` : "" }}
                             </span>
                         </div>
                     </div>
@@ -707,7 +707,7 @@ async function submitGroup() {
 
                 <template v-else-if="drawerDetail">
                     <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                        Risposte RSVP
+                        {{ $t('ceremly.event.guests.sectionRsvpAnswers') }}
                     </div>
                     <div v-if="answerRows.length > 0" class="col" style="gap: 10px; margin-top: 10px;">
                         <div v-for="r in answerRows" :key="r.q" class="row" style="align-items: flex-start; gap: 12px; font-size: 13px;">
@@ -716,19 +716,19 @@ async function submitGroup() {
                         </div>
                     </div>
                     <div v-else class="small muted" style="margin-top: 10px;">
-                        Nessuna risposta ancora — {{ drawerRow.rsvpStatus === "not_opened" ? "l'invito non è stato aperto." : "l'invito è stato aperto ma il form non è stato compilato." }}
+                        {{ $t('ceremly.event.guests.noAnswersYet') }} — {{ drawerRow.rsvpStatus === "not_opened" ? $t('ceremly.event.guests.noAnswersNotOpened') : $t('ceremly.event.guests.noAnswersOpenedNoForm') }}
                     </div>
 
                     <template v-if="drawerDetail.guest.notes">
                         <div style="height: 1px; background: var(--bone-200); margin: 16px 0;" />
-                        <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Note</div>
+                        <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.guests.sectionNotes') }}</div>
                         <div style="font-size: 13px; margin-top: 8px;">{{ drawerDetail.guest.notes }}</div>
                     </template>
 
                     <div style="height: 1px; background: var(--bone-200); margin: 16px 0;" />
 
                     <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                        Timeline
+                        {{ $t('ceremly.event.guests.sectionTimeline') }}
                     </div>
                     <div v-if="drawerDetail.activities.length > 0" class="col" style="gap: 6px; margin-top: 8px;">
                         <div v-for="a in drawerDetail.activities" :key="a.id" class="row" style="gap: 10px; font-size: 12px; align-items: flex-start;">
@@ -736,7 +736,7 @@ async function submitGroup() {
                             <span>{{ activityLabel(a) }}</span>
                         </div>
                     </div>
-                    <div v-else class="small muted" style="margin-top: 8px;">Nessuna attività registrata.</div>
+                    <div v-else class="small muted" style="margin-top: 8px;">{{ $t('ceremly.event.guests.noActivity') }}</div>
 
                     <div style="height: 1px; background: var(--bone-200); margin: 16px 0;" />
 
@@ -746,7 +746,7 @@ async function submitGroup() {
                         style="color: var(--decline); border-color: var(--decline);"
                         @click="confirmDeleteOpen = true"
                     >
-                        <CerIcon name="trash" :s="13" /> Elimina ospite
+                        <CerIcon name="trash" :s="13" /> {{ $t('ceremly.event.guests.deleteGuest') }}
                     </button>
                 </template>
             </aside>
@@ -755,19 +755,19 @@ async function submitGroup() {
         <!-- ─── Modale conferma eliminazione ────────────────────────── -->
         <div v-if="confirmDeleteOpen && drawerRow" class="cer-overlay" @click.self="confirmDeleteOpen = false">
             <div class="cer-modal" style="max-width: 440px;">
-                <div class="serif" style="font-size: 20px;">Eliminare {{ drawerRow.firstName }} {{ drawerRow.lastName }}?</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.guests.confirmDeleteTitle', { firstName: drawerRow.firstName, lastName: drawerRow.lastName }) }}</div>
                 <div class="muted" style="font-size: 14px; margin-top: 10px; line-height: 1.5;">
-                    Il link diventerà inattivo, le risposte restano nei conteggi.
+                    {{ $t('ceremly.event.guests.confirmDeleteBody') }}
                 </div>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 20px;">
-                    <button class="cer-btn ghost small" type="button" @click="confirmDeleteOpen = false">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="confirmDeleteOpen = false">{{ $t('common.cancel') }}</button>
                     <button
                         class="cer-btn small dark"
                         type="button"
                         :disabled="deleting"
                         @click="confirmDelete"
                     >
-                        <CerIcon name="trash" :s="12" /> {{ deleting ? "Elimino…" : "Elimina" }}
+                        <CerIcon name="trash" :s="12" /> {{ deleting ? $t('ceremly.event.guests.deletingProgress') : $t('ceremly.event.guests.deleteAction') }}
                     </button>
                 </div>
             </div>

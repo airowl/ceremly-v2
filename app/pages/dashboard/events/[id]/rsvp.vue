@@ -19,28 +19,26 @@ definePageMeta({
     auth: { only: "user" },
 });
 
+const { t, te } = useI18n();
 const route = useRoute();
 const toast = useToast();
 const eventId = computed(() => String(route.params.id ?? ""));
 
-const TYPE_LABELS: Record<string, string> = {
-    matrimonio: "Matrimonio",
-    laurea: "Laurea",
-    battesimo: "Battesimo",
-    compleanno: "Compleanno",
-};
-
-const QUESTION_TYPE_LABELS: Record<RsvpQuestionType, string> = {
-    text: "Testo libero",
-    single: "Selezione singola",
-    multiple: "Selezione multipla",
-    number: "Numero",
-    boolean: "Sì / No",
-};
+const QUESTION_TYPE_LABELS = computed<Record<RsvpQuestionType, string>>(() => ({
+    text: t("ceremly.event.rsvp.typeText"),
+    single: t("ceremly.event.rsvp.typeSingle"),
+    multiple: t("ceremly.event.rsvp.typeMultiple"),
+    number: t("ceremly.event.rsvp.typeNumber"),
+    boolean: t("ceremly.event.rsvp.typeBoolean"),
+}));
 
 const OP_SYMBOLS: Record<RsvpCondition["op"], string> = { eq: "=", neq: "≠", gt: ">" };
 const ATTENDANCE_CANONICAL = ["yes", "no", "maybe"] as const;
-const ATTENDANCE_FALLBACK_LABELS = ["Sì", "No", "Forse"];
+const ATTENDANCE_FALLBACK_LABELS = computed(() => [
+    t("ceremly.event.rsvp.attendanceYes"),
+    t("ceremly.event.rsvp.attendanceNo"),
+    t("ceremly.event.rsvp.attendanceMaybe"),
+]);
 
 // ─── Stato pagina ────────────────────────────────────────────────────
 const loading = ref(true);
@@ -77,11 +75,12 @@ async function load() {
         savedSnapshot.value = JSON.stringify(config.value);
         selectedId.value = config.value[0]?.id ?? "attendance";
         eventCtx.value = { id: res.event.id, title: res.event.title, type: res.event.type };
-        crumbs.value = ["Eventi", TYPE_LABELS[res.event.type] ?? res.event.title, "Form RSVP"];
+        const typeKey = `ceremly.eventType.${res.event.type}.label`;
+        crumbs.value = [t("ceremly.event.rsvp.breadcrumbEvents"), te(typeKey) ? t(typeKey) : res.event.title, t("ceremly.event.rsvp.breadcrumbRsvp")];
         rebuildOptionRows();
         resetDemo();
     } catch (e) {
-        loadError.value = errorMessage(e) || "Impossibile caricare l'evento.";
+        loadError.value = errorMessage(e) || t("ceremly.event.rsvp.loadError");
     } finally {
         loading.value = false;
     }
@@ -103,7 +102,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
 onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
 onBeforeRouteLeave(() => {
-    if (dirty.value && !window.confirm("Hai modifiche non salvate al form RSVP. Vuoi uscire senza salvare?")) {
+    if (dirty.value && !window.confirm(t("ceremly.event.rsvp.unsavedConfirm"))) {
         return false;
     }
 });
@@ -114,7 +113,7 @@ function pad2(n: number): string {
 }
 
 function questionTypeLabel(q: RsvpQuestion): string {
-    return QUESTION_TYPE_LABELS[q.type] ?? q.type;
+    return QUESTION_TYPE_LABELS.value[q.type] ?? q.type;
 }
 
 /** Label umana del valore di una condition (per attendance/boolean mappa il canonico). */
@@ -123,7 +122,7 @@ function conditionValueLabel(c: RsvpCondition, ref: RsvpQuestion | undefined): s
         const idx = ATTENDANCE_CANONICAL.indexOf(c.value as typeof ATTENDANCE_CANONICAL[number]);
         if (idx >= 0) return ref.options?.[idx] ?? ATTENDANCE_FALLBACK_LABELS[idx] ?? String(c.value);
     }
-    if (ref?.type === "boolean") return String(c.value) === "true" ? "Sì" : "No";
+    if (ref?.type === "boolean") return String(c.value) === "true" ? t("ceremly.event.rsvp.attendanceYes") : t("ceremly.event.rsvp.attendanceNo");
     return String(c.value);
 }
 
@@ -131,7 +130,7 @@ function conditionTagText(q: RsvpQuestion): string | null {
     if (!q.condition) return null;
     const ref = config.value.find(c => c.id === q.condition!.questionId);
     const refLabel = ref?.label ?? "?";
-    return `mostra se ${refLabel} ${OP_SYMBOLS[q.condition.op]} ${conditionValueLabel(q.condition, ref)}`;
+    return t("ceremly.event.rsvp.conditionTag", { ref: refLabel, op: OP_SYMBOLS[q.condition.op], val: conditionValueLabel(q.condition, ref) });
 }
 
 /** Condition che (dopo un riordino o una delete) puntano a domande successive o inesistenti. */
@@ -143,7 +142,7 @@ const conditionIssues = computed(() => {
         if (j === -1 || j >= i) {
             issues.push({
                 id: q.id,
-                label: q.label || `Domanda ${pad2(i + 1)}`,
+                label: q.label || t("ceremly.event.rsvp.questionFallback", { n: pad2(i + 1) }),
                 refLabel: j === -1 ? null : (config.value[j]?.label ?? null),
             });
         }
@@ -155,8 +154,8 @@ const invalidConditionIds = computed(() => new Set(conditionIssues.value.map(i =
 
 const bannerErrors = computed(() => [
     ...conditionIssues.value.map(i => i.refLabel
-        ? `«${i.label}» dipende da «${i.refLabel}» che ora viene dopo: spostala più in basso o modifica la condizione.`
-        : `«${i.label}» ha una condizione che punta a una domanda eliminata: modifica o disattiva la condizione.`),
+        ? t("ceremly.event.rsvp.bannerConditionOrder", { label: i.label, refLabel: i.refLabel })
+        : t("ceremly.event.rsvp.bannerConditionDeleted", { label: i.label })),
     ...saveErrors.value,
 ]);
 
@@ -190,7 +189,7 @@ function randomQuestionId(): string {
 function addQuestion() {
     const q: RsvpQuestion = {
         id: randomQuestionId(),
-        label: "Nuova domanda",
+        label: t("ceremly.event.rsvp.newQuestionLabel"),
         type: "text",
         required: false,
         perPerson: false,
@@ -255,7 +254,7 @@ function onTypeChange() {
     const q = selected.value;
     if (!q) return;
     if (q.type === "single" || q.type === "multiple") {
-        if (!q.options?.length) q.options = ["Opzione 1", "Opzione 2"];
+        if (!q.options?.length) q.options = [t("ceremly.event.rsvp.defaultOption1"), t("ceremly.event.rsvp.defaultOption2")];
         q.min = undefined;
         q.max = undefined;
     } else if (q.type === "number") {
@@ -389,9 +388,9 @@ function toDateInputValue(iso: string | null | undefined): string {
 
 const deadlineTagText = computed(() => {
     const iso = eventData.value?.rsvpDeadline;
-    if (!iso) return "Imposta deadline";
+    if (!iso) return t("ceremly.event.rsvp.deadlineSet");
     const d = new Date(iso);
-    return `Deadline ${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`;
+    return t("ceremly.event.rsvp.deadlineValue", { date: `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}` });
 });
 
 function openDeadlineEdit() {
@@ -415,10 +414,10 @@ async function commitDeadline() {
             body: { rsvpDeadline: deadlineDraft.value || null },
         });
         eventData.value = res.event;
-        toast.add({ title: "Deadline RSVP aggiornata", color: "success" });
+        toast.add({ title: t("ceremly.event.rsvp.toastDeadlineUpdated"), color: "success" });
     } catch (e) {
         toast.add({
-            title: "Impossibile aggiornare la deadline",
+            title: t("ceremly.event.rsvp.toastDeadlineError"),
             description: errorMessage(e),
             color: "error",
         });
@@ -449,14 +448,14 @@ function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
     const errors: string[] = [];
     const payload = (JSON.parse(JSON.stringify(config.value)) as RsvpQuestion[]).map((q, i) => {
         q.label = (q.label ?? "").trim();
-        if (!q.label) errors.push(`La domanda ${pad2(i + 1)} non ha un testo.`);
+        if (!q.label) errors.push(t("ceremly.event.rsvp.errorNoLabel", { n: pad2(i + 1) }));
 
         if (q.type === "single" || q.type === "multiple") {
             q.options = (q.options ?? []).map(o => o.trim()).filter(Boolean);
             if (q.id === "attendance" && q.options.length !== 3) {
-                errors.push("«Partecipi?» deve avere esattamente 3 opzioni compilate (sì / no / forse).");
+                errors.push(t("ceremly.event.rsvp.errorAttendanceOptions"));
             } else if (q.options.length === 0) {
-                errors.push(`Aggiungi almeno un'opzione a «${q.label || `Domanda ${pad2(i + 1)}`}».`);
+                errors.push(t("ceremly.event.rsvp.errorNoOptions", { label: q.label || t("ceremly.event.rsvp.questionFallback", { n: pad2(i + 1) }) }));
             }
             q.min = undefined;
             q.max = undefined;
@@ -465,7 +464,7 @@ function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
             q.min = Math.max(0, toIntOr(q.min, 0));
             q.max = Math.max(0, toIntOr(q.max, 4));
             if (q.max < q.min) {
-                errors.push(`Per «${q.label || `Domanda ${pad2(i + 1)}`}» il massimo deve essere maggiore o uguale al minimo.`);
+                errors.push(t("ceremly.event.rsvp.errorMinMax", { label: q.label || t("ceremly.event.rsvp.questionFallback", { n: pad2(i + 1) }) }));
             }
         } else {
             q.options = undefined;
@@ -476,7 +475,7 @@ function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
         if (q.condition) {
             if (q.condition.op === "gt") q.condition.value = toIntOr(q.condition.value, 0);
             if (typeof q.condition.value === "string" && q.condition.value.trim() === "") {
-                errors.push(`Completa il valore della condizione di «${q.label || `Domanda ${pad2(i + 1)}`}».`);
+                errors.push(t("ceremly.event.rsvp.errorConditionEmpty", { label: q.label || t("ceremly.event.rsvp.questionFallback", { n: pad2(i + 1) }) }));
             }
         }
         return q;
@@ -484,8 +483,8 @@ function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
 
     for (const issue of conditionIssues.value) {
         errors.push(issue.refLabel
-            ? `«${issue.label}» dipende da «${issue.refLabel}» che viene dopo nell'ordine.`
-            : `«${issue.label}» punta a una domanda eliminata.`);
+            ? t("ceremly.event.rsvp.errorConditionOrder", { label: issue.label, refLabel: issue.refLabel })
+            : t("ceremly.event.rsvp.errorConditionMissing", { label: issue.label }));
     }
     return { payload, errors };
 }
@@ -495,7 +494,7 @@ async function save() {
     const { payload, errors } = buildPayload();
     if (errors.length > 0) {
         saveErrors.value = [...new Set(errors)];
-        toast.add({ title: "Controlla il form: ci sono errori da correggere.", color: "error" });
+        toast.add({ title: t("ceremly.event.rsvp.toastValidationError"), color: "error" });
         return;
     }
     saving.value = true;
@@ -512,10 +511,10 @@ async function save() {
             selectedId.value = config.value[0]?.id ?? "attendance";
         }
         rebuildOptionRows();
-        toast.add({ title: "Form RSVP salvato", color: "success" });
+        toast.add({ title: t("ceremly.event.rsvp.toastSaved"), color: "success" });
     } catch (e) {
         toast.add({
-            title: "Salvataggio non riuscito",
+            title: t("ceremly.event.rsvp.toastSaveError"),
             description: errorMessage(e),
             color: "error",
         });
@@ -535,7 +534,7 @@ async function save() {
                     type="button"
                     @click="openPreview"
                 >
-                    <CerIcon name="eye" :s="14" /> Anteprima ospite
+                    <CerIcon name="eye" :s="14" /> {{ $t('ceremly.event.rsvp.previewGuest') }}
                 </button>
                 <button
                     v-if="eventData"
@@ -545,7 +544,7 @@ async function save() {
                     :style="saving ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="save"
                 >
-                    {{ saving ? "Salvataggio…" : "Salva" }}{{ dirty && !saving ? " •" : "" }}
+                    {{ saving ? $t('ceremly.event.rsvp.saving') : $t('common.save') }}{{ dirty && !saving ? " •" : "" }}
                 </button>
             </Teleport>
         </ClientOnly>
@@ -568,24 +567,24 @@ async function save() {
 
         <!-- Error -->
         <div v-else-if="loadError" class="cer-card" style="padding: 28px; margin-top: 8px; max-width: 560px;">
-            <div class="serif" style="font-size: 22px;">Qualcosa è andato storto</div>
+            <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.rsvp.loadErrorTitle') }}</div>
             <div class="small muted" style="margin-top: 8px; color: var(--decline);">{{ loadError }}</div>
             <div class="row" style="gap: 8px; margin-top: 16px;">
-                <button class="cer-btn ghost small" type="button" @click="load">Riprova</button>
-                <NuxtLink to="/dashboard" class="cer-btn small" style="text-decoration: none;">Torna agli eventi</NuxtLink>
+                <button class="cer-btn ghost small" type="button" @click="load">{{ $t('common.retry') }}</button>
+                <NuxtLink to="/dashboard" class="cer-btn small" style="text-decoration: none;">{{ $t('ceremly.event.rsvp.backToEvents') }}</NuxtLink>
             </div>
         </div>
 
         <template v-else-if="eventData">
-            <h1>Form RSVP</h1>
+            <h1>{{ $t('ceremly.event.rsvp.pageTitle') }}</h1>
             <div class="h-sub">
-                {{ config.length }} {{ config.length === 1 ? "domanda" : "domande" }} · preset {{ eventData.type }} applicato ·
+                {{ $t('ceremly.event.rsvp.questionCount', config.length) }} · {{ $t('ceremly.event.rsvp.presetApplied', { type: eventData.type }) }} ·
                 <button
                     v-if="!editingDeadline"
                     class="cer-tag"
                     style="margin-left: 8px; cursor: pointer;"
                     type="button"
-                    title="Modifica la deadline RSVP"
+                    :title="$t('ceremly.event.rsvp.deadlineEditTitle')"
                     @click="openDeadlineEdit"
                 >
                     <CerIcon name="calendar" :s="11" /> {{ deadlineTagText }}
@@ -610,7 +609,7 @@ async function save() {
                 style="margin-top: 16px; padding: 14px 16px; border: 1px solid var(--decline); background: color-mix(in srgb, var(--decline) 7%, white);"
             >
                 <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--decline);">
-                    Da correggere prima di salvare
+                    {{ $t('ceremly.event.rsvp.bannerTitle') }}
                 </div>
                 <div class="col" style="gap: 4px; margin-top: 8px;">
                     <span v-for="(err, i) in bannerErrors" :key="i" class="small" style="color: #6E1E0C;">· {{ err }}</span>
@@ -654,8 +653,8 @@ async function save() {
                                     </div>
                                     <div class="col" style="flex: 1; gap: 4px;">
                                         <div class="row" style="gap: 6px; align-items: center;">
-                                            <span style="font-weight: 500; font-size: 14px;">{{ q.label || "Domanda senza titolo" }}</span>
-                                            <span v-if="q.required" class="cer-dot" style="background: var(--wine); flex-shrink: 0;" title="Obbligatoria" />
+                                            <span style="font-weight: 500; font-size: 14px;">{{ q.label || $t('ceremly.event.rsvp.questionUntitled') }}</span>
+                                            <span v-if="q.required" class="cer-dot" style="background: var(--wine); flex-shrink: 0;" :title="$t('ceremly.event.rsvp.required')" />
                                             <span v-if="q.locked" class="cer-tag" style="font-size: 9px;">BASE</span>
                                         </div>
                                         <div class="row" style="gap: 6px; flex-wrap: wrap;">
@@ -669,18 +668,18 @@ async function save() {
                                                 v-if="q.perPerson"
                                                 class="cer-tag"
                                                 style="background: var(--sage-soft); color: var(--blue-deep); border-color: transparent;"
-                                            >per persona</span>
+                                            >{{ $t('ceremly.event.rsvp.perPerson') }}</span>
                                             <span
                                                 v-if="invalidConditionIds.has(q.id)"
                                                 class="cer-tag"
                                                 style="background: color-mix(in srgb, var(--decline) 12%, white); color: #6E1E0C; border-color: var(--decline);"
-                                            >condizione non valida</span>
+                                            >{{ $t('ceremly.event.rsvp.invalidCondition') }}</span>
                                         </div>
                                     </div>
                                     <div v-if="!q.locked" class="col" style="gap: 0; flex-shrink: 0;">
                                         <button
                                             type="button"
-                                            title="Sposta su"
+                                            :title="$t('ceremly.event.rsvp.moveUp')"
                                             :disabled="qi <= 1"
                                             :style="{
                                                 background: 'none', border: 'none', padding: '1px 2px',
@@ -694,7 +693,7 @@ async function save() {
                                         </button>
                                         <button
                                             type="button"
-                                            title="Sposta giù"
+                                            :title="$t('ceremly.event.rsvp.moveDown')"
                                             :disabled="qi >= config.length - 1"
                                             :style="{
                                                 background: 'none', border: 'none', padding: '1px 2px',
@@ -714,7 +713,7 @@ async function save() {
                     </draggable>
 
                     <button class="cer-btn ghost small" style="justify-content: center; margin-top: 8px;" type="button" @click="addQuestion">
-                        <CerIcon name="plus" :s="12" /> Aggiungi domanda
+                        <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.rsvp.addQuestion') }}
                     </button>
                 </div>
 
@@ -724,14 +723,14 @@ async function save() {
                     <div class="cer-card" style="padding: 20px;">
                         <div class="row" style="justify-content: space-between; align-items: center;">
                             <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                                Domanda {{ pad2(selectedIndex + 1) }}
+                                {{ $t('ceremly.event.rsvp.questionLabel', { n: pad2(selectedIndex + 1) }) }}
                             </div>
                             <button
                                 v-if="!selected.locked"
                                 class="cer-btn ghost small"
                                 style="padding: 6px;"
                                 type="button"
-                                title="Elimina domanda"
+                                :title="$t('ceremly.event.rsvp.deleteQuestion')"
                                 @click="askDeleteQuestion(selected)"
                             >
                                 <CerIcon name="trash" :s="12" />
@@ -741,12 +740,12 @@ async function save() {
                             v-model="selected.label"
                             class="cer-input"
                             style="margin-top: 10px; font-size: 18px; font-weight: 500; padding: 12px 14px;"
-                            placeholder="Testo della domanda"
+                            :placeholder="$t('ceremly.event.rsvp.questionTextPlaceholder')"
                         >
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px;">
                             <div class="col" style="gap: 4px;">
-                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Tipo</label>
+                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelType') }}</label>
                                 <select
                                     v-model="selected.type"
                                     class="cer-input"
@@ -754,22 +753,22 @@ async function save() {
                                     :style="selected.locked ? { opacity: 0.6, cursor: 'not-allowed' } : undefined"
                                     @change="onTypeChange"
                                 >
-                                    <option value="text">Testo libero</option>
-                                    <option value="single">Selezione singola</option>
-                                    <option value="multiple">Selezione multipla</option>
-                                    <option value="number">Numero</option>
-                                    <option value="boolean">Sì / No</option>
+                                    <option value="text">{{ $t('ceremly.event.rsvp.typeText') }}</option>
+                                    <option value="single">{{ $t('ceremly.event.rsvp.typeSingle') }}</option>
+                                    <option value="multiple">{{ $t('ceremly.event.rsvp.typeMultiple') }}</option>
+                                    <option value="number">{{ $t('ceremly.event.rsvp.typeNumber') }}</option>
+                                    <option value="boolean">{{ $t('ceremly.event.rsvp.typeBoolean') }}</option>
                                 </select>
                             </div>
                             <div class="col" style="gap: 4px;">
-                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Stato</label>
+                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelStatus') }}</label>
                                 <div class="row" style="gap: 8px; margin-top: 4px;">
-                                    <CerToggle v-model="selected.required" label="Obbligatoria" />
+                                    <CerToggle v-model="selected.required" :label="$t('ceremly.event.rsvp.required')" />
                                     <div
                                         :style="selected.locked ? { opacity: 0.45, pointerEvents: 'none' } : undefined"
-                                        :title="selected.locked ? 'Non disponibile per la domanda di partecipazione' : undefined"
+                                        :title="selected.locked ? $t('ceremly.event.rsvp.perPersonLockedTitle') : undefined"
                                     >
-                                        <CerToggle v-model="selected.perPerson" label="Per persona" />
+                                        <CerToggle v-model="selected.perPerson" :label="$t('ceremly.event.rsvp.perPerson')" />
                                     </div>
                                 </div>
                             </div>
@@ -777,15 +776,15 @@ async function save() {
 
                         <!-- Opzioni (single/multiple) -->
                         <div v-if="selected.type === 'single' || selected.type === 'multiple'" class="col" style="margin-top: 16px; gap: 6px;">
-                            <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Opzioni</label>
+                            <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelOptions') }}</label>
 
                             <template v-if="selected.locked">
                                 <div v-for="(row, oi) in optionRows" :key="row.k" class="row" style="gap: 8px;">
                                     <span class="mono" style="font-size: 10px; color: var(--ink-400); width: 12px;">{{ oi + 1 }}</span>
-                                    <input v-model="row.text" class="cer-input" placeholder="Testo opzione" @input="syncOptions">
+                                    <input v-model="row.text" class="cer-input" :placeholder="$t('ceremly.event.rsvp.optionTextPlaceholder')" @input="syncOptions">
                                 </div>
                                 <span class="small muted" style="margin-top: 2px;">
-                                    Le 3 opzioni sono fisse: puoi personalizzare i testi, l'ordine determina Sì / No / Forse.
+                                    {{ $t('ceremly.event.rsvp.attendanceOptionsHint') }}
                                 </span>
                             </template>
 
@@ -802,15 +801,15 @@ async function save() {
                                     <template #item="{ element: row, index: oi }">
                                         <div class="row" style="gap: 8px;">
                                             <CerIcon name="drag" :s="12" class="muted odrag" style="cursor: grab; flex-shrink: 0;" />
-                                            <input v-model="row.text" class="cer-input" placeholder="Testo opzione" @input="syncOptions">
-                                            <button class="cer-btn ghost small" style="padding: 6px;" type="button" title="Rimuovi opzione" @click="removeOption(oi)">
+                                            <input v-model="row.text" class="cer-input" :placeholder="$t('ceremly.event.rsvp.optionTextPlaceholder')" @input="syncOptions">
+                                            <button class="cer-btn ghost small" style="padding: 6px;" type="button" :title="$t('ceremly.event.rsvp.removeOption')" @click="removeOption(oi)">
                                                 <CerIcon name="trash" :s="12" />
                                             </button>
                                         </div>
                                     </template>
                                 </draggable>
                                 <button class="cer-btn ghost small" style="align-self: flex-start;" type="button" @click="addOption">
-                                    <CerIcon name="plus" :s="12" /> Opzione
+                                    <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.rsvp.addOption') }}
                                 </button>
                             </template>
                         </div>
@@ -818,11 +817,11 @@ async function save() {
                         <!-- Min/Max (number) -->
                         <div v-else-if="selected.type === 'number'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px;">
                             <div class="col" style="gap: 4px;">
-                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Minimo</label>
+                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelMin') }}</label>
                                 <input v-model.number="selected.min" type="number" min="0" class="cer-input" placeholder="0">
                             </div>
                             <div class="col" style="gap: 4px;">
-                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Massimo</label>
+                                <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelMax') }}</label>
                                 <input v-model.number="selected.max" type="number" min="0" class="cer-input" placeholder="4">
                             </div>
                         </div>

@@ -14,12 +14,20 @@ definePageMeta({
     layout: "ceremly",
 });
 
-useHead({ title: "Nuovo evento — Ceremly" });
+const { t } = useI18n();
+
+useHead({ title: t("ceremly.event.new.pageTitle") });
 
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
-crumbs.value = ["Eventi", "Nuovo evento"];
+crumbs.value = [t("ceremly.event.new.crumbEvents"), t("ceremly.event.new.crumbNew")];
 
-const STEPS = ["Tipo evento", "Template", "Dettagli", "Ospiti", "Invio"];
+const STEPS = computed(() => [
+    t("ceremly.event.new.stepEventType"),
+    t("ceremly.event.new.stepTemplate"),
+    t("ceremly.event.new.stepDetails"),
+    t("ceremly.event.new.stepGuests"),
+    t("ceremly.event.new.stepSend"),
+]);
 const ONBOARDING_TYPE_KEY = "ceremly:onboarding-type";
 
 // ─── Stato wizard ────────────────────────────────────────────────────
@@ -43,7 +51,7 @@ const planLimitMessage = ref<string | null>(null);
 // Pre-selezione tipo dal signup (localStorage, mai backend)
 onMounted(() => {
     const saved = localStorage.getItem(ONBOARDING_TYPE_KEY);
-    if (saved && EVENT_TYPES.some((t) => t.key === saved)) {
+    if (saved && EVENT_TYPES.some((et) => et.key === saved)) {
         eventType.value = saved as EventTypeKey;
     }
 });
@@ -72,7 +80,9 @@ const selectedTemplate = computed(() =>
 );
 
 const typeLabel = computed(
-    () => EVENT_TYPES.find((t) => t.key === eventType.value)?.label ?? eventType.value,
+    () => EVENT_TYPES.find((et) => et.key === eventType.value)?.key
+        ? t(`ceremly.eventType.${eventType.value}.label`)
+        : eventType.value,
 );
 
 // Mini-invito di anteprima: testi presi dai defaultBlocks del template stesso
@@ -90,43 +100,27 @@ function locationNameOf(t: InviteTemplate): string {
 }
 
 const templateCards = computed(() =>
-    templates.value.map((t) => {
-        const header = headerOf(t);
+    templates.value.map((tmpl) => {
+        const header = headerOf(tmpl);
         return {
-            key: t.key,
-            name: t.name,
-            tone: t.tone,
-            accent: t.accent,
+            key: tmpl.key,
+            name: tmpl.name,
+            tone: tmpl.tone,
+            accent: tmpl.accent,
             eyebrow: header.eyebrow,
             dateText: header.dateText,
             intro: header.intro,
             names: header.names,
-            locationName: locationNameOf(t),
+            locationName: locationNameOf(tmpl),
         };
     }),
 );
 
 // ─── Dettagli: hint titolo per tipo ──────────────────────────────────
-const TITLE_HINTS: Record<EventTypeKey, { placeholder: string, hint: string }> = {
-    matrimonio: {
-        placeholder: "Giulia & Tommaso",
-        hint: "I nomi degli sposi: compariranno sull'invito (es. «Giulia & Tommaso»).",
-    },
-    laurea: {
-        placeholder: "Laurea di Andrea",
-        hint: "Il titolo della festa (es. «Laurea di Andrea»).",
-    },
-    battesimo: {
-        placeholder: "Leo · Battesimo",
-        hint: "Il nome del festeggiato (es. «Leo · Battesimo»).",
-    },
-    compleanno: {
-        placeholder: "I 40 di Sara",
-        hint: "Il titolo della festa (es. «I 40 di Sara»).",
-    },
-};
-
-const titleHint = computed(() => TITLE_HINTS[eventType.value]);
+const titleHint = computed(() => ({
+    placeholder: t(`ceremly.event.new.titleHint.${eventType.value}.placeholder`),
+    hint: t(`ceremly.event.new.titleHint.${eventType.value}.hint`),
+}));
 
 // ─── Navigazione fasi ────────────────────────────────────────────────
 function scrollPageTop() {
@@ -182,12 +176,12 @@ async function submit() {
             planLimitMessage.value
                 = err.data?.statusMessage
                     || err.data?.message
-                    || "Il piano Free include 1 evento attivo. Passa a Celebrazione per crearne altri.";
+                    || t("ceremly.event.new.errorPlanLimit");
         } else {
             createError.value
                 = err.data?.statusMessage
                     || err.data?.message
-                    || "Non siamo riusciti a creare l'evento. Riprova tra qualche istante.";
+                    || t("ceremly.event.new.errorCreate");
         }
     } finally {
         creating.value = false;
@@ -204,47 +198,46 @@ async function submit() {
 
         <!-- ─── Fase 1+2: tipo evento + template (come il mockup) ─── -->
         <template v-if="phase === 'choose'">
-            <h1>Che tipo di evento stai organizzando?</h1>
+            <h1>{{ $t('ceremly.event.new.chooseTypeHeading') }}</h1>
             <p class="h-sub" style="max-width: 560px;">
-                La scelta determina la struttura dell'invito, i campi del form RSVP
-                e i template disponibili. Potrai cambiare idea più tardi.
+                {{ $t('ceremly.event.new.chooseTypeSubheading') }}
             </p>
 
             <!-- Type cards -->
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px;">
                 <div
-                    v-for="t in EVENT_TYPES"
-                    :key="t.key"
+                    v-for="et in EVENT_TYPES"
+                    :key="et.key"
                     :style="{
                         padding: '20px',
-                        border: '1px solid ' + (eventType === t.key ? 'var(--ink)' : 'var(--bone-200)'),
-                        background: eventType === t.key ? 'var(--ink)' : 'var(--bone-50)',
-                        color: eventType === t.key ? 'var(--bone-50)' : 'var(--ink)',
+                        border: '1px solid ' + (eventType === et.key ? 'var(--ink)' : 'var(--bone-200)'),
+                        background: eventType === et.key ? 'var(--ink)' : 'var(--bone-50)',
+                        color: eventType === et.key ? 'var(--bone-50)' : 'var(--ink)',
                         borderRadius: '14px',
                         cursor: 'pointer',
                         transition: 'transform 150ms',
                     }"
-                    @click="selectType(t.key)"
+                    @click="selectType(et.key)"
                 >
-                    <CerIcon :name="t.icon" :s="26" />
-                    <div class="serif" style="font-size: 22px; margin-top: 14px; letter-spacing: -0.01em;">{{ t.label }}</div>
+                    <CerIcon :name="et.icon" :s="26" />
+                    <div class="serif" style="font-size: 22px; margin-top: 14px; letter-spacing: -0.01em;">{{ $t(`ceremly.eventType.${et.key}.label`) }}</div>
                     <div
                         :style="{
                             fontSize: '12px',
                             marginTop: '4px',
-                            color: eventType === t.key ? 'var(--bone-200)' : 'var(--ink-500)',
+                            color: eventType === et.key ? 'var(--bone-200)' : 'var(--ink-500)',
                         }"
-                    >{{ t.desc }}</div>
+                    >{{ $t(`ceremly.eventType.${et.key}.desc`) }}</div>
                 </div>
             </div>
 
             <!-- Templates -->
             <div class="row" style="margin-top: 36px; justify-content: space-between;">
                 <div>
-                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Step 2</div>
-                    <div class="serif" style="font-size: 28px; margin-top: 4px;">Scegli un template</div>
+                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.step2Label') }}</div>
+                    <div class="serif" style="font-size: 28px; margin-top: 4px;">{{ $t('ceremly.event.new.chooseTemplateHeading') }}</div>
                 </div>
-                <div class="small muted">{{ templateCards.length }} template per {{ typeLabel.toLowerCase() }} · stile e tono fissi al lancio</div>
+                <div class="small muted">{{ $t('ceremly.event.new.templateCount', { count: templateCards.length, type: typeLabel.toLowerCase() }) }}</div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px;">
@@ -313,7 +306,7 @@ async function submit() {
                     <div style="padding: 12px;">
                         <div class="row" style="justify-content: space-between;">
                             <div style="font-size: 14px; font-weight: 500;">{{ c.name }}</div>
-                            <span v-if="templateKey === c.key" class="pill confirm"><span class="cer-dot" />Scelto</span>
+                            <span v-if="templateKey === c.key" class="pill confirm"><span class="cer-dot" />{{ $t('ceremly.event.new.templateChosen') }}</span>
                         </div>
                         <div class="small muted" style="margin-top: 2px;">{{ c.tone }}</div>
                     </div>
@@ -325,35 +318,35 @@ async function submit() {
         <template v-else>
             <div class="row" style="justify-content: space-between;">
                 <div>
-                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Step 3</div>
-                    <div class="serif" style="font-size: 28px; margin-top: 4px;">Dettagli dell'evento</div>
+                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.step3Label') }}</div>
+                    <div class="serif" style="font-size: 28px; margin-top: 4px;">{{ $t('ceremly.event.new.detailsHeading') }}</div>
                 </div>
-                <div class="small muted">Potrai modificare tutto in seguito dall'editor</div>
+                <div class="small muted">{{ $t('ceremly.event.new.detailsEditorNote') }}</div>
             </div>
 
             <form class="col" style="gap: 14px; max-width: 560px; margin-top: 24px;" novalidate @submit.prevent="submit">
                 <label class="col" style="gap: 6px;">
-                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">Titolo dell'evento</span>
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.fieldTitle') }}</span>
                     <input v-model="title" class="cer-input" type="text" :placeholder="titleHint.placeholder">
                     <span class="small muted">{{ titleHint.hint }}</span>
                 </label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <label class="col" style="gap: 6px;">
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">Data evento</span>
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.fieldDate') }}</span>
                         <input v-model="eventDate" class="cer-input" type="date">
                     </label>
                     <label class="col" style="gap: 6px;">
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">Ora</span>
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.fieldTime') }}</span>
                         <input v-model="eventTime" class="cer-input" type="time">
                     </label>
                 </div>
                 <label class="col" style="gap: 6px;">
-                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">Nome location</span>
-                    <input v-model="locationName" class="cer-input" type="text" placeholder="Villa delle Rose">
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.fieldLocationName') }}</span>
+                    <input v-model="locationName" class="cer-input" type="text" :placeholder="$t('ceremly.event.new.fieldLocationNamePlaceholder')">
                 </label>
                 <label class="col" style="gap: 6px;">
-                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">Indirizzo</span>
-                    <input v-model="locationAddress" class="cer-input" type="text" placeholder="Strada del Colle 12, San Gimignano (SI)">
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.new.fieldAddress') }}</span>
+                    <input v-model="locationAddress" class="cer-input" type="text" :placeholder="$t('ceremly.event.new.fieldAddressPlaceholder')">
                 </label>
             </form>
 
@@ -363,14 +356,14 @@ async function submit() {
                 class="cer-card"
                 style="margin-top: 24px; padding: 24px; max-width: 560px; background: var(--orange-soft); border-color: var(--ink);"
             >
-                <div class="serif" style="font-size: 22px; letter-spacing: -0.01em;">Hai raggiunto il limite del piano Free</div>
+                <div class="serif" style="font-size: 22px; letter-spacing: -0.01em;">{{ $t('ceremly.event.new.planLimitHeading') }}</div>
                 <p class="small" style="margin: 8px 0 0; color: var(--ink-700);">{{ planLimitMessage }}</p>
                 <div class="row" style="gap: 10px; margin-top: 16px;">
                     <button class="cer-btn dark" type="button" @click="navigateTo('/dashboard/subscription')">
-                        <CerIcon name="sparkle" :s="14" /> Passa a Celebrazione
+                        <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.event.new.upgradeCta') }}
                     </button>
                     <button class="cer-btn ghost" type="button" @click="navigateTo('/dashboard')">
-                        Torna ai tuoi eventi
+                        {{ $t('ceremly.event.new.backToEvents') }}
                     </button>
                 </div>
             </div>
@@ -384,7 +377,7 @@ async function submit() {
         <!-- Footer -->
         <div class="row" style="margin-top: 36px; justify-content: space-between;">
             <button class="cer-btn ghost" type="button" @click="goBack">
-                <CerIcon name="chevR" :s="14" style="transform: rotate(180deg);" /> Indietro
+                <CerIcon name="chevR" :s="14" style="transform: rotate(180deg);" /> {{ $t('common.back') }}
             </button>
             <button
                 v-if="phase === 'choose'"
@@ -394,7 +387,7 @@ async function submit() {
                 :style="!selectedTemplate ? { opacity: 0.5, cursor: 'not-allowed' } : undefined"
                 @click="goToDetails"
             >
-                Continua con "{{ selectedTemplate?.name ?? 'template' }}" <CerIcon name="chevR" :s="14" />
+                {{ $t('ceremly.event.new.continueWith', { name: selectedTemplate?.name ?? $t('ceremly.event.new.templateFallback') }) }} <CerIcon name="chevR" :s="14" />
             </button>
             <button
                 v-else
@@ -404,7 +397,7 @@ async function submit() {
                 :style="!canCreate ? { opacity: 0.5, cursor: 'not-allowed' } : undefined"
                 @click="submit"
             >
-                {{ creating ? "Creazione in corso…" : "Crea evento" }} <CerIcon name="chevR" :s="14" />
+                {{ creating ? $t('ceremly.event.new.creating') : $t('ceremly.event.new.createEvent') }} <CerIcon name="chevR" :s="14" />
             </button>
         </div>
     </div>

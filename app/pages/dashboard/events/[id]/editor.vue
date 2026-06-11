@@ -8,9 +8,10 @@ import type {
     InviteBlock,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
-import { getEventTypeLabel } from "~~/shared/constants/eventTypes";
 
 definePageMeta({ layout: "ceremly" });
+
+const { t } = useI18n();
 
 interface CeremlyEventCtx {
     id: string;
@@ -48,31 +49,31 @@ const isDirty = computed(() => savedSnapshot.value !== "" && snapshot() !== save
 // ─── Breadcrumbs + contesto evento sidebar ───────────────────────────
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
-crumbs.value = ["Eventi", "Evento", "Invito"];
+crumbs.value = [t("ceremly.event.editor.breadcrumb.events"), t("ceremly.event.editor.breadcrumb.event"), t("ceremly.event.editor.breadcrumb.invite")];
 
 // ─── Libreria blocchi (label e icone come blockLib del mockup) ───────
 const BLOCK_LIB: { type: BlockType; label: string; icon: string; locked?: boolean }[] = [
-    { type: "header", label: "Intestazione", icon: "ring" },
-    { type: "message", label: "Messaggio", icon: "edit" },
-    { type: "program", label: "Programma", icon: "clock" },
-    { type: "location", label: "Location + mappa", icon: "pin" },
-    { type: "dresscode", label: "Dress code", icon: "sparkle" },
-    { type: "logistics", label: "Logistica", icon: "calendar" },
-    { type: "countdown", label: "Countdown", icon: "clock" },
-    { type: "gallery", label: "Galleria", icon: "eye" },
-    { type: "rsvp", label: "Blocco RSVP", icon: "check", locked: true },
+    { type: "header", label: t("ceremly.event.editor.library.header"), icon: "ring" },
+    { type: "message", label: t("ceremly.event.editor.library.message"), icon: "edit" },
+    { type: "program", label: t("ceremly.event.editor.library.program"), icon: "clock" },
+    { type: "location", label: t("ceremly.event.editor.library.location"), icon: "pin" },
+    { type: "dresscode", label: t("ceremly.event.editor.library.dresscode"), icon: "sparkle" },
+    { type: "logistics", label: t("ceremly.event.editor.library.logistics"), icon: "calendar" },
+    { type: "countdown", label: t("ceremly.event.editor.library.countdown"), icon: "clock" },
+    { type: "gallery", label: t("ceremly.event.editor.library.gallery"), icon: "eye" },
+    { type: "rsvp", label: t("ceremly.event.editor.library.rsvp"), icon: "check", locked: true },
 ];
 
 const INSPECTOR_TITLES: Record<BlockType, string> = {
-    header: "Intestazione",
-    message: "Messaggio",
-    program: "Programma",
-    location: "Location",
-    dresscode: "Dress code",
-    logistics: "Logistica",
-    countdown: "Countdown",
-    gallery: "Galleria",
-    rsvp: "Blocco RSVP",
+    header: t("ceremly.event.editor.inspector.header"),
+    message: t("ceremly.event.editor.inspector.message"),
+    program: t("ceremly.event.editor.inspector.program"),
+    location: t("ceremly.event.editor.inspector.location"),
+    dresscode: t("ceremly.event.editor.inspector.dresscode"),
+    logistics: t("ceremly.event.editor.inspector.logistics"),
+    countdown: t("ceremly.event.editor.inspector.countdown"),
+    gallery: t("ceremly.event.editor.inspector.gallery"),
+    rsvp: t("ceremly.event.editor.inspector.rsvp"),
 };
 
 // ─── Blocchi: factory placeholder ────────────────────────────────────
@@ -123,12 +124,12 @@ async function loadEvent() {
         blocks.value = normalizeBlocks(structuredClone(ev.blocks ?? []));
         rsvpDeadline.value = ev.rsvpDeadline ? String(ev.rsvpDeadline).slice(0, 10) : "";
         activeBlockId.value = blocks.value[0]?.id ?? null;
-        crumbs.value = ["Eventi", getEventTypeLabel(ev.type), "Invito"];
+        crumbs.value = [t("ceremly.event.editor.breadcrumb.events"), t(`ceremly.eventType.${ev.type}.label`), t("ceremly.event.editor.breadcrumb.invite")];
         eventCtx.value = { id: ev.id, title: ev.title, type: ev.type };
         savedSnapshot.value = snapshot();
     } catch (e: unknown) {
         const err = e as { data?: { statusMessage?: string; message?: string }; message?: string };
-        loadError.value = err.data?.statusMessage || err.data?.message || err.message || "Errore di rete";
+        loadError.value = err.data?.statusMessage || err.data?.message || err.message || t("ceremly.event.editor.error.network");
     } finally {
         pending.value = false;
     }
@@ -156,7 +157,7 @@ const countdownD = computed(() => (activeBlock.value?.type === "countdown" ? act
 const galleryD = computed(() => (activeBlock.value?.type === "gallery" ? activeBlock.value.data : null));
 const rsvpD = computed(() => (activeBlock.value?.type === "rsvp" ? activeBlock.value.data : null));
 
-const inspectorTitle = computed(() => (activeBlock.value ? INSPECTOR_TITLES[activeBlock.value.type] : "Blocco"));
+const inspectorTitle = computed(() => (activeBlock.value ? INSPECTOR_TITLES[activeBlock.value.type] : t("ceremly.event.editor.inspector.fallback")));
 const isRemovable = computed(
     () => !!activeBlock.value && activeBlock.value.type !== "header" && activeBlock.value.type !== "rsvp",
 );
@@ -254,15 +255,15 @@ async function onGalleryFile(e: Event) {
     const d = galleryD.value;
     if (!file || !d) return;
     if (d.images.length >= 5) {
-        toast.add({ title: "Limite raggiunto", description: "La galleria può contenere al massimo 5 immagini.", icon: "i-lucide-alert-circle", color: "error" });
+        toast.add({ title: t("ceremly.event.editor.toast.gallery.limitTitle"), description: t("ceremly.event.editor.toast.gallery.limitDesc"), icon: "i-lucide-alert-circle", color: "error" });
         return;
     }
     if (!file.type.startsWith("image/")) {
-        toast.add({ title: "File non valido", description: "Puoi caricare solo immagini (JPG, PNG, WebP…).", icon: "i-lucide-alert-circle", color: "error" });
+        toast.add({ title: t("ceremly.event.editor.toast.gallery.invalidFileTitle"), description: t("ceremly.event.editor.toast.gallery.invalidFileDesc"), icon: "i-lucide-alert-circle", color: "error" });
         return;
     }
     if (file.size > 5 * 1024 * 1024) {
-        toast.add({ title: "Immagine troppo grande", description: "Dimensione massima: 5 MB.", icon: "i-lucide-alert-circle", color: "error" });
+        toast.add({ title: t("ceremly.event.editor.toast.gallery.tooLargeTitle"), description: t("ceremly.event.editor.toast.gallery.tooLargeDesc"), icon: "i-lucide-alert-circle", color: "error" });
         return;
     }
     uploadingGallery.value = true;
@@ -279,7 +280,7 @@ async function onGalleryFile(e: Event) {
             throw new Error("URL pubblico non disponibile");
         }
     } catch {
-        toast.add({ title: "Caricamento non riuscito", description: "Non è stato possibile caricare l'immagine. Riprova.", icon: "i-lucide-alert-circle", color: "error" });
+        toast.add({ title: t("ceremly.event.editor.toast.gallery.uploadErrorTitle"), description: t("ceremly.event.editor.toast.gallery.uploadErrorDesc"), icon: "i-lucide-alert-circle", color: "error" });
     } finally {
         uploadingGallery.value = false;
     }
@@ -291,7 +292,7 @@ async function save(): Promise<boolean> {
     const rsvpBlock = blocks.value.find((b) => b.type === "rsvp");
     if (rsvpBlock?.type === "rsvp" && !rsvpBlock.data.buttonLabel.trim()) {
         activeBlockId.value = rsvpBlock.id;
-        toast.add({ title: "Etichetta mancante", description: "L'etichetta del bottone RSVP non può essere vuota.", icon: "i-lucide-alert-circle", color: "error" });
+        toast.add({ title: t("ceremly.event.editor.toast.save.rsvpLabelMissingTitle"), description: t("ceremly.event.editor.toast.save.rsvpLabelMissingDesc"), icon: "i-lucide-alert-circle", color: "error" });
         return false;
     }
     saving.value = true;
@@ -305,13 +306,13 @@ async function save(): Promise<boolean> {
         });
         eventData.value = res.event;
         savedSnapshot.value = snapshot();
-        toast.add({ title: "Invito salvato", description: "Le modifiche sono state salvate.", icon: "i-lucide-check", color: "success" });
+        toast.add({ title: t("ceremly.event.editor.toast.save.successTitle"), description: t("ceremly.event.editor.toast.save.successDesc"), icon: "i-lucide-check", color: "success" });
         return true;
     } catch (e: unknown) {
         const err = e as { data?: { statusMessage?: string; message?: string } };
         toast.add({
-            title: "Salvataggio non riuscito",
-            description: err.data?.statusMessage || err.data?.message || "Riprova tra qualche istante.",
+            title: t("ceremly.event.editor.toast.save.errorTitle"),
+            description: err.data?.statusMessage || err.data?.message || t("ceremly.event.editor.toast.save.errorDesc"),
             icon: "i-lucide-alert-circle",
             color: "error",
         });
@@ -335,7 +336,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
 onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
 onBeforeRouteLeave(() => {
-    if (isDirty.value && !window.confirm("Hai modifiche non salvate. Vuoi davvero uscire dall'editor?")) {
+    if (isDirty.value && !window.confirm(t("ceremly.event.editor.unsavedChangesConfirm"))) {
         return false;
     }
 });
@@ -359,9 +360,9 @@ onBeforeRouteLeave(() => {
             class="col"
             style="align-items: center; justify-content: center; height: 100%; gap: 12px; text-align: center;"
         >
-            <div class="serif" style="font-size: 22px;">Impossibile caricare l'invito</div>
+            <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.editor.error.loadTitle') }}</div>
             <p class="small" style="margin: 0; color: var(--decline);">{{ loadError }}</p>
-            <button class="cer-btn ghost small" type="button" @click="loadEvent">Riprova</button>
+            <button class="cer-btn ghost small" type="button" @click="loadEvent">{{ $t('common.retry') }}</button>
         </div>
 
         <!-- Editor -->
@@ -372,7 +373,7 @@ onBeforeRouteLeave(() => {
             <!-- Libreria blocchi -->
             <div class="col" style="gap: 14px; min-height: 0; overflow-y: auto;">
                 <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                    Blocchi
+                    {{ $t('ceremly.event.editor.sidebar.blocksHeading') }}
                 </div>
                 <div class="col" style="gap: 4px;">
                     <div
@@ -397,7 +398,7 @@ onBeforeRouteLeave(() => {
                     </div>
                 </div>
                 <button class="cer-btn ghost small" style="justify-content: center;" type="button" @click="addCustomBlock">
-                    <CeremlyCerIcon name="plus" :s="12" /> Blocco personalizzato
+                    <CeremlyCerIcon name="plus" :s="12" /> {{ $t('ceremly.event.editor.sidebar.addCustomBlock') }}
                 </button>
             </div>
 
@@ -412,7 +413,7 @@ onBeforeRouteLeave(() => {
                 >
                     <div class="row" style="gap: 8px;">
                         <span class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">
-                            Anteprima · template {{ templateName }}
+                            {{ $t('ceremly.event.editor.preview.heading', { template: templateName }) }}
                         </span>
                     </div>
                     <div class="row" style="gap: 4px; background: var(--bone-100); border-radius: 999px; padding: 3px;">
@@ -422,7 +423,7 @@ onBeforeRouteLeave(() => {
                             :style="{ background: device === 'desktop' ? 'var(--bone-50)' : 'transparent', borderColor: 'transparent', borderRadius: '999px' }"
                             @click="device = 'desktop'"
                         >
-                            Desktop
+                            {{ $t('ceremly.event.editor.preview.desktop') }}
                         </button>
                         <button
                             type="button"
@@ -430,7 +431,7 @@ onBeforeRouteLeave(() => {
                             :style="{ background: device === 'mobile' ? 'var(--bone-50)' : 'transparent', borderColor: 'transparent', borderRadius: '999px' }"
                             @click="device = 'mobile'"
                         >
-                            Mobile
+                            {{ $t('ceremly.event.editor.preview.mobile') }}
                         </button>
                     </div>
                 </div>
@@ -455,7 +456,7 @@ onBeforeRouteLeave(() => {
                 <div class="row" style="justify-content: space-between; align-items: flex-start;">
                     <div>
                         <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                            Blocco selezionato
+                            {{ $t('ceremly.event.editor.inspector.selectedBlock') }}
                         </div>
                         <div class="serif" style="font-size: 22px; margin-top: 2px;">{{ inspectorTitle }}</div>
                     </div>
@@ -465,7 +466,7 @@ onBeforeRouteLeave(() => {
                             style="padding: 6px;"
                             type="button"
                             :disabled="!canMoveUp"
-                            aria-label="Sposta il blocco in su"
+                            :aria-label="$t('ceremly.event.editor.inspector.moveUp')"
                             @click="moveActive(-1)"
                         >
                             <CeremlyCerIcon name="chevD" :s="14" style="transform: rotate(180deg);" />
@@ -475,7 +476,7 @@ onBeforeRouteLeave(() => {
                             style="padding: 6px;"
                             type="button"
                             :disabled="!canMoveDown"
-                            aria-label="Sposta il blocco in giù"
+                            :aria-label="$t('ceremly.event.editor.inspector.moveDown')"
                             @click="moveActive(1)"
                         >
                             <CeremlyCerIcon name="chevD" :s="14" />
@@ -485,7 +486,7 @@ onBeforeRouteLeave(() => {
                             class="cer-btn ghost small"
                             style="padding: 6px;"
                             type="button"
-                            aria-label="Rimuovi il blocco"
+                            :aria-label="$t('ceremly.event.editor.inspector.removeBlock')"
                             @click="askDelete"
                         >
                             <CeremlyCerIcon name="trash" :s="14" />
@@ -494,22 +495,22 @@ onBeforeRouteLeave(() => {
                 </div>
 
                 <div v-if="!activeBlock" class="small muted">
-                    Seleziona un blocco nell'anteprima o dalla colonna Blocchi per modificarlo.
+                    {{ $t('ceremly.event.editor.inspector.noSelection') }}
                 </div>
 
                 <div v-else class="col" style="gap: 10px;">
                     <!-- header -->
                     <template v-if="headerD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Sopra-titolo</label>
-                            <input v-model="headerD.eyebrow" class="cer-input" placeholder="Save the date">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.header.eyebrow') }}</label>
+                            <input v-model="headerD.eyebrow" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.header.eyebrowPlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Frase introduttiva</label>
-                            <input v-model="headerD.intro" class="cer-input" placeholder="con gioia annunciamo…">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.header.intro') }}</label>
+                            <input v-model="headerD.intro" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.header.introPlaceholder')">
                         </div>
                         <div v-for="(_, i) in headerD.names" :key="i" class="col" style="gap: 4px;">
-                            <label class="ins-label">Nome {{ i + 1 }}</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.header.name', { n: i + 1 }) }}</label>
                             <div class="row" style="gap: 6px;">
                                 <input v-model="headerD.names[i]" class="cer-input">
                                 <button
@@ -517,7 +518,7 @@ onBeforeRouteLeave(() => {
                                     class="cer-btn ghost small"
                                     style="padding: 6px;"
                                     type="button"
-                                    aria-label="Rimuovi nome"
+                                    :aria-label="$t('ceremly.event.editor.fields.header.removeName')"
                                     @click="removeName(i)"
                                 >
                                     <CeremlyCerIcon name="x" :s="12" />
@@ -531,14 +532,14 @@ onBeforeRouteLeave(() => {
                             type="button"
                             @click="addName"
                         >
-                            <CeremlyCerIcon name="plus" :s="12" /> Aggiungi nome
+                            <CeremlyCerIcon name="plus" :s="12" /> {{ $t('ceremly.event.editor.fields.header.addName') }}
                         </button>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Data</label>
-                            <input v-model="headerD.dateText" class="cer-input" placeholder="12 settembre 2026">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.header.date') }}</label>
+                            <input v-model="headerD.dateText" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.header.datePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Ora</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.header.time') }}</label>
                             <input v-model="headerD.timeText" class="cer-input" placeholder="16:00">
                         </div>
                     </template>
@@ -546,7 +547,7 @@ onBeforeRouteLeave(() => {
                     <!-- message -->
                     <template v-else-if="messageD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Testo libero</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.message.text') }}</label>
                             <textarea v-model="messageD.text" class="cer-input" rows="3" />
                         </div>
                     </template>
@@ -554,11 +555,11 @@ onBeforeRouteLeave(() => {
                     <!-- program -->
                     <template v-else-if="programD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Titolo blocco</label>
-                            <input v-model="programD.title" class="cer-input" placeholder="Il giorno">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.program.blockTitle') }}</label>
+                            <input v-model="programD.title" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.program.blockTitlePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Voci</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.program.items') }}</label>
                             <div class="col" style="gap: 8px;">
                                 <div
                                     v-for="(it, i) in programD.items"
@@ -568,25 +569,25 @@ onBeforeRouteLeave(() => {
                                 >
                                     <div class="row" style="gap: 6px;">
                                         <input v-model="it.time" class="cer-input" placeholder="16:00" style="width: 72px; flex-shrink: 0;">
-                                        <input v-model="it.label" class="cer-input" placeholder="Cerimonia">
+                                        <input v-model="it.label" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.program.itemLabelPlaceholder')">
                                         <button
                                             class="cer-btn ghost small"
                                             style="padding: 6px;"
                                             type="button"
-                                            aria-label="Rimuovi voce"
+                                            :aria-label="$t('ceremly.event.editor.fields.program.removeItem')"
                                             @click="removeProgramItem(i)"
                                         >
                                             <CeremlyCerIcon name="x" :s="12" />
                                         </button>
                                     </div>
-                                    <input v-model="it.description" class="cer-input" placeholder="Dettaglio (opzionale)">
+                                    <input v-model="it.description" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.program.itemDescPlaceholder')">
                                 </div>
                             </div>
                             <div v-if="programD.items.length === 0" class="small muted">
-                                Nessuna voce: aggiungi i momenti della giornata.
+                                {{ $t('ceremly.event.editor.fields.program.noItems') }}
                             </div>
                             <button class="cer-btn ghost small" style="justify-content: center; margin-top: 2px;" type="button" @click="addProgramItem">
-                                <CeremlyCerIcon name="plus" :s="12" /> Aggiungi voce
+                                <CeremlyCerIcon name="plus" :s="12" /> {{ $t('ceremly.event.editor.fields.program.addItem') }}
                             </button>
                         </div>
                     </template>
@@ -594,52 +595,52 @@ onBeforeRouteLeave(() => {
                     <!-- location -->
                     <template v-else-if="locationD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Titolo</label>
-                            <input v-model="locationD.title" class="cer-input" placeholder="Dove">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.location.title') }}</label>
+                            <input v-model="locationD.title" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.location.titlePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Nome location</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.location.name') }}</label>
                             <input v-model="locationD.name" class="cer-input" placeholder="Villa Erba">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Indirizzo</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.location.address') }}</label>
                             <input v-model="locationD.address" class="cer-input" placeholder="Largo L. Visconti 4, Cernobbio (CO)">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Mostra mappa</label>
-                            <CeremlyCerToggle v-model="locationD.showMap" :label="locationD.showMap ? 'Attivo' : 'Disattivo'" />
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.location.showMap') }}</label>
+                            <CeremlyCerToggle v-model="locationD.showMap" :label="locationD.showMap ? $t('ceremly.event.editor.fields.location.mapOn') : $t('ceremly.event.editor.fields.location.mapOff')" />
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Link Google Maps (opzionale)</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.location.mapsUrl') }}</label>
                             <input v-model="locationD.mapsUrl" class="cer-input" placeholder="https://maps.google.com/…">
-                            <div class="small muted">Se vuoto, il link è generato dall'indirizzo.</div>
+                            <div class="small muted">{{ $t('ceremly.event.editor.fields.location.mapsUrlHint') }}</div>
                         </div>
                     </template>
 
                     <!-- dresscode -->
                     <template v-else-if="dressD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Titolo</label>
-                            <input v-model="dressD.title" class="cer-input" placeholder="Dress code">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.dresscode.title') }}</label>
+                            <input v-model="dressD.title" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.dresscode.titlePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Descrizione</label>
-                            <input v-model="dressD.headline" class="cer-input" placeholder="Elegante in toni pastello">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.dresscode.headline') }}</label>
+                            <input v-model="dressD.headline" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.dresscode.headlinePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Sotto-testo</label>
-                            <input v-model="dressD.note" class="cer-input" placeholder="niente bianco · scarpe comode">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.dresscode.note') }}</label>
+                            <input v-model="dressD.note" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.dresscode.notePlaceholder')">
                         </div>
                     </template>
 
                     <!-- logistics -->
                     <template v-else-if="logisticsD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Titolo</label>
-                            <input v-model="logisticsD.title" class="cer-input" placeholder="Informazioni utili">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.logistics.title') }}</label>
+                            <input v-model="logisticsD.title" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.logistics.titlePlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Testo</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.logistics.text') }}</label>
                             <textarea v-model="logisticsD.text" class="cer-input" rows="4" />
                         </div>
                     </template>

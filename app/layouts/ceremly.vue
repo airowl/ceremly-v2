@@ -18,6 +18,7 @@ interface EventLookupResponse {
     type?: string;
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const userStore = useUserStore();
 const { user } = useAuth();
@@ -26,27 +27,27 @@ const { hasActiveSubscription, currentPlan, refreshSubscription } = useSubscript
 // ─── Nav statica ─────────────────────────────────────────────────────
 // Nota: niente voce 'Home' — /dashboard È la lista eventi, una 'Home'
 // separata duplicherebbe 'I tuoi eventi' senza mai risultare attiva.
-const mainNav = [
-    { key: "events", label: "I tuoi eventi", icon: "events", to: "/dashboard" },
-    { key: "templates", label: "Template", icon: "sparkle", to: "/dashboard/events/new" },
-] as const;
+const mainNav = computed(() => [
+    { key: "events", label: t("ceremly.layout.navEvents"), icon: "events", to: "/dashboard" },
+    { key: "templates", label: t("ceremly.layout.navTemplates"), icon: "sparkle", to: "/dashboard/events/new" },
+]);
 
 // ─── Gruppo contestuale evento ───────────────────────────────────────
-const eventNav = [
-    { key: "invito", label: "Invito", icon: "edit", path: "editor" },
-    { key: "ospiti", label: "Ospiti", icon: "guests", path: "guests" },
-    { key: "rsvp", label: "Form RSVP", icon: "check", path: "rsvp" },
-    { key: "invio", label: "Distribuzione", icon: "send", path: "distribution" },
-    { key: "reminder", label: "Reminder", icon: "bell", path: "reminders" },
-    { key: "dashboard", label: "Andamento", icon: "chart", path: "" },
-] as const;
+const eventNav = computed(() => [
+    { key: "invito", label: t("ceremly.layout.navInvitation"), icon: "edit", path: "editor" },
+    { key: "ospiti", label: t("ceremly.layout.navGuests"), icon: "guests", path: "guests" },
+    { key: "rsvp", label: t("ceremly.layout.navRsvpForm"), icon: "check", path: "rsvp" },
+    { key: "invio", label: t("ceremly.layout.navDistribution"), icon: "send", path: "distribution" },
+    { key: "reminder", label: t("ceremly.layout.navReminders"), icon: "bell", path: "reminders" },
+    { key: "dashboard", label: t("ceremly.layout.navOverview"), icon: "chart", path: "" },
+]);
 
-const TYPE_LABELS: Record<string, string> = {
-    matrimonio: "Matrimonio",
-    laurea: "Laurea",
-    battesimo: "Battesimo",
-    compleanno: "Compleanno",
-};
+const TYPE_LABELS = computed<Record<string, string>>(() => ({
+    matrimonio: t("ceremly.layout.typeWedding"),
+    laurea: t("ceremly.layout.typeGraduation"),
+    battesimo: t("ceremly.layout.typeBaptism"),
+    compleanno: t("ceremly.layout.typeBirthday"),
+}));
 
 const eventId = computed(() => {
     const id = route.params.id;
@@ -67,15 +68,15 @@ watch(
                 eventCtx.value = { id: ev.id, title: ev.title, type: ev.type ?? "" };
             }
         } catch {
-            eventCtx.value = { id, title: "Evento", type: "" };
+            eventCtx.value = { id, title: t("ceremly.layout.eventFallback"), type: "" };
         }
     },
     { immediate: true },
 );
 
 const eventGroupLabel = computed(() => {
-    if (!eventCtx.value || eventCtx.value.id !== eventId.value) return "Evento";
-    const typeLabel = TYPE_LABELS[eventCtx.value.type];
+    if (!eventCtx.value || eventCtx.value.id !== eventId.value) return t("ceremly.layout.eventFallback");
+    const typeLabel = TYPE_LABELS.value[eventCtx.value.type];
     return typeLabel ? `${typeLabel} · ${eventCtx.value.title}` : eventCtx.value.title;
 });
 
@@ -106,9 +107,9 @@ const initials = computed(() => {
 });
 
 const planLabel = computed(() => {
-    if (!hasActiveSubscription.value) return "Piano Free";
+    if (!hasActiveSubscription.value) return t("ceremly.layout.planFree");
     const plan = currentPlan.value;
-    return `Piano ${plan.charAt(0).toUpperCase()}${plan.slice(1)}`;
+    return t("ceremly.layout.planPaid", { plan: plan.charAt(0).toUpperCase() + plan.slice(1) });
 });
 
 onMounted(async () => {
@@ -153,7 +154,7 @@ onMounted(async () => {
 
             <NuxtLink to="/dashboard/profile" class="cer-nav-item">
                 <CerIcon name="settings" :s="15" />
-                <span>Impostazioni</span>
+                <span>{{ $t('ceremly.layout.navSettings') }}</span>
             </NuxtLink>
 
             <div style="margin-top: 10px; padding: 10px 8px; border-top: 1px solid var(--bone-200); display: flex; align-items: center; gap: 10px;">
@@ -176,7 +177,7 @@ onMounted(async () => {
                 </div>
                 <div class="row" style="gap: 10px;">
                     <button class="cer-btn ghost small" type="button">
-                        <CerIcon name="search" :s="14" /> Cerca
+                        <CerIcon name="search" :s="14" /> {{ $t('ceremly.layout.search') }}
                         <span class="mono" style="color: var(--ink-400); margin-left: 6px; font-size: 11px;">⌘K</span>
                     </button>
                     <!-- Teleport target: le pagine vi teletrasportano i bottoni azione -->

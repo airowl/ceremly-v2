@@ -10,6 +10,7 @@ definePageMeta({ layout: "ceremly" });
 const route = useRoute();
 const toast = useToast();
 const config = useRuntimeConfig();
+const { t } = useI18n();
 const eventId = computed(() => String(route.params.id ?? ""));
 
 const { listGuests, sendInvites, sendTest, markWhatsappSent } = useEventGuests();
@@ -19,18 +20,18 @@ interface CeremlyEventCtx { id: string; title: string; type: string }
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 
-const TYPE_LABELS: Record<string, string> = {
-    matrimonio: "Matrimonio",
-    laurea: "Laurea",
-    battesimo: "Battesimo",
-    compleanno: "Compleanno",
-};
+const TYPE_LABELS = computed<Record<string, string>>(() => ({
+    matrimonio: t("ceremly.eventType.matrimonio"),
+    laurea: t("ceremly.eventType.laurea"),
+    battesimo: t("ceremly.eventType.battesimo"),
+    compleanno: t("ceremly.eventType.compleanno"),
+}));
 
 const eventData = ref<CeremlyEvent | null>(null);
 
 watchEffect(() => {
-    const label = eventData.value ? TYPE_LABELS[eventData.value.type] ?? eventData.value.title : "Evento";
-    crumbs.value = ["Eventi", label, "Distribuzione"];
+    const label = eventData.value ? TYPE_LABELS.value[eventData.value.type] ?? eventData.value.title : t("ceremly.event.distribution.crumbEvent");
+    crumbs.value = [t("ceremly.event.distribution.crumbEvents"), label, t("ceremly.event.distribution.crumbDistribution")];
 });
 
 // ─── Errori $fetch (shape minima, niente any) ────────────────────────
@@ -76,7 +77,7 @@ async function loadAll() {
             channel.value = "whatsapp";
         }
     } catch (e) {
-        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || "Errore nel caricamento dei dati di invio";
+        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || t("ceremly.event.distribution.loadError");
     } finally {
         loading.value = false;
     }
@@ -124,8 +125,8 @@ const currentTargets = computed(() => channel.value === "email" ? emailTargets.v
 const notSentCount = computed(() => activeGuests.value.filter(g => g.sentAt === null).length);
 
 const headerSub = computed(() => {
-    if (!summary.value) return "Caricamento…";
-    return `${notSentCount.value} ospiti non hanno ancora ricevuto il link · ${summary.value.pending} in attesa di risposta`;
+    if (!summary.value) return t("ceremly.event.distribution.loading");
+    return t("ceremly.event.distribution.headerSub", { notSent: notSentCount.value, pending: summary.value.pending });
 });
 
 // ─── Helpers di formattazione ────────────────────────────────────────
@@ -180,7 +181,7 @@ const previewSnippet = computed(() => {
         .split("{link}").join("")
         .replace(/\s+/g, " ")
         .trim();
-    if (!text) return "Il messaggio apparirà qui…";
+    if (!text) return t("ceremly.event.distribution.previewSnippetEmpty");
     return text.length > 64 ? `${text.slice(0, 64)}…` : text;
 });
 
@@ -214,7 +215,7 @@ const testSending = ref(false);
 
 function openConfirmSend() {
     if (!subject.value.trim() || !body.value.trim()) {
-        toast.add({ title: "Completa il messaggio", description: "Oggetto e messaggio sono obbligatori prima dell'invio.", color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastCompleteTitle"), description: t("ceremly.event.distribution.toastCompleteDesc"), color: "error" });
         return;
     }
     if (emailTargets.value.length === 0) return;
@@ -238,14 +239,15 @@ async function doSend() {
             skippedNoEmail += res.skippedNoEmail;
         }
         confirmSendOpen.value = false;
+        const skippedSuffix = skippedNoEmail > 0 ? ` · ${t("ceremly.event.distribution.toastSentSkipped", { n: skippedNoEmail })}` : "";
         toast.add({
-            title: "Inviti in partenza",
-            description: `${queued} email in coda${skippedNoEmail > 0 ? ` · ${skippedNoEmail} ospiti saltati (senza email)` : ""}.`,
+            title: t("ceremly.event.distribution.toastSentTitle"),
+            description: `${t("ceremly.event.distribution.toastSentDesc", { queued })}${skippedSuffix}`,
             color: "success",
         });
         await refreshGuests();
     } catch (e) {
-        toast.add({ title: "Invio non riuscito", description: errOf(e).data?.statusMessage || "Riprova tra qualche istante.", color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastSendFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastSendFailDesc"), color: "error" });
     } finally {
         sending.value = false;
     }
@@ -258,9 +260,9 @@ async function doSendTest() {
         if (subject.value.trim()) override.subject = subject.value.trim();
         if (body.value.trim()) override.body = body.value.trim();
         await sendTest(eventId.value, override);
-        toast.add({ title: "Test inviato", description: "Controlla la tua casella: l'email di prova è in arrivo.", color: "success" });
+        toast.add({ title: t("ceremly.event.distribution.toastTestSentTitle"), description: t("ceremly.event.distribution.toastTestSentDesc"), color: "success" });
     } catch (e) {
-        toast.add({ title: "Test non riuscito", description: errOf(e).data?.statusMessage || "Invio dell'email di test non riuscito.", color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastTestFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastTestFailDesc"), color: "error" });
     } finally {
         testSending.value = false;
     }
@@ -287,9 +289,9 @@ async function saveWaTemplate() {
             },
         });
         eventData.value = res.event;
-        toast.add({ title: "Modello salvato", description: "Il messaggio WhatsApp è stato aggiornato.", color: "success" });
+        toast.add({ title: t("ceremly.event.distribution.toastWaSavedTitle"), description: t("ceremly.event.distribution.toastWaSavedDesc"), color: "success" });
     } catch (e) {
-        toast.add({ title: "Errore", description: errOf(e).data?.statusMessage || "Salvataggio del modello non riuscito.", color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastWaSaveFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastWaSaveFailDesc"), color: "error" });
     } finally {
         waSavingTemplate.value = false;
     }
@@ -300,7 +302,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
         await navigator.clipboard.writeText(text);
         return true;
     } catch {
-        toast.add({ title: "Copia non riuscita", description: "Il browser ha bloccato l'accesso agli appunti.", color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyFailTitle"), description: t("ceremly.event.distribution.toastCopyFailDesc"), color: "error" });
         return false;
     }
 }
@@ -316,7 +318,7 @@ async function copyOne(g: GuestWithStatus) {
         await markWhatsappSent(eventId.value, [g.id]);
         await refreshGuests();
     } catch (e) {
-        toast.add({ title: "Attenzione", description: errOf(e).data?.statusMessage || "Messaggio copiato, ma lo stato di invio non è stato aggiornato.", color: "warning" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastCopyOneWarnDesc"), color: "warning" });
     }
 }
 
@@ -332,10 +334,10 @@ async function copyAll() {
         for (let i = 0; i < ids.length; i += 500) {
             await markWhatsappSent(eventId.value, ids.slice(i, i + 500));
         }
-        toast.add({ title: "Messaggi copiati", description: `${waTargets.value.length} messaggi personalizzati copiati negli appunti.`, color: "success" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyAllTitle"), description: t("ceremly.event.distribution.toastCopyAllDesc", { n: waTargets.value.length }), color: "success" });
         await refreshGuests();
     } catch (e) {
-        toast.add({ title: "Attenzione", description: errOf(e).data?.statusMessage || "Messaggi copiati, ma lo stato di invio non è stato aggiornato.", color: "warning" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastCopyAllWarnDesc"), color: "warning" });
     } finally {
         copyingAll.value = false;
     }
@@ -351,7 +353,7 @@ const GROUP_DOTS = ["var(--wine)", "var(--sage)", "var(--ink-500)", "var(--orang
 const groupBreakdown = computed(() => {
     const counts = new Map<string, number>();
     for (const g of currentTargets.value) {
-        const key = g.groupName?.trim() || "Senza gruppo";
+        const key = g.groupName?.trim() || t("ceremly.event.distribution.noGroup");
         counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts.entries()]
@@ -383,10 +385,10 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                 key,
                 ts: v.ts,
                 d: shortDateFmt.format(new Date(v.ts)),
-                t: v.channel === "whatsapp" ? `${n} link via WhatsApp` : `${n} inviti via email`,
+                t: v.channel === "whatsapp" ? t("ceremly.event.distribution.historyWaTitle", { n }) : t("ceremly.event.distribution.historyEmailTitle", { n }),
                 s: v.channel === "whatsapp"
-                    ? `${n} link copiati`
-                    : `aperti ${opened} · risposte ${responded}`,
+                    ? t("ceremly.event.distribution.historyWaSub", { n })
+                    : t("ceremly.event.distribution.historyEmailSub", { opened, responded }),
             };
         })
         .sort((a, b) => b.ts - a.ts);
@@ -398,7 +400,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
         <!-- Stato errore -->
         <div v-if="loadError" class="cer-card" style="padding: 22px;">
             <div style="color: var(--decline); font-size: 14px;">{{ loadError }}</div>
-            <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">Riprova</button>
+            <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">{{ $t('common.retry') }}</button>
         </div>
 
         <!-- Stato loading -->
@@ -412,11 +414,11 @@ const sendHistory = computed<HistoryEntry[]>(() => {
         </template>
 
         <template v-else>
-            <h1>Distribuisci gli inviti</h1>
+            <h1>{{ $t('ceremly.event.distribution.pageTitle') }}</h1>
             <div class="h-sub">{{ headerSub }}</div>
 
             <div v-if="hasSelection" class="row" style="margin-top: 10px;">
-                <span class="cer-tag">Selezione dalla lista ospiti · {{ preselectedIds.size }} ospiti</span>
+                <span class="cer-tag">{{ $t('ceremly.event.distribution.selectionTag', { n: preselectedIds.size }) }}</span>
             </div>
 
             <!-- Channel switch -->
@@ -428,7 +430,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     style="border-radius: 999px; border-color: transparent;"
                     @click="channel = 'email'"
                 >
-                    <CerIcon name="mail" :s="14" /> Email · {{ emailTargets.length }} ospiti
+                    <CerIcon name="mail" :s="14" /> {{ $t('ceremly.event.distribution.channelEmail', { n: emailTargets.length }) }}
                 </button>
                 <button
                     type="button"
@@ -437,47 +439,47 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     style="border-radius: 999px; border-color: transparent;"
                     @click="channel = 'whatsapp'"
                 >
-                    <CerIcon name="whatsapp" :s="14" /> WhatsApp · {{ waTargets.length }} ospiti
+                    <CerIcon name="whatsapp" :s="14" /> {{ $t('ceremly.event.distribution.channelWhatsapp', { n: waTargets.length }) }}
                 </button>
             </div>
 
             <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; margin-top: 22px;">
                 <!-- ─── EMAIL COMPOSER ───────────────────────────────── -->
                 <div v-if="channel === 'email'" class="cer-card" style="padding: 22px;">
-                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Email d'invito</div>
-                    <div class="serif" style="font-size: 22px; margin-top: 4px;">Scrivi il messaggio</div>
+                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.emailEyebrow') }}</div>
+                    <div class="serif" style="font-size: 22px; margin-top: 4px;">{{ $t('ceremly.event.distribution.emailHeading') }}</div>
 
                     <div style="display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px;">
                         <div class="col" style="gap: 4px;">
-                            <label class="cer-flabel">Mittente</label>
+                            <label class="cer-flabel">{{ $t('ceremly.event.distribution.labelSender') }}</label>
                             <input class="cer-input" :value="senderLine" readonly style="color: var(--ink-500); background: var(--bone);">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="cer-flabel">Oggetto</label>
-                            <input v-model="subject" class="cer-input" placeholder="Es. Ci sposiamo — ci sarai?">
+                            <label class="cer-flabel">{{ $t('ceremly.event.distribution.labelSubject') }}</label>
+                            <input v-model="subject" class="cer-input" :placeholder="$t('ceremly.event.distribution.subjectPlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
                             <label class="cer-flabel row" style="justify-content: space-between;">
-                                <span>Messaggio</span>
-                                <span>variabili: <span class="cer-tag" style="font-size: 9px;">{nome}</span> <span class="cer-tag" style="font-size: 9px;">{link}</span></span>
+                                <span>{{ $t('ceremly.event.distribution.labelMessage') }}</span>
+                                <span>{{ $t('ceremly.event.distribution.variables') }}: <span class="cer-tag" style="font-size: 9px;">{nome}</span> <span class="cer-tag" style="font-size: 9px;">{link}</span></span>
                             </label>
-                            <textarea v-model="body" class="cer-input" :rows="8" placeholder="Scrivi il messaggio che accompagnerà il link personale…" />
+                            <textarea v-model="body" class="cer-input" :rows="8" :placeholder="$t('ceremly.event.distribution.bodyPlaceholder')" />
                         </div>
                     </div>
 
                     <div style="height: 1px; background: var(--bone-200); margin: 20px 0;" />
 
                     <!-- Anteprima inbox -->
-                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Anteprima inbox</div>
+                    <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.inboxPreview') }}</div>
                     <div style="margin-top: 12px; padding: 18px; background: var(--bone-100); border-radius: 12px; border: 1px solid var(--bone-200);">
                         <div class="row" style="gap: 10px;">
                             <div class="av ink">{{ (senderName[0] || "C").toUpperCase() }}</div>
                             <div class="col" style="line-height: 1.25; flex: 1;">
                                 <div class="row" style="justify-content: space-between;">
                                     <span style="font-size: 13px; font-weight: 500;">{{ senderName }}</span>
-                                    <span class="small muted">oggi · {{ nowTime }}</span>
+                                    <span class="small muted">{{ $t('ceremly.event.distribution.previewToday') }} · {{ nowTime }}</span>
                                 </div>
-                                <span style="font-size: 13px;">{{ subject || "L'oggetto apparirà qui…" }}</span>
+                                <span style="font-size: 13px;">{{ subject || $t('ceremly.event.distribution.previewSubjectEmpty') }}</span>
                                 <span class="small muted">{{ previewSnippet }}</span>
                             </div>
                         </div>
@@ -495,14 +497,14 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                                 {{ previewMeta }}
                             </div>
                             <button type="button" style="margin-top: 16px; padding: 10px 22px; background: var(--wine); color: var(--ink); border: none; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: default;">
-                                Apri l'invito di {{ previewGuestName }}
+                                {{ $t('ceremly.event.distribution.previewCta', { name: previewGuestName }) }}
                             </button>
                         </div>
                     </div>
 
                     <div class="row" style="justify-content: space-between; margin-top: 18px;">
                         <button class="cer-btn ghost" type="button" :disabled="testSending" @click="doSendTest">
-                            <CerIcon name="eye" :s="14" /> {{ testSending ? "Invio…" : "Invia un test a me" }}
+                            <CerIcon name="eye" :s="14" /> {{ testSending ? $t('ceremly.event.distribution.sendingTest') : $t('ceremly.event.distribution.btnSendTest') }}
                         </button>
                         <button
                             class="cer-btn wine"
@@ -510,11 +512,11 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             :disabled="emailTargets.length === 0"
                             @click="openConfirmSend"
                         >
-                            <CerIcon name="send" :s="14" /> Invia a {{ emailTargets.length }} ospiti
+                            <CerIcon name="send" :s="14" /> {{ $t('ceremly.event.distribution.btnSendEmail', { n: emailTargets.length }) }}
                         </button>
                     </div>
                     <div v-if="emailTargets.length === 0" class="small muted" style="margin-top: 10px; text-align: right;">
-                        {{ hasSelection ? "Nessuno degli ospiti selezionati ha un'email: passa al canale WhatsApp." : "Tutti gli ospiti con email hanno già ricevuto il link." }}
+                        {{ hasSelection ? $t('ceremly.event.distribution.noEmailSelection') : $t('ceremly.event.distribution.allEmailSent') }}
                     </div>
                 </div>
 
@@ -523,9 +525,9 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     <div class="row" style="justify-content: space-between; align-items: flex-start;">
                         <div>
                             <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">WhatsApp</div>
-                            <div class="serif" style="font-size: 22px; margin-top: 4px;">Copia &amp; incolla per {{ waTargets.length }} ospiti</div>
+                            <div class="serif" style="font-size: 22px; margin-top: 4px;">{{ $t('ceremly.event.distribution.waHeading', { n: waTargets.length }) }}</div>
                             <div class="small muted" style="margin-top: 4px;">
-                                Generiamo un messaggio personalizzato per ogni ospite — basta cliccare "Copia" e incollarlo nella chat.
+                                {{ $t('ceremly.event.distribution.waSubheading') }}
                             </div>
                         </div>
                         <button
@@ -534,15 +536,15 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             :disabled="waTargets.length === 0 || copyingAll"
                             @click="copyAll"
                         >
-                            <CerIcon name="copy" :s="12" /> Copia tutti i {{ waTargets.length }}
+                            <CerIcon name="copy" :s="12" /> {{ $t('ceremly.event.distribution.btnCopyAll', { n: waTargets.length }) }}
                         </button>
                     </div>
 
                     <!-- Modello editabile -->
                     <div class="col" style="gap: 4px; margin-top: 18px;">
                         <label class="cer-flabel row" style="justify-content: space-between;">
-                            <span>Modello messaggio</span>
-                            <span>variabili: <span class="cer-tag" style="font-size: 9px;">{nome}</span> <span class="cer-tag" style="font-size: 9px;">{link}</span></span>
+                            <span>{{ $t('ceremly.event.distribution.labelWaTemplate') }}</span>
+                            <span>{{ $t('ceremly.event.distribution.variables') }}: <span class="cer-tag" style="font-size: 9px;">{nome}</span> <span class="cer-tag" style="font-size: 9px;">{link}</span></span>
                         </label>
                         <textarea v-model="waTemplate" class="cer-input" :rows="3" />
                         <button
@@ -552,12 +554,12 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             :disabled="waSavingTemplate"
                             @click="saveWaTemplate"
                         >
-                            <CerIcon name="check" :s="12" /> {{ waSavingTemplate ? "Salvo…" : "Salva modello" }}
+                            <CerIcon name="check" :s="12" /> {{ waSavingTemplate ? $t('ceremly.event.distribution.savingTemplate') : $t('ceremly.event.distribution.btnSaveTemplate') }}
                         </button>
                     </div>
 
                     <div v-if="waTargets.length === 0" class="small muted" style="margin-top: 18px;">
-                        Tutti i tuoi ospiti hanno un'email: puoi raggiungerli dal canale Email. Gli ospiti senza email compariranno qui.
+                        {{ $t('ceremly.event.distribution.waNoGuests') }}
                     </div>
 
                     <div v-else class="col" style="gap: 10px; margin-top: 18px;">
@@ -575,8 +577,8 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             </div>
                             <div class="col" style="gap: 6px;">
                                 <button class="cer-btn small" type="button" @click="copyOne(g)">
-                                    <template v-if="copiedGuestId === g.id"><CerIcon name="check" :s="12" /> Copiato ✓</template>
-                                    <template v-else><CerIcon name="copy" :s="12" /> Copia</template>
+                                    <template v-if="copiedGuestId === g.id"><CerIcon name="check" :s="12" /> {{ $t('ceremly.event.distribution.copied') }}</template>
+                                    <template v-else><CerIcon name="copy" :s="12" /> {{ $t('ceremly.event.distribution.copy') }}</template>
                                 </button>
                                 <button class="cer-btn small ghost" type="button" @click="openQr(g)">
                                     <CerIcon name="qr" :s="12" /> QR
@@ -590,7 +592,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             style="align-self: center;"
                             @click="waExpanded = true"
                         >
-                            Mostra tutti gli altri {{ waTargets.length - 4 }} <CerIcon name="chevD" :s="12" />
+                            {{ $t('ceremly.event.distribution.showMore', { n: waTargets.length - 4 }) }} <CerIcon name="chevD" :s="12" />
                         </button>
                     </div>
                 </div>
@@ -598,34 +600,34 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                 <!-- ─── COLONNA DESTRA ──────────────────────────────── -->
                 <div class="col" style="gap: 16px; align-items: stretch;">
                     <div class="cer-card" style="padding: 20px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Destinatari · questo invio</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.recipientsEyebrow') }}</div>
                         <div class="serif" style="font-size: 36px; margin-top: 6px;">{{ currentTargets.length }}</div>
-                        <div class="small muted">ospiti riceveranno l'invito {{ channel === "email" ? "via email" : "via WhatsApp" }}</div>
+                        <div class="small muted">{{ $t('ceremly.event.distribution.recipientsSub', { channel: channel === 'email' ? $t('ceremly.event.distribution.viaEmail') : $t('ceremly.event.distribution.viaWhatsapp') }) }}</div>
 
                         <div v-if="groupBreakdown.length > 0" class="col" style="gap: 10px; margin-top: 16px;">
                             <div v-for="g in groupBreakdown" :key="g.l" class="row" style="gap: 12px; font-size: 13px;">
                                 <span class="cer-dot" :style="{ background: g.c }" />
                                 <span style="flex: 1;">{{ g.l }}</span>
-                                <span class="mono small muted">{{ g.n }} ospiti</span>
+                                <span class="mono small muted">{{ $t('ceremly.event.distribution.guestCount', { n: g.n }) }}</span>
                             </div>
                         </div>
-                        <div v-else class="small muted" style="margin-top: 16px;">Nessun destinatario per questo canale.</div>
+                        <div v-else class="small muted" style="margin-top: 16px;">{{ $t('ceremly.event.distribution.noRecipients') }}</div>
                     </div>
 
                     <div class="cer-card" style="padding: 20px; background: var(--ink); color: var(--bone-50); border-color: var(--ink);">
                         <div class="row" style="gap: 10px; align-items: flex-start;">
                             <div style="padding-top: 2px;"><CerIcon name="sparkle" :s="16" /></div>
                             <div class="col" style="gap: 6px;">
-                                <div style="font-size: 14px; font-weight: 500;">Pronto/a per il primo invio?</div>
+                                <div style="font-size: 14px; font-weight: 500;">{{ $t('ceremly.event.distribution.tipTitle') }}</div>
                                 <div class="small" style="color: var(--bone-200); line-height: 1.5;">
-                                    Quando un ospite apre il link, lo vedrai aggiornarsi in tempo reale nella tua dashboard. Possiamo configurare anche reminder automatici.
+                                    {{ $t('ceremly.event.distribution.tipBody') }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="cer-card" style="padding: 20px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Cronologia invii</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.historyEyebrow') }}</div>
                         <div v-if="sendHistory.length > 0" class="col" style="gap: 8px; margin-top: 12px;">
                             <div v-for="e in sendHistory" :key="e.key" class="row" style="gap: 10px; font-size: 13px; align-items: flex-start;">
                                 <span class="mono small muted" style="width: 50px; padding-top: 2px; flex-shrink: 0;">{{ e.d }}</span>
@@ -636,7 +638,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                             </div>
                         </div>
                         <div v-else class="small muted" style="margin-top: 12px;">
-                            Nessun invio ancora — il primo è il più emozionante.
+                            {{ $t('ceremly.event.distribution.historyEmpty') }}
                         </div>
                     </div>
                 </div>
@@ -646,14 +648,14 @@ const sendHistory = computed<HistoryEntry[]>(() => {
         <!-- ─── Modale conferma invio email ─────────────────────────── -->
         <div v-if="confirmSendOpen" class="cer-overlay" @click.self="confirmSendOpen = false">
             <div class="cer-modal" style="max-width: 460px;">
-                <div class="serif" style="font-size: 20px;">Inviare gli inviti?</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.distribution.confirmTitle') }}</div>
                 <div class="muted" style="font-size: 14px; margin-top: 10px; line-height: 1.5;">
-                    Stai per inviare {{ emailTargets.length }} email. I link sono personali per ospite.
+                    {{ $t('ceremly.event.distribution.confirmBody', { n: emailTargets.length }) }}
                 </div>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 20px;">
-                    <button class="cer-btn ghost small" type="button" @click="confirmSendOpen = false">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="confirmSendOpen = false">{{ $t('common.cancel') }}</button>
                     <button class="cer-btn small wine" type="button" :disabled="sending" @click="doSend">
-                        <CerIcon name="send" :s="12" /> {{ sending ? "Invio…" : `Invia a ${emailTargets.length} ospiti` }}
+                        <CerIcon name="send" :s="12" /> {{ sending ? $t('ceremly.event.distribution.sending') : $t('ceremly.event.distribution.btnSendEmail', { n: emailTargets.length }) }}
                     </button>
                 </div>
             </div>

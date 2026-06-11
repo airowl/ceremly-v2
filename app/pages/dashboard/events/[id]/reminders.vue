@@ -12,6 +12,7 @@ definePageMeta({
     auth: { only: "user" },
 });
 
+const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
 const { listGuests, updateGuest } = useEventGuests();
@@ -95,9 +96,9 @@ async function load() {
         deadlineInput.value = toDateInputValue(evRes.event.rsvpDeadline);
         savedDeadlineInput.value = deadlineInput.value;
         eventCtx.value = { id: evRes.event.id, title: evRes.event.title, type: evRes.event.type };
-        crumbs.value = ["Eventi", TYPE_LABELS[evRes.event.type] ?? evRes.event.title, "Reminder automatici"];
+        crumbs.value = [t("ceremly.event.reminders.crumbEvents"), TYPE_LABELS[evRes.event.type] ?? evRes.event.title, t("ceremly.event.reminders.pageTitle")];
     } catch (e) {
-        loadError.value = errorMessage(e) || "Impossibile caricare i reminder.";
+        loadError.value = errorMessage(e) || t("ceremly.event.reminders.loadError");
     } finally {
         loading.value = false;
     }
@@ -118,7 +119,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
 onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
 onBeforeRouteLeave(() => {
-    if (dirty.value && !window.confirm("Hai modifiche non salvate ai reminder. Vuoi uscire senza salvare?")) {
+    if (dirty.value && !window.confirm(t("ceremly.event.reminders.unsavedChangesConfirm"))) {
         return false;
     }
 });
@@ -147,39 +148,39 @@ function reminderSendDate(r: LocalReminder): string | null {
 }
 
 function reminderStatusLine(r: LocalReminder): string {
-    if (r.sentAt) return `inviato il ${fmtDayMonth.format(new Date(r.sentAt))}`;
+    if (r.sentAt) return t("ceremly.event.reminders.statusSentOn", { date: fmtDayMonth.format(new Date(r.sentAt)) });
     const sendDate = reminderSendDate(r);
-    if (!sendDate) return "imposta la deadline RSVP per pianificare l'invio";
-    return `invio il ${sendDate} · pianificato`;
+    if (!sendDate) return t("ceremly.event.reminders.statusNoDeadline");
+    return t("ceremly.event.reminders.statusScheduled", { date: sendDate });
 }
 
 // ─── Reminder: add / remove / defaults ───────────────────────────────
 const MAX_REMINDERS = 3;
 
 function reminderDefaults(): Omit<LocalReminder, "id">[] {
-    const title = eventData.value?.title ?? "l'evento";
+    const title = eventData.value?.title ?? t("ceremly.event.reminders.defaultEventFallback");
     const eventDateLabel = eventData.value?.eventDate
         ? fmtDayMonth.format(new Date(eventData.value.eventDate))
         : null;
     return [
         {
             daysBefore: 14,
-            subject: "Manca poco — confermi la tua presenza?",
-            message: `Ciao {nome}, ti ricordiamo che la conferma per «${title}» scade tra due settimane. Bastano 30 secondi: {link}`,
+            subject: t("ceremly.event.reminders.default14Subject"),
+            message: t("ceremly.event.reminders.default14Message", { title }),
             enabled: true,
             sentAt: null,
         },
         {
             daysBefore: 7,
-            subject: "Una settimana alla deadline RSVP",
-            message: "Ciao {nome}, manca una settimana alla deadline. Se ci sarai (o purtroppo no), facci sapere qui: {link}",
+            subject: t("ceremly.event.reminders.default7Subject"),
+            message: t("ceremly.event.reminders.default7Message"),
             enabled: true,
             sentAt: null,
         },
         {
             daysBefore: 2,
-            subject: eventDateLabel ? `Ultima chiamata per il ${eventDateLabel}` : "Ultima chiamata — ci serve la tua risposta",
-            message: "Ultima chiamata, {nome}! Abbiamo bisogno della tua conferma entro 48 ore. Grazie 🤍 {link}",
+            subject: eventDateLabel ? t("ceremly.event.reminders.default2SubjectDate", { date: eventDateLabel }) : t("ceremly.event.reminders.default2Subject"),
+            message: t("ceremly.event.reminders.default2Message"),
             enabled: true,
             sentAt: null,
         },
@@ -237,12 +238,12 @@ async function setGuestExcluded(guestId: string, excluded: boolean) {
             guests.value[idx] = { ...guests.value[idx]!, ...updated };
         }
         toast.add({
-            title: excluded ? "Ospite escluso dai reminder" : "Reminder riattivati per l'ospite",
+            title: excluded ? t("ceremly.event.reminders.toastGuestExcluded") : t("ceremly.event.reminders.toastGuestReenabled"),
             color: "success",
         });
     } catch (e) {
         toast.add({
-            title: "Operazione non riuscita",
+            title: t("ceremly.event.reminders.toastOperationFailed"),
             description: errorMessage(e),
             color: "error",
         });
@@ -265,10 +266,10 @@ function validateReminders(): string[] {
         if (r.sentAt) return; // immutabili lato server
         const days = Number(r.daysBefore);
         if (!Number.isInteger(days) || days < 1 || days > 60) {
-            errors.push(`R${i + 1}: i giorni prima devono essere tra 1 e 60.`);
+            errors.push(t("ceremly.event.reminders.validationDays", { n: i + 1 }));
         }
-        if (!r.subject?.trim()) errors.push(`R${i + 1}: l'oggetto dell'email è obbligatorio.`);
-        if (!r.message?.trim()) errors.push(`R${i + 1}: il messaggio è obbligatorio.`);
+        if (!r.subject?.trim()) errors.push(t("ceremly.event.reminders.validationSubject", { n: i + 1 }));
+        if (!r.message?.trim()) errors.push(t("ceremly.event.reminders.validationMessage", { n: i + 1 }));
     });
     return errors;
 }
@@ -277,7 +278,7 @@ async function saveAll() {
     if (saving.value || !eventData.value) return;
     const errors = validateReminders();
     if (errors.length > 0) {
-        toast.add({ title: "Controlla i reminder", description: errors.join(" "), color: "error" });
+        toast.add({ title: t("ceremly.event.reminders.toastValidationError"), description: errors.join(" "), color: "error" });
         return;
     }
     saving.value = true;
@@ -309,10 +310,10 @@ async function saveAll() {
             },
         );
         setRemindersFromServer(res.reminders ?? []);
-        toast.add({ title: "Reminder salvati", color: "success" });
+        toast.add({ title: t("ceremly.event.reminders.toastSaved"), color: "success" });
     } catch (e) {
         toast.add({
-            title: "Salvataggio non riuscito",
+            title: t("ceremly.event.reminders.toastSaveFailed"),
             description: errorMessage(e),
             color: "error",
         });
@@ -338,7 +339,7 @@ function openDistribution() {
                     :style="saving ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="saveAll"
                 >
-                    {{ saving ? "Salvataggio…" : "Salva" }}{{ dirty && !saving ? " •" : "" }}
+                    {{ saving ? $t('ceremly.event.reminders.btnSaving') : $t('common.save') }}{{ dirty && !saving ? " •" : "" }}
                 </button>
             </Teleport>
         </ClientOnly>
@@ -362,18 +363,18 @@ function openDistribution() {
 
         <!-- Error -->
         <div v-else-if="loadError" class="cer-card" style="padding: 28px; margin-top: 8px; max-width: 560px;">
-            <div class="serif" style="font-size: 22px;">Qualcosa è andato storto</div>
+            <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.reminders.errorTitle') }}</div>
             <div class="small muted" style="margin-top: 8px; color: var(--decline);">{{ loadError }}</div>
             <div class="row" style="gap: 8px; margin-top: 16px;">
-                <button class="cer-btn ghost small" type="button" @click="load">Riprova</button>
-                <NuxtLink to="/dashboard" class="cer-btn small" style="text-decoration: none;">Torna agli eventi</NuxtLink>
+                <button class="cer-btn ghost small" type="button" @click="load">{{ $t('common.retry') }}</button>
+                <NuxtLink to="/dashboard" class="cer-btn small" style="text-decoration: none;">{{ $t('ceremly.event.reminders.backToEvents') }}</NuxtLink>
             </div>
         </div>
 
         <template v-else-if="eventData">
-            <h1>Reminder automatici</h1>
+            <h1>{{ $t('ceremly.event.reminders.pageTitle') }}</h1>
             <div class="h-sub">
-                Inviamo email di promemoria solo agli ospiti che non hanno ancora risposto. Chi ha già detto sì o no resta tranquillo.
+                {{ $t('ceremly.event.reminders.pageSubtitle') }}
             </div>
 
             <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 24px;">
@@ -381,7 +382,7 @@ function openDistribution() {
                 <div class="col" style="gap: 16px;">
                     <!-- Deadline RSVP -->
                     <div class="cer-card" style="padding: 20px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Deadline RSVP</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.deadlineLabel') }}</div>
                         <div class="row" style="margin-top: 12px; gap: 12px; align-items: center; flex-wrap: wrap;">
                             <input
                                 v-model="deadlineInput"
@@ -390,31 +391,29 @@ function openDistribution() {
                                 style="max-width: 240px; font-size: 16px;"
                             >
                             <span v-if="daysToDeadline === null" class="small" style="color: var(--decline);">
-                                Imposta una deadline: senza, i reminder non vengono pianificati.
+                                {{ $t('ceremly.event.reminders.deadlineNotSet') }}
                             </span>
                             <span v-else-if="daysToDeadline >= 0" class="small muted">
-                                Mancano <strong style="color: var(--ink);">{{ daysToDeadline }} {{ daysToDeadline === 1 ? "giorno" : "giorni" }}</strong>
-                                · dopo la deadline il form si chiude automaticamente
+                                {{ $t('ceremly.event.reminders.deadlineDaysLeft', { n: daysToDeadline }) }}
                             </span>
                             <span v-else class="small" style="color: var(--decline);">
-                                Deadline superata · il form RSVP è chiuso
+                                {{ $t('ceremly.event.reminders.deadlinePassed') }}
                             </span>
                         </div>
                     </div>
 
                     <!-- Empty state -->
                     <div v-if="reminders.length === 0" class="cer-card" style="padding: 24px;">
-                        <div class="serif" style="font-size: 20px;">Nessun reminder configurato</div>
+                        <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.reminders.emptyTitle') }}</div>
                         <div class="small muted" style="margin-top: 8px; line-height: 1.5;">
-                            Ti consigliamo tre promemoria gentili: 14, 7 e 2 giorni prima della deadline.
-                            Vengono inviati solo a chi non ha ancora risposto.
+                            {{ $t('ceremly.event.reminders.emptyHint') }}
                         </div>
                         <div class="row" style="gap: 8px; margin-top: 16px; flex-wrap: wrap;">
                             <button class="cer-btn small" type="button" @click="addRecommendedReminders">
-                                <CerIcon name="bell" :s="13" /> Aggiungi i 3 reminder consigliati
+                                <CerIcon name="bell" :s="13" /> {{ $t('ceremly.event.reminders.btnAddRecommended') }}
                             </button>
                             <button class="cer-btn ghost small" type="button" @click="addReminder">
-                                <CerIcon name="plus" :s="12" /> Aggiungi un reminder
+                                <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.reminders.btnAddOne') }}
                             </button>
                         </div>
                     </div>
@@ -449,7 +448,7 @@ function openDistribution() {
                                             :disabled="!!r.sentAt"
                                             style="width: 68px; padding: 5px 8px; font-size: 14px; font-weight: 500;"
                                         >
-                                        <span style="font-size: 15px; font-weight: 500;">{{ Number(r.daysBefore) === 1 ? "giorno prima" : "giorni prima" }}</span>
+                                        <span style="font-size: 15px; font-weight: 500;">{{ $t('ceremly.event.reminders.daysBefore', { n: Number(r.daysBefore) }) }}</span>
                                     </div>
                                     <span class="small muted">{{ reminderStatusLine(r) }}</span>
                                 </div>
@@ -457,16 +456,16 @@ function openDistribution() {
                             <div class="row" style="gap: 10px;">
                                 <div
                                     :style="r.sentAt ? { opacity: 0.45, pointerEvents: 'none' } : undefined"
-                                    :title="r.sentAt ? 'Reminder già inviato: non modificabile' : undefined"
+                                    :title="r.sentAt ? $t('ceremly.event.reminders.sentNotEditable') : undefined"
                                 >
-                                    <CerToggle v-model="r.enabled" :label="r.enabled ? 'Attivo' : 'Disattivo'" />
+                                    <CerToggle v-model="r.enabled" :label="r.enabled ? $t('ceremly.event.reminders.toggleEnabled') : $t('ceremly.event.reminders.toggleDisabled')" />
                                 </div>
                                 <button
                                     v-if="!r.sentAt"
                                     class="cer-btn ghost small"
                                     style="padding: 5px;"
                                     type="button"
-                                    title="Elimina reminder"
+                                    :title="$t('ceremly.event.reminders.btnDeleteTitle')"
                                     @click="removeTarget = ri"
                                 >
                                     <CerIcon name="trash" :s="12" />
@@ -476,17 +475,17 @@ function openDistribution() {
 
                         <div style="margin-top: 14px; padding: 14px; background: var(--bone); border-radius: 8px; border: 1px solid var(--bone-200);">
                             <div class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">
-                                Oggetto email
+                                {{ $t('ceremly.event.reminders.subjectLabel') }}
                             </div>
                             <input
                                 v-model="r.subject"
                                 class="cer-input"
                                 :disabled="!!r.sentAt"
                                 style="margin-top: 4px; font-size: 13px; padding: 8px 10px;"
-                                placeholder="Oggetto dell'email"
+                                :placeholder="$t('ceremly.event.reminders.subjectPlaceholder')"
                             >
                             <div class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500); margin-top: 10px;">
-                                Messaggio
+                                {{ $t('ceremly.event.reminders.messageLabel') }}
                             </div>
                             <textarea
                                 v-model="r.message"
@@ -494,12 +493,12 @@ function openDistribution() {
                                 rows="3"
                                 :disabled="!!r.sentAt"
                                 style="margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--ink-700); resize: vertical;"
-                                placeholder="Testo del promemoria"
+                                :placeholder="$t('ceremly.event.reminders.messagePlaceholder')"
                             />
                             <div class="row" style="gap: 6px; margin-top: 8px;">
                                 <span class="cer-tag" style="font-size: 10px;">{nome}</span>
                                 <span class="cer-tag" style="font-size: 10px;">{link}</span>
-                                <span class="small muted">vengono sostituiti per ogni ospite</span>
+                                <span class="small muted">{{ $t('ceremly.event.reminders.placeholdersHint') }}</span>
                             </div>
                         </div>
                     </div>
@@ -511,10 +510,10 @@ function openDistribution() {
                         type="button"
                         @click="addReminder"
                     >
-                        <CerIcon name="plus" :s="12" /> Aggiungi reminder
+                        <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.reminders.btnAddReminder') }}
                     </button>
                     <div v-else-if="reminders.length >= MAX_REMINDERS" class="small muted" style="align-self: flex-start;">
-                        Massimo 3 reminder per evento — il piano anti-spam di Ceremly
+                        {{ $t('ceremly.event.reminders.maxRemindersReached') }}
                     </div>
                 </div>
 
@@ -522,42 +521,42 @@ function openDistribution() {
                 <div class="col" style="gap: 16px;">
                     <!-- Destinatari -->
                     <div class="cer-card" style="padding: 20px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Sarà inviato a</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.recipientsLabel') }}</div>
                         <div class="serif" style="font-size: 36px; margin-top: 6px;">{{ pendingWithEmail.length }}</div>
-                        <div class="small muted">ospiti in attesa che riceveranno l'email</div>
+                        <div class="small muted">{{ $t('ceremly.event.reminders.recipientsHint') }}</div>
 
                         <div class="col" style="gap: 10px; margin-top: 14px;">
                             <div class="row" style="gap: 10px; padding: 10px 12px; background: var(--bone); border: 1px solid var(--bone-200); border-radius: 8px;">
                                 <CerIcon name="mail" :s="14" class="muted" />
-                                <span style="font-size: 13px; flex: 1;">Hanno email</span>
+                                <span style="font-size: 13px; flex: 1;">{{ $t('ceremly.event.reminders.haveEmail') }}</span>
                                 <span class="mono small">{{ pendingWithEmail.length }}</span>
                             </div>
                             <div v-if="pendingNoEmail.length > 0" class="row" style="gap: 10px; padding: 10px 12px; background: var(--wine-soft); border-radius: 8px;">
                                 <CerIcon name="whatsapp" :s="14" style="color: var(--wine-deep); flex-shrink: 0;" />
                                 <div class="col" style="flex: 1; line-height: 1.25;">
                                     <span style="font-size: 13px; color: var(--wine-deep); font-weight: 500;">
-                                        {{ pendingNoEmail.length }} {{ pendingNoEmail.length === 1 ? "ospite" : "ospiti" }} senza email
+                                        {{ $t('ceremly.event.reminders.noEmailGuests', { n: pendingNoEmail.length }) }}
                                     </span>
-                                    <span class="small" style="color: var(--wine-deep); opacity: 0.8;">messaggio pronto da copiare</span>
+                                    <span class="small" style="color: var(--wine-deep); opacity: 0.8;">{{ $t('ceremly.event.reminders.whatsappReady') }}</span>
                                 </div>
                                 <button class="cer-btn small wine" style="padding: 4px 10px; font-size: 11px;" type="button" @click="openDistribution">
-                                    Apri lista
+                                    {{ $t('ceremly.event.reminders.btnOpenList') }}
                                 </button>
                             </div>
                             <div v-if="pendingGuests.length === 0" class="small muted" style="line-height: 1.5;">
-                                Tutti gli ospiti hanno già risposto (o non ne hai ancora aggiunti): nessun reminder da inviare. 🎉
+                                {{ $t('ceremly.event.reminders.allReplied') }}
                             </div>
                         </div>
                     </div>
 
                     <!-- Esclusioni -->
                     <div class="cer-card" style="padding: 20px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Esclusioni</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.exclusionsLabel') }}</div>
                         <div class="small muted" style="margin-top: 8px;">
-                            Disattiva i reminder per singoli ospiti — ad esempio quelli che sai già che verranno.
+                            {{ $t('ceremly.event.reminders.exclusionsHint') }}
                         </div>
                         <div class="col" style="gap: 6px; margin-top: 12px;">
-                            <span v-if="excludedGuests.length === 0" class="small muted">Nessun ospite escluso.</span>
+                            <span v-if="excludedGuests.length === 0" class="small muted">{{ $t('ceremly.event.reminders.noExclusions') }}</span>
                             <div
                                 v-for="g in excludedGuests"
                                 :key="g.id"
@@ -567,12 +566,12 @@ function openDistribution() {
                                 <div class="av" style="width: 24px; height: 24px; font-size: 10px;">{{ guestInitials(g) }}</div>
                                 <div class="col" style="flex: 1; line-height: 1.25;">
                                     <span style="font-size: 13px;">{{ g.firstName }} {{ g.lastName }}</span>
-                                    <span class="small muted">{{ g.notes || g.groupName || "nessuna nota" }}</span>
+                                    <span class="small muted">{{ g.notes || g.groupName || $t('ceremly.event.reminders.noNotes') }}</span>
                                 </div>
                                 <button
                                     class="cer-btn ghost small"
                                     type="button"
-                                    title="Riattiva i reminder"
+                                    :title="$t('ceremly.event.reminders.btnReenableTitle')"
                                     :disabled="exclusionBusyId === g.id"
                                     :style="{ padding: '4px', opacity: exclusionBusyId === g.id ? 0.5 : 1 }"
                                     @click="setGuestExcluded(g.id, false)"
@@ -588,7 +587,7 @@ function openDistribution() {
                                 style="margin-top: 4px;"
                                 @change="onExcludePicked"
                             >
-                                <option value="" disabled>— scegli un ospite in attesa —</option>
+                                <option value="" disabled>{{ $t('ceremly.event.reminders.excludePickerPrompt') }}</option>
                                 <option v-for="g in excludeCandidates" :key="g.id" :value="g.id">
                                     {{ g.firstName }} {{ g.lastName }}{{ g.groupName ? ` · ${g.groupName}` : "" }}
                                 </option>
@@ -599,10 +598,10 @@ function openDistribution() {
                                 type="button"
                                 :disabled="excludeCandidates.length === 0"
                                 :style="excludeCandidates.length === 0 ? { opacity: 0.5 } : undefined"
-                                :title="excludeCandidates.length === 0 ? 'Nessun ospite in attesa da escludere' : undefined"
+                                :title="excludeCandidates.length === 0 ? $t('ceremly.event.reminders.noPendingToExclude') : undefined"
                                 @click="showExcludePicker = true"
                             >
-                                <CerIcon name="plus" :s="12" /> Escludi un ospite
+                                <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.reminders.btnExcludeGuest') }}
                             </button>
                         </div>
                     </div>
@@ -612,9 +611,9 @@ function openDistribution() {
                         <div class="row" style="gap: 10px; align-items: flex-start;">
                             <CerIcon name="bell" :s="16" style="flex-shrink: 0; margin-top: 2px;" />
                             <div class="col" style="gap: 6px;">
-                                <div style="font-size: 14px; font-weight: 500;">Niente spam</div>
+                                <div style="font-size: 14px; font-weight: 500;">{{ $t('ceremly.event.reminders.noSpamTitle') }}</div>
                                 <div class="small" style="color: var(--bone-200); line-height: 1.5;">
-                                    Appena un ospite risponde, viene rimosso dalla coda dei reminder successivi. Non riceverà più nulla.
+                                    {{ $t('ceremly.event.reminders.noSpamDesc') }}
                                 </div>
                             </div>
                         </div>
@@ -631,19 +630,19 @@ function openDistribution() {
             @click.self="removeTarget = null"
         >
             <div class="cer-card" style="padding: 24px; width: 440px; max-width: 92vw; background: var(--bone-50); box-shadow: var(--hard);">
-                <div class="serif" style="font-size: 20px;">Eliminare il reminder R{{ (removeTarget ?? 0) + 1 }}?</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.reminders.deleteModalTitle', { n: (removeTarget ?? 0) + 1 }) }}</div>
                 <div class="small muted" style="margin-top: 8px; line-height: 1.5;">
-                    Il promemoria verrà rimosso definitivamente al prossimo salvataggio. Gli ospiti non riceveranno questa email.
+                    {{ $t('ceremly.event.reminders.deleteModalDesc') }}
                 </div>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 18px;">
-                    <button class="cer-btn ghost small" type="button" @click="removeTarget = null">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="removeTarget = null">{{ $t('common.cancel') }}</button>
                     <button
                         class="cer-btn small"
                         type="button"
                         style="background: var(--decline); border-color: var(--ink); color: #fff;"
                         @click="confirmRemoveReminder"
                     >
-                        <CerIcon name="trash" :s="12" /> Elimina
+                        <CerIcon name="trash" :s="12" /> {{ $t('ceremly.event.reminders.btnDelete') }}
                     </button>
                 </div>
             </div>

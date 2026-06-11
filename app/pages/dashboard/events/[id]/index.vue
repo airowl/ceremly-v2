@@ -24,6 +24,7 @@ definePageMeta({
     auth: { only: "user" },
 });
 
+const { t } = useI18n();
 const route = useRoute();
 const eventId = computed(() => String(route.params.id));
 
@@ -58,7 +59,7 @@ async function refreshStats(silent = false) {
             statsError.value
                 = err.data?.statusMessage
                     || err.data?.message
-                    || "Impossibile caricare le statistiche dell'evento";
+                    || t("ceremly.event.detail.errorLoadStats");
         }
     } finally {
         statsLoading.value = false;
@@ -74,8 +75,8 @@ let tickTimer: ReturnType<typeof setInterval> | null = null;
 const lastUpdatedLabel = computed(() => {
     if (!lastFetchedAt.value) return "—";
     const s = Math.max(0, Math.floor((nowTick.value - lastFetchedAt.value) / 1000));
-    if (s < 60) return `${s} sec fa`;
-    return `${Math.floor(s / 60)} min fa`;
+    if (s < 60) return t("ceremly.event.detail.lastUpdatedSec", { s });
+    return t("ceremly.event.detail.lastUpdatedMin", { m: Math.floor(s / 60) });
 });
 
 // ─── Evento (data header + rsvpConfig per umanizzare le risposte) ──────
@@ -89,14 +90,14 @@ async function loadEvent() {
         crumbs.value = ["Eventi", getEventTypeLabel(res.event.type), "Andamento"];
         eventCtx.value = { id: res.event.id, title: res.event.title, type: res.event.type };
     } catch {
-        eventError.value = "Impossibile caricare i dati dell'evento";
+        eventError.value = t("ceremly.event.detail.errorLoadEvent");
     }
 }
 
 const dateLine = computed(() => {
     if (!eventData.value) return eventError.value ? "—" : "…";
     const iso = eventData.value.eventDate;
-    if (!iso) return "Data da definire";
+    if (!iso) return t("ceremly.event.detail.dateTbd");
     const date = new Date(iso);
     const formatted = new Intl.DateTimeFormat("it-IT", {
         day: "numeric",
@@ -110,14 +111,14 @@ const dateLine = computed(() => {
     const diff = Math.round((day.getTime() - today.getTime()) / 86_400_000);
     const rel
         = diff > 1
-            ? `tra ${diff} giorni`
+            ? t("ceremly.event.detail.dateInDays", { n: diff })
             : diff === 1
-                ? "domani"
+                ? t("ceremly.event.detail.dateTomorrow")
                 : diff === 0
-                    ? "oggi"
+                    ? t("ceremly.event.detail.dateToday")
                     : diff === -1
-                        ? "ieri"
-                        : `${Math.abs(diff)} giorni fa`;
+                        ? t("ceremly.event.detail.dateYesterday")
+                        : t("ceremly.event.detail.dateDaysAgo", { n: Math.abs(diff) });
     return `${formatted} · ${rel}`;
 });
 
@@ -157,35 +158,35 @@ const kpiCards = computed(() => {
     return [
         {
             key: "total",
-            label: "Totale invitati",
+            label: t("ceremly.event.detail.kpiTotalGuests"),
             value: k.totalGuests,
-            sub: withEmailCount.value !== null ? `${withEmailCount.value} con email` : "",
+            sub: withEmailCount.value !== null ? t("ceremly.event.detail.kpiWithEmail", { n: withEmailCount.value }) : "",
             accent: true,
             to: `/dashboard/events/${eventId.value}/guests`,
         },
         {
             key: "opened",
-            label: "Inviti aperti",
+            label: t("ceremly.event.detail.kpiOpened"),
             value: k.opened,
-            sub: `${pct(k.opened, k.totalGuests)} · obiettivo >70%`,
+            sub: `${pct(k.opened, k.totalGuests)} · ${t("ceremly.event.detail.kpiOpenedTarget")}`,
             accent: false,
             // Nessun ?filter: guests.vue non ha un filtro 'opened' (solo all/confirmed/pending/maybe/declined)
             to: `/dashboard/events/${eventId.value}/guests`,
         },
         {
             key: "responded",
-            label: "Risposte ricevute",
+            label: t("ceremly.event.detail.kpiResponded"),
             value: k.responded,
-            sub: `${pct(k.responded, k.opened)} degli aperti`,
+            sub: `${pct(k.responded, k.opened)} ${t("ceremly.event.detail.kpiRespondedSub")}`,
             accent: false,
             // Nessun ?filter: guests.vue non ha un filtro 'responded'
             to: `/dashboard/events/${eventId.value}/guests`,
         },
         {
             key: "confirmed",
-            label: "Confermati totali persone",
+            label: t("ceremly.event.detail.kpiConfirmedPeople"),
             value: k.totalPeople,
-            sub: `${k.confirmed} ospiti + ${Math.max(0, k.totalPeople - k.confirmed)} accompagnatori`,
+            sub: t("ceremly.event.detail.kpiConfirmedSub", { guests: k.confirmed, companions: Math.max(0, k.totalPeople - k.confirmed) }),
             accent: false,
             to: `/dashboard/events/${eventId.value}/guests?filter=confirmed`,
         },
@@ -284,7 +285,7 @@ const hoverPoint = computed(() => {
     if (hoverIdx.value === null) return null;
     const p = timeline.value[hoverIdx.value];
     if (!p) return null;
-    const text = `${p.confirmed} confermat${p.confirmed === 1 ? "o" : "i"}`;
+    const text = t("ceremly.event.detail.chartTooltipConfirmed", { n: p.confirmed });
     const tw = Math.max(86, 18 + text.length * 6.4);
     const x = cx(hoverIdx.value);
     const y = cy(p.confirmed);
@@ -328,7 +329,7 @@ async function selectGuest(guestId: string) {
         detail.value = await getGuest(eventId.value, guestId);
     } catch {
         detail.value = null;
-        detailError.value = "Impossibile caricare il dettaglio dell'ospite";
+        detailError.value = t("ceremly.event.detail.errorLoadGuest");
     } finally {
         detailLoading.value = false;
     }
@@ -352,7 +353,7 @@ const drawerName = computed(() => {
 const drawerContact = computed(() => {
     const g = detail.value?.guest;
     if (!g) return "";
-    const contact = g.email || g.phone || "nessun contatto";
+    const contact = g.email || g.phone || t("ceremly.event.detail.noContact");
     return g.groupName ? `${contact} · Gruppo "${g.groupName}"` : contact;
 });
 
@@ -382,7 +383,7 @@ function isPerPersonAnswer(v: unknown): v is RsvpPerPersonAnswer {
 
 function formatAnswer(v: RsvpAnswerValue | null | undefined): string {
     if (v === null || v === undefined) return "";
-    if (typeof v === "boolean") return v ? "Sì" : "No";
+    if (typeof v === "boolean") return v ? t("ceremly.event.detail.answerYes") : t("ceremly.event.detail.answerNo");
     if (Array.isArray(v)) return v.join(" + ");
     return String(v).trim();
 }
@@ -393,11 +394,11 @@ function companionNames(answers: RsvpAnswers | undefined): string[] {
     return raw.companions.map((v) => (typeof v === "string" ? v.trim() : ""));
 }
 
-const ATTENDANCE_FALLBACK: Record<AttendingStatus, string> = {
-    yes: "Sì, ci sarò",
-    no: "No, mi dispiace",
-    maybe: "Non ancora sicuro",
-};
+const ATTENDANCE_FALLBACK = computed<Record<AttendingStatus, string>>(() => ({
+    yes: t("ceremly.event.detail.attendanceYes"),
+    no: t("ceremly.event.detail.attendanceNo"),
+    maybe: t("ceremly.event.detail.attendanceMaybe"),
+}));
 
 const qaRows = computed<{ q: string; a: string }[]>(() => {
     const d = detail.value;
@@ -410,8 +411,8 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
     const attQ = config.find((q) => q.id === "attendance");
     const attIdx = res.attending === "yes" ? 0 : res.attending === "no" ? 1 : 2;
     rows.push({
-        q: attQ?.label ?? "Partecipi?",
-        a: attQ?.options?.[attIdx] ?? ATTENDANCE_FALLBACK[res.attending],
+        q: attQ?.label ?? t("ceremly.event.detail.qaAttendance"),
+        a: attQ?.options?.[attIdx] ?? ATTENDANCE_FALLBACK.value[res.attending],
     });
 
     const names = companionNames(res.answers);
@@ -421,9 +422,9 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
         const count = res.companionsCount ?? 0;
         const validNames = names.filter(Boolean);
         rows.push({
-            q: "Accompagnatori",
+            q: t("ceremly.event.detail.qaCompanions"),
             a: count === 0
-                ? "Nessuno"
+                ? t("ceremly.event.detail.qaNoCompanions")
                 : validNames.length
                     ? `${count} — ${validNames.join(", ")}`
                     : String(count),
@@ -447,7 +448,7 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
             raw.companions.forEach((v, i) => {
                 const a = formatAnswer(v);
                 if (!a) return;
-                rows.push({ q: `${q.label} ${names[i] || `accomp. ${i + 1}`}`, a });
+                rows.push({ q: `${q.label} ${names[i] || t("ceremly.event.detail.companionFallback", { n: i + 1 })}`, a });
             });
         } else if (!isPerPersonAnswer(raw)) {
             const a = formatAnswer(raw);
@@ -456,7 +457,7 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
     }
 
     // 4. Messaggio del declino
-    if (res.declineMessage) rows.push({ q: "Messaggio", a: res.declineMessage });
+    if (res.declineMessage) rows.push({ q: t("ceremly.event.detail.qaMessage"), a: res.declineMessage });
 
     return rows;
 });
@@ -468,23 +469,23 @@ function activityLabel(a: { type: string; meta: Record<string, unknown> }): stri
     switch (a.type) {
         case "invite_sent":
             return a.meta?.channel === "whatsapp"
-                ? "Invito inviato via WhatsApp"
-                : "Invito inviato via email";
+                ? t("ceremly.event.detail.activityInviteSentWhatsapp")
+                : t("ceremly.event.detail.activityInviteSentEmail");
         case "link_opened": {
             const nth = Number(a.meta?.nth);
             if (Number.isFinite(nth) && nth > 0) {
-                return `Link aperto (${ORDINALS[nth] ?? `${nth}ª`} volta)`;
+                return t("ceremly.event.detail.activityLinkOpenedNth", { ordinal: ORDINALS[nth] ?? `${nth}ª` });
             }
-            return "Link aperto";
+            return t("ceremly.event.detail.activityLinkOpened");
         }
         case "email_opened":
-            return "Email aperta";
+            return t("ceremly.event.detail.activityEmailOpened");
         case "rsvp_submitted":
-            return "Risposta completata";
+            return t("ceremly.event.detail.activityRsvpSubmitted");
         case "rsvp_updated":
-            return "Risposta aggiornata";
+            return t("ceremly.event.detail.activityRsvpUpdated");
         case "reminder_sent":
-            return "Reminder inviato";
+            return t("ceremly.event.detail.activityReminderSent");
         default:
             return a.type;
     }
@@ -536,10 +537,10 @@ onUnmounted(() => {
             <Teleport defer to="#ceremly-topbar-actions">
                 <div class="row" style="gap: 8px;">
                     <button class="cer-btn ghost small" type="button" @click="onExport">
-                        <CerIcon name="upload" :s="14" /> Export
+                        <CerIcon name="upload" :s="14" /> {{ $t('ceremly.event.detail.btnExport') }}
                     </button>
                     <button class="cer-btn small" type="button" @click="goToDistribution">
-                        <CerIcon name="send" :s="14" /> Comunicazione
+                        <CerIcon name="send" :s="14" /> {{ $t('ceremly.event.detail.btnCommunication') }}
                     </button>
                 </div>
             </Teleport>
@@ -548,7 +549,7 @@ onUnmounted(() => {
         <!-- Header -->
         <div class="row" style="justify-content: space-between; align-items: flex-end;">
             <div>
-                <h1>Come sta andando</h1>
+                <h1>{{ $t('ceremly.event.detail.pageTitle') }}</h1>
                 <div class="h-sub row" style="gap: 12px;">
                     <span>{{ dateLine }}</span>
                     <span>·</span>
@@ -557,7 +558,7 @@ onUnmounted(() => {
                             class="cer-dot"
                             style="background: var(--confirm); box-shadow: 0 0 0 3px color-mix(in oklch, var(--confirm) 25%, transparent);"
                         />
-                        Aggiornamento live
+                        {{ $t('ceremly.event.detail.liveUpdate') }}
                     </span>
                 </div>
             </div>
@@ -565,7 +566,7 @@ onUnmounted(() => {
                 class="row mono"
                 style="gap: 6px; font-size: 11px; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.08em;"
             >
-                <CerIcon name="clock" :s="12" /> Ultimo aggiornamento: {{ lastUpdatedLabel }}
+                <CerIcon name="clock" :s="12" /> {{ $t('ceremly.event.detail.lastUpdatedLabel') }} {{ lastUpdatedLabel }}
             </div>
         </div>
 
@@ -579,7 +580,7 @@ onUnmounted(() => {
                 {{ statsError }}
             </div>
             <div class="small muted" style="margin-top: 4px;">
-                Controlla la connessione e riprova.
+                {{ $t('ceremly.event.detail.errorCheckConnection') }}
             </div>
             <button
                 class="cer-btn ghost small"
@@ -587,7 +588,7 @@ onUnmounted(() => {
                 style="margin-top: 12px;"
                 @click="refreshStats()"
             >
-                Riprova
+                {{ $t('common.retry') }}
             </button>
         </div>
 
@@ -642,16 +643,16 @@ onUnmounted(() => {
                                 class="mono"
                                 style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);"
                             >
-                                Andamento RSVP
+                                {{ $t('ceremly.event.detail.chartTitle') }}
                             </div>
                             <div class="serif" style="font-size: 22px; margin-top: 4px;">
-                                Ultime 4 settimane
+                                {{ $t('ceremly.event.detail.chartSubtitle') }}
                             </div>
                         </div>
                         <div class="row" style="gap: 6px;">
-                            <span class="cer-tag" style="background: var(--ink); color: var(--bone-50);">4 sett</span>
-                            <span class="cer-tag tag-disabled" title="Presto disponibile">3 mesi</span>
-                            <span class="cer-tag tag-disabled" title="Presto disponibile">Tutto</span>
+                            <span class="cer-tag" style="background: var(--ink); color: var(--bone-50);">{{ $t('ceremly.event.detail.period4w') }}</span>
+                            <span class="cer-tag tag-disabled" :title="$t('ceremly.event.detail.comingSoon')">{{ $t('ceremly.event.detail.period3m') }}</span>
+                            <span class="cer-tag tag-disabled" :title="$t('ceremly.event.detail.comingSoon')">{{ $t('ceremly.event.detail.periodAll') }}</span>
                         </div>
                     </div>
 
@@ -759,28 +760,28 @@ onUnmounted(() => {
                         class="col"
                         style="height: 218px; margin-top: 18px; align-items: center; justify-content: center; gap: 4px;"
                     >
-                        <div style="font-size: 14px; font-weight: 500;">Ancora nessuna risposta</div>
+                        <div style="font-size: 14px; font-weight: 500;">{{ $t('ceremly.event.detail.chartEmpty') }}</div>
                         <div class="small muted">
-                            Il grafico si popolerà man mano che gli ospiti rispondono all'invito.
+                            {{ $t('ceremly.event.detail.chartEmptySub') }}
                         </div>
                     </div>
 
                     <!-- Legend -->
                     <div class="row" style="gap: 18px; margin-top: 16px; font-size: 12px;">
                         <span class="row" style="gap: 6px;">
-                            <span class="cer-dot" style="background: var(--confirm);" />Sì
+                            <span class="cer-dot" style="background: var(--confirm);" />{{ $t('ceremly.event.detail.legendYes') }}
                             <strong style="margin-left: 4px;">{{ stats.kpi.confirmed }}</strong>
                         </span>
                         <span class="row" style="gap: 6px;">
-                            <span class="cer-dot" style="background: var(--decline);" />No
+                            <span class="cer-dot" style="background: var(--decline);" />{{ $t('ceremly.event.detail.legendNo') }}
                             <strong style="margin-left: 4px;">{{ stats.kpi.declined }}</strong>
                         </span>
                         <span class="row" style="gap: 6px;">
-                            <span class="cer-dot" style="background: var(--pending);" />Forse
+                            <span class="cer-dot" style="background: var(--pending);" />{{ $t('ceremly.event.detail.legendMaybe') }}
                             <strong style="margin-left: 4px;">{{ stats.kpi.maybe }}</strong>
                         </span>
                         <span class="row" style="gap: 6px;">
-                            <span class="cer-dot" style="background: var(--bone-300);" />In attesa
+                            <span class="cer-dot" style="background: var(--bone-300);" />{{ $t('ceremly.event.detail.legendPending') }}
                             <strong style="margin-left: 4px;">{{ stats.kpi.pending }}</strong>
                         </span>
                     </div>
@@ -793,7 +794,7 @@ onUnmounted(() => {
                             class="mono"
                             style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);"
                         >
-                            Preferenze menu
+                            {{ $t('ceremly.event.detail.menuPreferences') }}
                         </div>
                         <div v-if="stats.menuBreakdown.length" style="margin-top: 12px;">
                             <div
@@ -819,7 +820,7 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <div v-else class="small muted" style="margin-top: 12px;">
-                            Nessuna preferenza raccolta finora.
+                            {{ $t('ceremly.event.detail.menuEmpty') }}
                         </div>
                     </div>
 
@@ -829,10 +830,10 @@ onUnmounted(() => {
                                 class="mono"
                                 style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);"
                             >
-                                Allergie segnalate
+                                {{ $t('ceremly.event.detail.allergyTitle') }}
                             </div>
                             <span class="cer-tag">
-                                {{ allergyTotal }} {{ allergyTotal === 1 ? "ospite" : "ospiti" }}
+                                {{ $t('ceremly.event.detail.guestCount', { n: allergyTotal }) }}
                             </span>
                         </div>
                         <div v-if="stats.allergies.length" class="col" style="gap: 6px; margin-top: 12px;">
@@ -847,7 +848,7 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <div v-else class="small muted" style="margin-top: 12px;">
-                            Nessuna allergia segnalata finora.
+                            {{ $t('ceremly.event.detail.allergyEmpty') }}
                         </div>
                     </div>
                 </div>
@@ -858,14 +859,13 @@ onUnmounted(() => {
                 <!-- Da contattare -->
                 <div class="cer-card" style="padding: 20px;">
                     <div class="row" style="justify-content: space-between;">
-                        <div class="serif" style="font-size: 20px;">Da contattare</div>
+                        <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.detail.needsAttentionTitle') }}</div>
                         <span class="cer-tag" style="background: var(--wine-soft); color: var(--wine-deep);">
-                            {{ stats.needsAttention.length }}
-                            {{ stats.needsAttention.length === 1 ? "ospite" : "ospiti" }}
+                            {{ $t('ceremly.event.detail.guestCount', { n: stats.needsAttention.length }) }}
                         </span>
                     </div>
                     <div class="small muted" style="margin-top: 4px;">
-                        Hanno aperto l'invito da oltre 7 giorni senza rispondere
+                        {{ $t('ceremly.event.detail.needsAttentionSub') }}
                     </div>
                     <div v-if="stats.needsAttention.length" class="col" style="gap: 8px; margin-top: 14px;">
                         <div
@@ -880,16 +880,16 @@ onUnmounted(() => {
                             <div class="col" style="flex: 1; line-height: 1.25;">
                                 <span style="font-size: 13px; font-weight: 500;">{{ g.name }}</span>
                                 <span class="small muted">
-                                    {{ g.contact || "nessun contatto" }} · aperto {{ g.openedDaysAgo }} gg fa
+                                    {{ g.contact || $t('ceremly.event.detail.noContact') }} · {{ $t('ceremly.event.detail.openedDaysAgo', { n: g.openedDaysAgo }) }}
                                 </span>
                             </div>
                             <button class="cer-btn small ghost" type="button" @click.stop="goToReminders">
-                                <CerIcon name="bell" :s="12" /> Reminder
+                                <CerIcon name="bell" :s="12" /> {{ $t('ceremly.event.detail.btnReminder') }}
                             </button>
                         </div>
                     </div>
                     <div v-else class="small muted" style="margin-top: 14px;">
-                        Nessuno da rincorrere 🎉
+                        {{ $t('ceremly.event.detail.needsAttentionEmpty') }}
                     </div>
                 </div>
 
@@ -897,7 +897,7 @@ onUnmounted(() => {
                 <div class="cer-card" style="padding: 20px;">
                     <div v-if="detailLoading" class="col" style="align-items: center; justify-content: center; min-height: 180px; gap: 10px;">
                         <span class="cer-spin" />
-                        <span class="small muted">Carico il dettaglio…</span>
+                        <span class="small muted">{{ $t('ceremly.event.detail.loadingGuest') }}</span>
                     </div>
 
                     <div
@@ -912,7 +912,7 @@ onUnmounted(() => {
                             type="button"
                             @click="selectGuest(selectedGuestId)"
                         >
-                            Riprova
+                            {{ $t('common.retry') }}
                         </button>
                     </div>
 
@@ -934,7 +934,7 @@ onUnmounted(() => {
                             class="mono"
                             style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);"
                         >
-                            Risposte RSVP
+                            {{ $t('ceremly.event.detail.drawerRsvpAnswers') }}
                         </div>
                         <div v-if="qaRows.length" class="col" style="gap: 10px; margin-top: 10px;">
                             <div
@@ -948,7 +948,7 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <div v-else class="small muted" style="margin-top: 10px;">
-                            Non ha ancora risposto all'invito.
+                            {{ $t('ceremly.event.detail.drawerNoAnswer') }}
                         </div>
 
                         <div style="height: 1px; background: var(--bone-200); margin: 16px 0;" />
@@ -957,7 +957,7 @@ onUnmounted(() => {
                             class="mono"
                             style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);"
                         >
-                            Timeline
+                            {{ $t('ceremly.event.detail.drawerTimeline') }}
                         </div>
                         <div v-if="detail.activities.length" class="col" style="gap: 6px; margin-top: 8px;">
                             <div
@@ -971,7 +971,7 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <div v-else class="small muted" style="margin-top: 8px;">
-                            Nessuna attività registrata.
+                            {{ $t('ceremly.event.detail.drawerNoActivity') }}
                         </div>
                     </template>
 
@@ -980,10 +980,10 @@ onUnmounted(() => {
                         class="col"
                         style="align-items: center; justify-content: center; min-height: 180px; gap: 4px; text-align: center;"
                     >
-                        <div style="font-size: 14px; font-weight: 500;">Nessuna risposta da mostrare</div>
+                        <div style="font-size: 14px; font-weight: 500;">{{ $t('ceremly.event.detail.drawerEmpty') }}</div>
                         <div class="small muted">
-                            Quando un ospite risponderà, qui vedrai il dettaglio della sua risposta.<br>
-                            Puoi anche selezionare un ospite dalla lista "Da contattare".
+                            {{ $t('ceremly.event.detail.drawerEmptySub') }}<br>
+                            {{ $t('ceremly.event.detail.drawerEmptyHint') }}
                         </div>
                     </div>
                 </div>

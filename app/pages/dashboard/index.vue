@@ -13,10 +13,12 @@ definePageMeta({
     layout: "ceremly",
 });
 
-useHead({ title: "I tuoi eventi — Ceremly" });
+const { t } = useI18n();
+
+useHead({ title: t("ceremly.dashboard.pageTitle") });
 
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
-crumbs.value = ["Dashboard"];
+crumbs.value = [t("ceremly.dashboard.breadcrumb")];
 
 // ─── Dati reali ──────────────────────────────────────────────────────
 const { listEvents } = useEvents();
@@ -30,7 +32,7 @@ async function load() {
     try {
         events.value = await listEvents();
     } catch {
-        loadError.value = "Non siamo riusciti a caricare i tuoi eventi. Controlla la connessione e riprova.";
+        loadError.value = t("ceremly.dashboard.loadErrorMessage");
     } finally {
         pending.value = false;
     }
@@ -54,17 +56,17 @@ const draftEvents = computed(() => events.value.filter((e) => e.status === "draf
 const closedEvents = computed(() => events.value.filter((e) => e.status === "closed"));
 
 const subLine = computed(() => {
-    if (pending.value) return "Caricamento dei tuoi eventi…";
-    if (loadError.value) return "Qualcosa è andato storto.";
-    if (events.value.length === 0) return "Nessun evento ancora — il primo è quello che si ricorda di più.";
+    if (pending.value) return t("ceremly.dashboard.subLineLoading");
+    if (loadError.value) return t("ceremly.dashboard.subLineError");
+    if (events.value.length === 0) return t("ceremly.dashboard.subLineEmpty");
     const parts: string[] = [];
     const a = activeEvents.value.length;
     const d = draftEvents.value.length;
     const c = closedEvents.value.length;
-    if (a > 0) parts.push(a === 1 ? "1 evento attivo" : `${a} eventi attivi`);
-    if (d > 0) parts.push(d === 1 ? "1 bozza" : `${d} bozze`);
-    if (c > 0) parts.push(c === 1 ? "1 concluso" : `${c} conclusi`);
-    return parts.join(" · ") || "Nessun evento attivo";
+    if (a > 0) parts.push(t("ceremly.dashboard.subLineActive", a));
+    if (d > 0) parts.push(t("ceremly.dashboard.subLineDraft", d));
+    if (c > 0) parts.push(t("ceremly.dashboard.subLineClosed", c));
+    return parts.join(" · ") || t("ceremly.dashboard.subLineNoActive");
 });
 
 // ─── KPI client-side dai counts (eventi non conclusi) ────────────────
@@ -85,17 +87,17 @@ const totalOpened = computed(() => sumCounts("opened"));
 
 const guestsSub = computed(() => {
     const a = activeEvents.value.length;
-    if (a > 0) return a === 1 ? "in 1 evento attivo" : `tra ${a} eventi attivi`;
+    if (a > 0) return t("ceremly.dashboard.guestsSubActive", a);
     const d = draftEvents.value.length;
-    if (d > 0) return d === 1 ? "in 1 bozza" : `in ${d} bozze`;
-    return "nessun evento attivo";
+    if (d > 0) return t("ceremly.dashboard.guestsSubDraft", d);
+    return t("ceremly.dashboard.guestsSubNone");
 });
 
 const openRate = computed(() =>
     totalSent.value > 0 ? `${Math.round((totalOpened.value / totalSent.value) * 100)}%` : "—",
 );
 const openRateSub = computed(() =>
-    totalSent.value > 0 ? "obiettivo >70%" : "nessun invito inviato",
+    totalSent.value > 0 ? t("ceremly.dashboard.openRateSubGoal") : t("ceremly.dashboard.openRateSubNone"),
 );
 
 // ─── Helpers presentazione ───────────────────────────────────────────
@@ -104,9 +106,9 @@ function typeMeta(type: string) {
 }
 
 function dateLabel(eventDate: string | null) {
-    if (!eventDate) return "Data da definire";
+    if (!eventDate) return t("ceremly.dashboard.dateTbd");
     const d = new Date(eventDate);
-    if (Number.isNaN(d.getTime())) return "Data da definire";
+    if (Number.isNaN(d.getTime())) return t("ceremly.dashboard.dateTbd");
     return new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", year: "numeric" }).format(d);
 }
 
@@ -129,12 +131,12 @@ function newEvent() {
         <ClientOnly>
             <Teleport defer to="#ceremly-topbar-actions">
                 <button class="cer-btn" type="button" @click="newEvent">
-                    <CerIcon name="plus" :s="14" /> Nuovo evento
+                    <CerIcon name="plus" :s="14" /> {{ $t('ceremly.dashboard.newEvent') }}
                 </button>
             </Teleport>
         </ClientOnly>
 
-        <h1>I tuoi eventi</h1>
+        <h1>{{ $t('ceremly.dashboard.title') }}</h1>
         <div class="h-sub">{{ subLine }}</div>
 
         <!-- Loading: skeleton sobri -->
@@ -165,11 +167,11 @@ function newEvent() {
             style="margin-top: 32px; padding: 24px; border-color: var(--decline); max-width: 560px;"
         >
             <div class="row" style="gap: 8px; color: var(--decline); font-weight: 600;">
-                <CerIcon name="x" :s="16" /> Errore di caricamento
+                <CerIcon name="x" :s="16" /> {{ $t('ceremly.dashboard.loadErrorTitle') }}
             </div>
             <p class="small muted" style="margin: 8px 0 0;">{{ loadError }}</p>
             <button class="cer-btn ghost small" type="button" style="margin-top: 14px;" @click="load">
-                Riprova
+                {{ $t('common.retry') }}
             </button>
         </div>
 
@@ -183,17 +185,16 @@ function newEvent() {
                 <CerIcon name="sparkle" :s="30" />
             </div>
             <div class="serif" style="font-size: 32px; margin-top: 14px; letter-spacing: -0.02em;">
-                Il tuo primo invito ti aspetta
+                {{ $t('ceremly.dashboard.emptyTitle') }}
             </div>
             <p class="h-sub" style="max-width: 460px; margin: 8px auto 0;">
-                Scegli il tipo di evento, personalizza un template e invia a ogni ospite
-                un link personale per rispondere. Bastano pochi minuti.
+                {{ $t('ceremly.dashboard.emptyDescription') }}
             </p>
             <button class="cer-btn" type="button" style="margin-top: 22px;" @click="newEvent">
-                <CerIcon name="plus" :s="14" /> Crea il tuo primo evento
+                <CerIcon name="plus" :s="14" /> {{ $t('ceremly.dashboard.emptyCreateBtn') }}
             </button>
             <div class="small muted" style="margin-top: 12px;">
-                Matrimonio, laurea, battesimo o compleanno — gratis fino a 30 ospiti.
+                {{ $t('ceremly.dashboard.emptyDisclaimer') }}
             </div>
         </div>
 
@@ -201,26 +202,26 @@ function newEvent() {
         <template v-else>
             <!-- Quick stats -->
             <div class="kpi-row" style="margin-top: 24px;">
-                <KpiCard label="Totale ospiti gestiti" :value="totalGuests" :sub="guestsSub" accent />
+                <KpiCard :label="$t('ceremly.dashboard.kpiTotalGuests')" :value="totalGuests" :sub="guestsSub" accent />
                 <KpiCard
-                    label="In attesa di risposta"
+                    :label="$t('ceremly.dashboard.kpiPending')"
                     :value="totalPending"
-                    :sub="`su ${totalGuests} ospiti invitati`"
+                    :sub="$t('ceremly.dashboard.kpiPendingSub', { total: totalGuests })"
                 />
                 <KpiCard
-                    label="Confermati"
+                    :label="$t('ceremly.dashboard.kpiConfirmed')"
                     :value="totalConfirmed"
-                    :sub="`su ${totalResponded} risposte ricevute`"
+                    :sub="$t('ceremly.dashboard.kpiConfirmedSub', { total: totalResponded })"
                 />
-                <KpiCard label="Tasso apertura inviti" :value="openRate" :sub="openRateSub" />
+                <KpiCard :label="$t('ceremly.dashboard.kpiOpenRate')" :value="openRate" :sub="openRateSub" />
             </div>
 
             <div style="margin-top: 32px;">
                 <!-- Attivi -->
                 <template v-if="activeEvents.length > 0">
                     <div class="row" style="justify-content: space-between;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Attivi</div>
-                        <div class="mono" style="font-size: 11px; color: var(--ink-400);">Ordina per: data evento ↓</div>
+                        <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.dashboard.sectionActive') }}</div>
+                        <div class="mono" style="font-size: 11px; color: var(--ink-400);">{{ $t('ceremly.dashboard.sortByDate') }}</div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px;">
                         <EventCard
@@ -243,7 +244,7 @@ function newEvent() {
                         marginTop: activeEvents.length > 0 ? '28px' : '0',
                     }"
                 >
-                    Bozze
+                    {{ $t('ceremly.dashboard.sectionDrafts') }}
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px;">
                     <div
@@ -255,12 +256,12 @@ function newEvent() {
                     >
                         <div class="row" style="gap: 10px; color: var(--ink-500);">
                             <CerIcon :name="typeMeta(d.type).icon" :s="18" />
-                            <span class="mono" style="font-size: 11px; text-transform: uppercase;">{{ typeMeta(d.type).label }}</span>
+                            <span class="mono" style="font-size: 11px; text-transform: uppercase;">{{ $t('ceremly.eventType.' + d.type + '.label') }}</span>
                         </div>
                         <div class="serif" style="font-size: 22px; margin-top: 8px;">{{ d.title }}</div>
                         <div class="small muted" style="margin-top: 4px;">{{ dateLabel(d.eventDate) }}</div>
                         <button class="cer-btn ghost small" type="button" style="margin-top: 14px;" @click.stop="openEditor(d.id)">
-                            Continua la configurazione <CerIcon name="chevR" :s="12" />
+                            {{ $t('ceremly.dashboard.continueSetup') }} <CerIcon name="chevR" :s="12" />
                         </button>
                     </div>
 
@@ -271,15 +272,15 @@ function newEvent() {
                         @click="newEvent"
                     >
                         <CerIcon name="plus" :s="20" />
-                        <div style="margin-top: 6px; font-size: 13px;">Crea un nuovo evento</div>
-                        <div class="small muted" style="margin-top: 2px;">Matrimonio, laurea, compleanno…</div>
+                        <div style="margin-top: 6px; font-size: 13px;">{{ $t('ceremly.dashboard.createNewEvent') }}</div>
+                        <div class="small muted" style="margin-top: 2px;">{{ $t('ceremly.dashboard.createNewEventSub') }}</div>
                     </div>
                 </div>
 
                 <!-- Conclusi -->
                 <template v-if="closedEvents.length > 0">
                     <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500); margin-top: 28px;">
-                        Conclusi
+                        {{ $t('ceremly.dashboard.sectionClosed') }}
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px;">
                         <EventCard
