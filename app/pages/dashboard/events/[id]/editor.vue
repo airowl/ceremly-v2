@@ -648,13 +648,13 @@ onBeforeRouteLeave(() => {
                     <!-- countdown -->
                     <template v-else-if="countdownD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Titolo</label>
-                            <input v-model="countdownD.title" class="cer-input" placeholder="Manca poco">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.countdown.title') }}</label>
+                            <input v-model="countdownD.title" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.countdown.titlePlaceholder')">
                         </div>
                         <div class="small muted">
                             {{ eventData.eventDate
-                                ? "I giorni mancanti sono calcolati dalla data dell'evento."
-                                : "Imposta la data dell'evento per mostrare il countdown." }}
+                                ? $t('ceremly.event.editor.fields.countdown.hintWithDate')
+                                : $t('ceremly.event.editor.fields.countdown.hintNoDate') }}
                         </div>
                     </template>
 

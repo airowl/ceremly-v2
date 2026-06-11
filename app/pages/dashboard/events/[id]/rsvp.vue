@@ -831,19 +831,19 @@ async function save() {
                     <div class="cer-card" style="padding: 20px;">
                         <div class="row" style="justify-content: space-between; align-items: center;">
                             <div>
-                                <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">Logica condizionale</div>
-                                <div style="font-size: 14px; margin-top: 4px;">Mostra questa domanda solo se…</div>
+                                <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.conditionalLogic') }}</div>
+                                <div style="font-size: 14px; margin-top: 4px;">{{ $t('ceremly.event.rsvp.conditionalLogicSub') }}</div>
                             </div>
                             <div
                                 :style="selected.locked ? { opacity: 0.45, pointerEvents: 'none' } : undefined"
-                                :title="selected.locked ? 'La domanda di partecipazione è sempre visibile' : undefined"
+                                :title="selected.locked ? $t('ceremly.event.rsvp.attendanceAlwaysVisible') : undefined"
                             >
-                                <CerToggle :model-value="!!selected.condition" label="Attiva" @update:model-value="setConditionActive" />
+                                <CerToggle :model-value="!!selected.condition" :label="$t('ceremly.event.rsvp.conditionActive')" @update:model-value="setConditionActive" />
                             </div>
                         </div>
 
                         <div v-if="selected.locked" class="small muted" style="margin-top: 10px;">
-                            La domanda di partecipazione è sempre visibile a tutti gli ospiti.
+                            {{ $t('ceremly.event.rsvp.attendanceAlwaysVisibleHint') }}
                         </div>
 
                         <div v-else-if="selected.condition" class="row" style="margin-top: 14px; gap: 8px; align-items: stretch;">
