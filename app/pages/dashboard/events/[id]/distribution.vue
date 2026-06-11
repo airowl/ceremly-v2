@@ -14,6 +14,7 @@ const { t } = useI18n();
 const eventId = computed(() => String(route.params.id ?? ""));
 
 const { listGuests, sendInvites, sendTest, markWhatsappSent } = useEventGuests();
+const { withRefetch } = useRefetching();
 
 // ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
@@ -85,7 +86,7 @@ async function loadAll() {
 
 async function refreshGuests() {
     try {
-        const res = await listGuests(eventId.value);
+        const res = await withRefetch(() => listGuests(eventId.value));
         guests.value = res.guests;
         summary.value = res.summary;
     } catch {
@@ -214,7 +215,7 @@ const previewMeta = computed(() => {
 // → overlay bloccante con avanzamento reale (pattern C della guida UI).
 const confirmSendOpen = ref(false);
 const sendPhase = ref<"idle" | "sending" | "done">("idle");
-const testSending = ref(false);
+const testBtn = useButtonSuccess();
 
 // Stato avanzamento invio
 const sentN = ref(0); // ospiti accodati finora
@@ -295,46 +296,44 @@ async function doSend() {
 }
 
 async function doSendTest() {
-    testSending.value = true;
     try {
-        const override: { subject?: string; body?: string } = {};
-        if (subject.value.trim()) override.subject = subject.value.trim();
-        if (body.value.trim()) override.body = body.value.trim();
-        await sendTest(eventId.value, override);
+        await testBtn.run(async () => {
+            const override: { subject?: string; body?: string } = {};
+            if (subject.value.trim()) override.subject = subject.value.trim();
+            if (body.value.trim()) override.body = body.value.trim();
+            await sendTest(eventId.value, override);
+        });
         toast.add({ title: t("ceremly.event.distribution.toastTestSentTitle"), description: t("ceremly.event.distribution.toastTestSentDesc"), color: "success" });
     } catch (e) {
         toast.add({ title: t("ceremly.event.distribution.toastTestFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastTestFailDesc"), color: "error" });
-    } finally {
-        testSending.value = false;
     }
 }
 
 // ─── WhatsApp: template + copia ──────────────────────────────────────
 const waExpanded = ref(false);
 const waVisible = computed(() => waExpanded.value ? waTargets.value : waTargets.value.slice(0, 4));
-const waSavingTemplate = ref(false);
+const waBtn = useButtonSuccess();
 const copiedGuestId = ref<string | null>(null);
 const copyingAll = ref(false);
 
 async function saveWaTemplate() {
     if (!eventData.value) return;
-    waSavingTemplate.value = true;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-            method: "PUT",
-            body: {
-                distribution: {
-                    ...eventData.value.distribution,
-                    whatsappTemplate: waTemplate.value,
+        await waBtn.run(async () => {
+            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
+                method: "PUT",
+                body: {
+                    distribution: {
+                        ...eventData.value!.distribution,
+                        whatsappTemplate: waTemplate.value,
+                    },
                 },
-            },
+            });
+            eventData.value = res.event;
         });
-        eventData.value = res.event;
         toast.add({ title: t("ceremly.event.distribution.toastWaSavedTitle"), description: t("ceremly.event.distribution.toastWaSavedDesc"), color: "success" });
     } catch (e) {
         toast.add({ title: t("ceremly.event.distribution.toastWaSaveFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastWaSaveFailDesc"), color: "error" });
-    } finally {
-        waSavingTemplate.value = false;
     }
 }
 
@@ -544,8 +543,8 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     </div>
 
                     <div class="row" style="justify-content: space-between; margin-top: 18px;">
-                        <button class="cer-btn ghost" type="button" :disabled="testSending" @click="doSendTest">
-                            <CerIcon name="eye" :s="14" /> {{ testSending ? $t('ceremly.event.distribution.sendingTest') : $t('ceremly.event.distribution.btnSendTest') }}
+                        <button class="cer-btn ghost" :class="{ success: testBtn.isSuccess }" type="button" :disabled="testBtn.busy" @click="doSendTest">
+                            <CerIcon :name="testBtn.isSuccess ? 'check' : 'eye'" :s="14" /> {{ testBtn.isLoading ? $t('ceremly.event.distribution.sendingTest') : testBtn.isSuccess ? $t('ceremly.event.distribution.testSent') : $t('ceremly.event.distribution.btnSendTest') }}
                         </button>
                         <button
                             class="cer-btn wine"
@@ -590,12 +589,13 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                         <textarea v-model="waTemplate" class="cer-input" :rows="3" />
                         <button
                             class="cer-btn ghost small"
+                            :class="{ success: waBtn.isSuccess }"
                             type="button"
                             style="align-self: flex-end; margin-top: 4px;"
-                            :disabled="waSavingTemplate"
+                            :disabled="waBtn.busy"
                             @click="saveWaTemplate"
                         >
-                            <CerIcon name="check" :s="12" /> {{ waSavingTemplate ? $t('ceremly.event.distribution.savingTemplate') : $t('ceremly.event.distribution.btnSaveTemplate') }}
+                            <CerIcon name="check" :s="12" /> {{ waBtn.isLoading ? $t('ceremly.event.distribution.savingTemplate') : waBtn.isSuccess ? $t('common.saved') : $t('ceremly.event.distribution.btnSaveTemplate') }}
                         </button>
                     </div>
 

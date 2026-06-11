@@ -43,7 +43,7 @@ const ATTENDANCE_FALLBACK_LABELS = computed(() => [
 // ─── Stato pagina ────────────────────────────────────────────────────
 const loading = ref(true);
 const loadError = ref<string | null>(null);
-const saving = ref(false);
+const saveBtn = useButtonSuccess();
 const eventData = ref<CeremlyEvent | null>(null);
 const config = ref<RsvpQuestion[]>([]);
 const savedSnapshot = ref("[]");
@@ -490,27 +490,28 @@ function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
 }
 
 async function save() {
-    if (saving.value || !eventData.value) return;
+    if (saveBtn.busy || !eventData.value) return;
     const { payload, errors } = buildPayload();
     if (errors.length > 0) {
         saveErrors.value = [...new Set(errors)];
         toast.add({ title: t("ceremly.event.rsvp.toastValidationError"), color: "error" });
         return;
     }
-    saving.value = true;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-            method: "PUT",
-            body: { rsvpConfig: payload },
+        await saveBtn.run(async () => {
+            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
+                method: "PUT",
+                body: { rsvpConfig: payload },
+            });
+            eventData.value = res.event;
+            config.value = payload;
+            savedSnapshot.value = JSON.stringify(payload);
+            saveErrors.value = [];
+            if (!config.value.some(q => q.id === selectedId.value)) {
+                selectedId.value = config.value[0]?.id ?? "attendance";
+            }
+            rebuildOptionRows();
         });
-        eventData.value = res.event;
-        config.value = payload;
-        savedSnapshot.value = JSON.stringify(payload);
-        saveErrors.value = [];
-        if (!config.value.some(q => q.id === selectedId.value)) {
-            selectedId.value = config.value[0]?.id ?? "attendance";
-        }
-        rebuildOptionRows();
         toast.add({ title: t("ceremly.event.rsvp.toastSaved"), color: "success" });
     } catch (e) {
         toast.add({
@@ -518,8 +519,6 @@ async function save() {
             description: errorMessage(e),
             color: "error",
         });
-    } finally {
-        saving.value = false;
     }
 }
 </script>
@@ -539,12 +538,13 @@ async function save() {
                 <button
                     v-if="eventData"
                     class="cer-btn small"
+                    :class="{ success: saveBtn.isSuccess }"
                     type="button"
-                    :disabled="saving"
-                    :style="saving ? { opacity: 0.7, cursor: 'default' } : undefined"
+                    :disabled="saveBtn.busy"
+                    :style="saveBtn.busy ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="save"
                 >
-                    {{ saving ? $t('ceremly.event.rsvp.saving') : $t('common.save') }}{{ dirty && !saving ? " •" : "" }}
+                    {{ saveBtn.isLoading ? $t('ceremly.event.rsvp.saving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}{{ dirty && !saveBtn.busy ? " •" : "" }}
                 </button>
             </Teleport>
         </ClientOnly>

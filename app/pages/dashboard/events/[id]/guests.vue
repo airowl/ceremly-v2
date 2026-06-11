@@ -31,6 +31,7 @@ const eventId = computed(() => String(route.params.id ?? ""));
 const {
     listGuests, getGuest, createGuest, updateGuest, deleteGuest, importGuests,
 } = useEventGuests();
+const { withRefetch } = useRefetching();
 
 // ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
@@ -90,7 +91,7 @@ async function loadAll() {
 
 async function refreshGuests() {
     try {
-        const res = await listGuests(eventId.value);
+        const res = await withRefetch(() => listGuests(eventId.value));
         guests.value = res.guests;
         summary.value = res.summary;
     } catch {

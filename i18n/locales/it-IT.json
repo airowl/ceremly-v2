@@ -644,6 +644,8 @@
     "choose": "Scegli",
     "retry": "Riprova",
     "save": "Salva",
+    "saved": "Salvato",
+    "updating": "aggiornamento",
     "cookieConsent": {
       "message": "Utilizziamo cookie di prima parte per migliorare la tua esperienza sul nostro sito.",
       "accept": "Accetta",
@@ -2685,6 +2687,7 @@
         "confirmTitle": "Inviare gli inviti?",
         "confirmBody": "Stai per inviare {n} email. I link sono personali per ospite.",
         "sending": "Invio…",
+        "testSent": "Inviato",
         "progressTitle": "Invio inviti in corso",
         "progressCount": "{n} / {total} accodati",
         "progressEta": "~{s}s rimanenti",

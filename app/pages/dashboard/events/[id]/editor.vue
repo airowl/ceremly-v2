@@ -33,7 +33,7 @@ const loadError = ref<string | null>(null);
 
 const activeBlockId = ref<string | null>(null);
 const device = ref<"desktop" | "mobile">("desktop");
-const saving = ref(false);
+const saveBtn = useButtonSuccess();
 const previewOpen = ref(false);
 const confirmDeleteId = ref<string | null>(null);
 const uploadingGallery = ref(false);
@@ -288,24 +288,25 @@ async function onGalleryFile(e: Event) {
 
 // ─── Salvataggio ─────────────────────────────────────────────────────
 async function save(): Promise<boolean> {
-    if (!eventData.value || saving.value) return false;
+    if (!eventData.value || saveBtn.busy) return false;
     const rsvpBlock = blocks.value.find((b) => b.type === "rsvp");
     if (rsvpBlock?.type === "rsvp" && !rsvpBlock.data.buttonLabel.trim()) {
         activeBlockId.value = rsvpBlock.id;
         toast.add({ title: t("ceremly.event.editor.toast.save.rsvpLabelMissingTitle"), description: t("ceremly.event.editor.toast.save.rsvpLabelMissingDesc"), icon: "i-lucide-alert-circle", color: "error" });
         return false;
     }
-    saving.value = true;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-            method: "PUT",
-            body: {
-                blocks: blocks.value,
-                rsvpDeadline: rsvpDeadline.value || null,
-            },
+        await saveBtn.run(async () => {
+            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
+                method: "PUT",
+                body: {
+                    blocks: blocks.value,
+                    rsvpDeadline: rsvpDeadline.value || null,
+                },
+            });
+            eventData.value = res.event;
+            savedSnapshot.value = snapshot();
         });
-        eventData.value = res.event;
-        savedSnapshot.value = snapshot();
         toast.add({ title: t("ceremly.event.editor.toast.save.successTitle"), description: t("ceremly.event.editor.toast.save.successDesc"), icon: "i-lucide-check", color: "success" });
         return true;
     } catch (e: unknown) {
@@ -317,8 +318,6 @@ async function save(): Promise<boolean> {
             color: "error",
         });
         return false;
-    } finally {
-        saving.value = false;
     }
 }
 
@@ -736,17 +735,18 @@ onBeforeRouteLeave(() => {
                     </button>
                     <button
                         class="cer-btn ghost small"
+                        :class="{ success: saveBtn.isSuccess }"
                         type="button"
-                        :disabled="pending || !eventData || saving"
+                        :disabled="pending || !eventData || saveBtn.busy"
                         @click="save()"
                     >
-                        {{ saving ? $t('ceremly.event.editor.topbar.saving') : $t('common.save') }}
-                        <span v-if="isDirty && !saving" class="cer-dot" style="background: var(--orange);" />
+                        {{ saveBtn.isLoading ? $t('ceremly.event.editor.topbar.saving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}
+                        <span v-if="isDirty && !saveBtn.busy" class="cer-dot" style="background: var(--orange);" />
                     </button>
                     <button
                         class="cer-btn small"
                         type="button"
-                        :disabled="pending || !eventData || saving"
+                        :disabled="pending || !eventData || saveBtn.busy"
                         @click="saveAndContinue"
                     >
                         {{ $t('ceremly.event.editor.topbar.saveAndContinue') }} <CeremlyCerIcon name="chevR" :s="12" />

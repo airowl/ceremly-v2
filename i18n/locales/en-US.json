@@ -644,6 +644,8 @@
     "choose": "Choose",
     "retry": "Retry",
     "save": "Save",
+    "saved": "Saved",
+    "updating": "updating",
     "cookieConsent": {
       "message": "We use first-party cookies to enhance your experience on our website.",
       "accept": "Accept",
@@ -2685,6 +2687,7 @@
         "confirmTitle": "Send the invitations?",
         "confirmBody": "You are about to send {n} emails. Links are personal per guest.",
         "sending": "Sending…",
+        "testSent": "Sent",
         "progressTitle": "Sending invitations",
         "progressCount": "{n} / {total} queued",
         "progressEta": "~{s}s remaining",

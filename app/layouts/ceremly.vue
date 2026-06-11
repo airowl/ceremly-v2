@@ -97,6 +97,9 @@ function isMainActive(key: string) {
 // ─── Breadcrumbs (le pagine li impostano via useState) ───────────────
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 
+// Indicatore "aggiornamento" contestuale sui refetch silenziosi (pattern E)
+const { isRefetching } = useRefetching();
+
 // ─── Utente e piano ──────────────────────────────────────────────────
 const displayName = computed(() => user.value?.name || user.value?.email || "—");
 
@@ -206,6 +209,14 @@ onMounted(async () => {
                     </template>
                 </div>
                 <div class="row" style="gap: 10px;">
+                    <span
+                        v-if="isRefetching"
+                        class="cer-tag cer-fade-in"
+                        style="color: var(--purple-ink); border-color: var(--purple); background: var(--wine-soft);"
+                    >
+                        <span class="cer-dots" style="color: var(--purple-bright);"><span /><span /><span /></span>
+                        {{ $t('common.updating') }}
+                    </span>
                     <button class="cer-btn ghost small" type="button">
                         <CerIcon name="search" :s="14" /> {{ $t('ceremly.layout.search') }}
                         <span class="mono" style="color: var(--ink-400); margin-left: 6px; font-size: 11px;">⌘K</span>

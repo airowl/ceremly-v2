@@ -39,7 +39,7 @@ interface LocalReminder {
 // ─── Stato pagina ────────────────────────────────────────────────────
 const loading = ref(true);
 const loadError = ref<string | null>(null);
-const saving = ref(false);
+const saveBtn = useButtonSuccess();
 const eventData = ref<CeremlyEvent | null>(null);
 const reminders = ref<LocalReminder[]>([]);
 const guests = ref<GuestWithStatus[]>([]);
@@ -275,41 +275,42 @@ function validateReminders(): string[] {
 }
 
 async function saveAll() {
-    if (saving.value || !eventData.value) return;
+    if (saveBtn.busy || !eventData.value) return;
     const errors = validateReminders();
     if (errors.length > 0) {
         toast.add({ title: t("ceremly.event.reminders.toastValidationError"), description: errors.join(" "), color: "error" });
         return;
     }
-    saving.value = true;
     try {
-        // 1. Deadline (se cambiata)
-        if (deadlineInput.value !== savedDeadlineInput.value) {
-            const evRes = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-                method: "PUT",
-                body: { rsvpDeadline: deadlineInput.value || null },
-            });
-            eventData.value = evRes.event;
-            savedDeadlineInput.value = deadlineInput.value;
-        }
+        await saveBtn.run(async () => {
+            // 1. Deadline (se cambiata)
+            if (deadlineInput.value !== savedDeadlineInput.value) {
+                const evRes = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
+                    method: "PUT",
+                    body: { rsvpDeadline: deadlineInput.value || null },
+                });
+                eventData.value = evRes.event;
+                savedDeadlineInput.value = deadlineInput.value;
+            }
 
-        // 2. Bulk upsert reminder (gli inviati sono skip silenzioso lato server)
-        const res = await $fetch<{ reminders: EventReminderData[] }>(
-            `/api/events/${eventId.value}/reminders`,
-            {
-                method: "PUT",
-                body: {
-                    reminders: reminders.value.map(r => ({
-                        ...(r.id ? { id: r.id } : {}),
-                        daysBefore: Number(r.daysBefore),
-                        subject: r.subject.trim(),
-                        message: r.message.trim(),
-                        enabled: r.enabled,
-                    })),
+            // 2. Bulk upsert reminder (gli inviati sono skip silenzioso lato server)
+            const res = await $fetch<{ reminders: EventReminderData[] }>(
+                `/api/events/${eventId.value}/reminders`,
+                {
+                    method: "PUT",
+                    body: {
+                        reminders: reminders.value.map(r => ({
+                            ...(r.id ? { id: r.id } : {}),
+                            daysBefore: Number(r.daysBefore),
+                            subject: r.subject.trim(),
+                            message: r.message.trim(),
+                            enabled: r.enabled,
+                        })),
+                    },
                 },
-            },
-        );
-        setRemindersFromServer(res.reminders ?? []);
+            );
+            setRemindersFromServer(res.reminders ?? []);
+        });
         toast.add({ title: t("ceremly.event.reminders.toastSaved"), color: "success" });
     } catch (e) {
         toast.add({
@@ -317,8 +318,6 @@ async function saveAll() {
             description: errorMessage(e),
             color: "error",
         });
-    } finally {
-        saving.value = false;
     }
 }
 
@@ -334,12 +333,13 @@ function openDistribution() {
                 <button
                     v-if="eventData"
                     class="cer-btn small"
+                    :class="{ success: saveBtn.isSuccess }"
                     type="button"
-                    :disabled="saving"
-                    :style="saving ? { opacity: 0.7, cursor: 'default' } : undefined"
+                    :disabled="saveBtn.busy"
+                    :style="saveBtn.busy ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="saveAll"
                 >
-                    {{ saving ? $t('ceremly.event.reminders.btnSaving') : $t('common.save') }}{{ dirty && !saving ? " •" : "" }}
+                    {{ saveBtn.isLoading ? $t('ceremly.event.reminders.btnSaving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}{{ dirty && !saveBtn.busy ? " •" : "" }}
                 </button>
             </Teleport>
         </ClientOnly>
