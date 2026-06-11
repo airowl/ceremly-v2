@@ -541,7 +541,7 @@ async function save() {
                     :class="{ success: saveBtn.isSuccess }"
                     type="button"
                     :disabled="saveBtn.busy"
-                    :style="saveBtn.busy ? { opacity: 0.7, cursor: 'default' } : undefined"
+                    :style="saveBtn.isLoading ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="save"
                 >
                     {{ saveBtn.isLoading ? $t('ceremly.event.rsvp.saving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}{{ dirty && !saveBtn.busy ? " •" : "" }}

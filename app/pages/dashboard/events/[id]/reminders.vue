@@ -336,7 +336,7 @@ function openDistribution() {
                     :class="{ success: saveBtn.isSuccess }"
                     type="button"
                     :disabled="saveBtn.busy"
-                    :style="saveBtn.busy ? { opacity: 0.7, cursor: 'default' } : undefined"
+                    :style="saveBtn.isLoading ? { opacity: 0.7, cursor: 'default' } : undefined"
                     @click="saveAll"
                 >
                     {{ saveBtn.isLoading ? $t('ceremly.event.reminders.btnSaving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}{{ dirty && !saveBtn.busy ? " •" : "" }}

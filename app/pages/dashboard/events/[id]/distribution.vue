@@ -226,9 +226,11 @@ const sendFailed = ref(false); // l'invio si è interrotto a metà
 const sendErrMsg = ref<string | null>(null);
 const sendEta = ref<number | null>(null); // secondi rimanenti stimati
 
-// Chunk piccolo (schema accetta max 200): più risposte intermedie reali →
-// la barra avanza per step realmente completati e l'ETA è onesta.
-const SEND_CHUNK = 25;
+// Chunk ridotto (schema accetta max 200): più risposte intermedie reali →
+// la barra avanza per step realmente completati e l'ETA è onesta. 50 è il
+// compromesso tra granularità della barra e numero di entry audit/scritture
+// DB (1 logAudit 'invite.sent' + updateEvent per chunk, lato server).
+const SEND_CHUNK = 50;
 
 const sendPct = computed(() => sendTotal.value > 0 ? Math.round((sentN.value / sendTotal.value) * 100) : 0);
 
