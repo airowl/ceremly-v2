@@ -303,6 +303,33 @@ a.cer-nav-item, a.cer-nav-item:hover { text-decoration: none; }
 }
 .cer-fade-in { animation: cer-fade-in 300ms ease both; }
 
+/* ── Loading primitives (spinner + barra avanzamento) ──────────────── */
+.cer-spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cer-rot 0.7s linear infinite;
+}
+@keyframes cer-rot { to { transform: rotate(360deg); } }
+
+.cer-progress {
+  height: 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--bone-50);
+  overflow: hidden;
+}
+.cer-progress > i {
+  display: block;
+  height: 100%;
+  background: var(--purple);
+  transition: width 0.25s ease;
+}
+
 /* Responsive minimo: sotto i 900px lo shell collassa a colonna singola
    con sidebar nascosta */
 @media (max-width: 900px) {

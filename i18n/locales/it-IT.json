@@ -2684,7 +2684,18 @@
         "historyEmpty": "Nessun invio ancora — il primo è il più emozionante.",
         "confirmTitle": "Inviare gli inviti?",
         "confirmBody": "Stai per inviare {n} email. I link sono personali per ospite.",
-        "sending": "Invio…"
+        "sending": "Invio…",
+        "progressTitle": "Invio inviti in corso",
+        "progressCount": "{n} / {total} accodati",
+        "progressEta": "~{s}s rimanenti",
+        "progressNote": "Non chiudere la pagina. Le consegne si aggiorneranno nella dashboard man mano.",
+        "doneTitleOk": "Inviti in coda",
+        "doneTitlePartial": "Invio interrotto",
+        "doneSummaryOk": "{queued} inviti accodati",
+        "doneSummaryPartial": "{queued} di {total} accodati prima di un errore",
+        "doneSkipped": "{n} senza email saltati",
+        "doneNote": "Le consegne reali si aggiorneranno nella dashboard a mano a mano che partono.",
+        "doneClose": "Fatto"
       }
     }
   }

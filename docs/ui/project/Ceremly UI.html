@@ -35,6 +35,7 @@
   <script type="text/babel" src="screens/reminders.jsx"></script>
   <script type="text/babel" src="screens/invite-mobile.jsx"></script>
   <script type="text/babel" src="screens/rsvp-mobile.jsx"></script>
+  <script type="text/babel" src="screens/loading-states.jsx"></script>
 
   <script type="text/babel" data-presets="env,react">
   // App composition — design canvas with three sections
@@ -93,6 +94,15 @@
             width={MW + 40} height={MH + 40}>
             <MobileFrame><RSVPConfirmMobile /></MobileFrame>
           </DCArtboard>
+        </DCSection>
+
+        <DCSection id="loading" title="Stati di caricamento" subtitle="Proposte · feedback dopo chiamate al backend — demo interattive, clicca ▶ per riprodurre">
+          <DCArtboard id="load-guide"   label="P0 · Guida — quale pattern, quando" width={1180} height={620}><LoadingGuide /></DCArtboard>
+          <DCArtboard id="load-button"  label="P1 · Bottone con stato"            width={1180} height={620}><LoadingButtonsDemo /></DCArtboard>
+          <DCArtboard id="load-skel"    label="P2 · Skeleton screen"              width={1180} height={760}><SkeletonDemo /></DCArtboard>
+          <DCArtboard id="load-overlay" label="P3 · Overlay con avanzamento"      width={1180} height={760}><OverlayProgressDemo /></DCArtboard>
+          <DCArtboard id="load-toast"   label="P4 · Toast ottimistico"            width={1180} height={640}><ToastDemo /></DCArtboard>
+          <DCArtboard id="load-topbar"  label="P5 · Barra globale"                width={1180} height={600}><TopbarProgressDemo /></DCArtboard>
         </DCSection>
       </DesignCanvas>
     );

@@ -2684,7 +2684,18 @@
         "historyEmpty": "No sends yet — the first one is the most exciting.",
         "confirmTitle": "Send the invitations?",
         "confirmBody": "You are about to send {n} emails. Links are personal per guest.",
-        "sending": "Sending…"
+        "sending": "Sending…",
+        "progressTitle": "Sending invitations",
+        "progressCount": "{n} / {total} queued",
+        "progressEta": "~{s}s remaining",
+        "progressNote": "Don't close the page. Deliveries will update in the dashboard as they go out.",
+        "doneTitleOk": "Invitations queued",
+        "doneTitlePartial": "Sending interrupted",
+        "doneSummaryOk": "{queued} invitations queued",
+        "doneSummaryPartial": "{queued} of {total} queued before an error",
+        "doneSkipped": "{n} skipped (no email)",
+        "doneNote": "Real deliveries will update in the dashboard as they are sent.",
+        "doneClose": "Done"
       }
     }
   }

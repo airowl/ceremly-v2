@@ -208,10 +208,28 @@ const previewMeta = computed(() => {
     return parts.join(" · ");
 });
 
-// ─── Invio email ─────────────────────────────────────────────────────
+// ─── Invio email (overlay a fasi: idle → sending → done) ─────────────
+// L'invio è proporzionale al numero di ospiti (1 dispatch QStash per ospite,
+// sequenziale lato server), quindi è un'operazione lunga e non interrompibile
+// → overlay bloccante con avanzamento reale (pattern C della guida UI).
 const confirmSendOpen = ref(false);
-const sending = ref(false);
+const sendPhase = ref<"idle" | "sending" | "done">("idle");
 const testSending = ref(false);
+
+// Stato avanzamento invio
+const sentN = ref(0); // ospiti accodati finora
+const sendTotal = ref(0); // ospiti da accodare in questo invio
+const sentQueued = ref(0); // job effettivamente accodati (esito)
+const sentSkipped = ref(0); // ospiti senza email saltati (esito)
+const sendFailed = ref(false); // l'invio si è interrotto a metà
+const sendErrMsg = ref<string | null>(null);
+const sendEta = ref<number | null>(null); // secondi rimanenti stimati
+
+// Chunk piccolo (schema accetta max 200): più risposte intermedie reali →
+// la barra avanza per step realmente completati e l'ETA è onesta.
+const SEND_CHUNK = 25;
+
+const sendPct = computed(() => sendTotal.value > 0 ? Math.round((sentN.value / sendTotal.value) * 100) : 0);
 
 function openConfirmSend() {
     if (!subject.value.trim() || !body.value.trim()) {
@@ -219,37 +237,60 @@ function openConfirmSend() {
         return;
     }
     if (emailTargets.value.length === 0) return;
+    sendPhase.value = "idle";
     confirmSendOpen.value = true;
 }
 
+function closeSend() {
+    // Chiudibile solo a riposo o a invio concluso (mai durante l'invio).
+    if (sendPhase.value === "sending") return;
+    confirmSendOpen.value = false;
+    sendPhase.value = "idle";
+    sentN.value = 0;
+    sendEta.value = null;
+}
+
 async function doSend() {
-    sending.value = true;
+    const ids = emailTargets.value.map(g => g.id);
+    sendTotal.value = ids.length;
+    sentN.value = 0;
+    sentQueued.value = 0;
+    sentSkipped.value = 0;
+    sendFailed.value = false;
+    sendErrMsg.value = null;
+    sendEta.value = null;
+    sendPhase.value = "sending";
+
+    const startedAt = Date.now();
     try {
-        // sendInvitesSchema accetta max 200 guestIds per chiamata: chunking.
-        const ids = emailTargets.value.map(g => g.id);
-        let queued = 0;
-        let skippedNoEmail = 0;
-        for (let i = 0; i < ids.length; i += 200) {
+        for (let i = 0; i < ids.length; i += SEND_CHUNK) {
+            const slice = ids.slice(i, i + SEND_CHUNK);
             const res = await sendInvites(eventId.value, {
-                guestIds: ids.slice(i, i + 200),
+                guestIds: slice,
                 subject: subject.value.trim(),
                 body: body.value.trim(),
             });
-            queued += res.queued;
-            skippedNoEmail += res.skippedNoEmail;
+            sentQueued.value += res.queued;
+            sentSkipped.value += res.skippedNoEmail;
+            sentN.value = Math.min(ids.length, i + slice.length);
+
+            // ETA onesta: tempo medio per ospite finora × ospiti rimanenti.
+            const elapsed = Date.now() - startedAt;
+            if (sentN.value > 0 && sentN.value < ids.length) {
+                const perGuest = elapsed / sentN.value;
+                sendEta.value = Math.max(1, Math.ceil((perGuest * (ids.length - sentN.value)) / 1000));
+            } else {
+                sendEta.value = null;
+            }
         }
-        confirmSendOpen.value = false;
-        const skippedSuffix = skippedNoEmail > 0 ? ` · ${t("ceremly.event.distribution.toastSentSkipped", { n: skippedNoEmail })}` : "";
-        toast.add({
-            title: t("ceremly.event.distribution.toastSentTitle"),
-            description: `${t("ceremly.event.distribution.toastSentDesc", { queued })}${skippedSuffix}`,
-            color: "success",
-        });
-        await refreshGuests();
     } catch (e) {
-        toast.add({ title: t("ceremly.event.distribution.toastSendFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastSendFailDesc"), color: "error" });
+        // Interruzione a metà: i chunk già completati restano accodati.
+        sendFailed.value = true;
+        sendErrMsg.value = errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastSendFailDesc");
     } finally {
-        sending.value = false;
+        sendEta.value = null;
+        sendPhase.value = "done";
+        await refreshGuests();
     }
 }
 
@@ -645,19 +686,66 @@ const sendHistory = computed<HistoryEntry[]>(() => {
             </div>
         </template>
 
-        <!-- ─── Modale conferma invio email ─────────────────────────── -->
-        <div v-if="confirmSendOpen" class="cer-overlay" @click.self="confirmSendOpen = false">
+        <!-- ─── Overlay invio email (idle → sending → done) ─────────── -->
+        <div v-if="confirmSendOpen" class="cer-overlay" @click.self="closeSend">
             <div class="cer-modal" style="max-width: 460px;">
-                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.distribution.confirmTitle') }}</div>
-                <div class="muted" style="font-size: 14px; margin-top: 10px; line-height: 1.5;">
-                    {{ $t('ceremly.event.distribution.confirmBody', { n: emailTargets.length }) }}
-                </div>
-                <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 20px;">
-                    <button class="cer-btn ghost small" type="button" @click="confirmSendOpen = false">{{ $t('common.cancel') }}</button>
-                    <button class="cer-btn small wine" type="button" :disabled="sending" @click="doSend">
-                        <CerIcon name="send" :s="12" /> {{ sending ? $t('ceremly.event.distribution.sending') : $t('ceremly.event.distribution.btnSendEmail', { n: emailTargets.length }) }}
-                    </button>
-                </div>
+
+                <!-- Fase 1 · conferma -->
+                <template v-if="sendPhase === 'idle'">
+                    <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.distribution.confirmTitle') }}</div>
+                    <div class="muted" style="font-size: 14px; margin-top: 10px; line-height: 1.5;">
+                        {{ $t('ceremly.event.distribution.confirmBody', { n: emailTargets.length }) }}
+                    </div>
+                    <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 20px;">
+                        <button class="cer-btn ghost small" type="button" @click="closeSend">{{ $t('common.cancel') }}</button>
+                        <button class="cer-btn small wine" type="button" @click="doSend">
+                            <CerIcon name="send" :s="12" /> {{ $t('ceremly.event.distribution.btnSendEmail', { n: emailTargets.length }) }}
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Fase 2 · invio in corso (non interrompibile) -->
+                <template v-else-if="sendPhase === 'sending'">
+                    <div class="row" style="gap: 10px; align-items: center;">
+                        <span class="cer-spinner" style="width: 18px; height: 18px;" />
+                        <span class="serif" style="font-size: 19px;">{{ $t('ceremly.event.distribution.progressTitle') }}</span>
+                    </div>
+                    <div class="cer-progress" style="margin-top: 16px;"><i :style="{ width: sendPct + '%' }" /></div>
+                    <div class="row" style="justify-content: space-between; margin-top: 10px;">
+                        <span class="mono small muted">{{ $t('ceremly.event.distribution.progressCount', { n: sentN, total: sendTotal }) }}</span>
+                        <span v-if="sendEta" class="mono small muted">{{ $t('ceremly.event.distribution.progressEta', { s: sendEta }) }}</span>
+                    </div>
+                    <p class="small muted" style="margin: 14px 0 0; line-height: 1.45;">
+                        {{ $t('ceremly.event.distribution.progressNote') }}
+                    </p>
+                </template>
+
+                <!-- Fase 3 · esito (riepilogo, anche parziale su errore) -->
+                <template v-else>
+                    <div class="row" style="gap: 10px; align-items: center;">
+                        <span
+                            class="row"
+                            style="width: 28px; height: 28px; border-radius: 50%; justify-content: center; flex-shrink: 0; color: #fff;"
+                            :style="{ background: sendFailed ? 'var(--decline)' : 'var(--confirm)' }"
+                        >
+                            <CerIcon :name="sendFailed ? 'x' : 'check'" :s="15" />
+                        </span>
+                        <span class="serif" style="font-size: 19px;">
+                            {{ sendFailed ? $t('ceremly.event.distribution.doneTitlePartial') : $t('ceremly.event.distribution.doneTitleOk') }}
+                        </span>
+                    </div>
+                    <div class="muted" style="font-size: 14px; margin-top: 12px; line-height: 1.5;">
+                        <template v-if="sendFailed">{{ $t('ceremly.event.distribution.doneSummaryPartial', { queued: sentQueued, total: sendTotal }) }}</template>
+                        <template v-else>{{ $t('ceremly.event.distribution.doneSummaryOk', { queued: sentQueued }) }}</template>
+                        <template v-if="sentSkipped > 0"> · {{ $t('ceremly.event.distribution.doneSkipped', { n: sentSkipped }) }}</template>
+                    </div>
+                    <div v-if="sendFailed && sendErrMsg" class="small" style="margin-top: 8px; color: var(--decline);">{{ sendErrMsg }}</div>
+                    <p v-else class="small muted" style="margin: 10px 0 0; line-height: 1.45;">{{ $t('ceremly.event.distribution.doneNote') }}</p>
+                    <div class="row" style="justify-content: flex-end; margin-top: 20px;">
+                        <button class="cer-btn small wine" type="button" @click="closeSend">{{ $t('ceremly.event.distribution.doneClose') }}</button>
+                    </div>
+                </template>
+
             </div>
         </div>
     </div>
