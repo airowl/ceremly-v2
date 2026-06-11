@@ -8,6 +8,7 @@ import type {
     InviteBlock,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
+import { getEventTypeLabel as _getEventTypeLabel } from "~~/shared/constants/eventTypes";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -780,19 +781,19 @@ onBeforeRouteLeave(() => {
         <!-- Conferma rimozione blocco -->
         <div v-if="confirmDeleteId" class="cer-overlay" @click.self="confirmDeleteId = null">
             <div class="cer-card col" style="width: 380px; max-width: calc(100vw - 32px); padding: 22px; gap: 10px;">
-                <div class="serif" style="font-size: 20px;">Rimuovere il blocco?</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.editor.deleteModal.title') }}</div>
                 <p class="small muted" style="margin: 0;">
-                    «{{ confirmDeleteLabel }}» sarà rimosso dall'invito. Potrai aggiungerlo di nuovo dalla colonna Blocchi.
+                    {{ $t('ceremly.event.editor.deleteModal.body', { label: confirmDeleteLabel }) }}
                 </p>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 6px;">
-                    <button class="cer-btn ghost small" type="button" @click="confirmDeleteId = null">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="confirmDeleteId = null">{{ $t('common.cancel') }}</button>
                     <button
                         class="cer-btn small"
                         style="background: var(--decline); color: #fff;"
                         type="button"
                         @click="confirmDelete"
                     >
-                        <CeremlyCerIcon name="trash" :s="12" /> Rimuovi
+                        <CeremlyCerIcon name="trash" :s="12" /> {{ $t('ceremly.event.editor.deleteModal.confirm') }}
                     </button>
                 </div>
             </div>

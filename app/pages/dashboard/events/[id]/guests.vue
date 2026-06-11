@@ -894,8 +894,8 @@ async function submitGroup() {
                 <!-- Step 3: report -->
                 <template v-else-if="importStep === 'done' && importResult">
                     <div class="row" style="gap: 10px; margin-top: 18px;">
-                        <span class="pill confirm"><span class="cer-dot" />Importati {{ importResult.imported }}</span>
-                        <span class="pill" :class="importResult.skipped.length > 0 ? 'decline' : 'neutral'"><span class="cer-dot" />Saltati {{ importResult.skipped.length }}</span>
+                        <span class="pill confirm"><span class="cer-dot" />{{ $t('ceremly.event.guests.importDoneImported', { count: importResult.imported }) }}</span>
+                        <span class="pill" :class="importResult.skipped.length > 0 ? 'decline' : 'neutral'"><span class="cer-dot" />{{ $t('ceremly.event.guests.importDoneSkipped', { count: importResult.skipped.length }) }}</span>
                     </div>
                     <div v-if="importResult.skipped.length > 0" class="col" style="gap: 4px; margin-top: 12px; max-height: 120px; overflow: auto;">
                         <span v-for="(s, i) in importResult.skipped" :key="i" class="small" style="color: var(--decline);">
