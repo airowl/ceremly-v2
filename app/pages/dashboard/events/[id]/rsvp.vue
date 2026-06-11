@@ -984,7 +984,7 @@ async function save() {
                                 </div>
                             </div>
                             <div v-else-if="selected.type === 'single' || selected.type === 'multiple'" class="small muted" style="margin-top: 12px;">
-                                Aggiungi almeno un'opzione per vedere l'anteprima.
+                                {{ $t('ceremly.event.rsvp.previewNoOptions') }}
                             </div>
 
                             <!-- text → textarea -->

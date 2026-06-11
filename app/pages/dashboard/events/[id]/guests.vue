@@ -876,16 +876,16 @@ async function submitGroup() {
                     <div v-if="importSubmitError" style="margin-top: 12px; font-size: 13px; color: var(--decline);">{{ importSubmitError }}</div>
 
                     <div class="row" style="justify-content: space-between; margin-top: 18px;">
-                        <button class="cer-btn ghost small" type="button" @click="importStep = 'pick'">Scegli un altro file</button>
+                        <button class="cer-btn ghost small" type="button" @click="importStep = 'pick'">{{ $t('ceremly.event.guests.importChooseAnother') }}</button>
                         <div class="row" style="gap: 8px;">
-                            <button class="cer-btn ghost small" type="button" @click="importOpen = false">Annulla</button>
+                            <button class="cer-btn ghost small" type="button" @click="importOpen = false">{{ $t('common.cancel') }}</button>
                             <button
                                 class="cer-btn small"
                                 type="button"
                                 :disabled="importRows.length === 0 || importSaving"
                                 @click="submitImport"
                             >
-                                <CerIcon name="upload" :s="12" /> {{ importSaving ? "Importo…" : `Importa ${importRows.length} ospiti` }}
+                                <CerIcon name="upload" :s="12" /> {{ importSaving ? $t('ceremly.event.guests.importingProgress') : $t('ceremly.event.guests.importNGuests', { count: importRows.length }) }}
                             </button>
                         </div>
                     </div>
