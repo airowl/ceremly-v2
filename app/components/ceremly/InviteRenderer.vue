@@ -21,6 +21,8 @@ import { getTemplate } from "~~/shared/constants/templates";
 import CerIcon from "./CerIcon.vue";
 import CountdownRing from "./CountdownRing.vue";
 
+const { t } = useI18n();
+
 const props = withDefaults(
     defineProps<{
         blocks: InviteBlock[];
@@ -51,17 +53,17 @@ const emit = defineEmits<{
     rsvpClick: [];
 }>();
 
-const BLOCK_LABELS: Record<BlockType, string> = {
-    header: "Intestazione",
-    message: "Messaggio",
-    program: "Programma",
-    location: "Location",
-    dresscode: "Dress code",
-    logistics: "Logistica",
-    countdown: "Countdown",
-    gallery: "Galleria",
-    rsvp: "Blocco RSVP",
-};
+const BLOCK_LABELS = computed<Record<BlockType, string>>(() => ({
+    header: t("ceremly.invite.blockHeader"),
+    message: t("ceremly.invite.blockMessage"),
+    program: t("ceremly.invite.blockProgram"),
+    location: t("ceremly.invite.blockLocation"),
+    dresscode: t("ceremly.invite.blockDresscode"),
+    logistics: t("ceremly.invite.blockLogistics"),
+    countdown: t("ceremly.invite.blockCountdown"),
+    gallery: t("ceremly.invite.blockGallery"),
+    rsvp: t("ceremly.invite.blockRsvp"),
+}));
 
 const tpl = computed(() => {
     if (typeof props.template === "string") {
@@ -166,8 +168,7 @@ const deadlineLabel = computed<string | null>(() => {
     return new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", year: "numeric" }).format(d);
 });
 
-const DEFAULT_CLOSED_MESSAGE
-    = "Le risposte a questo invito sono chiuse. Per qualsiasi variazione contatta l'organizzatore.";
+const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"));
 </script>
 
 <template>
@@ -184,7 +185,7 @@ const DEFAULT_CLOSED_MESSAGE
                     textTransform: 'uppercase',
                 }"
             >
-                Ciao {{ guestName }}
+                {{ $t('ceremly.invite.greeting') }} {{ guestName }}
             </div>
         </div>
 
@@ -332,7 +333,7 @@ const DEFAULT_CLOSED_MESSAGE
                                     color: 'var(--ink-500)',
                                 }"
                             >
-                                mappa Google Maps
+                                {{ $t('ceremly.invite.mapPlaceholder') }}
                             </div>
                             <div
                                 :style="{
@@ -365,7 +366,7 @@ const DEFAULT_CLOSED_MESSAGE
                                 fontWeight: 500,
                                 textDecoration: 'none',
                             }"
-                        >Apri in Google Maps</a>
+                        >{{ $t('ceremly.invite.openMaps') }}</a>
                     </template>
                 </div>
 
@@ -411,7 +412,7 @@ const DEFAULT_CLOSED_MESSAGE
                             v-else
                             :style="{ marginTop: '14px', fontSize: '22px', fontStyle: 'italic', color: 'var(--wine-deep)' }"
                         >
-                            È il grande giorno!
+                            {{ $t('ceremly.invite.eventDay') }}
                         </div>
                     </template>
                 </div>
@@ -439,12 +440,12 @@ const DEFAULT_CLOSED_MESSAGE
 
                 <!-- rsvp -->
                 <div v-else-if="block.type === 'rsvp'" :style="{ textAlign: 'center' }">
-                    <div :style="{ fontSize: '22px', color: 'var(--ink)' }">Ci sarai?</div>
+                    <div :style="{ fontSize: '22px', color: 'var(--ink)' }">{{ $t('ceremly.invite.rsvpQuestion') }}</div>
                     <div
                         v-if="deadlineLabel"
                         :style="{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-500)', marginTop: '4px' }"
                     >
-                        Conferma entro il {{ deadlineLabel }}
+                        {{ $t('ceremly.invite.rsvpDeadlinePrefix') }} {{ deadlineLabel }}
                     </div>
                     <button
                         v-if="!deadlinePassed"

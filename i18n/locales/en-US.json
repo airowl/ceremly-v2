@@ -1551,5 +1551,66 @@
       "admin": "Can manage members and settings",
       "member": "Read-only access"
     }
+  },
+  "ceremly": {
+    "eventType": {
+      "matrimonio": {
+        "label": "Wedding",
+        "desc": "Ceremony + reception, menu, accommodation"
+      },
+      "laurea": {
+        "label": "Graduation",
+        "desc": "University ceremony + reception"
+      },
+      "battesimo": {
+        "label": "Baptism",
+        "desc": "Church, godparents, reception"
+      },
+      "compleanno": {
+        "label": "Birthday",
+        "desc": "Party, dress code, gifts"
+      }
+    },
+    "rsvpStatus": {
+      "confirmed": "Confirmed",
+      "declined": "Declined",
+      "maybe": "Maybe",
+      "opened": "Pending",
+      "pending": "Pending",
+      "not_opened": "Not opened"
+    },
+    "eventStatus": {
+      "draft": "Draft",
+      "active": "RSVPs open",
+      "closed": "Closed"
+    },
+    "eventCard": {
+      "dateTbd": "Date TBD",
+      "locationTbd": "Location TBD",
+      "yes": "yes",
+      "no": "no",
+      "pending": "pending"
+    },
+    "invite": {
+      "blockHeader": "Header",
+      "blockMessage": "Message",
+      "blockProgram": "Program",
+      "blockLocation": "Location",
+      "blockDresscode": "Dress code",
+      "blockLogistics": "Logistics",
+      "blockCountdown": "Countdown",
+      "blockGallery": "Gallery",
+      "blockRsvp": "RSVP Block",
+      "greeting": "Hi",
+      "mapPlaceholder": "Google Maps",
+      "openMaps": "Open in Google Maps",
+      "eventDay": "Today is the big day!",
+      "rsvpQuestion": "Will you be there?",
+      "rsvpDeadlinePrefix": "Confirm by",
+      "closedDefault": "Responses to this invitation are closed. For any changes, please contact the organiser."
+    },
+    "countdown": {
+      "daysLabel": "days to go"
+    }
   }
 }

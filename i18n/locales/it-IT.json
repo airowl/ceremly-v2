@@ -1551,5 +1551,66 @@
       "admin": "Può gestire membri e impostazioni",
       "member": "Accesso in sola lettura"
     }
+  },
+  "ceremly": {
+    "eventType": {
+      "matrimonio": {
+        "label": "Matrimonio",
+        "desc": "Cerimonia + ricevimento, menu, alloggio"
+      },
+      "laurea": {
+        "label": "Laurea",
+        "desc": "Cerimonia in ateneo + rinfresco"
+      },
+      "battesimo": {
+        "label": "Battesimo",
+        "desc": "Chiesa, padrini, rinfresco"
+      },
+      "compleanno": {
+        "label": "Compleanno",
+        "desc": "Festa, dress code, regali"
+      }
+    },
+    "rsvpStatus": {
+      "confirmed": "Confermato",
+      "declined": "Declinato",
+      "maybe": "Forse",
+      "opened": "In attesa",
+      "pending": "In attesa",
+      "not_opened": "Non aperto"
+    },
+    "eventStatus": {
+      "draft": "Bozza",
+      "active": "RSVP attivi",
+      "closed": "Chiuso"
+    },
+    "eventCard": {
+      "dateTbd": "Data da definire",
+      "locationTbd": "Luogo da definire",
+      "yes": "sì",
+      "no": "no",
+      "pending": "in attesa"
+    },
+    "invite": {
+      "blockHeader": "Intestazione",
+      "blockMessage": "Messaggio",
+      "blockProgram": "Programma",
+      "blockLocation": "Location",
+      "blockDresscode": "Dress code",
+      "blockLogistics": "Logistica",
+      "blockCountdown": "Countdown",
+      "blockGallery": "Galleria",
+      "blockRsvp": "Blocco RSVP",
+      "greeting": "Ciao",
+      "mapPlaceholder": "mappa Google Maps",
+      "openMaps": "Apri in Google Maps",
+      "eventDay": "È il grande giorno!",
+      "rsvpQuestion": "Ci sarai?",
+      "rsvpDeadlinePrefix": "Conferma entro il",
+      "closedDefault": "Le risposte a questo invito sono chiuse. Per qualsiasi variazione contatta l'organizzatore."
+    },
+    "countdown": {
+      "daysLabel": "giorni al sì"
+    }
   }
 }

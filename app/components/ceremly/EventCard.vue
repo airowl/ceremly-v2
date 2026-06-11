@@ -26,25 +26,26 @@ const emit = defineEmits<{
     click: [];
 }>();
 
-// matrimonio/compleanno → wine (camel), laurea/battesimo → sage
-const TYPE_META: Record<string, { label: string; icon: string; tint: "wine" | "sage" }> = {
-    matrimonio: { label: "Matrimonio", icon: "ring", tint: "wine" },
-    compleanno: { label: "Compleanno", icon: "cake", tint: "wine" },
-    laurea: { label: "Laurea", icon: "cap", tint: "sage" },
-    battesimo: { label: "Battesimo", icon: "cross", tint: "sage" },
+const { t, te } = useI18n();
+
+// matrimonio/compleanno → wine (camel), laurea/battesimo → sage. Solo struttura (icona/tint); label da i18n.
+const TYPE_META: Record<string, { icon: string; tint: "wine" | "sage" }> = {
+    matrimonio: { icon: "ring", tint: "wine" },
+    compleanno: { icon: "cake", tint: "wine" },
+    laurea: { icon: "cap", tint: "sage" },
+    battesimo: { icon: "cross", tint: "sage" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-    draft: "Bozza",
-    active: "RSVP attivi",
-    closed: "Chiuso",
-};
+const meta = computed(() => {
+    const base = TYPE_META[props.event.type] ?? { icon: "events", tint: "sage" as const };
+    const key = `ceremly.eventType.${props.event.type}.label`;
+    return { ...base, label: te(key) ? t(key) : props.event.type };
+});
 
-const meta = computed(
-    () => TYPE_META[props.event.type] ?? { label: props.event.type, icon: "events", tint: "sage" as const },
-);
-
-const statusLabel = computed(() => STATUS_LABELS[props.event.status] ?? props.event.status);
+const statusLabel = computed(() => {
+    const key = `ceremly.eventStatus.${props.event.status}`;
+    return te(key) ? t(key) : props.event.status;
+});
 
 const headerBackground = computed(() =>
     meta.value.tint === "wine"
@@ -57,11 +58,17 @@ const pct = computed(() => {
     return guests > 0 ? Math.round((confirmed / guests) * 100) : 0;
 });
 
+const { locale } = useI18n();
+
 const dateLabel = computed(() => {
-    if (!props.event.eventDate) return "Data da definire";
+    if (!props.event.eventDate) return t("ceremly.eventCard.dateTbd");
     const d = new Date(props.event.eventDate);
-    if (Number.isNaN(d.getTime())) return "Data da definire";
-    return new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", year: "numeric" }).format(d);
+    if (Number.isNaN(d.getTime())) return t("ceremly.eventCard.dateTbd");
+    return new Intl.DateTimeFormat(locale.value === "en" ? "en-US" : "it-IT", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    }).format(d);
 });
 </script>
 
@@ -96,7 +103,7 @@ const dateLabel = computed(() => {
                 <CerIcon name="calendar" :s="13" /> {{ dateLabel }}
             </div>
             <div class="row small muted" style="gap: 6px; margin-top: 4px;">
-                <CerIcon name="pin" :s="13" /> {{ event.locationName || "Luogo da definire" }}
+                <CerIcon name="pin" :s="13" /> {{ event.locationName || t("ceremly.eventCard.locationTbd") }}
             </div>
 
             <div style="margin-top: 14px;">
@@ -108,9 +115,9 @@ const dateLabel = computed(() => {
                     <div :style="{ height: '100%', width: pct + '%', background: 'var(--ink)' }" />
                 </div>
                 <div class="row" style="margin-top: 10px; gap: 12px; font-size: 12px; color: var(--ink-700);">
-                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--confirm);" />{{ event.counts.confirmed }} sì</span>
-                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--decline);" />{{ event.counts.declined }} no</span>
-                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--pending);" />{{ event.counts.pending }} in attesa</span>
+                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--confirm);" />{{ event.counts.confirmed }} {{ t("ceremly.eventCard.yes") }}</span>
+                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--decline);" />{{ event.counts.declined }} {{ t("ceremly.eventCard.no") }}</span>
+                    <span class="row" style="gap: 4px;"><span class="cer-dot" style="background: var(--pending);" />{{ event.counts.pending }} {{ t("ceremly.eventCard.pending") }}</span>
                 </div>
             </div>
         </div>

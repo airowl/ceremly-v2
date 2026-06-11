@@ -2,6 +2,9 @@
 // Countdown circolare — port di CountdownRing (docs/ui/project/screens/invite-mobile.jsx):
 // due cerchi SVG, progress = 1 - days/365 clampato 0..1, numero display + label mono.
 // Lo stroke usa --tpl-accent (se impostata da InviteRenderer) con fallback --wine.
+
+const { t } = useI18n();
+
 const props = withDefaults(
     defineProps<{
         days: number;
@@ -10,9 +13,11 @@ const props = withDefaults(
     }>(),
     {
         size: 132,
-        label: "giorni al sì",
+        label: undefined,
     },
 );
+
+const resolvedLabel = computed(() => props.label ?? t("ceremly.countdown.daysLabel"));
 
 // Geometria del mockup (size 132 → r 56), scalata proporzionalmente.
 const scale = computed(() => props.size / 132);
@@ -77,7 +82,7 @@ const progress = computed(() => Math.min(1, Math.max(0, 1 - props.days / 365)));
                     marginTop: '4px',
                 }"
             >
-                {{ label }}
+                {{ resolvedLabel }}
             </div>
         </div>
     </div>

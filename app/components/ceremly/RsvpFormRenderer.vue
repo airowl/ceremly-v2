@@ -14,6 +14,8 @@ import type {
 import { getVisibleQuestions } from "~~/shared/utils/rsvpLogic";
 import CerIcon from "./CerIcon.vue";
 
+const { t } = useI18n();
+
 interface RsvpSubmitPayload {
     attending: AttendingStatus;
     companionsCount: number;
@@ -104,12 +106,20 @@ function isEmpty(v: unknown): boolean {
 // ---------------------------------------------------------------------------
 
 const ATTENDANCE_VALUES: AttendingStatus[] = ["yes", "no", "maybe"];
-const ATTENDANCE_SUBTITLES = ["non vediamo l'ora", "sarai con noi col cuore", "potrai aggiornare la risposta"];
-const FALLBACK_ATTENDANCE_OPTIONS = ["Sì, ci sarò", "No, mi dispiace", "Non ancora sicuro"];
+const ATTENDANCE_SUBTITLES = computed(() => [
+    t("ceremly.rsvpForm.attendanceSubtitleYes"),
+    t("ceremly.rsvpForm.attendanceSubtitleNo"),
+    t("ceremly.rsvpForm.attendanceSubtitleMaybe"),
+]);
+const FALLBACK_ATTENDANCE_OPTIONS = computed(() => [
+    t("ceremly.rsvpForm.attendanceOptionYes"),
+    t("ceremly.rsvpForm.attendanceOptionNo"),
+    t("ceremly.rsvpForm.attendanceOptionMaybe"),
+]);
 
 const attendanceOptions = computed<string[]>(() => {
     const q = props.config.find(c => c.id === "attendance");
-    return q?.options?.length ? q.options.slice(0, 3) : FALLBACK_ATTENDANCE_OPTIONS;
+    return q?.options?.length ? q.options.slice(0, 3) : FALLBACK_ATTENDANCE_OPTIONS.value;
 });
 
 const attendanceQuestion = computed(() => props.config.find(c => c.id === "attendance"));
@@ -120,11 +130,11 @@ const attendanceTitle = computed(() => {
     const label = attendanceQuestion.value?.label?.trim();
     if (label && label !== "Partecipi?") return label;
     const name = props.guestName?.trim();
-    return name ? `${name}, ci sarai con noi?` : "Ci sarai con noi?";
+    return name ? t("ceremly.rsvpForm.attendanceTitleWithName", { name }) : t("ceremly.rsvpForm.attendanceTitle");
 });
 
 const attendanceSubtitle = computed(() =>
-    attendanceQuestion.value?.description?.trim() || "La tua presenza è importante.");
+    attendanceQuestion.value?.description?.trim() || t("ceremly.rsvpForm.attendanceSubtitleDefault"));
 
 function isAttendanceSelected(i: number): boolean {
     return state.attending !== null && state.attending === ATTENDANCE_VALUES[i];
@@ -194,14 +204,14 @@ interface PersonSlot {
     name: string;
 }
 
-const selfName = computed(() => props.guestName?.trim() || "Te");
+const selfName = computed(() => props.guestName?.trim() || t("ceremly.rsvpForm.selfName"));
 
 const companionNames = computed<string[]>(() => {
     const cn = state.answers.companion_names;
     const list = isPerPersonShape(cn) ? cn.companions : [];
     return Array.from({ length: companionsCount.value }, (_, i) => {
         const v = list[i];
-        return typeof v === "string" && v.trim() ? v.trim() : `Accompagnatore ${i + 1}`;
+        return typeof v === "string" && v.trim() ? v.trim() : t("ceremly.rsvpForm.companionFallbackName", { n: i + 1 });
     });
 });
 
@@ -212,7 +222,7 @@ function personSlotsFor(q: RsvpQuestion): PersonSlot[] {
         slots.push({ kind: "self", index: -1, name: selfName.value });
     }
     for (let i = 0; i < companionsCount.value; i++) {
-        slots.push({ kind: "companion", index: i, name: companionNames.value[i] ?? `Accompagnatore ${i + 1}` });
+        slots.push({ kind: "companion", index: i, name: companionNames.value[i] ?? t("ceremly.rsvpForm.companionFallbackName", { n: i + 1 }) });
     }
     return slots;
 }
@@ -271,8 +281,8 @@ function numberRange(q: RsvpQuestion): number[] {
 
 const companionsNote = computed(() =>
     companionsCount.value === 1
-        ? "Hai dichiarato 1 accompagnatore. Ti chiederemo i suoi dati nei prossimi passaggi."
-        : `Hai dichiarato ${companionsCount.value} accompagnatori. Ti chiederemo i loro dati nei prossimi passaggi.`,
+        ? t("ceremly.rsvpForm.companionsNoteSingular")
+        : t("ceremly.rsvpForm.companionsNotePlural", { count: companionsCount.value }),
 );
 
 // ---------------------------------------------------------------------------
@@ -288,8 +298,8 @@ function hasTags(q: RsvpQuestion): boolean {
 }
 
 function questionSubtitle(q: RsvpQuestion): string | null {
-    if (q.description) return q.required ? q.description : `${q.description} · facoltativa`;
-    if (!q.required) return "Risposta facoltativa";
+    if (q.description) return q.required ? q.description : `${q.description} · ${t("ceremly.rsvpForm.optional")}`;
+    if (!q.required) return t("ceremly.rsvpForm.optionalAnswer");
     return null;
 }
 
@@ -305,7 +315,7 @@ function validateCurrentStep(): boolean {
     const step = currentStep.value;
     if (step.kind === "attendance") {
         if (!state.attending) {
-            stepError.value = "Seleziona una risposta per continuare.";
+            stepError.value = t("ceremly.rsvpForm.errorSelectAttendance");
             return false;
         }
         return true;
@@ -316,8 +326,8 @@ function validateCurrentStep(): boolean {
     for (const slot of personSlotsFor(q)) {
         if (isEmpty(getAnswer(q, slot))) {
             stepError.value = q.perPerson
-                ? "Compila la risposta per ogni persona per continuare."
-                : "Questa risposta è obbligatoria.";
+                ? t("ceremly.rsvpForm.errorRequiredPerPerson")
+                : t("ceremly.rsvpForm.errorRequired");
             return false;
         }
     }
@@ -546,7 +556,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     :style="{ background: 'none', border: 'none', cursor: 'pointer' }"
                     @click="emit('close')"
                 >
-                    chiudi
+                    {{ $t('ceremly.rsvpForm.close') }}
                 </button>
             </div>
             <div class="row" :style="{ marginTop: '14px', gap: '4px' }">
@@ -565,7 +575,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                 class="mono small muted"
                 :style="{ marginTop: '8px', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '10px' }"
             >
-                Domanda {{ progressCurrent }} di {{ progressTotal }}
+                {{ $t('ceremly.rsvpForm.stepCounter', { current: progressCurrent, total: progressTotal }) }}
             </div>
         </div>
 
@@ -607,17 +617,17 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
         <!-- Step declino: messaggio opzionale -->
         <div v-else-if="currentStep.kind === 'decline'" :style="{ padding: '28px 22px 0' }">
             <div class="serif" :style="{ fontSize: '30px', lineHeight: 1.15, letterSpacing: '-0.01em' }">
-                Ci dispiace non averti con noi.
+                {{ $t('ceremly.rsvpForm.declineTitle') }}
             </div>
             <div class="small muted" :style="{ marginTop: '8px' }">
-                Se vuoi, lascia un messaggio: verrà letto con affetto. È facoltativo.
+                {{ $t('ceremly.rsvpForm.declineSubtitle') }}
             </div>
             <textarea
                 v-model="state.declineMessage"
                 class="cer-input"
                 rows="4"
-                placeholder="Il tuo messaggio…"
-                aria-label="Messaggio per gli organizzatori"
+                :placeholder="$t('ceremly.rsvpForm.declinePlaceholder')"
+                :aria-label="$t('ceremly.rsvpForm.declineAriaLabel')"
                 :style="{ marginTop: '22px', fontSize: '15px', padding: '14px 16px', borderRadius: '12px' }"
             />
         </div>
@@ -629,12 +639,12 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     v-if="showAttendanceTag(currentQuestion)"
                     class="cer-tag"
                     :style="{ background: 'var(--wine-soft)', color: 'var(--wine-deep)' }"
-                >mostrata perché hai risposto Sì</span>
+                >{{ $t('ceremly.rsvpForm.tagShownBecauseYes') }}</span>
                 <span
                     v-if="currentQuestion.perPerson"
                     class="cer-tag"
                     :style="{ background: 'var(--sage-soft)', color: 'var(--blue-deep)', borderColor: 'transparent' }"
-                >per ogni persona</span>
+                >{{ $t('ceremly.rsvpForm.tagPerPerson') }}</span>
             </div>
 
             <div
@@ -730,14 +740,14 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                         :style="boolPillStyle(getAnswer(currentQuestion, slot) === true)"
                         @click="setAnswer(currentQuestion, slot, true)"
                     >
-                        Sì
+                        {{ $t('ceremly.rsvpForm.yes') }}
                     </button>
                     <button
                         type="button"
                         :style="boolPillStyle(getAnswer(currentQuestion, slot) === false)"
                         @click="setAnswer(currentQuestion, slot, false)"
                     >
-                        No
+                        {{ $t('ceremly.rsvpForm.no') }}
                     </button>
                 </div>
 
@@ -746,7 +756,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     v-else-if="currentQuestion.type === 'text' && !currentQuestion.perPerson"
                     class="cer-input"
                     rows="3"
-                    placeholder="Scrivi qui…"
+                    :placeholder="$t('ceremly.rsvpForm.textPlaceholder')"
                     :value="textValue(currentQuestion, slot)"
                     :aria-label="slotAriaLabel(currentQuestion, slot)"
                     :style="textInputStyle"
@@ -756,7 +766,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     v-else-if="currentQuestion.type === 'text'"
                     class="cer-input"
                     type="text"
-                    placeholder="Scrivi qui…"
+                    :placeholder="$t('ceremly.rsvpForm.textPlaceholder')"
                     :value="textValue(currentQuestion, slot)"
                     :aria-label="slotAriaLabel(currentQuestion, slot)"
                     :style="textInputStyle"
@@ -778,10 +788,10 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
         <!-- Bottom nav -->
         <div :style="{ padding: '40px 22px 38px', display: 'flex', gap: '10px' }">
             <button v-if="stepIndex > 0" type="button" :style="backBtnStyle" @click="goBack">
-                Indietro
+                {{ $t('ceremly.rsvpForm.back') }}
             </button>
             <button type="button" :disabled="submitting" :style="nextBtnStyle" @click="goNext">
-                {{ submitting ? "Invio…" : isLastStep ? "Invia la risposta" : "Continua" }}
+                {{ submitting ? $t('ceremly.rsvpForm.submitting') : isLastStep ? $t('ceremly.rsvpForm.submit') : $t('common.continue') }}
             </button>
         </div>
     </div>

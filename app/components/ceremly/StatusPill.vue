@@ -7,18 +7,22 @@ const props = defineProps<{
     status: CeremlyRsvpStatus;
 }>();
 
-const MAP: Record<CeremlyRsvpStatus, { label: string; cls: string }> = {
-    confirmed: { label: "Confermato", cls: "confirm" },
-    declined: { label: "Declinato", cls: "decline" },
-    maybe: { label: "Forse", cls: "pending" },
-    opened: { label: "In attesa", cls: "pending" },
-    pending: { label: "In attesa", cls: "pending" },
-    not_opened: { label: "Non aperto", cls: "neutral" },
+const { t } = useI18n();
+
+// Solo la classe CSS è derivata dallo stato; la label arriva da i18n (ceremly.rsvpStatus.*)
+const CLS: Record<CeremlyRsvpStatus, string> = {
+    confirmed: "confirm",
+    declined: "decline",
+    maybe: "pending",
+    opened: "pending",
+    pending: "pending",
+    not_opened: "neutral",
 };
 
-const pill = computed(() => MAP[props.status] ?? MAP.pending);
+const cls = computed(() => CLS[props.status] ?? CLS.pending);
+const label = computed(() => t(`ceremly.rsvpStatus.${props.status in CLS ? props.status : "pending"}`));
 </script>
 
 <template>
-    <span class="pill" :class="pill.cls"><span class="cer-dot" />{{ pill.label }}</span>
+    <span class="pill" :class="cls"><span class="cer-dot" />{{ label }}</span>
 </template>
