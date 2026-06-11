@@ -10,11 +10,11 @@
  * resto. Le regole locale-agnostiche vivono in shared/constants/siteMode.
  *
  * WAITINGLIST:
- *   - API: tutte 503 tranne /api/waiting-list/** (+ jobs/cron sempre liberi)
+ *   - API: tutte 503 tranne /api/waiting-list/** (+ jobs/cron/public sempre liberi)
  *   - Pagine: /dashboard, /login, /signup, /logout, /auth, /invite, /contactUs
  *     (in ogni locale) → redirect "/"
  * MAINTENANCE:
- *   - API: tutte 503 (tranne jobs/cron)
+ *   - API: tutte 503 (tranne jobs/cron/public)
  *   - Pagine: tutte → /maintenance (che risponde 503 dal proprio setup)
  */
 import {
@@ -32,6 +32,12 @@ export default defineEventHandler(async (event) => {
 
     // Background jobs (QStash) e cron (Vercel): liberi a prescindere dal mode.
     if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
+
+    // API pubbliche ospite (invito/RSVP/pixel email): liberi a prescindere dal
+    // mode. I token degli inviti sono già stati recapitati agli ospiti: bloccarli
+    // in waitinglist/maintenance romperebbe RSVP già in circolazione e il pixel
+    // di apertura nelle email inviate.
+    if (path.startsWith("/api/public/")) return;
 
     // Endpoint admin (protetti da admin API key): restano operabili anche in
     // waitinglist/maintenance. Critico: il toggle stesso (/api/admin/site-mode)

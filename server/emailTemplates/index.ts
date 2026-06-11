@@ -9,12 +9,25 @@ import { WaitingListEmail } from './WaitingListEmail';
 import { ContactConfirmationEmail } from './ContactConfirmationEmail';
 import { ContactNotificationEmail } from './ContactNotificationEmail';
 import { OrgInviteEmail } from './OrgInviteEmail';
+import { GuestInviteEmail } from './GuestInviteEmail';
+import { GuestReminderEmail } from './GuestReminderEmail';
 import { runtimeConfig } from '../utils/runtimeConfig';
 
 export type SupportedLanguage = 'it' | 'en';
 
 // Brand name from env (env-driven, fallback empty string)
 const appName = (): string => runtimeConfig.public.appName || '';
+
+// Host pubblico (es. "ceremly.app") derivato da baseURL, per i footer Ceremly
+const appHost = (): string => {
+    const base = runtimeConfig.public.baseURL as string | undefined;
+    if (!base) return '';
+    try {
+        return new URL(base).host;
+    } catch {
+        return '';
+    }
+};
 
 // Re-export components
 export { VerificationEmail } from './VerificationEmail';
@@ -23,6 +36,8 @@ export { WaitingListEmail } from './WaitingListEmail';
 export { ContactConfirmationEmail } from './ContactConfirmationEmail';
 export { ContactNotificationEmail } from './ContactNotificationEmail';
 export { OrgInviteEmail } from './OrgInviteEmail';
+export { GuestInviteEmail } from './GuestInviteEmail';
+export { GuestReminderEmail } from './GuestReminderEmail';
 
 /**
  * Render verification email to HTML
@@ -134,6 +149,52 @@ export async function renderOrgInviteEmail(options: {
     return await render(element);
 }
 
+/**
+ * Render guest invite email to HTML (Ceremly, SPEC §6 — owner B3).
+ * `message` arriva con i placeholder {nome}/{link} già sostituiti.
+ */
+export async function renderGuestInviteEmail(options: {
+    eventTitle: string;
+    firstName: string;
+    message: string;
+    ctaUrl: string;
+    pixelUrl: string;
+}): Promise<string> {
+    const element = React.createElement(GuestInviteEmail, {
+        eventTitle: options.eventTitle,
+        firstName: options.firstName,
+        message: options.message,
+        ctaUrl: options.ctaUrl,
+        pixelUrl: options.pixelUrl,
+        appName: appName(),
+        appHost: appHost(),
+    });
+    return await render(element);
+}
+
+/**
+ * Render guest reminder email to HTML (Ceremly, SPEC §6 — owner B3).
+ * `message` arriva con i placeholder {nome}/{link} già sostituiti.
+ */
+export async function renderGuestReminderEmail(options: {
+    eventTitle: string;
+    firstName: string;
+    message: string;
+    ctaUrl: string;
+    pixelUrl: string;
+}): Promise<string> {
+    const element = React.createElement(GuestReminderEmail, {
+        eventTitle: options.eventTitle,
+        firstName: options.firstName,
+        message: options.message,
+        ctaUrl: options.ctaUrl,
+        pixelUrl: options.pixelUrl,
+        appName: appName(),
+        appHost: appHost(),
+    });
+    return await render(element);
+}
+
 // Email subject lines by language (brand injected via appName)
 export const emailSubjects = {
     verification: {
@@ -157,4 +218,8 @@ export const emailSubjects = {
         it: `Sei stato invitato a unirti a ${orgName} - ${appName()}`,
         en: `You've been invited to join ${orgName} - ${appName()}`,
     }),
+    // Ceremly (solo italiano, SPEC §0): fallback quando l'organizzatore non ha
+    // definito un oggetto in event.distribution / nel reminder.
+    guestInvite: (eventTitle: string) => `Sei invitato: ${eventTitle}`,
+    guestReminder: (eventTitle: string) => `Promemoria — ${eventTitle}`,
 };

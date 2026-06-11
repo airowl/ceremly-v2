@@ -1,0 +1,191 @@
+<script setup lang="ts">
+// App shell Ceremly — port di docs/ui/project/screens/app-shell.jsx.
+// Sidebar 240px + topbar con breadcrumbs (useState 'ceremly-crumbs') e
+// Teleport target '#ceremly-topbar-actions' per le azioni di pagina.
+import CerIcon from "~/components/ceremly/CerIcon.vue";
+
+interface CeremlyEventCtx {
+    id: string;
+    title: string;
+    type: string;
+}
+
+// Shape difensiva: GET /api/events/:id può rispondere { event } o l'evento diretto
+interface EventLookupResponse {
+    event?: { id?: string; title?: string; type?: string };
+    id?: string;
+    title?: string;
+    type?: string;
+}
+
+const route = useRoute();
+const userStore = useUserStore();
+const { user } = useAuth();
+const { hasActiveSubscription, currentPlan, refreshSubscription } = useSubscription();
+
+// ─── Nav statica ─────────────────────────────────────────────────────
+// Nota: niente voce 'Home' — /dashboard È la lista eventi, una 'Home'
+// separata duplicherebbe 'I tuoi eventi' senza mai risultare attiva.
+const mainNav = [
+    { key: "events", label: "I tuoi eventi", icon: "events", to: "/dashboard" },
+    { key: "templates", label: "Template", icon: "sparkle", to: "/dashboard/events/new" },
+] as const;
+
+// ─── Gruppo contestuale evento ───────────────────────────────────────
+const eventNav = [
+    { key: "invito", label: "Invito", icon: "edit", path: "editor" },
+    { key: "ospiti", label: "Ospiti", icon: "guests", path: "guests" },
+    { key: "rsvp", label: "Form RSVP", icon: "check", path: "rsvp" },
+    { key: "invio", label: "Distribuzione", icon: "send", path: "distribution" },
+    { key: "reminder", label: "Reminder", icon: "bell", path: "reminders" },
+    { key: "dashboard", label: "Andamento", icon: "chart", path: "" },
+] as const;
+
+const TYPE_LABELS: Record<string, string> = {
+    matrimonio: "Matrimonio",
+    laurea: "Laurea",
+    battesimo: "Battesimo",
+    compleanno: "Compleanno",
+};
+
+const eventId = computed(() => {
+    const id = route.params.id;
+    return typeof id === "string" && route.path.startsWith("/dashboard/events/") ? id : null;
+});
+
+// Cache leggera del contesto evento (titolo/tipo) condivisa con le pagine
+const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
+
+watch(
+    eventId,
+    async (id) => {
+        if (!id || eventCtx.value?.id === id) return;
+        try {
+            const res = await $fetch<EventLookupResponse>(`/api/events/${id}`);
+            const ev = res.event ?? res;
+            if (ev.id && ev.title) {
+                eventCtx.value = { id: ev.id, title: ev.title, type: ev.type ?? "" };
+            }
+        } catch {
+            eventCtx.value = { id, title: "Evento", type: "" };
+        }
+    },
+    { immediate: true },
+);
+
+const eventGroupLabel = computed(() => {
+    if (!eventCtx.value || eventCtx.value.id !== eventId.value) return "Evento";
+    const typeLabel = TYPE_LABELS[eventCtx.value.type];
+    return typeLabel ? `${typeLabel} · ${eventCtx.value.title}` : eventCtx.value.title;
+});
+
+function eventItemTo(path: string) {
+    return path ? `/dashboard/events/${eventId.value}/${path}` : `/dashboard/events/${eventId.value}`;
+}
+
+function isEventItemActive(path: string) {
+    return route.path === eventItemTo(path);
+}
+
+function isMainActive(key: string) {
+    if (key === "events") return route.path === "/dashboard";
+    if (key === "templates") return route.path === "/dashboard/events/new";
+    return false;
+}
+
+// ─── Breadcrumbs (le pagine li impostano via useState) ───────────────
+const crumbs = useState<string[]>("ceremly-crumbs", () => []);
+
+// ─── Utente e piano ──────────────────────────────────────────────────
+const displayName = computed(() => user.value?.name || user.value?.email || "—");
+
+const initials = computed(() => {
+    const name = user.value?.name || user.value?.email || "";
+    const parts = name.split(/\s+/).filter(Boolean);
+    return parts.map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+});
+
+const planLabel = computed(() => {
+    if (!hasActiveSubscription.value) return "Piano Free";
+    const plan = currentPlan.value;
+    return `Piano ${plan.charAt(0).toUpperCase()}${plan.slice(1)}`;
+});
+
+onMounted(async () => {
+    if (!userStore.isAuthenticated) {
+        await userStore.initializeAuth();
+    }
+    await refreshSubscription();
+});
+</script>
+
+<template>
+    <div class="cer cer-app">
+        <aside class="cer-side">
+            <div class="brand serif">Ceremly<span class="dot" /></div>
+
+            <NuxtLink
+                v-for="item in mainNav"
+                :key="item.key"
+                :to="item.to"
+                class="cer-nav-item"
+                :class="{ active: isMainActive(item.key) }"
+            >
+                <CerIcon :name="item.icon" :s="15" />
+                <span>{{ item.label }}</span>
+            </NuxtLink>
+
+            <template v-if="eventId">
+                <div class="cer-nav-group">{{ eventGroupLabel }}</div>
+                <NuxtLink
+                    v-for="item in eventNav"
+                    :key="item.key"
+                    :to="eventItemTo(item.path)"
+                    class="cer-nav-item"
+                    :class="{ active: isEventItemActive(item.path) }"
+                >
+                    <CerIcon :name="item.icon" :s="15" />
+                    <span>{{ item.label }}</span>
+                </NuxtLink>
+            </template>
+
+            <div class="spacer" />
+
+            <NuxtLink to="/dashboard/profile" class="cer-nav-item">
+                <CerIcon name="settings" :s="15" />
+                <span>Impostazioni</span>
+            </NuxtLink>
+
+            <div style="margin-top: 10px; padding: 10px 8px; border-top: 1px solid var(--bone-200); display: flex; align-items: center; gap: 10px;">
+                <div class="av sage">{{ initials }}</div>
+                <div style="display: flex; flex-direction: column; line-height: 1.15;">
+                    <span style="font-size: 13px; font-weight: 500;">{{ displayName }}</span>
+                    <span style="font-size: 11px; color: var(--ink-500);">{{ planLabel }}</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="cer-main">
+            <header class="cer-topbar">
+                <div class="crumbs">
+                    <template v-for="(crumb, i) in crumbs" :key="`${i}-${crumb}`">
+                        <CerIcon v-if="i > 0" name="chevR" :s="12" />
+                        <strong v-if="i === crumbs.length - 1">{{ crumb }}</strong>
+                        <span v-else>{{ crumb }}</span>
+                    </template>
+                </div>
+                <div class="row" style="gap: 10px;">
+                    <button class="cer-btn ghost small" type="button">
+                        <CerIcon name="search" :s="14" /> Cerca
+                        <span class="mono" style="color: var(--ink-400); margin-left: 6px; font-size: 11px;">⌘K</span>
+                    </button>
+                    <!-- Teleport target: le pagine vi teletrasportano i bottoni azione -->
+                    <div id="ceremly-topbar-actions" class="row" style="gap: 10px;" />
+                </div>
+            </header>
+            <div :key="route.path" class="cer-page scroll cer-fade-in">
+                <slot />
+            </div>
+        </main>
+    </div>
+</template>

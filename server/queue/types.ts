@@ -7,13 +7,21 @@
 export interface JobPayloadMap {
   'data-export': { exportId: string; userId: string }
   'image-variant': { fileId: string }
+  // Ceremly — distribuzione inviti/reminder (SPEC §6, owner B3): 1 job per ospite.
+  'send-invite-email': { guestId: string }
+  'send-reminder-email': { guestId: string; reminderId: string }
 }
 
 export type JobName = keyof JobPayloadMap
 
 export type JobPayload<K extends JobName> = JobPayloadMap[K]
 
-export const JOB_NAMES: readonly JobName[] = ['data-export', 'image-variant'] as const
+export const JOB_NAMES: readonly JobName[] = [
+  'data-export',
+  'image-variant',
+  'send-invite-email',
+  'send-reminder-email',
+] as const
 
 export function isJobName(value: string): value is JobName {
   return (JOB_NAMES as readonly string[]).includes(value)

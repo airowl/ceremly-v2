@@ -178,7 +178,7 @@ export const createBetterAuth = () =>
         emailVerification: {
             sendOnSignUp: true,
             autoSignInAfterVerification: true,
-            sendVerificationEmail: async ({ user, url }) => {
+            sendVerificationEmail: async ({ user, url }, request) => {
                 const language = ((user as { locale?: string }).locale as SupportedLanguage) || 'it';
                 const result = await sendEmail({
                     type: "verification",
@@ -190,6 +190,17 @@ export const createBetterAuth = () =>
                 });
 
                 if (!result.success) {
+                    // Invio come side-effect (sign-up, sign-in con email non verificata):
+                    // l'utente è GIÀ committato in DB prima di questo callback → un throw
+                    // produrrebbe un 500 con account creato ("email già registrata" al retry).
+                    // Non bloccare il flusso: log + reinvio self-service.
+                    // Solo sull'endpoint esplicito /send-verification-email (dove l'invio È
+                    // l'operazione richiesta) il fallimento deve diventare un errore HTTP.
+                    const path = request ? new URL(request.url).pathname : "";
+                    if (!path.endsWith("/send-verification-email")) {
+                        console.error(`[Email] Verification email non inviata a ${user.email} (flusso non bloccato, reinvio possibile): ${result.error}`);
+                        return;
+                    }
                     throw createError({
                         statusCode: 500,
                         statusMessage: "Internal Server Error",

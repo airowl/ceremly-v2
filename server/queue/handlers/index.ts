@@ -1,6 +1,8 @@
 import type { JobName, JobPayload } from '../types'
 import { handleDataExport } from './dataExport.handler'
 import { handleImageVariant } from './imageVariant.handler'
+import { handleSendInviteEmail } from './sendInviteEmail.handler'
+import { handleSendReminderEmail } from './sendReminderEmail.handler'
 
 type JobHandler<K extends JobName> = (payload: JobPayload<K>) => Promise<void>
 
@@ -11,6 +13,8 @@ type JobHandlers = {
 export const jobHandlers: JobHandlers = {
   'data-export': handleDataExport,
   'image-variant': handleImageVariant,
+  'send-invite-email': handleSendInviteEmail,
+  'send-reminder-email': handleSendReminderEmail,
 }
 
 /**

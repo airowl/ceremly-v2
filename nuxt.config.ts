@@ -38,7 +38,7 @@ export default defineNuxtConfig({
         enabled: true,
     },
 
-    css: ["~/assets/css/main.css"],
+    css: ["~/assets/css/main.css", "~/assets/css/ceremly.css"],
 
     routeRules: {
         "/**": {
@@ -94,6 +94,9 @@ export default defineNuxtConfig({
 
         // Dashboard & Events management - client-side only
         "/dashboard/**": { ssr: false, prerender: false },
+
+        // Pagina invito ospite — SSR pubblico (OG preview su WhatsApp/Telegram)
+        "/e/**": { ssr: true, prerender: false },
 
         "/login": { ssr: false, prerender: false },
         "/signup": { ssr: false, prerender: false },
@@ -353,6 +356,11 @@ export default defineNuxtConfig({
                         path: "/api/cron/cleanup-files",
                         // Hobby plan = max 1 run/day. Pro = minute precision.
                         schedule: "0 3 * * *",
+                    },
+                    {
+                        // Reminder RSVP (SPEC Ceremly §6): enqueue giornaliero 07:00 UTC.
+                        path: "/api/cron/send-reminders",
+                        schedule: "0 7 * * *",
                     },
                 ],
             },

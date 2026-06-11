@@ -1,0 +1,314 @@
+/* ─────────────────────────────────────────────────────
+   Ceremly — "Soft Meadow" design tokens
+   Sage + camel · warm cream canvas · hard shadows
+   Palette: #ccd5ae #e9edc9 #fefae0 #faedcd #d4a373
+   Variable names preserved so every screen inherits the system.
+   Port fedele di docs/ui/project/styles.css.
+   Fonts gestite da @nuxt/fonts (niente @import Google Fonts).
+   ───────────────────────────────────────────────────── */
+
+/* Variabili scoped sotto .cer (non :root) per non inquinare il boilerplate
+   esistente: Tailwind @theme in main.css definisce già --font-sans. */
+.cer {
+  /* Surfaces — warm cream canvas, white containers */
+  --bone:        #fefae0;   /* page canvas */
+  --bone-50:     #FFFFFF;   /* cards / containers */
+  --bone-100:    #faedcd;   /* alternating band (pale sand) */
+  --bone-200:    #e9edc9;   /* pale green — subtle fills */
+  --bone-300:    #ccd5ae;   /* sage — darker fills / borders */
+
+  /* Crisp outlines (dark brown @ low opacity) */
+  --line:        rgba(63,54,34,0.14);
+  --line-strong: rgba(63,54,34,0.24);
+
+  /* Ink — deep warm brown (derived for contrast on a light palette) */
+  --ink:         #3F3622;
+  --ink-700:     #57492F;
+  --ink-500:     #786949;
+  --ink-400:     #A3957A;
+  --ink-300:     #CDC4AC;
+
+  /* Primary — camel (kept under --wine* so screens map over) */
+  --wine:        #d4a373;   /* primary */
+  --wine-soft:   #faedcd;   /* primary-fixed (light container) */
+  --wine-deep:   #5E4426;   /* on-primary-fixed (text on light tan) */
+  --purple:        #d4a373;
+  --purple-bright: #c28c54;
+  --purple-ink:    #5E4426;
+
+  /* Secondary accents */
+  --sage:        #ccd5ae;   /* sage — secondary accent */
+  --sage-soft:   #e9edc9;
+  --orange:      #d4a373;   /* camel — warm accent */
+  --orange-soft: #faedcd;
+  --orange-deep: #6E4A1F;
+  --blue:        #ccd5ae;   /* sage (kept name) */
+  --blue-soft:   #e9edc9;
+  --blue-deep:   #4A5A2E;
+
+  /* Semantic */
+  --confirm:     #6B8E23;
+  --decline:     #B0481A;
+  --pending:     #d4a373;
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-sans:    'Be Vietnam Pro', system-ui, sans-serif;
+  --font-mono:    'Space Mono', ui-monospace, monospace;
+
+  /* Radius */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px;
+
+  /* Hard shadows (offset, 0 blur) */
+  --hard:    4px 4px 0 var(--ink);
+  --hard-sm: 2px 2px 0 var(--ink);
+  --hard-p:  4px 4px 0 var(--purple);
+}
+
+/* Reset within artboards */
+.cer { font-family: var(--font-sans); color: var(--ink); background: var(--bone); -webkit-font-smoothing: antialiased; }
+.cer * { box-sizing: border-box; }
+.cer button { font-family: inherit; }
+.cer .serif { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+.cer .mono { font-family: var(--font-mono); }
+
+/* Generic primitives */
+.cer-card {
+  background: var(--bone-50);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.cer-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--ink-500);
+  padding: 4px 9px;
+  border-radius: var(--r-xs);
+  background: var(--bone-50);
+  border: 1px solid var(--line);
+}
+.cer-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+/* Buttons — bold, hard-shadow on interaction */
+.cer-btn {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  padding: 12px 22px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--ink);
+  background: var(--purple);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 150ms ease;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: var(--hard-sm);
+}
+.cer-btn:hover { transform: translate(-2px,-2px); box-shadow: var(--hard); }
+.cer-btn:active { transform: translate(0,0); box-shadow: 0 0 0 var(--ink); }
+.cer-btn.ghost { background: var(--bone-50); color: var(--ink); }
+.cer-btn.ghost:hover { background: var(--bone-100); }
+.cer-btn.wine { background: var(--purple); border-color: var(--ink); color: var(--ink); }
+.cer-btn.dark { background: var(--ink); border-color: var(--ink); color: var(--bone-50); }
+.cer-btn.small { padding: 7px 12px; font-size: 12px; border-radius: var(--r-xs); border-width: 1.5px; box-shadow: var(--hard-sm); }
+
+/* Sidebar nav (desktop app shell) */
+.cer-app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100%;
+  background: var(--bone);
+}
+.cer-side {
+  background: var(--bone-50);
+  border-right: 1px solid var(--line);
+  padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cer-side .brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  padding: 4px 8px 16px;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.cer-side .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); display: inline-block; }
+.cer-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.cer-nav-item:hover { background: var(--wine-soft); color: var(--purple-ink); }
+.cer-nav-item.active { background: var(--purple); color: var(--ink); }
+.cer-nav-group {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-400);
+  padding: 14px 10px 6px;
+}
+
+/* Main area */
+.cer-main { overflow: hidden; display: flex; flex-direction: column; }
+.cer-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bone);
+}
+.cer-topbar .crumbs {
+  font-size: 14px; color: var(--ink-500);
+  display: flex; gap: 6px; align-items: center;
+}
+.cer-topbar .crumbs strong { color: var(--ink); font-weight: 600; }
+
+.cer-page {
+  padding: 32px;
+  overflow: auto;
+  flex: 1;
+}
+.cer-page h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+  line-height: 1.05;
+}
+.cer-page .h-sub { color: var(--ink-500); font-size: 14px; }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.kpi {
+  background: var(--bone-50);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: transform 100ms, box-shadow 100ms;
+}
+.kpi:hover { transform: translate(-2px,-2px); box-shadow: var(--hard); }
+.kpi .k-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+.kpi .k-num {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 38px; line-height: 1.05; margin: 8px 0 4px; letter-spacing: -0.02em;
+}
+.kpi .k-sub { font-size: 12px; color: var(--ink-500); }
+.kpi.accent { background: var(--purple); color: var(--ink); border-color: var(--ink); }
+.kpi.accent .k-label, .kpi.accent .k-sub { color: var(--ink-700); }
+
+/* Table */
+.cer-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cer-table th {
+  text-align: left;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink-500); font-weight: 500;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.cer-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.cer-table tr:hover td { background: var(--bone-100); }
+
+/* Status pill */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.pill .cer-dot { width: 5px; height: 5px; }
+.pill.confirm { background: color-mix(in srgb, var(--confirm) 14%, white); color: #34461A; border-color: color-mix(in srgb, var(--confirm) 30%, transparent); }
+.pill.confirm .cer-dot { background: var(--confirm); }
+.pill.decline { background: color-mix(in srgb, var(--decline) 12%, white); color: #6E1E0C; border-color: color-mix(in srgb, var(--decline) 28%, transparent); }
+.pill.decline .cer-dot { background: var(--decline); }
+.pill.pending { background: var(--orange-soft); color: var(--orange-deep); border-color: color-mix(in srgb, var(--orange) 35%, transparent); }
+.pill.pending .cer-dot { background: var(--orange); }
+.pill.neutral { background: var(--bone-50); color: var(--ink-500); border-color: var(--line); }
+.pill.neutral .cer-dot { background: var(--ink-400); }
+
+/* Input — outline that hardens on focus */
+.cer-input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bone-50);
+  font-family: inherit; color: var(--ink);
+  outline: none;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.cer-input::placeholder { color: var(--ink-400); }
+.cer-input:focus { border: 2px solid var(--purple); box-shadow: var(--hard-p); }
+
+/* Avatar */
+.av {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--wine-soft); color: var(--purple-ink);
+  font-family: var(--font-mono); font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+}
+.av.sage { background: var(--blue-soft); color: var(--blue-deep); }
+.av.ink { background: var(--ink); color: var(--bone-50); border-color: var(--ink); }
+.av.lg { width: 38px; height: 38px; font-size: 12px; }
+
+/* Misc helpers — scoped sotto .cer per non collidere con pagine boilerplate */
+.cer .row { display: flex; align-items: center; gap: 8px; }
+.cer .col { display: flex; flex-direction: column; }
+.cer .spacer { flex: 1; }
+.cer .muted { color: var(--ink-500); }
+.cer .small { font-size: 12px; }
+.cer .divider { height: 1px; background: var(--line); margin: 12px 0; }
+.cer .scroll { overflow: auto; }
+.cer .scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.cer .scroll::-webkit-scrollbar-thumb { background: var(--bone-300); border-radius: 3px; }
+
+/* ─────────────────────────────────────────────────────
+   Utility aggiuntive per l'app reale (non nel mockup)
+   ───────────────────────────────────────────────────── */
+
+/* Lo shell occupa il viewport (il mockup ereditava l'altezza dall'artboard) */
+.cer-app { height: 100vh; height: 100dvh; }
+
+/* I nav item sono NuxtLink (<a>): nessuna sottolineatura */
+a.cer-nav-item, a.cer-nav-item:hover { text-decoration: none; }
+
+/* KPI non cliccabile: niente affordance hover */
+.kpi.static { cursor: default; }
+.kpi.static:hover { transform: none; box-shadow: none; }
+
+/* Fade-in leggero per le page transitions */
+@keyframes cer-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.cer-fade-in { animation: cer-fade-in 300ms ease both; }
+
+/* Responsive minimo: sotto i 900px lo shell collassa a colonna singola
+   con sidebar nascosta */
+@media (max-width: 900px) {
+  .cer-app { grid-template-columns: 1fr; }
+  .cer-app > .cer-side { display: none; }
+  .cer-topbar { padding: 14px 16px; }
+  .cer-page { padding: 20px 16px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}

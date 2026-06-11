@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
-
-const route = useRoute();
 const toast = useToast();
-
-const open = ref(false);
+const { t } = useI18n();
 
 const userStore = useUserStore()
 
@@ -18,13 +14,12 @@ onMounted(async () => {
     }
 
     toast.add({
-        title:
-            "We use first-party cookies to enhance your experience on our website.",
+        title: t("common.cookieConsent.message"),
         duration: 0,
         close: false,
         actions: [
             {
-                label: "Accept",
+                label: t("common.cookieConsent.accept"),
                 color: "neutral",
                 variant: "outline",
                 onClick: () => {
@@ -32,7 +27,7 @@ onMounted(async () => {
                 },
             },
             {
-                label: "Opt out",
+                label: t("common.cookieConsent.optOut"),
                 color: "neutral",
                 variant: "ghost",
             },

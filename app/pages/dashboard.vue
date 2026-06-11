@@ -1,23 +1,18 @@
 <script setup lang="ts">
-import { sub } from 'date-fns'
-import type { DropdownMenuItem, NavigationMenuItem  } from '@nuxt/ui'
-import type { Period, Range } from '~/types'
-import { useUserStore } from '~/stores/userStore'
+import type { NavigationMenuItem } from '@nuxt/ui'
 
-const userStore = useUserStore()
 const { t, locale, setLocale } = useI18n()
 
 definePageMeta({
     layout: 'dashboard',
 })
 
-const range = shallowRef<Range>({
-    start: sub(new Date(), { days: 14 }),
-    end: new Date()
-})
-const period = ref<Period>('daily')
-
 const route = useRoute();
+
+// Le route Ceremly (layout 'ceremly' in definePageMeta) sono figlie annidate di
+// questa pagina parent legacy: per loro questo componente è un puro passthrough,
+// altrimenti UDashboardGroup (fixed inset-0) coprirebbe la shell Ceremly.
+const isCeremlyRoute = computed(() => route.meta.layout === "ceremly");
 
 const open = ref(false);
 
@@ -30,16 +25,6 @@ const isInsideOrganization = computed(() => {
     const paramsId = route.params.id as string | undefined;
     return rn.startsWith("dashboard-organization-id") && !!paramsId;
 });
-
-const items = computed(() => [[{
-    label: t('dashboard.dropdown.newOrganization'),
-    icon: 'i-lucide-building-2',
-    to: '/dashboard/organization'
-}, {
-    label: t('dashboard.dropdown.inviteMember'),
-    icon: 'i-lucide-user-plus',
-    to: isInsideOrganization.value ? `/dashboard/organization/${route.params.id}/members` : '/dashboard/organization'
-}]] satisfies DropdownMenuItem[][])
 
 const changeLinks = () => {
     const paramsId = route.params.id as string | undefined;
@@ -112,32 +97,13 @@ const changeLinks = () => {
 watch([() => route.name, locale], () => {
     changeLinks();
 }, { immediate: true });
-
-const groups = computed(() => [
-    {
-        id: "links",
-        label: t('dashboard.nav.goTo'),
-        items: links.value.flat(),
-    },
-    {
-        id: "code",
-        label: t('dashboard.nav.code'),
-        items: [
-            {
-                id: "source",
-                label: t('dashboard.nav.viewSource'),
-                icon: "i-simple-icons-github",
-                to: `https://github.com/nuxt-ui-templates/dashboard/blob/main/app/pages${route.path === "/" ? "/index" : route.path
-                    }.vue`,
-                target: "_blank",
-            },
-        ],
-    },
-]);
 </script>
 
 <template>
-    <NuxtLayout name="dashboard">
+    <!-- Route Ceremly: passthrough — il layout 'ceremly' è già applicato da app.vue -->
+    <NuxtPage v-if="isCeremlyRoute" />
+
+    <NuxtLayout v-else name="dashboard">
         <template #sidebar>
             <UDashboardSidebar
 id="default" v-model:open="open" collapsible resizable class="bg-default border-r border-default"

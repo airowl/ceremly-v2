@@ -11,6 +11,9 @@ export const AUDIT_CATEGORIES = {
   team: 'team',
   page: 'page',
   event: 'event',
+  guest: 'guest',
+  invite: 'invite',
+  reminder: 'reminder',
   organization: 'organization',
   project: 'project',
   contact: 'contact',
@@ -66,10 +69,22 @@ export const AUDIT_ACTIONS = {
   'email.sent': 'email.sent',
   'email.failed': 'email.failed',
 
-  // Event
+  // Event (Ceremly — eventi invito, SPEC §6)
   'event.created': 'event.created',
   'event.updated': 'event.updated',
   'event.deleted': 'event.deleted',
+
+  // Guest (Ceremly — ospiti evento, SPEC §6)
+  'guest.created': 'guest.created',
+  'guest.updated': 'guest.updated',
+  'guest.deleted': 'guest.deleted',
+  'guest.imported': 'guest.imported',
+
+  // Distribuzione inviti (Ceremly — usata dall'agente B3)
+  'invite.sent': 'invite.sent',
+
+  // Reminder (Ceremly — usata dall'agente B4)
+  'reminder.updated': 'reminder.updated',
 
   // Organization (FASE 1c)
   'organization.created': 'organization.created',

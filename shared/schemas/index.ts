@@ -7,3 +7,4 @@ export * from "./admin";
 export * from "./waiting-list";
 export * from "./organization";
 export * from "./project";
+export * from "./ceremly";

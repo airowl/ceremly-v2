@@ -643,7 +643,12 @@
     "cancel": "Cancel",
     "choose": "Choose",
     "retry": "Retry",
-    "save": "Save"
+    "save": "Save",
+    "cookieConsent": {
+      "message": "We use first-party cookies to enhance your experience on our website.",
+      "accept": "Accept",
+      "optOut": "Opt out"
+    }
   },
   "footer": {
     "resources": {

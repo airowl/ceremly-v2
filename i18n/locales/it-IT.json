@@ -643,7 +643,12 @@
     "cancel": "Annulla",
     "choose": "Scegli",
     "retry": "Riprova",
-    "save": "Salva"
+    "save": "Salva",
+    "cookieConsent": {
+      "message": "Utilizziamo cookie di prima parte per migliorare la tua esperienza sul nostro sito.",
+      "accept": "Accetta",
+      "optOut": "Rifiuta"
+    }
   },
   "footer": {
     "resources": {

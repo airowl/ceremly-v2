@@ -78,7 +78,9 @@ export function isWaitingListBlockedPage(path: string): boolean {
  * Vue (pagine), dove un allowlist è naturale e fail-closed sull'ignoto.
  */
 export const WAITINGLIST_ALLOWED_EXACT = ["/"] as const;
-export const WAITINGLIST_ALLOWED_PREFIXES = ["/legal/", "/blogs"] as const;
+// "/e/" = pagine invito ospite pubbliche (/e/:slug/:token): devono restare
+// raggiungibili anche in waitinglist (token opaco come unica autorità).
+export const WAITINGLIST_ALLOWED_PREFIXES = ["/legal/", "/blogs", "/e/"] as const;
 
 /** True se `path` (qualsiasi locale) è una pagina pubblica accessibile in waitinglist. */
 export function isWaitingListAllowedPage(path: string): boolean {

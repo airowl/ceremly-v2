@@ -160,3 +160,13 @@ export function calculateYearlySavings(
     const savings = ((yearlyEquivalent - yearlyPrice) / yearlyEquivalent) * 100;
     return Math.round(savings);
 }
+
+/**
+ * Ceremly: limiti del piano Free (org senza subscription Creem attiva).
+ * Enforcement nel service layer; org con qualsiasi piano attivo = nessun limite.
+ */
+export const CEREMLY_FREE_LIMITS = {
+    maxGuestsPerEvent: 30,
+    maxActiveEvents: 1,
+    maxReminders: 3,
+} as const;
