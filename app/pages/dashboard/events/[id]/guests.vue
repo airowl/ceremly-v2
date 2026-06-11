@@ -865,7 +865,7 @@ async function submitGroup() {
                     </div>
 
                     <div v-if="importErrors.length > 0" style="margin-top: 12px;">
-                        <div class="cer-flabel" style="color: var(--decline);">Righe saltate</div>
+                        <div class="cer-flabel" style="color: var(--decline);">{{ $t('ceremly.event.guests.importSkippedRows') }}</div>
                         <div class="col" style="gap: 4px; margin-top: 6px; max-height: 120px; overflow: auto;">
                             <span v-for="(err, i) in importErrors" :key="i" class="small" style="color: var(--decline);">
                                 Riga {{ err.line }}: {{ err.reason }}

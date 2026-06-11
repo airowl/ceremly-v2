@@ -905,10 +905,10 @@ async function save() {
                     <!-- Anteprima ospite (inline) -->
                     <div class="cer-card" style="padding: 20px; background: var(--bone-100);">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                            Anteprima ospite
+                            {{ $t('ceremly.event.rsvp.previewGuest') }}
                         </div>
                         <div style="margin-top: 14px;">
-                            <div class="serif" style="font-size: 22px;">{{ selected.label || "Domanda senza titolo" }}</div>
+                            <div class="serif" style="font-size: 22px;">{{ selected.label || $t('ceremly.event.rsvp.questionUntitled') }}</div>
 
                             <!-- number → quadrati -->
                             <div v-if="selected.type === 'number' && demoNumberRange.length > 0" class="row" style="margin-top: 12px; gap: 4px; flex-wrap: wrap;">
