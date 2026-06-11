@@ -860,7 +860,7 @@ async function submitGroup() {
                             </tbody>
                         </table>
                         <div v-if="importRows.length > 5" class="small muted" style="padding: 10px 14px;">
-                            … e altri {{ importRows.length - 5 }} ospiti
+                            {{ $t('ceremly.event.guests.importMoreGuests', { count: importRows.length - 5 }) }}
                         </div>
                     </div>
 
