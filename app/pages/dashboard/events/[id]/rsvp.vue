@@ -993,7 +993,7 @@ async function save() {
                                 v-model="demoText"
                                 class="cer-input"
                                 rows="3"
-                                placeholder="Scrivi qui…"
+                                :placeholder="$t('ceremly.event.rsvp.previewTextPlaceholder')"
                                 style="margin-top: 12px; background: var(--bone-50); resize: vertical;"
                             />
                         </div>
