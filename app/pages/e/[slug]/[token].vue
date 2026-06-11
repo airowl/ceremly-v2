@@ -15,6 +15,7 @@ import type {
 import { getTemplate } from "~~/shared/constants/templates";
 import { getVisibleQuestions } from "~~/shared/utils/rsvpLogic";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
+import CerLangSwitch from "~/components/ceremly/CerLangSwitch.vue";
 import InviteRenderer from "~/components/ceremly/InviteRenderer.vue";
 import RsvpFormRenderer from "~/components/ceremly/RsvpFormRenderer.vue";
 import type { PublicRsvpPayload, PublicRsvpResponse } from "~/composables/usePublicInvite";
@@ -435,6 +436,9 @@ const agendaBtnStyle: CSSProperties = {
 
 <template>
     <div>
+        <!-- Switcher lingua (IT/EN) — fisso, sempre raggiungibile dagli ospiti -->
+        <CerLangSwitch :style="{ position: 'fixed', top: '16px', right: '16px', zIndex: 50 }" />
+
         <!-- ERRORE (404 o altro): schermata cortese standalone -->
         <div
             v-if="error"
