@@ -776,42 +776,42 @@ async function submitGroup() {
         <!-- ─── Modale "Aggiungi ospite" ────────────────────────────── -->
         <div v-if="addOpen" class="cer-overlay" @click.self="addOpen = false">
             <div class="cer-modal">
-                <div class="serif" style="font-size: 22px;">Aggiungi ospite</div>
-                <div class="muted" style="font-size: 13px; margin-top: 4px;">Riceverà un link personale all'invito.</div>
+                <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.guests.addModalTitle') }}</div>
+                <div class="muted" style="font-size: 13px; margin-top: 4px;">{{ $t('ceremly.event.guests.addModalSubtitle') }}</div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
                     <div class="col" style="gap: 4px;">
-                        <label class="cer-flabel">Nome *</label>
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldFirstName') }} *</label>
                         <input v-model="addForm.firstName" class="cer-input" placeholder="Anna">
                     </div>
                     <div class="col" style="gap: 4px;">
-                        <label class="cer-flabel">Cognome *</label>
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldLastName') }} *</label>
                         <input v-model="addForm.lastName" class="cer-input" placeholder="Conti">
                     </div>
                     <div class="col" style="gap: 4px;">
-                        <label class="cer-flabel">Email</label>
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldEmail') }}</label>
                         <input v-model="addForm.email" class="cer-input" type="email" placeholder="anna@email.it">
                     </div>
                     <div class="col" style="gap: 4px;">
-                        <label class="cer-flabel">Telefono</label>
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldPhone') }}</label>
                         <input v-model="addForm.phone" class="cer-input" placeholder="+39 333 1234567">
                     </div>
                     <div class="col" style="gap: 4px; grid-column: 1 / -1;">
-                        <label class="cer-flabel">Gruppo</label>
-                        <input v-model="addForm.groupName" class="cer-input" placeholder="Famiglia, Amici, Colleghi…">
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldGroup') }}</label>
+                        <input v-model="addForm.groupName" class="cer-input" :placeholder="$t('ceremly.event.guests.fieldGroupPlaceholder')">
                     </div>
                     <div class="col" style="gap: 4px; grid-column: 1 / -1;">
-                        <label class="cer-flabel">Note</label>
-                        <textarea v-model="addForm.notes" class="cer-input" rows="2" placeholder="Note private, visibili solo a te" />
+                        <label class="cer-flabel">{{ $t('ceremly.event.guests.fieldNotes') }}</label>
+                        <textarea v-model="addForm.notes" class="cer-input" rows="2" :placeholder="$t('ceremly.event.guests.fieldNotesPlaceholder')" />
                     </div>
                 </div>
 
                 <div v-if="addError" style="margin-top: 12px; font-size: 13px; color: var(--decline);">{{ addError }}</div>
 
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 18px;">
-                    <button class="cer-btn ghost small" type="button" @click="addOpen = false">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="addOpen = false">{{ $t('common.cancel') }}</button>
                     <button class="cer-btn small" type="button" :disabled="addSaving" @click="submitAdd">
-                        <CerIcon name="plus" :s="12" /> {{ addSaving ? "Salvo…" : "Aggiungi ospite" }}
+                        <CerIcon name="plus" :s="12" /> {{ addSaving ? $t('ceremly.event.guests.savingProgress') : $t('ceremly.event.guests.addGuest') }}
                     </button>
                 </div>
             </div>
