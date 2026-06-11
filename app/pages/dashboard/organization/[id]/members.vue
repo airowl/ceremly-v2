@@ -146,9 +146,12 @@ async function cancelInvitation(inv: OrganizationInvitation) {
 
         <template #body>
             <div class="p-4 sm:p-6 space-y-6">
-                <div v-if="orgStore.isLoading && !orgStore.currentOrganization" class="flex items-center justify-center py-12">
-                    <UIcon name="i-lucide-loader-2" class="w-8 h-8 animate-spin text-primary" />
-                </div>
+                <AppTableSkeleton
+                    v-if="orgStore.isLoading && !orgStore.currentOrganization"
+                    :rows="4"
+                    :columns="3"
+                    avatar
+                />
 
                 <div v-else-if="loadError || orgStore.error" class="text-center py-8">
                     <UIcon name="i-lucide-alert-circle" class="w-12 h-12 text-error mx-auto mb-4" />

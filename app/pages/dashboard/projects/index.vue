@@ -229,9 +229,7 @@ const columns: TableColumn<ProjectItem>[] = [
             <p class="text-muted text-sm mb-6">{{ $t('dashboard.projects.subtitle') }}</p>
 
             <!-- Loading State -->
-            <div v-if="status === 'pending'" class="flex items-center justify-center py-12">
-                <UIcon name="i-lucide-loader-2" class="size-6 animate-spin text-primary" />
-            </div>
+            <AppTableSkeleton v-if="status === 'pending'" :rows="5" :columns="5" />
 
             <!-- Error State -->
             <div v-else-if="error" class="text-center py-12">

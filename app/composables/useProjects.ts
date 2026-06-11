@@ -15,69 +15,39 @@ export interface ProjectItem {
 }
 
 export function useProjects() {
-    const isLoading = ref(false);
-    const error = ref<string | null>(null);
+    // Toast gestiti dalle pagine (possiedono le chiavi i18n) → errorToast: false.
+    const { isLoading, error, run } = useApi();
 
     async function list(): Promise<ProjectItem[]> {
         if (import.meta.server) return [];
-        isLoading.value = true;
-        error.value = null;
-        try {
-            const res = await $fetch<{ projects: ProjectItem[] }>("/api/projects");
-            return res.projects ?? [];
-        } catch (e: any) {
-            error.value = e.data?.message || e.message || "Errore nel caricamento";
-            throw e;
-        } finally {
-            isLoading.value = false;
-        }
+        const res = await run(
+            () => $fetch<{ projects: ProjectItem[] }>("/api/projects"),
+            { fallback: "Errore nel caricamento", errorToast: false },
+        );
+        return res.projects ?? [];
     }
 
     async function create(data: CreateProjectInput): Promise<ProjectItem> {
-        isLoading.value = true;
-        error.value = null;
-        try {
-            const res = await $fetch<{ project: ProjectItem }>("/api/projects", {
-                method: "POST",
-                body: data,
-            });
-            return res.project;
-        } catch (e: any) {
-            error.value = e.data?.message || e.message || "Errore nella creazione";
-            throw e;
-        } finally {
-            isLoading.value = false;
-        }
+        const res = await run(
+            () => $fetch<{ project: ProjectItem }>("/api/projects", { method: "POST", body: data }),
+            { fallback: "Errore nella creazione", errorToast: false },
+        );
+        return res.project;
     }
 
     async function update(id: string, data: UpdateProjectInput): Promise<ProjectItem> {
-        isLoading.value = true;
-        error.value = null;
-        try {
-            const res = await $fetch<{ project: ProjectItem }>(`/api/projects/${id}`, {
-                method: "PUT",
-                body: data,
-            });
-            return res.project;
-        } catch (e: any) {
-            error.value = e.data?.message || e.message || "Errore nell'aggiornamento";
-            throw e;
-        } finally {
-            isLoading.value = false;
-        }
+        const res = await run(
+            () => $fetch<{ project: ProjectItem }>(`/api/projects/${id}`, { method: "PUT", body: data }),
+            { fallback: "Errore nell'aggiornamento", errorToast: false },
+        );
+        return res.project;
     }
 
     async function remove(id: string): Promise<void> {
-        isLoading.value = true;
-        error.value = null;
-        try {
-            await $fetch(`/api/projects/${id}`, { method: "DELETE" });
-        } catch (e: any) {
-            error.value = e.data?.message || e.message || "Errore nell'eliminazione";
-            throw e;
-        } finally {
-            isLoading.value = false;
-        }
+        await run(
+            () => $fetch(`/api/projects/${id}`, { method: "DELETE" }),
+            { fallback: "Errore nell'eliminazione", errorToast: false },
+        );
     }
 
     return { isLoading, error, list, create, update, remove };

@@ -57,29 +57,13 @@ export interface SendInvitesResult {
     skippedNoEmail: number;
 }
 
-/** Shape minima degli errori $fetch (ofetch FetchError). */
-interface FetchErrorLike {
-    statusCode?: number;
-    data?: { statusMessage?: string; message?: string };
-    message?: string;
-}
-
 export function useEventGuests() {
-    const isLoading = ref(false);
-    const error = ref<string | null>(null);
+    const { isLoading, error, run: runApi } = useApi();
 
-    async function run<T>(fn: () => Promise<T>, fallback: string): Promise<T> {
-        isLoading.value = true;
-        error.value = null;
-        try {
-            return await fn();
-        } catch (e) {
-            const err = (e ?? {}) as FetchErrorLike;
-            error.value = err.data?.statusMessage || err.data?.message || err.message || fallback;
-            throw e;
-        } finally {
-            isLoading.value = false;
-        }
+    // Adapter sulla vecchia firma run(fn, fallback) → useApi senza toast
+    // (le pagine ospiti gestiscono i propri toast).
+    function run<T>(fn: () => Promise<T>, fallback: string): Promise<T> {
+        return runApi(fn, { fallback, errorToast: false });
     }
 
     async function listGuests(eventId: string): Promise<GuestListResult> {
