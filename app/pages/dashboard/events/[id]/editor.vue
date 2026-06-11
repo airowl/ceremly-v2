@@ -760,9 +760,9 @@ onBeforeRouteLeave(() => {
             <div style="width: 390px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 10px;">
                 <div class="row" style="justify-content: space-between;">
                     <span class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #fff;">
-                        Anteprima ospite
+                        {{ $t('ceremly.event.editor.guestPreview.title') }}
                     </span>
-                    <button class="cer-btn ghost small" style="padding: 6px;" type="button" aria-label="Chiudi anteprima" @click="previewOpen = false">
+                    <button class="cer-btn ghost small" style="padding: 6px;" type="button" :aria-label="$t('ceremly.event.editor.guestPreview.close')" @click="previewOpen = false">
                         <CeremlyCerIcon name="x" :s="14" />
                     </button>
                 </div>
