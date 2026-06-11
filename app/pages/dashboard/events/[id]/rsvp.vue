@@ -578,7 +578,7 @@ async function save() {
         <template v-else-if="eventData">
             <h1>{{ $t('ceremly.event.rsvp.pageTitle') }}</h1>
             <div class="h-sub">
-                {{ $t('ceremly.event.rsvp.questionCount', config.length) }} · {{ $t('ceremly.event.rsvp.presetApplied', { type: eventData.type }) }} ·
+                {{ config.length === 1 ? $t('ceremly.event.rsvp.questionCountOne') : $t('ceremly.event.rsvp.questionCountMany', { n: config.length }) }} · {{ $t('ceremly.event.rsvp.presetApplied', { type: eventData.type }) }} ·
                 <button
                     v-if="!editingDeadline"
                     class="cer-tag"
@@ -1019,9 +1019,9 @@ async function save() {
                         >
                             <CerIcon name="check" :s="26" :sw="2.5" />
                         </span>
-                        <div class="serif" style="font-size: 22px;">Anteprima completata</div>
-                        <div class="small muted">Le risposte di prova non vengono inviate né salvate.</div>
-                        <button class="cer-btn dark small" style="margin-top: 8px;" type="button" @click="closePreview">Chiudi anteprima</button>
+                        <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.rsvp.previewDoneTitle') }}</div>
+                        <div class="small muted">{{ $t('ceremly.event.rsvp.previewDoneHint') }}</div>
+                        <button class="cer-btn dark small" style="margin-top: 8px;" type="button" @click="closePreview">{{ $t('ceremly.event.rsvp.closePreview') }}</button>
                     </div>
                     <div v-else class="scroll" style="flex: 1; overflow: auto;">
                         <RsvpFormRenderer
@@ -1033,7 +1033,7 @@ async function save() {
                         />
                     </div>
                 </div>
-                <span class="cer-tag" style="background: var(--bone-50);">Anteprima demo · nessun invio reale</span>
+                <span class="cer-tag" style="background: var(--bone-50);">{{ $t('ceremly.event.rsvp.previewDemoTag') }}</span>
             </div>
         </div>
 
@@ -1045,29 +1045,28 @@ async function save() {
             @click.self="deleteTarget = null"
         >
             <div class="cer-card" style="padding: 24px; width: 460px; max-width: 92vw; background: var(--bone-50); box-shadow: var(--hard);">
-                <div class="serif" style="font-size: 20px;">Eliminare la domanda?</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.rsvp.deleteTitle') }}</div>
                 <div class="small muted" style="margin-top: 8px; line-height: 1.5;">
-                    «{{ deleteTarget.label || "Domanda senza titolo" }}» verrà rimossa dal form RSVP.
+                    {{ $t('ceremly.event.rsvp.deleteBody', { label: deleteTarget.label || $t('ceremly.event.rsvp.questionUntitled') }) }}
                 </div>
                 <div
                     v-if="deleteDependents.length > 0"
                     style="margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--wine-soft); color: var(--wine-deep); font-size: 13px; line-height: 1.5;"
                 >
-                    <strong>Attenzione:</strong>
-                    {{ deleteDependents.length === 1 ? "una domanda usa" : `${deleteDependents.length} domande usano` }}
-                    questa domanda in una condizione
-                    ({{ deleteDependents.map(d => `«${d.label}»`).join(", ") }}).
-                    Eliminandola, quelle condizioni verranno azzerate e le domande saranno mostrate a tutti.
+                    <strong>{{ $t('ceremly.event.rsvp.deleteWarningLabel') }}</strong>
+                    {{ deleteDependents.length === 1
+                        ? $t('ceremly.event.rsvp.deleteWarningBodyOne', { deps: deleteDependents.map(d => `«${d.label}»`).join(", ") })
+                        : $t('ceremly.event.rsvp.deleteWarningBodyMany', { count: deleteDependents.length, deps: deleteDependents.map(d => `«${d.label}»`).join(", ") }) }}
                 </div>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 18px;">
-                    <button class="cer-btn ghost small" type="button" @click="deleteTarget = null">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="deleteTarget = null">{{ $t('common.cancel') }}</button>
                     <button
                         class="cer-btn small"
                         type="button"
                         style="background: var(--decline); border-color: var(--ink); color: #fff;"
                         @click="confirmDeleteQuestion"
                     >
-                        <CerIcon name="trash" :s="12" /> Elimina
+                        <CerIcon name="trash" :s="12" /> {{ $t('ceremly.event.rsvp.deleteConfirm') }}
                     </button>
                 </div>
             </div>

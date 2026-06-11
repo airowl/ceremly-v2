@@ -8,7 +8,6 @@ import type {
     InviteBlock,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
-import { getEventTypeLabel as _getEventTypeLabel } from "~~/shared/constants/eventTypes";
 
 definePageMeta({ layout: "ceremly" });
 

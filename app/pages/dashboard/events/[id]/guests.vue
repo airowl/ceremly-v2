@@ -899,19 +899,19 @@ async function submitGroup() {
                     </div>
                     <div v-if="importResult.skipped.length > 0" class="col" style="gap: 4px; margin-top: 12px; max-height: 120px; overflow: auto;">
                         <span v-for="(s, i) in importResult.skipped" :key="i" class="small" style="color: var(--decline);">
-                            Riga {{ s.row }}: {{ s.reason }}
+                            {{ $t('ceremly.event.guests.rowN', { n: s.row }) }}: {{ s.reason }}
                         </span>
                     </div>
                     <div v-if="importResult.warnings.length > 0" style="margin-top: 12px;">
-                        <div class="cer-flabel">Possibili duplicati (importati comunque)</div>
+                        <div class="cer-flabel">{{ $t('ceremly.event.guests.importDuplicates') }}</div>
                         <div class="col" style="gap: 4px; margin-top: 6px; max-height: 120px; overflow: auto;">
                             <span v-for="(w, i) in importResult.warnings" :key="i" class="small muted">
-                                Riga {{ w.row }}: {{ w.reason }}
+                                {{ $t('ceremly.event.guests.rowN', { n: w.row }) }}: {{ w.reason }}
                             </span>
                         </div>
                     </div>
                     <div class="row" style="justify-content: flex-end; margin-top: 18px;">
-                        <button class="cer-btn small" type="button" @click="importOpen = false">Chiudi</button>
+                        <button class="cer-btn small" type="button" @click="importOpen = false">{{ $t('ceremly.event.guests.importClose') }}</button>
                     </div>
                 </template>
             </div>
@@ -920,18 +920,18 @@ async function submitGroup() {
         <!-- ─── Modale "Cambia gruppo" ──────────────────────────────── -->
         <div v-if="groupOpen" class="cer-overlay" @click.self="groupOpen = false">
             <div class="cer-modal" style="max-width: 440px;">
-                <div class="serif" style="font-size: 20px;">Cambia gruppo</div>
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.guests.groupModalTitle') }}</div>
                 <div class="muted" style="font-size: 13px; margin-top: 4px;">
-                    Il nuovo gruppo sarà applicato a {{ selected.size }} ospiti selezionati.
+                    {{ $t('ceremly.event.guests.groupModalSubtitle', { count: selected.size }) }}
                 </div>
                 <div class="col" style="gap: 4px; margin-top: 16px;">
-                    <label class="cer-flabel">Nome del gruppo</label>
-                    <input v-model="groupName" class="cer-input" placeholder="Famiglia, Amici, Colleghi…" @keyup.enter="submitGroup">
+                    <label class="cer-flabel">{{ $t('ceremly.event.guests.groupNameLabel') }}</label>
+                    <input v-model="groupName" class="cer-input" :placeholder="$t('ceremly.event.guests.fieldGroupPlaceholder')" @keyup.enter="submitGroup">
                 </div>
                 <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 18px;">
-                    <button class="cer-btn ghost small" type="button" @click="groupOpen = false">Annulla</button>
+                    <button class="cer-btn ghost small" type="button" @click="groupOpen = false">{{ $t('common.cancel') }}</button>
                     <button class="cer-btn small" type="button" :disabled="!groupName.trim() || groupSaving" @click="submitGroup">
-                        {{ groupSaving ? "Salvo…" : "Applica" }}
+                        {{ groupSaving ? $t('ceremly.event.guests.savingProgress') : $t('ceremly.event.guests.groupApply') }}
                     </button>
                 </div>
             </div>
