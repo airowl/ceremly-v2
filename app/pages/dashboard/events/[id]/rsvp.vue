@@ -849,9 +849,9 @@ async function save() {
                         <div v-else-if="selected.condition" class="row" style="margin-top: 14px; gap: 8px; align-items: stretch;">
                             <select v-model="selected.condition.questionId" class="cer-input" @change="onCondRefChange">
                                 <option v-if="condRefIsForward" :value="selected.condition.questionId" disabled>
-                                    ⚠ {{ condRef?.label ?? "Domanda eliminata" }}
+                                    ⚠ {{ condRef?.label ?? $t('ceremly.event.rsvp.questionDeleted') }}
                                 </option>
-                                <option v-for="p in precedingQuestions" :key="p.id" :value="p.id">{{ p.label || "Domanda senza titolo" }}</option>
+                                <option v-for="p in precedingQuestions" :key="p.id" :value="p.id">{{ p.label || $t('ceremly.event.rsvp.questionUntitled') }}</option>
                             </select>
                             <select v-model="selected.condition.op" class="cer-input" style="width: 90px; flex-shrink: 0;" @change="onCondOpChange">
                                 <option value="eq">è</option>

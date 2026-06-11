@@ -661,7 +661,7 @@ onBeforeRouteLeave(() => {
                     <!-- gallery -->
                     <template v-else-if="galleryD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Immagini ({{ galleryD.images.length }}/5)</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.gallery.images', { count: galleryD.images.length }) }}</label>
                             <div v-if="galleryD.images.length" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                 <div v-for="(img, i) in galleryD.images" :key="i" style="position: relative;">
                                     <img
@@ -669,12 +669,12 @@ onBeforeRouteLeave(() => {
                                         :alt="img.alt"
                                         style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block; border: 1px solid var(--line);"
                                     >
-                                    <button class="img-x" type="button" aria-label="Rimuovi immagine" @click="removeGalleryImage(i)">
+                                    <button class="img-x" type="button" :aria-label="$t('ceremly.event.editor.fields.gallery.removeImage')" @click="removeGalleryImage(i)">
                                         <CeremlyCerIcon name="x" :s="11" />
                                     </button>
                                 </div>
                             </div>
-                            <div v-else class="small muted">Nessuna immagine ancora: caricane fino a 5.</div>
+                            <div v-else class="small muted">{{ $t('ceremly.event.editor.fields.gallery.noImages') }}</div>
                             <input ref="galleryInput" type="file" accept="image/*" style="display: none;" @change="onGalleryFile">
                             <button
                                 class="cer-btn ghost small"
@@ -684,7 +684,7 @@ onBeforeRouteLeave(() => {
                                 @click="galleryInput?.click()"
                             >
                                 <CeremlyCerIcon name="upload" :s="12" />
-                                {{ uploadingGallery ? "Caricamento…" : "Carica immagine" }}
+                                {{ uploadingGallery ? $t('ceremly.event.editor.fields.gallery.uploading') : $t('ceremly.event.editor.fields.gallery.upload') }}
                             </button>
                         </div>
                     </template>

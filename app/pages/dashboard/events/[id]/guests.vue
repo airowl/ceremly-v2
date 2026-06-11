@@ -820,9 +820,9 @@ async function submitGroup() {
         <!-- ─── Modale "Importa CSV" ────────────────────────────────── -->
         <div v-if="importOpen" class="cer-overlay" @click.self="importOpen = false">
             <div class="cer-modal" style="max-width: 640px;">
-                <div class="serif" style="font-size: 22px;">Importa ospiti da CSV</div>
+                <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.guests.importModalTitle') }}</div>
                 <div class="muted" style="font-size: 13px; margin-top: 4px;">
-                    Colonne attese: nome, cognome, email, telefono, gruppo — la riga di intestazione è facoltativa.
+                    {{ $t('ceremly.event.guests.importModalSubtitle') }}
                 </div>
 
                 <!-- Step 1: scelta file -->
