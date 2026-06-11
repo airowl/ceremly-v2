@@ -21,10 +21,10 @@ const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => nul
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 
 const TYPE_LABELS = computed<Record<string, string>>(() => ({
-    matrimonio: t("ceremly.eventType.matrimonio"),
-    laurea: t("ceremly.eventType.laurea"),
-    battesimo: t("ceremly.eventType.battesimo"),
-    compleanno: t("ceremly.eventType.compleanno"),
+    matrimonio: t("ceremly.eventType.matrimonio.label"),
+    laurea: t("ceremly.eventType.laurea.label"),
+    battesimo: t("ceremly.eventType.battesimo.label"),
+    compleanno: t("ceremly.eventType.compleanno.label"),
 }));
 
 const eventData = ref<CeremlyEvent | null>(null);

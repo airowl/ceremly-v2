@@ -258,32 +258,32 @@ async function onSubmit(payload: PublicRsvpPayload) {
 
 const confirmCopy = computed(() => {
     switch (response.value?.attending) {
-        case “no”:
+        case "no":
             return {
-                title: t(“ceremly.guest.confirmNoTitle”),
-                sub: t(“ceremly.guest.confirmNoSub”),
-                icon: “heart”,
-                iconBg: “var(--wine)”,
-                gradient: “linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)”,
-                quote: t(“ceremly.guest.confirmNoQuote”),
+                title: t("ceremly.guest.confirmNoTitle"),
+                sub: t("ceremly.guest.confirmNoSub"),
+                icon: "heart",
+                iconBg: "var(--wine)",
+                gradient: "linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)",
+                quote: t("ceremly.guest.confirmNoQuote"),
             };
-        case “maybe”:
+        case "maybe":
             return {
-                title: t(“ceremly.guest.confirmMaybeTitle”),
-                sub: t(“ceremly.guest.confirmMaybeSub”),
-                icon: “clock”,
-                iconBg: “var(--wine)”,
-                gradient: “linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)”,
-                quote: t(“ceremly.guest.confirmMaybeQuote”),
+                title: t("ceremly.guest.confirmMaybeTitle"),
+                sub: t("ceremly.guest.confirmMaybeSub"),
+                icon: "clock",
+                iconBg: "var(--wine)",
+                gradient: "linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)",
+                quote: t("ceremly.guest.confirmMaybeQuote"),
             };
         default:
             return {
-                title: t(“ceremly.guest.confirmYesTitle”),
-                sub: t(“ceremly.guest.confirmYesSub”, { name: firstName.value }),
-                icon: “check”,
-                iconBg: “oklch(0.55 0.10 150)”,
-                gradient: “linear-gradient(180deg, color-mix(in srgb, var(--confirm) 16%, white) 0%, var(--bone) 40%)”,
-                quote: t(“ceremly.guest.confirmYesQuote”),
+                title: t("ceremly.guest.confirmYesTitle"),
+                sub: t("ceremly.guest.confirmYesSub", { name: firstName.value }),
+                icon: "check",
+                iconBg: "oklch(0.55 0.10 150)",
+                gradient: "linear-gradient(180deg, color-mix(in srgb, var(--confirm) 16%, white) 0%, var(--bone) 40%)",
+                quote: t("ceremly.guest.confirmYesQuote"),
             };
     }
 });

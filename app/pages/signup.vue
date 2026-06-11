@@ -138,81 +138,81 @@ async function onSubmit() {
 
 <template>
     <CeremlyAuthShell
-        :label=”$t('ceremly.signup.shellLabel')”
-        :body=”$t('ceremly.signup.shellBody')”
-        :quote=”{
+        :label="$t('ceremly.signup.shellLabel')"
+        :body="$t('ceremly.signup.shellBody')"
+        :quote="{
             text: $t('ceremly.signup.quoteText'),
             av: 'AM', who: $t('ceremly.signup.quoteWho'), where: $t('ceremly.signup.quoteWhere')
-        }”
-        :foot=”$t('ceremly.signup.shellFoot')”
+        }"
+        :foot="$t('ceremly.signup.shellFoot')"
     >
         <template #title>
-            {{ $t('ceremly.signup.titleLine1') }}<br>{{ $t('ceremly.signup.titleLine2') }}<br><span style=”color: #fff; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 4px; text-underline-offset: 6px;”>{{ $t('ceremly.signup.titleHighlight') }}</span><br>{{ $t('ceremly.signup.titleLine3') }}
+            {{ $t('ceremly.signup.titleLine1') }}<br>{{ $t('ceremly.signup.titleLine2') }}<br><span style="color: #fff; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 4px; text-underline-offset: 6px;">{{ $t('ceremly.signup.titleHighlight') }}</span><br>{{ $t('ceremly.signup.titleLine3') }}
         </template>
 
-        <div class=”serif” style=”font-size: 42px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;”>{{ $t('ceremly.signup.heading') }}</div>
-        <p style=”font-size: 14px; color: var(--ink-500); margin-top: 8px;”>
-            {{ $t('ceremly.signup.hasAccount') }} <NuxtLink to=”/login” style=”color: var(--purple); font-weight: 600; text-decoration: none;”>{{ $t('common.signIn') }} →</NuxtLink>
+        <div class="serif" style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;">{{ $t('ceremly.signup.heading') }}</div>
+        <p style="font-size: 14px; color: var(--ink-500); margin-top: 8px;">
+            {{ $t('ceremly.signup.hasAccount') }} <NuxtLink to="/login" style="color: var(--purple); font-weight: 600; text-decoration: none;">{{ $t('common.signIn') }} →</NuxtLink>
         </p>
 
-        <div style=”margin-top: 28px;”>
+        <div style="margin-top: 28px;">
             <!-- Social: SOLO Google (Apple non configurato) -->
-            <div style=”display: grid; grid-template-columns: 1fr; gap: 10px;”>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
                 <button
-                    type=”button”
-                    class=”cer-btn ghost”
-                    style=”justify-content: center; padding: 11px 12px; font-size: 13px;”
-                    :disabled=”loading”
-                    @click=”signUpWithGoogle”
+                    type="button"
+                    class="cer-btn ghost"
+                    style="justify-content: center; padding: 11px 12px; font-size: 13px;"
+                    :disabled="loading"
+                    @click="signUpWithGoogle"
                 >
-                    <svg width=”14” height=”14” viewBox=”0 0 24 24” aria-hidden=”true”><path fill=”#EA4335” d=”M12 11v3.2h5.3c-.2 1.4-1.6 4-5.3 4-3.2 0-5.8-2.6-5.8-5.9s2.6-5.9 5.8-5.9c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.7 4 14.5 3 12 3 6.9 3 2.8 7.1 2.8 12.2S6.9 21.4 12 21.4c6.9 0 9.5-4.8 9.5-7.3 0-.5-.1-.9-.1-1.3H12z” /></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 11v3.2h5.3c-.2 1.4-1.6 4-5.3 4-3.2 0-5.8-2.6-5.8-5.9s2.6-5.9 5.8-5.9c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.7 4 14.5 3 12 3 6.9 3 2.8 7.1 2.8 12.2S6.9 21.4 12 21.4c6.9 0 9.5-4.8 9.5-7.3 0-.5-.1-.9-.1-1.3H12z" /></svg>
                     {{ $t('ceremly.signup.continueWithGoogle') }}
                 </button>
             </div>
 
-            <div class=”row” style=”gap: 12px; margin: 20px 0; align-items: center;”>
-                <div style=”flex: 1; height: 1px; background: var(--bone-200);” />
-                <span class=”mono” style=”font-size: 10px; color: var(--ink-400); letter-spacing: 0.08em;”>{{ $t('ceremly.signup.orDivider') }}</span>
-                <div style=”flex: 1; height: 1px; background: var(--bone-200);” />
+            <div class="row" style="gap: 12px; margin: 20px 0; align-items: center;">
+                <div style="flex: 1; height: 1px; background: var(--bone-200);" />
+                <span class="mono" style="font-size: 10px; color: var(--ink-400); letter-spacing: 0.08em;">{{ $t('ceremly.signup.orDivider') }}</span>
+                <div style="flex: 1; height: 1px; background: var(--bone-200);" />
             </div>
 
-            <form class=”col” style=”gap: 14px;” novalidate @submit.prevent=”onSubmit”>
-                <div style=”display: grid; grid-template-columns: 1fr 1fr; gap: 12px;”>
-                    <label class=”col” style=”gap: 6px;”>
-                        <span class=”mono” style=”font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);”>{{ $t('ceremly.signup.labelFirstName') }}</span>
-                        <input v-model=”firstName” class=”cer-input” type=”text” autocomplete=”given-name” :placeholder=”$t('ceremly.signup.placeholderFirstName')”>
+            <form class="col" style="gap: 14px;" novalidate @submit.prevent="onSubmit">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <label class="col" style="gap: 6px;">
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.signup.labelFirstName') }}</span>
+                        <input v-model="firstName" class="cer-input" type="text" autocomplete="given-name" :placeholder="$t('ceremly.signup.placeholderFirstName')">
                     </label>
-                    <label class=”col” style=”gap: 6px;”>
-                        <span class=”mono” style=”font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);”>{{ $t('ceremly.signup.labelLastName') }}</span>
-                        <input v-model=”lastName” class=”cer-input” type=”text” autocomplete=”family-name” :placeholder=”$t('ceremly.signup.placeholderLastName')”>
+                    <label class="col" style="gap: 6px;">
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.signup.labelLastName') }}</span>
+                        <input v-model="lastName" class="cer-input" type="text" autocomplete="family-name" :placeholder="$t('ceremly.signup.placeholderLastName')">
                     </label>
                 </div>
-                <label class=”col” style=”gap: 6px;”>
-                    <span class=”mono” style=”font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);”>{{ $t('ceremly.signup.labelEmail') }}</span>
-                    <input v-model=”email” class=”cer-input” type=”email” autocomplete=”email” :placeholder=”$t('ceremly.signup.placeholderEmail')”>
+                <label class="col" style="gap: 6px;">
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.signup.labelEmail') }}</span>
+                    <input v-model="email" class="cer-input" type="email" autocomplete="email" :placeholder="$t('ceremly.signup.placeholderEmail')">
                 </label>
-                <label class=”col” style=”gap: 6px;”>
-                    <span class=”mono” style=”font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);”>{{ $t('ceremly.signup.labelPassword') }}</span>
-                    <input v-model=”password” class=”cer-input” type=”password” autocomplete=”new-password” placeholder=”••••••••••••”>
-                    <div class=”row” style=”gap: 4px; margin-top: 6px;”>
+                <label class="col" style="gap: 6px;">
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.signup.labelPassword') }}</span>
+                    <input v-model="password" class="cer-input" type="password" autocomplete="new-password" placeholder="••••••••••••">
+                    <div class="row" style="gap: 4px; margin-top: 6px;">
                         <span
-                            v-for=”i in 4”
-                            :key=”i”
-                            :style=”{ flex: 1, height: '3px', background: i <= strengthScore ? 'var(--confirm)' : 'var(--bone-200)', borderRadius: '2px' }”
+                            v-for="i in 4"
+                            :key="i"
+                            :style="{ flex: 1, height: '3px', background: i <= strengthScore ? 'var(--confirm)' : 'var(--bone-200)', borderRadius: '2px' }"
                         />
                     </div>
-                    <span class=”small muted” style=”margin-top: 4px;”>{{ strengthHint }}</span>
+                    <span class="small muted" style="margin-top: 4px;">{{ strengthHint }}</span>
                 </label>
 
-                <div class=”col” style=”gap: 6px;”>
-                    <span class=”mono” style=”font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);”>{{ $t('ceremly.signup.labelEventType') }}</span>
-                    <div style=”display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;”>
+                <div class="col" style="gap: 6px;">
+                    <span class="mono" style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.signup.labelEventType') }}</span>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
                         <button
-                            v-for=”eventType in EVENT_TYPES”
-                            :key=”eventType.key”
-                            type=”button”
-                            :aria-pressed=”selectedType === eventType.key”
-                            :style=”{
+                            v-for="eventType in EVENT_TYPES"
+                            :key="eventType.key"
+                            type="button"
+                            :aria-pressed="selectedType === eventType.key"
+                            :style="{
                                 border: '2px solid var(--ink)',
                                 background: selectedType === eventType.key ? 'var(--purple)' : 'var(--bone-50)',
                                 color: selectedType === eventType.key ? 'var(--ink)' : 'var(--ink-700)',
@@ -221,29 +221,29 @@ async function onSubmit() {
                                 textAlign: 'center',
                                 cursor: 'pointer',
                                 boxShadow: selectedType === eventType.key ? '3px 3px 0 var(--ink)' : 'none'
-                            }”
-                            @click=”selectType(eventType.key)”
+                            }"
+                            @click="selectType(eventType.key)"
                         >
-                            <CeremlyCerIcon :name=”eventType.icon” :s=”18” />
-                            <div style=”font-size: 11px; margin-top: 4px;”>{{ $t('ceremly.eventType.' + eventType.key + '.label') }}</div>
+                            <CeremlyCerIcon :name="eventType.icon" :s="18" />
+                            <div style="font-size: 11px; margin-top: 4px;">{{ $t('ceremly.eventType.' + eventType.key + '.label') }}</div>
                         </button>
                     </div>
                 </div>
 
-                <label class=”row” style=”gap: 8px; font-size: 12px; color: var(--ink-700); align-items: flex-start; margin-top: 6px; cursor: pointer;”>
-                    <input v-model=”acceptTerms” type=”checkbox” style=”accent-color: var(--purple); margin-top: 2px;”>
-                    <span>{{ $t('ceremly.signup.termsPrefix') }} <NuxtLink to=”/legal/tos” style=”color: var(--purple); font-weight: 600; text-decoration: none;”>{{ $t('ceremly.signup.termsLinkTos') }}</NuxtLink> {{ $t('ceremly.signup.termsAnd') }}<NuxtLink to=”/legal/privacy” style=”color: var(--purple); font-weight: 600; text-decoration: none;”>{{ $t('ceremly.signup.termsLinkPrivacy') }}</NuxtLink>{{ $t('ceremly.signup.termsSuffix') }}</span>
+                <label class="row" style="gap: 8px; font-size: 12px; color: var(--ink-700); align-items: flex-start; margin-top: 6px; cursor: pointer;">
+                    <input v-model="acceptTerms" type="checkbox" style="accent-color: var(--purple); margin-top: 2px;">
+                    <span>{{ $t('ceremly.signup.termsPrefix') }} <NuxtLink to="/legal/tos" style="color: var(--purple); font-weight: 600; text-decoration: none;">{{ $t('ceremly.signup.termsLinkTos') }}</NuxtLink> {{ $t('ceremly.signup.termsAnd') }}<NuxtLink to="/legal/privacy" style="color: var(--purple); font-weight: 600; text-decoration: none;">{{ $t('ceremly.signup.termsLinkPrivacy') }}</NuxtLink>{{ $t('ceremly.signup.termsSuffix') }}</span>
                 </label>
 
-                <p v-if=”formError” class=”small” style=”color: var(--decline); margin: 0;”>{{ formError }}</p>
+                <p v-if="formError" class="small" style="color: var(--decline); margin: 0;">{{ formError }}</p>
 
                 <button
-                    type=”submit”
-                    class=”cer-btn wine”
-                    style=”width: 100%; justify-content: center; padding: 13px 16px; margin-top: 8px;”
-                    :disabled=”loading”
+                    type="submit"
+                    class="cer-btn wine"
+                    style="width: 100%; justify-content: center; padding: 13px 16px; margin-top: 8px;"
+                    :disabled="loading"
                 >
-                    <CeremlyCerIcon name=”sparkle” :s=”14” /> {{ loading ? $t('ceremly.signup.submitting') : $t('ceremly.signup.submitButton') }}
+                    <CeremlyCerIcon name="sparkle" :s="14" /> {{ loading ? $t('ceremly.signup.submitting') : $t('ceremly.signup.submitButton') }}
                 </button>
             </form>
         </div>

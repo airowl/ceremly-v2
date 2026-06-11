@@ -87,13 +87,13 @@ async function onSubmit() {
 
 <template>
     <CeremlyAuthShell
-        :label=”$t('ceremly.login.shellLabel')”
-        :body=”$t('ceremly.login.shellBody')”
-        :quote=”{
+        :label="$t('ceremly.login.shellLabel')"
+        :body="$t('ceremly.login.shellBody')"
+        :quote="{
             text: $t('ceremly.login.quoteText'),
             av: 'GT', who: 'Giulia T.', where: $t('ceremly.login.quoteWhere')
-        }”
-        :foot=”$t('ceremly.login.shellFoot')”
+        }"
+        :foot="$t('ceremly.login.shellFoot')"
     >
         <template #title>
             {{ $t('ceremly.login.titleLine1') }}<br>{{ $t('ceremly.login.titleLine2') }}<br><span style="color: #fff; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 4px; text-underline-offset: 6px;">{{ $t('ceremly.login.titleLine3') }}</span>.

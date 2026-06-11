@@ -120,7 +120,7 @@ function questionTypeLabel(q: RsvpQuestion): string {
 function conditionValueLabel(c: RsvpCondition, ref: RsvpQuestion | undefined): string {
     if (ref?.id === "attendance") {
         const idx = ATTENDANCE_CANONICAL.indexOf(c.value as typeof ATTENDANCE_CANONICAL[number]);
-        if (idx >= 0) return ref.options?.[idx] ?? ATTENDANCE_FALLBACK_LABELS[idx] ?? String(c.value);
+        if (idx >= 0) return ref.options?.[idx] ?? ATTENDANCE_FALLBACK_LABELS.value[idx] ?? String(c.value);
     }
     if (ref?.type === "boolean") return String(c.value) === "true" ? t("ceremly.event.rsvp.attendanceYes") : t("ceremly.event.rsvp.attendanceNo");
     return String(c.value);
