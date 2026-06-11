@@ -14,14 +14,15 @@ definePageMeta({
 })
 
 const NuxtLink = resolveComponent('NuxtLink')
+const { t } = useI18n()
 
 const { isActiveMode } = useSiteMode()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
 // SEO
-const seoTitle = 'Ceremly — Inviti digitali e RSVP intelligenti'
-const seoDescription = 'Smetti di rincorrere conferme su WhatsApp: un link, un invito digitale e una dashboard che ti dice chi viene davvero — per matrimoni, lauree, battesimi e compleanni.'
+const seoTitle = t('ceremly.home.seo.title')
+const seoDescription = t('ceremly.home.seo.description')
 
 useSeoMeta({
     titleTemplate: '',
@@ -78,7 +79,7 @@ async function submitWaitingList() {
 
     const email = wlEmail.value.trim()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        wlError.value = 'Inserisci un indirizzo email valido.'
+        wlError.value = t('ceremly.home.waitingList.errorInvalidEmail')
         return
     }
 
@@ -103,7 +104,7 @@ async function submitWaitingList() {
         wlEmail.value = ''
     } catch (error) {
         const err = error as { data?: { message?: string } }
-        wlError.value = err?.data?.message || 'Qualcosa è andato storto. Riprova tra poco.'
+        wlError.value = err?.data?.message || t('ceremly.home.waitingList.errorGeneric')
     } finally {
         wlLoading.value = false
     }
@@ -118,37 +119,37 @@ function onSignupCta(e: Event) {
 }
 
 const navAnchors = [
-    { id: 'come-funziona', label: 'Come funziona' },
-    { id: 'funzionalita', label: 'Funzionalità' },
-    { id: 'prezzi', label: 'Prezzi' },
-    { id: 'esempi', label: 'Esempi' },
+    { id: 'come-funziona', label: t('ceremly.home.nav.howItWorks') },
+    { id: 'funzionalita', label: t('ceremly.home.nav.features') },
+    { id: 'prezzi', label: t('ceremly.home.nav.pricing') },
+    { id: 'esempi', label: t('ceremly.home.nav.examples') },
 ]
 
 // ── Dati sezioni (1:1 dal mockup) ──
 interface Pain { k: string, t: string, d: string }
 const pains: Pain[] = [
-    { k: '01', t: 'Gruppi WhatsApp infiniti', d: 'Una conferma sì, un forse, tre messaggi vocali. La lista finale resta un mistero fino a tre giorni prima.' },
-    { k: '02', t: 'Allergie a voce', d: 'Lo zio è celiaco, la cugina vegetariana — e nessuno se lo ricorda quando arriva il catering.' },
-    { k: '03', t: 'Plus-one fantasma', d: '"Posso portare il mio fidanzato?" — chiesto cinque volte, dimenticato due. Il conteggio non torna mai.' },
-    { k: '04', t: 'Inviti cartacei dispersi', d: 'Belli sì, ma costosi, lenti e impossibili da modificare se cambia data o location.' },
+    { k: '01', t: t('ceremly.home.pains.whatsapp.title'), d: t('ceremly.home.pains.whatsapp.desc') },
+    { k: '02', t: t('ceremly.home.pains.allergies.title'), d: t('ceremly.home.pains.allergies.desc') },
+    { k: '03', t: t('ceremly.home.pains.plusOne.title'), d: t('ceremly.home.pains.plusOne.desc') },
+    { k: '04', t: t('ceremly.home.pains.paperInvites.title'), d: t('ceremly.home.pains.paperInvites.desc') },
 ]
 
 interface Step { k: string, t: string, d: string, icon: string, c: string }
 const steps: Step[] = [
-    { k: '01', t: 'Crea l\'invito', d: 'Scegli un modello — matrimonio, laurea, battesimo, compleanno — e personalizza colori, foto e testi. Pronto in 5 minuti.', icon: 'edit', c: 'var(--purple)' },
-    { k: '02', t: 'Importa la lista', d: 'Incolla da Excel, da rubrica o digita. Raggruppa per famiglia, lato sposi o tavolo. Riconosciamo i duplicati.', icon: 'guests', c: 'var(--orange)' },
-    { k: '03', t: 'Distribuisci', d: 'Un link per tutti, oppure WhatsApp ed email personalizzati con nome dell\'ospite. QR per inviti cartacei.', icon: 'send', c: 'var(--blue)' },
-    { k: '04', t: 'Ricevi RSVP', d: 'Conferme, menu, plus-one e note arrivano in dashboard. Promemoria automatici a chi tarda.', icon: 'chart', c: 'var(--confirm)' },
+    { k: '01', t: t('ceremly.home.steps.create.title'), d: t('ceremly.home.steps.create.desc'), icon: 'edit', c: 'var(--purple)' },
+    { k: '02', t: t('ceremly.home.steps.import.title'), d: t('ceremly.home.steps.import.desc'), icon: 'guests', c: 'var(--orange)' },
+    { k: '03', t: t('ceremly.home.steps.distribute.title'), d: t('ceremly.home.steps.distribute.desc'), icon: 'send', c: 'var(--blue)' },
+    { k: '04', t: t('ceremly.home.steps.rsvp.title'), d: t('ceremly.home.steps.rsvp.desc'), icon: 'chart', c: 'var(--confirm)' },
 ]
 
 interface Feat { icon: string, t: string, d: string }
 const feats: Feat[] = [
-    { icon: 'mail', t: 'Email & WhatsApp personalizzati', d: 'Ogni ospite riceve il suo invito con nome e link unico — niente moduli generici.' },
-    { icon: 'bell', t: 'Promemoria automatici', d: 'Solleciti gentili a chi non ha ancora risposto, con la cadenza che decidi tu.' },
-    { icon: 'qr', t: 'QR per inviti cartacei', d: 'Mantieni la carta se ti piace — il QR porta lo stesso al form di conferma digitale.' },
-    { icon: 'heart', t: 'Menu, allergie, intolleranze', d: 'Raccogli preferenze alimentari nel form RSVP, esporta tutto per il catering.' },
-    { icon: 'guests', t: 'Plus-one e nuclei familiari', d: 'Gestisci accompagnatori, bambini e gruppi famiglia in un colpo solo.' },
-    { icon: 'chart', t: 'Andamento in tempo reale', d: 'Dashboard con tasso apertura, conferme per fascia, previsione costi catering.' },
+    { icon: 'mail', t: t('ceremly.home.feats.emailWhatsapp.title'), d: t('ceremly.home.feats.emailWhatsapp.desc') },
+    { icon: 'bell', t: t('ceremly.home.feats.reminders.title'), d: t('ceremly.home.feats.reminders.desc') },
+    { icon: 'qr', t: t('ceremly.home.feats.qr.title'), d: t('ceremly.home.feats.qr.desc') },
+    { icon: 'heart', t: t('ceremly.home.feats.menu.title'), d: t('ceremly.home.feats.menu.desc') },
+    { icon: 'guests', t: t('ceremly.home.feats.plusOne.title'), d: t('ceremly.home.feats.plusOne.desc') },
+    { icon: 'chart', t: t('ceremly.home.feats.realtime.title'), d: t('ceremly.home.feats.realtime.desc') },
 ]
 
 interface Tier {
@@ -164,31 +165,51 @@ interface Tier {
 }
 const tiers: Tier[] = [
     {
-        n: 'Free',
+        n: t('ceremly.home.pricing.free.name'),
         p: '0',
-        sub: 'per sempre',
-        desc: 'Per piccoli eventi e prove. Tutto il necessario per iniziare.',
-        feats: ['Fino a 30 ospiti', '1 evento attivo', '3 modelli di invito', 'RSVP via link', 'Dashboard base'],
-        cta: 'Inizia gratis',
+        sub: t('ceremly.home.pricing.free.sub'),
+        desc: t('ceremly.home.pricing.free.desc'),
+        feats: [
+            t('ceremly.home.pricing.free.feat1'),
+            t('ceremly.home.pricing.free.feat2'),
+            t('ceremly.home.pricing.free.feat3'),
+            t('ceremly.home.pricing.free.feat4'),
+            t('ceremly.home.pricing.free.feat5'),
+        ],
+        cta: t('ceremly.home.pricing.free.cta'),
         kind: 'ghost',
     },
     {
-        n: 'Celebrazione',
+        n: t('ceremly.home.pricing.celebration.name'),
         p: '39',
-        sub: 'una tantum · per evento',
-        desc: 'Per matrimoni, lauree e battesimi. L\'opzione consigliata per la maggior parte degli eventi.',
-        feats: ['Fino a 250 ospiti', 'Tutti i modelli + brand colors', 'WhatsApp & email personalizzati', 'Menu, allergie, plus-one', 'Promemoria automatici', 'Esporta lista per catering'],
-        cta: 'Scegli Celebrazione',
+        sub: t('ceremly.home.pricing.celebration.sub'),
+        desc: t('ceremly.home.pricing.celebration.desc'),
+        feats: [
+            t('ceremly.home.pricing.celebration.feat1'),
+            t('ceremly.home.pricing.celebration.feat2'),
+            t('ceremly.home.pricing.celebration.feat3'),
+            t('ceremly.home.pricing.celebration.feat4'),
+            t('ceremly.home.pricing.celebration.feat5'),
+            t('ceremly.home.pricing.celebration.feat6'),
+        ],
+        cta: t('ceremly.home.pricing.celebration.cta'),
         highlight: true,
-        tag: 'Più scelto',
+        tag: t('ceremly.home.pricing.celebration.tag'),
     },
     {
-        n: 'Atelier',
+        n: t('ceremly.home.pricing.atelier.name'),
         p: '24',
-        sub: '/mese · per planner',
-        desc: 'Per chi organizza eventi di lavoro. Eventi illimitati e brand su misura.',
-        feats: ['Eventi e ospiti illimitati', 'Workspace con il tuo logo', 'Domini personalizzati', 'API & integrazioni catering', 'Account team', 'Supporto prioritario'],
-        cta: 'Parla con noi',
+        sub: t('ceremly.home.pricing.atelier.sub'),
+        desc: t('ceremly.home.pricing.atelier.desc'),
+        feats: [
+            t('ceremly.home.pricing.atelier.feat1'),
+            t('ceremly.home.pricing.atelier.feat2'),
+            t('ceremly.home.pricing.atelier.feat3'),
+            t('ceremly.home.pricing.atelier.feat4'),
+            t('ceremly.home.pricing.atelier.feat5'),
+            t('ceremly.home.pricing.atelier.feat6'),
+        ],
+        cta: t('ceremly.home.pricing.atelier.cta'),
         kind: 'ghost',
     },
 ]
@@ -197,43 +218,43 @@ interface FooterItem { label: string, to?: string, anchor?: string }
 interface FooterCol { t: string, items: FooterItem[] }
 const footerCols: FooterCol[] = [
     {
-        t: 'Prodotto',
+        t: t('ceremly.home.footer.cols.product.title'),
         items: [
-            { label: 'Come funziona', anchor: 'come-funziona' },
-            { label: 'Funzionalità', anchor: 'funzionalita' },
-            { label: 'Modelli di invito' },
-            { label: 'Prezzi', anchor: 'prezzi' },
-            { label: 'Esempi reali', anchor: 'esempi' },
+            { label: t('ceremly.home.nav.howItWorks'), anchor: 'come-funziona' },
+            { label: t('ceremly.home.nav.features'), anchor: 'funzionalita' },
+            { label: t('ceremly.home.footer.cols.product.inviteTemplates') },
+            { label: t('ceremly.home.nav.pricing'), anchor: 'prezzi' },
+            { label: t('ceremly.home.footer.cols.product.realExamples'), anchor: 'esempi' },
         ],
     },
     {
-        t: 'Per chi',
+        t: t('ceremly.home.footer.cols.forWho.title'),
         items: [
-            { label: 'Matrimoni' },
-            { label: 'Lauree' },
-            { label: 'Battesimi' },
-            { label: 'Compleanni' },
-            { label: 'Wedding planner' },
+            { label: t('ceremly.home.footer.cols.forWho.weddings') },
+            { label: t('ceremly.home.footer.cols.forWho.graduations') },
+            { label: t('ceremly.home.footer.cols.forWho.baptisms') },
+            { label: t('ceremly.home.footer.cols.forWho.birthdays') },
+            { label: t('ceremly.home.footer.cols.forWho.weddingPlanners') },
         ],
     },
     {
-        t: 'Risorse',
+        t: t('ceremly.home.footer.cols.resources.title'),
         items: [
-            { label: 'Guida RSVP', to: '/blogs' },
-            { label: 'Centro aiuto' },
-            { label: 'Stato servizio' },
-            { label: 'Changelog' },
-            { label: 'API per partner' },
+            { label: t('ceremly.home.footer.cols.resources.rsvpGuide'), to: '/blogs' },
+            { label: t('ceremly.home.footer.cols.resources.helpCenter') },
+            { label: t('ceremly.home.footer.cols.resources.serviceStatus') },
+            { label: t('ceremly.home.footer.cols.resources.changelog') },
+            { label: t('ceremly.home.footer.cols.resources.apiPartners') },
         ],
     },
     {
         t: 'Ceremly',
         items: [
-            { label: 'Chi siamo' },
-            { label: 'Contatti', to: '/contactUs' },
-            { label: 'Termini', to: '/legal/tos' },
-            { label: 'Privacy & GDPR', to: '/legal/privacy' },
-            { label: 'Cookie' },
+            { label: t('ceremly.home.footer.cols.company.about') },
+            { label: t('ceremly.home.footer.cols.company.contact'), to: '/contactUs' },
+            { label: t('ceremly.home.footer.cols.company.terms'), to: '/legal/tos' },
+            { label: t('ceremly.home.footer.cols.company.privacy'), to: '/legal/privacy' },
+            { label: t('ceremly.home.footer.cols.company.cookies') },
         ],
     },
 ]
@@ -248,7 +269,7 @@ const footerCols: FooterCol[] = [
                     <span class="serif" style="font-size: 28px; font-weight: 800; letter-spacing: -0.03em;">Ceremly</span>
                     <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--orange); display: inline-block;" />
                 </div>
-                <nav class="row l-nav-links" style="gap: 32px; font-size: 14px; color: var(--ink-700); font-weight: 500;" aria-label="Navigazione principale">
+                <nav class="row l-nav-links" style="gap: 32px; font-size: 14px; color: var(--ink-700); font-weight: 500;" :aria-label="$t('ceremly.home.nav.ariaLabel')">
                     <a
                         v-for="a in navAnchors"
                         :key="a.id"
@@ -259,8 +280,8 @@ const footerCols: FooterCol[] = [
                 </nav>
                 <div class="row" style="gap: 10px;">
                     <template v-if="isActiveMode">
-                        <NuxtLink to="/login" class="cer-btn ghost small">Accedi</NuxtLink>
-                        <NuxtLink to="/signup" class="cer-btn small">Registrati</NuxtLink>
+                        <NuxtLink to="/login" class="cer-btn ghost small">{{ $t('common.signIn') }}</NuxtLink>
+                        <NuxtLink to="/signup" class="cer-btn small">{{ $t('common.signUp') }}</NuxtLink>
                     </template>
                 </div>
             </div>
@@ -270,22 +291,20 @@ const footerCols: FooterCol[] = [
         <section class="l-wrap l-hero l-hero-grid">
             <div>
                 <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent; margin-bottom: 22px;">
-                    <CerIcon name="sparkle" :s="12" /> v0.1 · aperto agli organizzatori italiani
+                    <CerIcon name="sparkle" :s="12" /> {{ $t('ceremly.home.hero.badge') }}
                 </span>
                 <h1 class="serif l-h1" style="font-weight: 800; line-height: 0.95; letter-spacing: -0.045em; margin: 14px 0 0;">
-                    Gli inviti<br>che contano<br><span class="l-mark" style="background: var(--purple);">davvero</span>.
+                    {{ $t('ceremly.home.hero.titlePart1') }}<br>{{ $t('ceremly.home.hero.titlePart2') }}<br><span class="l-mark" style="background: var(--purple);">{{ $t('ceremly.home.hero.titleMark') }}</span>.
                 </h1>
                 <p style="max-width: 510px; margin-top: 28px; font-size: 18px; line-height: 1.55; color: var(--ink-700);">
-                    Smetti di rincorrere conferme su WhatsApp. Un link, un invito digitale,
-                    una dashboard che ti dice chi viene davvero — per matrimoni, lauree,
-                    battesimi e compleanni.
+                    {{ $t('ceremly.home.hero.subtitle') }}
                 </p>
                 <div v-if="isActiveMode" class="row" style="margin-top: 32px; gap: 12px; flex-wrap: wrap;">
                     <NuxtLink to="/signup" class="cer-btn" style="padding: 15px 24px; font-size: 14px;">
-                        <CerIcon name="sparkle" :s="14" /> Crea il tuo primo invito — gratis
+                        <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.hero.ctaPrimary') }}
                     </NuxtLink>
                     <a href="#esempi" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('esempi')">
-                        <CerIcon name="eye" :s="14" /> Invito d'esempio
+                        <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
                     </a>
                 </div>
                 <!-- Waiting list mode: form di iscrizione al posto del CTA /signup -->
@@ -307,31 +326,31 @@ const footerCols: FooterCol[] = [
                             type="email"
                             name="email"
                             class="cer-input"
-                            placeholder="La tua email"
-                            aria-label="Email per la lista d'attesa"
+                            :placeholder="$t('ceremly.home.waitingList.emailPlaceholder')"
+                            :aria-label="$t('ceremly.home.waitingList.emailAriaLabel')"
                             required
                             :disabled="wlLoading"
                             style="width: min(300px, 100%); padding: 13px 16px;"
                         >
                         <button type="submit" class="cer-btn" style="padding: 13px 22px; font-size: 14px;" :disabled="wlLoading">
-                            <CerIcon name="sparkle" :s="14" /> {{ wlLoading ? 'Un attimo…' : 'Entra in lista d\'attesa' }}
+                            <CerIcon name="sparkle" :s="14" /> {{ wlLoading ? $t('ceremly.home.waitingList.loading') : $t('ceremly.home.waitingList.submit') }}
                         </button>
                     </form>
                     <div v-else class="row" style="gap: 10px; flex-wrap: wrap;">
-                        <span class="pill confirm"><span class="cer-dot" />{{ wlAlreadySubscribed ? 'Sei già in lista' : 'Sei in lista!' }}</span>
-                        <span style="font-size: 14px; color: var(--ink-700);">Ti scriviamo appena apriamo.</span>
+                        <span class="pill confirm"><span class="cer-dot" />{{ wlAlreadySubscribed ? $t('ceremly.home.waitingList.alreadySubscribed') : $t('ceremly.home.waitingList.subscribed') }}</span>
+                        <span style="font-size: 14px; color: var(--ink-700);">{{ $t('ceremly.home.waitingList.successMessage') }}</span>
                     </div>
                     <div v-if="wlError" role="alert" style="margin-top: 8px; font-size: 13px; color: var(--decline);">{{ wlError }}</div>
                     <div class="row" style="margin-top: 14px;">
                         <a href="#esempi" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('esempi')">
-                            <CerIcon name="eye" :s="14" /> Invito d'esempio
+                            <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
                         </a>
                     </div>
                 </div>
                 <div class="row" style="margin-top: 26px; gap: 18px; font-size: 13px; color: var(--ink-500); flex-wrap: wrap;">
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> Nessuna carta richiesta</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> 30 ospiti gratis</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> Ospiti senza account</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.hero.trust1') }}</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.hero.trust2') }}</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.hero.trust3') }}</span>
                 </div>
             </div>
 
@@ -341,13 +360,13 @@ const footerCols: FooterCol[] = [
                 <div style="position: absolute; left: 30px; top: 0; width: 360px; height: 510px; background: var(--purple); border-radius: 18px; border: 2px solid var(--ink); box-shadow: 10px 10px 0 var(--ink); color: var(--ink); padding: 40px 32px; transform: rotate(-3deg); display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wine-deep);">
-                            12 · settembre · 2026
+                            {{ $t('ceremly.home.heroVisual.inviteDate') }}
                         </div>
                         <div class="serif" style="font-size: 46px; font-weight: 800; line-height: 1.0; margin-top: 22px; letter-spacing: -0.03em;">
-                            Giulia &amp;<br>Tommaso<br><span style="font-weight: 400; font-style: italic;">si sposano</span>
+                            Giulia &amp;<br>Tommaso<br><span style="font-weight: 400; font-style: italic;">{{ $t('ceremly.home.heroVisual.inviteMarried') }}</span>
                         </div>
                         <div style="margin-top: 20px; font-size: 14px; opacity: 0.9; line-height: 1.5;">
-                            Villa Erba, Cernobbio<br>ore 16 — cerimonia all'aperto
+                            Villa Erba, Cernobbio<br>{{ $t('ceremly.home.heroVisual.inviteDetails') }}
                         </div>
                     </div>
                     <div>
@@ -355,12 +374,12 @@ const footerCols: FooterCol[] = [
                         <div class="row" style="justify-content: space-between; align-items: flex-end;">
                             <div>
                                 <div class="mono" style="font-size: 10px; letter-spacing: 0.12em; color: var(--wine-deep); text-transform: uppercase;">
-                                    Rispondi entro il
+                                    {{ $t('ceremly.home.heroVisual.replyBy') }}
                                 </div>
-                                <div style="font-size: 15px; margin-top: 4px; font-weight: 500;">1 luglio</div>
+                                <div style="font-size: 15px; margin-top: 4px; font-weight: 500;">{{ $t('ceremly.home.heroVisual.replyDate') }}</div>
                             </div>
                             <div style="background: var(--orange); color: var(--ink); padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 2px solid var(--ink);">
-                                Conferma →
+                                {{ $t('ceremly.home.heroVisual.confirmBtn') }} →
                             </div>
                         </div>
                     </div>
@@ -370,10 +389,10 @@ const footerCols: FooterCol[] = [
                 <div style="position: absolute; right: 0; top: 56px; width: 282px; padding: 20px; background: var(--bone-50); border-radius: 16px; border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); transform: rotate(2deg);">
                     <div class="row" style="justify-content: space-between;">
                         <span class="mono" style="font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-500);">RSVP live</span>
-                        <span class="pill confirm"><span class="cer-dot" />+12 oggi</span>
+                        <span class="pill confirm"><span class="cer-dot" />{{ $t('ceremly.home.heroVisual.statToday') }}</span>
                     </div>
                     <div class="serif" style="font-size: 60px; font-weight: 800; line-height: 1; margin-top: 12px; letter-spacing: -0.03em;">87<span style="color: var(--ink-300); font-size: 30px;">/142</span></div>
-                    <div class="small muted" style="margin-top: 4px;">conferme · 89% inviti aperti</div>
+                    <div class="small muted" style="margin-top: 4px;">{{ $t('ceremly.home.heroVisual.statDesc') }}</div>
                     <div style="margin-top: 14px; height: 8px; background: var(--bone-100); border-radius: 999px; overflow: hidden; border: 1px solid var(--line);">
                         <div style="height: 100%; width: 61%; background: var(--purple);" />
                     </div>
@@ -385,12 +404,12 @@ const footerCols: FooterCol[] = [
                         <div class="av sage lg">MR</div>
                         <div class="col" style="gap: 2px;">
                             <span style="font-size: 14px; font-weight: 600;">Marta R.</span>
-                            <span class="small muted">ha confermato +1</span>
+                            <span class="small muted">{{ $t('ceremly.home.heroVisual.guestConfirmedPlusOne') }}</span>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 10px; gap: 6px;">
-                        <span class="cer-tag" style="font-size: 10px; padding: 2px 7px;">vegetariana</span>
-                        <span class="cer-tag" style="font-size: 10px; padding: 2px 7px;">bus 16:30</span>
+                        <span class="cer-tag" style="font-size: 10px; padding: 2px 7px;">{{ $t('ceremly.home.heroVisual.tagVegetarian') }}</span>
+                        <span class="cer-tag" style="font-size: 10px; padding: 2px 7px;">{{ $t('ceremly.home.heroVisual.tagBus') }}</span>
                     </div>
                 </div>
             </div>
@@ -399,10 +418,10 @@ const footerCols: FooterCol[] = [
         <!-- ───────────────────────────────  PROBLEM  -->
         <section style="background: var(--bone-100); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
             <div class="l-wrap l-problem reveal reveal-up">
-                <span class="cer-tag" style="background: var(--orange-soft); color: var(--orange-deep); border-color: transparent; margin-bottom: 24px;">Il problema</span>
+                <span class="cer-tag" style="background: var(--orange-soft); color: var(--orange-deep); border-color: transparent; margin-bottom: 24px;">{{ $t('ceremly.home.problem.tag') }}</span>
                 <div class="l-problem-grid">
                     <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 0; letter-spacing: -0.035em;">
-                        Organizzare<br>un evento è bello.<br><span style="color: var(--purple);">Contare gli ospiti</span><br>molto meno.
+                        {{ $t('ceremly.home.problem.titlePart1') }}<br>{{ $t('ceremly.home.problem.titlePart2') }}<br><span style="color: var(--purple);">{{ $t('ceremly.home.problem.titleMark') }}</span><br>{{ $t('ceremly.home.problem.titlePart3') }}
                     </h2>
                     <div class="l-pain-grid">
                         <div v-for="p in pains" :key="p.k" class="cer-card" style="padding: 22px;">
@@ -418,9 +437,9 @@ const footerCols: FooterCol[] = [
         <!-- ───────────────────────────────  HOW IT WORKS  -->
         <section id="come-funziona" class="l-target">
             <div class="l-wrap l-how reveal reveal-up">
-                <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent;">Come funziona</span>
+                <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent;">{{ $t('ceremly.home.nav.howItWorks') }}</span>
                 <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 0; letter-spacing: -0.035em; max-width: 820px;">
-                    Quattro passaggi, dalla bozza<br>alla <span style="color: var(--purple);">lista finale</span>.
+                    {{ $t('ceremly.home.howItWorks.titlePart1') }}<br>{{ $t('ceremly.home.howItWorks.titlePart2') }} <span style="color: var(--purple);">{{ $t('ceremly.home.howItWorks.titleMark') }}</span>.
                 </h2>
 
                 <div class="l-how-grid">
@@ -443,12 +462,12 @@ const footerCols: FooterCol[] = [
             <div class="l-wrap l-features reveal reveal-up">
                 <div class="l-feat-grid">
                     <div>
-                        <span class="cer-tag" style="background: rgba(255,255,255,0.08); color: var(--bone-200); border-color: rgba(255,255,255,0.18);">Funzionalità</span>
+                        <span class="cer-tag" style="background: rgba(255,255,255,0.08); color: var(--bone-200); border-color: rgba(255,255,255,0.18);">{{ $t('ceremly.home.nav.features') }}</span>
                         <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 0; letter-spacing: -0.035em;">
-                            Tutto quello<br>che serve.<br><span style="color: var(--blue);">Niente di più.</span>
+                            {{ $t('ceremly.home.features.titlePart1') }}<br>{{ $t('ceremly.home.features.titlePart2') }}<br><span style="color: var(--blue);">{{ $t('ceremly.home.features.titleMark') }}</span>
                         </h2>
                         <p style="font-size: 16px; color: var(--bone-200); line-height: 1.6; margin-top: 20px; max-width: 360px;">
-                            Ceremly non vuole sostituire il wedding planner né il fotografo. Risolve un solo problema — sapere chi viene — e lo risolve bene.
+                            {{ $t('ceremly.home.features.subtitle') }}
                         </p>
                     </div>
                     <div class="l-feat-cards">
@@ -466,12 +485,12 @@ const footerCols: FooterCol[] = [
         <section id="prezzi" class="l-target">
             <div class="l-wrap l-pricing reveal reveal-up">
                 <div style="text-align: center; margin-bottom: 52px;">
-                    <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent; display: inline-flex;">Prezzi</span>
+                    <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent; display: inline-flex;">{{ $t('ceremly.home.nav.pricing') }}</span>
                     <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 12px; letter-spacing: -0.035em;">
-                        <span style="color: var(--purple);">Trasparenti</span>, senza<br>percentuali sugli ospiti.
+                        <span style="color: var(--purple);">{{ $t('ceremly.home.pricing.titleMark') }}</span>, {{ $t('ceremly.home.pricing.titlePart1') }}<br>{{ $t('ceremly.home.pricing.titlePart2') }}
                     </h2>
                     <p style="font-size: 16px; color: var(--ink-700); max-width: 540px; margin: 0 auto; line-height: 1.6;">
-                        Paghi una volta per evento, oppure un abbonamento se organizzi per lavoro. Mai per RSVP, mai per ospite.
+                        {{ $t('ceremly.home.pricing.subtitle') }}
                     </p>
                 </div>
 
@@ -509,7 +528,7 @@ const footerCols: FooterCol[] = [
                         </ul>
                         <component
                             :is="isActiveMode ? NuxtLink : 'a'"
-                            v-bind="isActiveMode ? { to: tier.kind === 'ghost' && tier.n === 'Atelier' ? '/contactUs' : '/signup' } : { href: '#lista-attesa' }"
+                            v-bind="isActiveMode ? { to: tier.kind === 'ghost' && tier.n === $t('ceremly.home.pricing.atelier.name') ? '/contactUs' : '/signup' } : { href: '#lista-attesa' }"
                             class="cer-btn"
                             :class="{ ghost: tier.kind === 'ghost' }"
                             :style="{
@@ -523,15 +542,15 @@ const footerCols: FooterCol[] = [
                             }"
                             @click="onSignupCta"
                         >
-                            {{ isActiveMode ? tier.cta : 'Entra in lista d\'attesa' }} <CerIcon name="chevR" :s="13" />
+                            {{ isActiveMode ? tier.cta : $t('ceremly.home.waitingList.submit') }} <CerIcon name="chevR" :s="13" />
                         </component>
                     </div>
                 </div>
 
                 <div class="row" style="justify-content: center; gap: 20px; margin-top: 36px; font-size: 13px; color: var(--ink-500); flex-wrap: wrap;">
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> Fatturazione elettronica</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> Server in UE · GDPR</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> Cancella quando vuoi</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust1') }}</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust2') }}</span>
+                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust3') }}</span>
                 </div>
             </div>
         </section>
@@ -540,16 +559,16 @@ const footerCols: FooterCol[] = [
         <section id="esempi" class="l-target" style="background: var(--bone-100); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
             <div class="l-wrap l-quote reveal reveal-up">
                 <div style="max-width: 980px; margin: 0 auto; text-align: center;">
-                    <span class="cer-tag" style="background: var(--blue-soft); color: var(--blue-deep); border-color: transparent; display: inline-flex;">Beta · 142 eventi gestiti</span>
+                    <span class="cer-tag" style="background: var(--blue-soft); color: var(--blue-deep); border-color: transparent; display: inline-flex;">{{ $t('ceremly.home.testimonial.tag') }}</span>
                     <blockquote class="serif l-blockquote" style="font-weight: 700; line-height: 1.2; margin: 24px 0 28px; letter-spacing: -0.03em; color: var(--ink);">
-                        “Ho organizzato il matrimonio di mia sorella senza <span style="color: var(--purple);">un solo gruppo WhatsApp</span>.
-                        La lista è arrivata al catering tre giorni prima — completa, con le allergie.”
+                        "{{ $t('ceremly.home.testimonial.quotePart1') }} <span style="color: var(--purple);">{{ $t('ceremly.home.testimonial.quoteMark') }}</span>.
+                        {{ $t('ceremly.home.testimonial.quotePart2') }}"
                     </blockquote>
                     <div class="row" style="justify-content: center; gap: 12px;">
                         <div class="av lg" aria-hidden="true">FB</div>
                         <div class="col" style="align-items: flex-start;">
                             <span style="font-size: 14px; font-weight: 600;">Francesca B.</span>
-                            <span class="small muted">Matrimonio · 168 ospiti · Verona</span>
+                            <span class="small muted">{{ $t('ceremly.home.testimonial.authorMeta') }}</span>
                         </div>
                     </div>
                 </div>
@@ -560,20 +579,20 @@ const footerCols: FooterCol[] = [
         <section style="background: var(--ink); color: #fff; text-align: center; position: relative; overflow: hidden;">
             <div class="l-wrap l-cta reveal reveal-up">
                 <h2 class="serif l-h2-cta" style="font-weight: 800; line-height: 0.98; letter-spacing: -0.04em; margin: 0 auto; max-width: 900px;">
-                    Il tuo prossimo evento<br><span class="l-mark" style="background: var(--orange);">merita una lista vera</span>.
+                    {{ $t('ceremly.home.cta.titlePart1') }}<br><span class="l-mark" style="background: var(--orange);">{{ $t('ceremly.home.cta.titleMark') }}</span>.
                 </h2>
                 <p style="font-size: 18px; color: rgba(255,255,255,0.88); max-width: 520px; margin: 26px auto 0; line-height: 1.55;">
-                    Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.
+                    {{ $t('ceremly.home.cta.subtitle') }}
                 </p>
                 <div class="row" style="justify-content: center; gap: 12px; margin-top: 36px; flex-wrap: wrap;">
                     <NuxtLink v-if="isActiveMode" to="/signup" class="cer-btn" style="background: var(--bone-50); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;">
-                        <CerIcon name="sparkle" :s="14" /> Inizia gratis
+                        <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.cta.ctaPrimary') }}
                     </NuxtLink>
                     <a v-else href="#lista-attesa" class="cer-btn" style="background: var(--bone-50); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;" @click="onSignupCta">
-                        <CerIcon name="sparkle" :s="14" /> Entra in lista d'attesa
+                        <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.waitingList.submit') }}
                     </a>
                     <NuxtLink to="/contactUs" class="cer-btn" style="background: var(--purple); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;">
-                        <CerIcon name="mail" :s="14" /> Parla con il team
+                        <CerIcon name="mail" :s="14" /> {{ $t('ceremly.home.cta.ctaTeam') }}
                     </NuxtLink>
                 </div>
             </div>
@@ -589,10 +608,10 @@ const footerCols: FooterCol[] = [
                             <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--orange); display: inline-block;" />
                         </div>
                         <p style="font-size: 14px; color: var(--ink-500); line-height: 1.6; margin-top: 12px; max-width: 280px;">
-                            Inviti digitali e RSVP intelligenti, per eventi che contano davvero. Fatto in Italia.
+                            {{ $t('ceremly.home.footer.tagline') }}
                         </p>
                         <div class="mono" style="font-size: 12px; color: var(--ink-400); margin-top: 18px;">
-                            © 2026 Ceremly Srl · P.IVA 12345670156
+                            {{ $t('ceremly.home.footer.copyright') }}
                         </div>
                     </div>
                     <div v-for="c in footerCols" :key="c.t" class="col" style="gap: 10px;">
@@ -606,10 +625,10 @@ const footerCols: FooterCol[] = [
                 </div>
                 <div style="height: 1px; background: var(--line); margin: 40px 0 16px;" />
                 <div class="row l-footer-bottom" style="justify-content: space-between; font-size: 13px; color: var(--ink-500);">
-                    <span>Server in UE · GDPR compliant · pagamenti sicuri via Creem</span>
+                    <span>{{ $t('ceremly.home.footer.legal') }}</span>
                     <span class="row" style="gap: 16px;">
                         <span style="font-weight: 600;">IT</span>
-                        <span style="color: var(--ink-300);">EN — soon</span>
+                        <span style="color: var(--ink-300);">{{ $t('ceremly.home.footer.enSoon') }}</span>
                     </span>
                 </div>
             </div>

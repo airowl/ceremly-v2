@@ -20,6 +20,8 @@ import InviteRenderer from "~/components/ceremly/InviteRenderer.vue";
 import RsvpFormRenderer from "~/components/ceremly/RsvpFormRenderer.vue";
 import type { PublicRsvpPayload, PublicRsvpResponse } from "~/composables/usePublicInvite";
 
+const { t } = useI18n();
+
 definePageMeta({
     layout: false,
     auth: false,
@@ -48,10 +50,10 @@ const { data, error, status } = await fetchInvite(token.value);
 // ---------------------------------------------------------------------------
 
 useSeoMeta({
-    title: () => (data.value ? `${data.value.event.title} — Sei invitato!` : "Invito non disponibile"),
-    description: "Apri il tuo invito personale e conferma la presenza in 30 secondi.",
-    ogTitle: () => (data.value ? `${data.value.event.title} — Sei invitato!` : "Invito non disponibile"),
-    ogDescription: "Apri il tuo invito personale e conferma la presenza in 30 secondi.",
+    title: () => (data.value ? `${data.value.event.title} — ${t("ceremly.guest.seoInvited")}` : t("ceremly.guest.seoUnavailable")),
+    description: () => t("ceremly.guest.seoDescription"),
+    ogTitle: () => (data.value ? `${data.value.event.title} — ${t("ceremly.guest.seoInvited")}` : t("ceremly.guest.seoUnavailable")),
+    ogDescription: () => t("ceremly.guest.seoDescription"),
     robots: "noindex, nofollow",
 });
 
@@ -71,7 +73,7 @@ const deadlinePassed = ref(data.value?.deadlinePassed ?? false);
 
 const ev = computed(() => data.value?.event ?? null);
 const guest = computed(() => data.value?.guest ?? null);
-const firstName = computed(() => guest.value?.firstName?.trim() || "ospite");
+const firstName = computed(() => guest.value?.firstName?.trim() || t("ceremly.guest.defaultGuestName"));
 
 const tpl = computed(() => {
     const t = ev.value ? getTemplate(ev.value.templateKey) : undefined;
@@ -97,13 +99,17 @@ onBeforeUnmount(() => {
 // Helpers risposte (banner + riepilogo)
 // ---------------------------------------------------------------------------
 
-const ATTENDANCE_FALLBACK = ["Sì, ci sarò", "No, mi dispiace", "Non ancora sicuro"];
 const ATTENDANCE_ORDER: AttendingStatus[] = ["yes", "no", "maybe"];
 
 function attendanceLabel(att: AttendingStatus): string {
     const q = ev.value?.rsvpConfig.find(c => c.id === "attendance");
     const idx = ATTENDANCE_ORDER.indexOf(att);
-    return q?.options?.[idx] ?? ATTENDANCE_FALLBACK[idx] ?? att;
+    const fallbacks = [
+        t("ceremly.guest.attendanceYes"),
+        t("ceremly.guest.attendanceNo"),
+        t("ceremly.guest.attendanceMaybe"),
+    ];
+    return q?.options?.[idx] ?? fallbacks[idx] ?? att;
 }
 
 function isPerPersonShape(v: unknown): v is RsvpPerPersonAnswer {
@@ -124,7 +130,7 @@ function isEmptyVal(v: unknown): boolean {
 
 function humanize(v: RsvpAnswerValue | null): string {
     if (v === null) return "—";
-    if (typeof v === "boolean") return v ? "Sì" : "No";
+    if (typeof v === "boolean") return v ? t("ceremly.guest.yes") : t("ceremly.guest.no");
     if (Array.isArray(v)) return v.join(" · ");
     return String(v);
 }
@@ -137,7 +143,7 @@ const companionNames = computed<string[]>(() => {
     const list = isPerPersonShape(raw) ? raw.companions : [];
     return Array.from({ length: resp.companionsCount }, (_, i) => {
         const v = list[i];
-        return typeof v === "string" && v.trim() ? v.trim() : `Accompagnatore ${i + 1}`;
+        return typeof v === "string" && v.trim() ? v.trim() : t("ceremly.guest.companionFallback", { n: i + 1 });
     });
 });
 
@@ -160,10 +166,10 @@ const summaryRows = computed<{ l: string; v: string }[]>(() => {
     if (!resp) return [];
 
     const rows: { l: string; v: string }[] = [
-        { l: "Partecipazione", v: attendanceLabel(resp.attending) },
+        { l: t("ceremly.guest.summaryAttendance"), v: attendanceLabel(resp.attending) },
     ];
     if (resp.attending !== "no") {
-        rows.push({ l: "Persone", v: peopleSummary.value });
+        rows.push({ l: t("ceremly.guest.summaryPeople"), v: peopleSummary.value });
     }
 
     // Visibilità valutata con i valori autoritativi, come fa il server.
@@ -182,7 +188,7 @@ const summaryRows = computed<{ l: string; v: string }[]>(() => {
             raw.companions.forEach((v, i) => {
                 if (isEmptyVal(v)) return;
                 rows.push({
-                    l: `${q.label} · ${companionNames.value[i] ?? `Accompagnatore ${i + 1}`}`,
+                    l: `${q.label} · ${companionNames.value[i] ?? t("ceremly.guest.companionFallback", { n: i + 1 })}`,
                     v: humanize(v),
                 });
             });
@@ -193,7 +199,7 @@ const summaryRows = computed<{ l: string; v: string }[]>(() => {
     }
 
     if (resp.attending === "no" && resp.declineMessage) {
-        rows.push({ l: "Messaggio", v: `"${resp.declineMessage}"` });
+        rows.push({ l: t("ceremly.guest.summaryMessage"), v: `"${resp.declineMessage}"` });
     }
     return rows;
 });
@@ -252,32 +258,32 @@ async function onSubmit(payload: PublicRsvpPayload) {
 
 const confirmCopy = computed(() => {
     switch (response.value?.attending) {
-        case "no":
+        case “no”:
             return {
-                title: "Ci mancherai.",
-                sub: "Grazie per averci avvisato.",
-                icon: "heart",
-                iconBg: "var(--wine)",
-                gradient: "linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)",
-                quote: "“Ci mancherai, ma ti sentiremo vicino.”",
+                title: t(“ceremly.guest.confirmNoTitle”),
+                sub: t(“ceremly.guest.confirmNoSub”),
+                icon: “heart”,
+                iconBg: “var(--wine)”,
+                gradient: “linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)”,
+                quote: t(“ceremly.guest.confirmNoQuote”),
             };
-        case "maybe":
+        case “maybe”:
             return {
-                title: "Ti aspettiamo.",
-                sub: "Grazie! Potrai aggiornare la risposta quando vuoi.",
-                icon: "clock",
-                iconBg: "var(--wine)",
-                gradient: "linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)",
-                quote: "“Speriamo in un sì. A presto.”",
+                title: t(“ceremly.guest.confirmMaybeTitle”),
+                sub: t(“ceremly.guest.confirmMaybeSub”),
+                icon: “clock”,
+                iconBg: “var(--wine)”,
+                gradient: “linear-gradient(180deg, var(--wine-soft) 0%, var(--bone) 40%)”,
+                quote: t(“ceremly.guest.confirmMaybeQuote”),
             };
         default:
             return {
-                title: "Ci sarai.",
-                sub: `Grazie, ${firstName.value}.`,
-                icon: "check",
-                iconBg: "oklch(0.55 0.10 150)",
-                gradient: "linear-gradient(180deg, color-mix(in srgb, var(--confirm) 16%, white) 0%, var(--bone) 40%)",
-                quote: "“Ci hai reso felici. Ti aspettiamo.”",
+                title: t(“ceremly.guest.confirmYesTitle”),
+                sub: t(“ceremly.guest.confirmYesSub”, { name: firstName.value }),
+                icon: “check”,
+                iconBg: “oklch(0.55 0.10 150)”,
+                gradient: “linear-gradient(180deg, color-mix(in srgb, var(--confirm) 16%, white) 0%, var(--bone) 40%)”,
+                quote: t(“ceremly.guest.confirmYesQuote”),
             };
     }
 });
@@ -469,12 +475,12 @@ const agendaBtnStyle: CSSProperties = {
                     <CerIcon name="mail" :s="24" />
                 </div>
                 <div class="serif" :style="{ fontSize: '26px', marginTop: '18px', letterSpacing: '-0.01em' }">
-                    Invito non disponibile
+                    {{ $t("ceremly.guest.errorTitle") }}
                 </div>
                 <p class="muted" :style="{ fontSize: '14px', marginTop: '8px', lineHeight: 1.5 }">
-                    Controlla il link ricevuto o contatta chi ti ha invitato.
+                    {{ $t("ceremly.guest.errorHint") }}
                 </p>
-                <div :style="footerMonoStyle">{{ brandHost }} · creato con cura</div>
+                <div :style="footerMonoStyle">{{ brandHost }} · {{ $t("ceremly.guest.footerTagline") }}</div>
             </div>
         </div>
 
@@ -494,7 +500,7 @@ const agendaBtnStyle: CSSProperties = {
         >
             <span class="guest-spin" aria-hidden="true" />
             <span class="mono" :style="{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-500)' }">
-                Apriamo il tuo invito…
+                {{ $t("ceremly.guest.loadingInvite") }}
             </span>
         </div>
 
@@ -533,9 +539,9 @@ const agendaBtnStyle: CSSProperties = {
                                 <CerIcon name="check" :s="13" :sw="2.5" />
                             </span>
                             <div :style="{ flex: 1, fontSize: '13px', lineHeight: 1.35, fontFamily: 'var(--font-sans)' }">
-                                Hai risposto: <strong>{{ attendanceLabel(response.attending) }}</strong>
+                                {{ $t("ceremly.guest.bannerAnswered") }} <strong>{{ attendanceLabel(response.attending) }}</strong>
                                 <template v-if="peopleCount > 0">
-                                    · {{ peopleCount }} {{ peopleCount === 1 ? "persona" : "persone" }}
+                                    · {{ peopleCount }} {{ peopleCount === 1 ? $t("ceremly.guest.person") : $t("ceremly.guest.people") }}
                                 </template>
                             </div>
                             <button
@@ -555,7 +561,7 @@ const agendaBtnStyle: CSSProperties = {
                                 }"
                                 @click="openForm"
                             >
-                                Modifica
+                                {{ $t("ceremly.guest.edit") }}
                             </button>
                         </div>
                     </div>
@@ -572,7 +578,7 @@ const agendaBtnStyle: CSSProperties = {
                             :closed-message="ev!.rsvpClosedMessage"
                             @rsvp-click="openForm"
                         />
-                        <div :style="footerMonoStyle">{{ brandHost }} · creato con cura</div>
+                        <div :style="footerMonoStyle">{{ brandHost }} · {{ $t("ceremly.guest.footerTagline") }}</div>
                     </div>
                 </template>
 
@@ -623,7 +629,7 @@ const agendaBtnStyle: CSSProperties = {
                                     color: 'var(--ink-500)',
                                 }"
                             >
-                                Riepilogo
+                                {{ $t("ceremly.guest.summary") }}
                             </div>
                             <div class="col" :style="{ gap: '12px', marginTop: '14px', fontFamily: 'var(--font-sans)' }">
                                 <div
@@ -660,7 +666,7 @@ const agendaBtnStyle: CSSProperties = {
                                     color: 'var(--ink-500)',
                                 }"
                             >
-                                Salva in agenda
+                                {{ $t("ceremly.guest.saveToCalendar") }}
                             </div>
                             <div :style="{ fontSize: '22px', marginTop: '8px' }">{{ eventDateLabel }}</div>
                             <div class="row" :style="{ justifyContent: 'center', gap: '8px', marginTop: '14px', fontFamily: 'var(--font-sans)', flexWrap: 'wrap' }">
@@ -701,7 +707,7 @@ const agendaBtnStyle: CSSProperties = {
                                 }"
                                 @click="openForm"
                             >
-                                <CerIcon name="edit" :s="12" /> Modifica la risposta
+                                <CerIcon name="edit" :s="12" /> {{ $t("ceremly.guest.editResponse") }}
                             </button>
                         </div>
 
@@ -732,7 +738,7 @@ const agendaBtnStyle: CSSProperties = {
                         </div>
 
                         <div :style="{ ...footerMonoStyle, padding: '0 0 36px', marginTop: '24px' }">
-                            {{ brandHost }} · creato con cura
+                            {{ brandHost }} · {{ $t("ceremly.guest.footerTagline") }}
                         </div>
                     </div>
                 </div>
@@ -763,7 +769,7 @@ const agendaBtnStyle: CSSProperties = {
                         </div>
                         <button
                             type="button"
-                            aria-label="Chiudi messaggio di errore"
+                            :aria-label="$t('ceremly.guest.closeError')"
                             :style="{
                                 background: 'none',
                                 border: 'none',
