@@ -847,7 +847,7 @@ async function submitGroup() {
                     <div v-if="importRows.length > 0" class="cer-card scroll" style="margin-top: 12px; padding: 0;">
                         <table class="cer-table">
                             <thead>
-                                <tr><th style="padding-left: 14px;">Nome</th><th>Cognome</th><th>Email</th><th>Telefono</th><th>Gruppo</th></tr>
+                                <tr><th style="padding-left: 14px;">{{ $t('ceremly.event.guests.fieldFirstName') }}</th><th>{{ $t('ceremly.event.guests.fieldLastName') }}</th><th>{{ $t('ceremly.event.guests.fieldEmail') }}</th><th>{{ $t('ceremly.event.guests.fieldPhone') }}</th><th>{{ $t('ceremly.event.guests.fieldGroup') }}</th></tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(r, i) in importRows.slice(0, 5)" :key="i">

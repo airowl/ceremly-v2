@@ -882,8 +882,8 @@ async function save() {
                                 v-model="selected.condition.value"
                                 class="cer-input"
                             >
-                                <option value="true">Sì</option>
-                                <option value="false">No</option>
+                                <option value="true">{{ $t('ceremly.event.rsvp.attendanceYes') }}</option>
+                                <option value="false">{{ $t('ceremly.event.rsvp.attendanceNo') }}</option>
                             </select>
                             <input
                                 v-else-if="condValueMode === 'number'"
@@ -897,7 +897,7 @@ async function save() {
                                 v-model="selected.condition.value"
                                 type="text"
                                 class="cer-input"
-                                placeholder="Valore"
+                                :placeholder="$t('ceremly.event.rsvp.conditionValuePlaceholder')"
                             >
                         </div>
                     </div>

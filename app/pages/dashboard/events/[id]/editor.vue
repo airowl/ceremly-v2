@@ -708,15 +708,15 @@ onBeforeRouteLeave(() => {
                 <div class="col" style="gap: 8px;">
                     <div class="row" style="justify-content: space-between;">
                         <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
-                            Visibile a
+                            {{ $t('ceremly.event.editor.visibility.label') }}
                         </div>
                         <span class="cer-tag">Phase 2</span>
                     </div>
                     <select class="cer-input" disabled>
-                        <option>Tutti gli ospiti</option>
+                        <option>{{ $t('ceremly.event.editor.visibility.allGuests') }}</option>
                     </select>
                     <div class="small muted">
-                        I gruppi ti permetteranno di mostrare blocchi diversi a sottoinsiemi di ospiti.
+                        {{ $t('ceremly.event.editor.visibility.hint') }}
                     </div>
                 </div>
             </div>
