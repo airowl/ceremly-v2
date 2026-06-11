@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ceremly · UI design</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #fefae0; }
+    body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #3F3622; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Components -->
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="screens/app-shell.jsx"></script>
+  <script type="text/babel" src="screens/brand.jsx"></script>
+  <script type="text/babel" src="screens/landing.jsx"></script>
+  <script type="text/babel" src="screens/auth.jsx"></script>
+  <script type="text/babel" src="screens/events-home.jsx"></script>
+  <script type="text/babel" src="screens/onboarding.jsx"></script>
+  <script type="text/babel" src="screens/editor.jsx"></script>
+  <script type="text/babel" src="screens/guests.jsx"></script>
+  <script type="text/babel" src="screens/rsvp-builder.jsx"></script>
+  <script type="text/babel" src="screens/event-dashboard.jsx"></script>
+  <script type="text/babel" src="screens/distribution.jsx"></script>
+  <script type="text/babel" src="screens/reminders.jsx"></script>
+  <script type="text/babel" src="screens/invite-mobile.jsx"></script>
+  <script type="text/babel" src="screens/rsvp-mobile.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+  // App composition — design canvas with three sections
+  const DW = 1400, DH = 900; // desktop artboards
+  const MW = 402,  MH = 874; // mobile (iOS frame)
+
+  function MobileFrame({ children }) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: 16, background: 'var(--bone-100)' }}>
+        <IOSDevice width={MW} height={MH}>{children}</IOSDevice>
+      </div>
+    );
+  }
+
+  function App() {
+    return (
+      <DesignCanvas
+        title="Ceremly — Interfacce UI"
+        subtitle="Inviti digitali e RSVP intelligenti · v0.1 · MVP">
+
+        <DCSection id="brand" title="Sistema" subtitle="Identità, palette, tipografia">
+          <DCArtboard id="brand"
+            label="Brand · design system"
+            width={1180} height={840}>
+            <BrandShowcase />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="public" title="Sito pubblico" subtitle="Landing marketing e accesso account">
+          <DCArtboard id="landing"   label="L1 · Landing page"    width={1400} height={5300}><LandingPage /></DCArtboard>
+          <DCArtboard id="login"     label="L2 · Accedi"          width={DW} height={DH}><LoginScreen /></DCArtboard>
+          <DCArtboard id="register"  label="L3 · Registrati"      width={DW} height={DH}><RegisterScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="organizer" title="Lato organizzatore" subtitle="Desktop · 1400×900 · piano Free">
+          <DCArtboard id="home"          label="01 · Home eventi"        width={DW} height={DH}><EventsHome /></DCArtboard>
+          <DCArtboard id="onboarding"    label="02 · Nuovo evento"       width={DW} height={DH}><OnboardingScreen /></DCArtboard>
+          <DCArtboard id="editor"        label="03 · Editor invito"      width={DW} height={DH}><EditorScreen /></DCArtboard>
+          <DCArtboard id="guests"        label="04 · Lista ospiti"       width={DW} height={DH}><GuestsScreen /></DCArtboard>
+          <DCArtboard id="rsvp-builder"  label="05 · Form RSVP builder"  width={DW} height={DH}><RSVPBuilderScreen /></DCArtboard>
+          <DCArtboard id="distribution"  label="06 · Distribuzione"      width={DW} height={DH}><DistributionScreen /></DCArtboard>
+          <DCArtboard id="reminders"     label="07 · Reminder"           width={DW} height={DH}><RemindersScreen /></DCArtboard>
+          <DCArtboard id="dashboard"     label="08 · Andamento"          width={DW} height={DH}><EventDashboardScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="guest" title="Lato ospite" subtitle="Mobile · iPhone · esperienza senza account">
+          <DCArtboard id="invite-mobile"  label="09 · Invito ricevuto"
+            width={MW + 40} height={MH + 40}>
+            <MobileFrame><InviteMobile /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="rsvp-mobile"    label="10 · Form RSVP"
+            width={MW + 40} height={MH + 40}>
+            <MobileFrame><RSVPMobile /></MobileFrame>
+          </DCArtboard>
+          <DCArtboard id="confirm-mobile" label="11 · Conferma RSVP"
+            width={MW + 40} height={MH + 40}>
+            <MobileFrame><RSVPConfirmMobile /></MobileFrame>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

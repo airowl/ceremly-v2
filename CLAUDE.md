@@ -61,7 +61,8 @@ The backend runs on **Vercel as serverless functions** — no persistent process
 - `shared/` — Shared between client/server (Zod schemas, constants, utils)
 - `i18n/locales/` — Translation files (`it-IT.json`, `en-US.json`)
 - `content/blogs/` — Blog posts (Markdown)
-- `docs/guide/` — Build guide (stack, conventions, phase-by-phase reference for clones)
+- `docs/base/` — Build guide (stack, conventions, phase-by-phase reference for clones)
+- `docs/saas-prd/` — Ceremly PRD + implementation spec (`SPEC-Ceremly-MVP.md`)
 - `drizzle/migrations/` — Generated migration files
 
 ### Server Middleware Stack (numbered for order)
@@ -148,7 +149,7 @@ All business logic lives in `server/services/`. Routes are thin controllers (max
 
 ## Backend conventions (MUST READ)
 
-Before writing or modifying backend code, read `docs/guide/STACK-AND-CONVENTIONS.md`. Key rules:
+Before writing or modifying backend code, read `docs/base/STACK-AND-CONVENTIONS.md`. Key rules:
 
 - **Thin routes**: `server/api/` routes validate input, call a service, return output. No business logic in routes.
 - **Services**: business logic in `server/services/` (pure functions + singleton classes for SDKs).
