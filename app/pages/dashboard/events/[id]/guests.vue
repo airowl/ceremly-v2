@@ -868,7 +868,7 @@ async function submitGroup() {
                         <div class="cer-flabel" style="color: var(--decline);">{{ $t('ceremly.event.guests.importSkippedRows') }}</div>
                         <div class="col" style="gap: 4px; margin-top: 6px; max-height: 120px; overflow: auto;">
                             <span v-for="(err, i) in importErrors" :key="i" class="small" style="color: var(--decline);">
-                                Riga {{ err.line }}: {{ err.reason }}
+                                {{ $t('ceremly.event.guests.rowN', { n: err.line }) }}: {{ err.reason }}
                             </span>
                         </div>
                     </div>

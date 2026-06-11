@@ -732,7 +732,7 @@ onBeforeRouteLeave(() => {
                         :disabled="pending || !eventData"
                         @click="previewOpen = true"
                     >
-                        <CeremlyCerIcon name="eye" :s="14" /> Anteprima
+                        <CeremlyCerIcon name="eye" :s="14" /> {{ $t('ceremly.event.editor.topbar.preview') }}
                     </button>
                     <button
                         class="cer-btn ghost small"
@@ -740,7 +740,7 @@ onBeforeRouteLeave(() => {
                         :disabled="pending || !eventData || saving"
                         @click="save()"
                     >
-                        {{ saving ? "Salvataggio…" : "Salva" }}
+                        {{ saving ? $t('ceremly.event.editor.topbar.saving') : $t('common.save') }}
                         <span v-if="isDirty && !saving" class="cer-dot" style="background: var(--orange);" />
                     </button>
                     <button
@@ -749,7 +749,7 @@ onBeforeRouteLeave(() => {
                         :disabled="pending || !eventData || saving"
                         @click="saveAndContinue"
                     >
-                        Salva e continua <CeremlyCerIcon name="chevR" :s="12" />
+                        {{ $t('ceremly.event.editor.topbar.saveAndContinue') }} <CeremlyCerIcon name="chevR" :s="12" />
                     </button>
                 </div>
             </Teleport>

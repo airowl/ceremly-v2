@@ -940,7 +940,7 @@ async function save() {
                             <!-- boolean → pill -->
                             <div v-else-if="selected.type === 'boolean'" class="row" style="margin-top: 12px; gap: 8px;">
                                 <button
-                                    v-for="(lbl, bi) in ['Sì', 'No']"
+                                    v-for="(lbl, bi) in [$t('ceremly.event.rsvp.attendanceYes'), $t('ceremly.event.rsvp.attendanceNo')]"
                                     :key="lbl"
                                     class="cer-btn ghost"
                                     type="button"
@@ -980,7 +980,7 @@ async function save() {
                                             display: 'inline-block', flexShrink: 0,
                                         }"
                                     />
-                                    <span style="font-size: 14px;">{{ o || "Opzione senza testo" }}</span>
+                                    <span style="font-size: 14px;">{{ o || $t('ceremly.event.rsvp.optionUntitled') }}</span>
                                 </div>
                             </div>
                             <div v-else-if="selected.type === 'single' || selected.type === 'multiple'" class="small muted" style="margin-top: 12px;">
