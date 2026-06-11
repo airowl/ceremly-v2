@@ -692,13 +692,13 @@ onBeforeRouteLeave(() => {
                     <!-- rsvp -->
                     <template v-else-if="rsvpD">
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Etichetta bottone</label>
-                            <input v-model="rsvpD.buttonLabel" class="cer-input" placeholder="Rispondi all'invito">
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.rsvp.buttonLabel') }}</label>
+                            <input v-model="rsvpD.buttonLabel" class="cer-input" :placeholder="$t('ceremly.event.editor.fields.rsvp.buttonLabelPlaceholder')">
                         </div>
                         <div class="col" style="gap: 4px;">
-                            <label class="ins-label">Deadline RSVP</label>
+                            <label class="ins-label">{{ $t('ceremly.event.editor.fields.rsvp.deadline') }}</label>
                             <input v-model="rsvpDeadline" type="date" class="cer-input">
-                            <div class="small muted">Dopo questa data il form ospite si chiude.</div>
+                            <div class="small muted">{{ $t('ceremly.event.editor.fields.rsvp.deadlineHint') }}</div>
                         </div>
                     </template>
                 </div>

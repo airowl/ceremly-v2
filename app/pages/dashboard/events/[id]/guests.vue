@@ -841,7 +841,7 @@ async function submitGroup() {
                 <template v-else-if="importStep === 'preview'">
                     <div class="row" style="margin-top: 16px; justify-content: space-between;">
                         <span class="cer-tag">{{ importFileName }}</span>
-                        <span class="small muted">{{ importRows.length }} ospiti pronti · {{ importErrors.length }} righe con problemi</span>
+                        <span class="small muted">{{ $t('ceremly.event.guests.importPreviewStats', { ready: importRows.length, errors: importErrors.length }) }}</span>
                     </div>
 
                     <div v-if="importRows.length > 0" class="cer-card scroll" style="margin-top: 12px; padding: 0;">
