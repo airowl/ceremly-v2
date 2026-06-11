@@ -14,7 +14,7 @@ definePageMeta({
 })
 
 const NuxtLink = resolveComponent('NuxtLink')
-const { t } = useI18n()
+const { t, locale, setLocale } = useI18n()
 
 const { isActiveMode } = useSiteMode()
 const runtimeConfig = useRuntimeConfig()
@@ -626,9 +626,24 @@ const footerCols: FooterCol[] = [
                 <div style="height: 1px; background: var(--line); margin: 40px 0 16px;" />
                 <div class="row l-footer-bottom" style="justify-content: space-between; font-size: 13px; color: var(--ink-500);">
                     <span>{{ $t('ceremly.home.footer.legal') }}</span>
-                    <span class="row" style="gap: 16px;">
-                        <span style="font-weight: 600;">IT</span>
-                        <span style="color: var(--ink-300);">{{ $t('ceremly.home.footer.enSoon') }}</span>
+                    <span class="row" style="gap: 14px;" :aria-label="$t('common.language')">
+                        <span
+                            role="button"
+                            tabindex="0"
+                            style="cursor: pointer;"
+                            :style="{ fontWeight: locale.startsWith('it') ? 700 : 400, color: locale.startsWith('it') ? 'var(--ink)' : 'var(--ink-400)' }"
+                            @click="setLocale('it')"
+                            @keydown.enter="setLocale('it')"
+                        >IT</span>
+                        <span style="color: var(--ink-300);">·</span>
+                        <span
+                            role="button"
+                            tabindex="0"
+                            style="cursor: pointer;"
+                            :style="{ fontWeight: locale.startsWith('en') ? 700 : 400, color: locale.startsWith('en') ? 'var(--ink)' : 'var(--ink-400)' }"
+                            @click="setLocale('en')"
+                            @keydown.enter="setLocale('en')"
+                        >EN</span>
                     </span>
                 </div>
             </div>
