@@ -1,8 +1,6 @@
 <script setup lang="ts">
 // Invito in miniatura — port di MiniInvite (site-shared.jsx). Usato nelle
 // gallerie modelli e negli hero dei casi d'uso. Nomi via slot #names.
-import CerIcon from '~/components/ceremly/CerIcon.vue'
-
 withDefaults(
     defineProps<{
         bg?: string

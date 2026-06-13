@@ -1572,29 +1572,1040 @@
         "intro1": "L'idea è arrivata la sera in cui Andrea, a tre giorni dal suo matrimonio, ha chiamato il catering con tre numeri diversi su tre fogli diversi. Gli inviti erano stati bellissimi. La lista, un incubo. Ci siamo chiesti perché nel 2026 si potesse prenotare un volo in due minuti, ma non sapere quanti zii vengono a pranzo.",
         "intro2": "Così abbiamo costruito Ceremly: inviti digitali che non sfigurano accanto a quelli di carta, e un form di risposta che chiunque sa usare — senza app, senza account, senza spiegazioni al telefono. Oggi siamo in beta, piccoli per scelta, e cresciamo un evento alla volta.",
         "nums": [
-          { "n": "2026", "l": "fondazione, Milano" },
-          { "n": "142", "l": "eventi nella beta" },
-          { "n": "11.804", "l": "RSVP raccolti" },
-          { "n": "3", "l": "persone, per ora" }
+          {
+            "n": "2026",
+            "l": "fondazione, Milano"
+          },
+          {
+            "n": "142",
+            "l": "eventi nella beta"
+          },
+          {
+            "n": "11.804",
+            "l": "RSVP raccolti"
+          },
+          {
+            "n": "3",
+            "l": "persone, per ora"
+          }
         ],
         "principiTag": "Principi",
         "principiTitle": "Tre cose in cui crediamo",
         "principi": [
-          { "t": "Un solo problema", "d": "Niente liste nozze, niente album, niente siti vetrina. Ceremly risponde a una domanda — chi viene? — e basta. Quello che non facciamo è una scelta, non una mancanza." },
-          { "t": "I dati sono degli sposi", "d": "Le liste ospiti non si vendono, non si profilano, non alimentano pubblicità. Server in UE, export completo in ogni momento, cancellazione vera quando la chiedi." },
-          { "t": "Fatto in Italia", "d": "Eventi italiani, galateo italiano, fattura elettronica italiana. Costruiamo per come si festeggia qui: famiglie larghe, conferme tardive e pranzi lunghi." }
+          {
+            "t": "Un solo problema",
+            "d": "Niente liste nozze, niente album, niente siti vetrina. Ceremly risponde a una domanda — chi viene? — e basta. Quello che non facciamo è una scelta, non una mancanza."
+          },
+          {
+            "t": "I dati sono degli sposi",
+            "d": "Le liste ospiti non si vendono, non si profilano, non alimentano pubblicità. Server in UE, export completo in ogni momento, cancellazione vera quando la chiedi."
+          },
+          {
+            "t": "Fatto in Italia",
+            "d": "Eventi italiani, galateo italiano, fattura elettronica italiana. Costruiamo per come si festeggia qui: famiglie larghe, conferme tardive e pranzi lunghi."
+          }
         ],
         "teamTag": "Il team",
         "teamTitle": "Chi c'è dietro",
         "team": [
-          { "ini": "AC", "n": "Andrea C.", "r": "Prodotto", "d": "Ha contato a mano i 187 invitati del suo matrimonio. Mai più." },
-          { "ini": "LF", "n": "Lucia F.", "r": "Design", "d": "Crede che un invito brutto rovini la festa prima che inizi." },
-          { "ini": "PV", "n": "Pietro V.", "r": "Ingegneria", "d": "Vuole che il form RSVP si apra anche sul telefono della nonna." }
+          {
+            "ini": "AC",
+            "n": "Andrea C.",
+            "r": "Prodotto",
+            "d": "Ha contato a mano i 187 invitati del suo matrimonio. Mai più."
+          },
+          {
+            "ini": "LF",
+            "n": "Lucia F.",
+            "r": "Design",
+            "d": "Crede che un invito brutto rovini la festa prima che inizi."
+          },
+          {
+            "ini": "PV",
+            "n": "Pietro V.",
+            "r": "Ingegneria",
+            "d": "Vuole che il form RSVP si apra anche sul telefono della nonna."
+          }
         ],
         "ctaTitlePart1": "Festeggia con noi.",
         "ctaTitleMark": "Letteralmente",
         "ctaSub": "Il modo migliore per conoscerci è usare Ceremly per il tuo prossimo evento.",
         "ctaSecondary": "Scrivici"
+      },
+      "comeFunziona": {
+        "seoTitle": "Come funziona Ceremly — dall'invito alla lista finale",
+        "seoDescription": "Quattro passaggi per sapere chi viene al tuo evento: crea l'invito, importa la lista, distribuiscilo e raccogli le risposte. Senza rincorrere nessuno.",
+        "heroTag": "Come funziona",
+        "heroTitlePart1": "Dalla bozza alla lista finale,",
+        "heroTitlePart2": "senza rincorrere",
+        "heroTitleMark": "nessuno",
+        "heroSub": "Quattro passaggi. Il primo richiede cinque minuti, gli altri tre lavorano da soli mentre tu pensi all'evento.",
+        "steps": [
+          {
+            "k": "01 · Crea",
+            "t": "Scegli un modello, rendilo tuo.",
+            "d": "Matrimonio, laurea, battesimo o compleanno: parti da un modello curato e cambia colori, foto e testi. Nessuna competenza grafica richiesta.",
+            "bullets": [
+              "Anteprima mobile in tempo reale",
+              "Foto e palette personali",
+              "Data, luogo e dress code inclusi"
+            ]
+          },
+          {
+            "k": "02 · Importa",
+            "t": "La lista, una volta sola.",
+            "d": "Incolla da Excel o dalla rubrica. Ceremly riconosce i duplicati e ti lascia raggruppare per famiglia, lato o tavolo.",
+            "bullets": [
+              "Import da Excel e CSV",
+              "Gruppi famiglia e plus-one",
+              "Duplicati segnalati subito"
+            ]
+          },
+          {
+            "k": "03 · Distribuisci",
+            "t": "Un link. O cento inviti personali.",
+            "d": "Condividi un link unico nel gruppo, oppure invia a ogni ospite il suo invito con nome via WhatsApp ed email. QR per chi resta alla carta.",
+            "bullets": [
+              "Link unico o inviti nominali",
+              "WhatsApp, email e QR",
+              "Gli ospiti non creano account"
+            ]
+          },
+          {
+            "k": "04 · Raccogli",
+            "t": "Le risposte arrivano da sole.",
+            "d": "Conferme, menu, allergie e accompagnatori entrano in dashboard man mano. I ritardatari ricevono promemoria gentili, automatici.",
+            "bullets": [
+              "Promemoria automatici",
+              "Menu e intolleranze nel form",
+              "Esporta tutto per il catering"
+            ]
+          }
+        ],
+        "guestList": "Lista ospiti",
+        "guestImported": "142 importati",
+        "distLinkLabel": "Link unico",
+        "distCopy": "Copia",
+        "distWhatsapp": "WhatsApp",
+        "distEmail": "Email",
+        "distQr": "QR",
+        "dashTrend": "Andamento RSVP",
+        "dashToday": "+12 oggi",
+        "dashMeta": "conferme · 89% inviti aperti",
+        "dashYes": "87 sì",
+        "dashNo": "9 no",
+        "dashPending": "46 in attesa",
+        "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
+        "ctaSecondary": "Guarda un esempio"
+      },
+      "funzionalita": {
+        "seoTitle": "Funzionalità di Ceremly — un solo problema, risolto bene",
+        "seoDescription": "Inviti belli da aprire, RSVP senza attrito e una dashboard che risponde a una domanda: chi viene? Scopri tutte le funzionalità di Ceremly.",
+        "heroTag": "Funzionalità",
+        "heroTitlePart1": "Un solo problema.",
+        "heroTitleMark": "Risolto bene",
+        "heroSub": "Ceremly non fa siti di matrimonio, liste nozze o album. Fa una cosa: ti dice chi viene davvero al tuo evento.",
+        "groups": [
+          {
+            "tag": "L'invito",
+            "title": "Bello da aprire",
+            "desc": "La prima impressione conta: l'invito è la copertina del tuo evento.",
+            "feats": [
+              {
+                "t": "Modelli per ogni occasione",
+                "d": "Matrimoni, lauree, battesimi e compleanni — curati, pronti in cinque minuti."
+              },
+              {
+                "t": "Colori, foto e testi tuoi",
+                "d": "Personalizza palette e immagini. Con Celebrazione, anche i colori del tuo evento."
+              },
+              {
+                "t": "QR per la carta",
+                "d": "Ami l'invito stampato? Il QR porta lo stesso al form di conferma digitale."
+              }
+            ]
+          },
+          {
+            "tag": "Le risposte",
+            "title": "RSVP senza attrito",
+            "desc": "Più è facile rispondere, prima si chiude la lista.",
+            "feats": [
+              {
+                "t": "Zero account per gli ospiti",
+                "d": "Si apre il link, si risponde. Nessuna registrazione, nessuna app da scaricare."
+              },
+              {
+                "t": "Menu, allergie, plus-one",
+                "d": "Il form raccoglie tutto quello che serve a te e al catering, in un passaggio."
+              },
+              {
+                "t": "Promemoria automatici",
+                "d": "Solleciti gentili a chi non ha risposto, con la cadenza che decidi tu."
+              }
+            ]
+          },
+          {
+            "tag": "La regia",
+            "title": "Tutto sotto controllo",
+            "desc": "La dashboard risponde all'unica domanda che conta: chi viene?",
+            "feats": [
+              {
+                "t": "Famiglie e gruppi",
+                "d": "Un invito per nucleo, risposte individuali. Adulti e bambini contati a parte."
+              },
+              {
+                "t": "Andamento in tempo reale",
+                "d": "Aperture, conferme, tendenze. Sai sempre a che punto sei."
+              },
+              {
+                "t": "Esporta per il catering",
+                "d": "Lista finale con menu e intolleranze, in CSV o PDF, pronta da inoltrare."
+              }
+            ]
+          }
+        ],
+        "ctaTitlePart1": "Provale tutte,",
+        "ctaTitleMark": "gratis",
+        "ctaSub": "Trenta ospiti e un evento attivo nel piano Free. Per sempre.",
+        "ctaSecondary": "Vedi i prezzi"
+      },
+      "modelli": {
+        "seoTitle": "Modelli di invito — parti già bello con Ceremly",
+        "seoDescription": "Sei famiglie di modelli per matrimoni, lauree, battesimi e compleanni. Tutto personalizzabile: colori, foto, testi e form di risposta.",
+        "heroTag": "Modelli di invito",
+        "heroTitlePart1": "Parti già",
+        "heroTitleMark": "bello",
+        "heroSub": "Sei famiglie di modelli, ognuna pensata per un'occasione. Tutto è personalizzabile: colori, foto, testi e form di risposta.",
+        "chips": [
+          "Tutti",
+          "Matrimonio",
+          "Laurea",
+          "Battesimo",
+          "Compleanno"
+        ],
+        "tpls": [
+          {
+            "n": "Botanico",
+            "occ": "Matrimonio"
+          },
+          {
+            "n": "Sera d'estate",
+            "occ": "Matrimonio"
+          },
+          {
+            "n": "Toga",
+            "occ": "Laurea"
+          },
+          {
+            "n": "Acquerello",
+            "occ": "Battesimo"
+          },
+          {
+            "n": "Coriandoli",
+            "occ": "Compleanno"
+          },
+          {
+            "n": "Classico",
+            "occ": "Matrimonio"
+          }
+        ],
+        "noteText": "Tre modelli inclusi nel piano Free. Tutti i modelli e i colori su misura dal piano Celebrazione.",
+        "notePrices": "Vedi i prezzi",
+        "ctaTitlePart1": "Il tuo evento merita la sua",
+        "ctaTitleMark": "copertina",
+        "ctaSecondary": "Guarda un esempio"
+      },
+      "prezzi": {
+        "seoTitle": "Prezzi di Ceremly — trenta ospiti gratis, per sempre",
+        "seoDescription": "Free per iniziare, Celebrazione a pagamento unico per evento, Atelier per chi organizza di mestiere. Confronta i piani e le funzionalità di Ceremly.",
+        "tableTag": "Nel dettaglio",
+        "tableTitle": "Confronta i piani",
+        "colFeature": "Funzionalità",
+        "colFree": "Free · €0",
+        "colCeleb": "Celebrazione · €39",
+        "colAtelier": "Atelier · €24/mese",
+        "rows": [
+          {
+            "l": "Ospiti per evento",
+            "free": "30",
+            "celeb": "250",
+            "atelier": "Illimitati"
+          },
+          {
+            "l": "Eventi attivi",
+            "free": "1",
+            "celeb": "1 per acquisto",
+            "atelier": "Illimitati"
+          },
+          {
+            "l": "Modelli di invito",
+            "free": "3",
+            "celeb": "Tutti + colori su misura",
+            "atelier": "Tutti + brand workspace"
+          },
+          {
+            "l": "WhatsApp & email personalizzati",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Promemoria automatici",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Menu, allergie, plus-one",
+            "free": "yes",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Esporta per il catering",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Domini personalizzati & API",
+            "free": "no",
+            "celeb": "no",
+            "atelier": "yes"
+          },
+          {
+            "l": "Account team",
+            "free": "no",
+            "celeb": "no",
+            "atelier": "yes"
+          }
+        ],
+        "faqTag": "FAQ",
+        "faqTitle": "Domande frequenti",
+        "faq": [
+          {
+            "q": "Posso iniziare gratis e passare a Celebrazione dopo?",
+            "a": "Sì. Tutto quello che hai creato — invito, lista, risposte — resta. Sblocchi semplicemente i limiti quando ti serve."
+          },
+          {
+            "q": "Cosa succede dopo l'evento?",
+            "a": "L'evento resta consultabile per 12 mesi: lista, risposte ed export inclusi. Poi puoi archiviarlo o scaricare tutto."
+          },
+          {
+            "q": "Celebrazione è un abbonamento?",
+            "a": "No: è un pagamento unico per evento. Niente rinnovi, niente sorprese. Solo Atelier, pensato per chi organizza di mestiere, è mensile."
+          },
+          {
+            "q": "Emettete fattura?",
+            "a": "Sì, fattura elettronica per ogni acquisto. Per Atelier supportiamo anche l'addebito SDI ricorrente."
+          },
+          {
+            "q": "E se l'evento viene annullato?",
+            "a": "Rimborso completo entro 30 giorni dall'acquisto se non hai ancora inviato gli inviti. Scrivici e basta."
+          },
+          {
+            "q": "Serve la carta per il piano Free?",
+            "a": "No. Registrazione con email, nessun dato di pagamento richiesto finché non scegli un piano a pagamento."
+          }
+        ],
+        "ctaTitlePart1": "Trenta ospiti gratis.",
+        "ctaTitleMark": "Per sempre",
+        "ctaSecondary": "Parla con noi"
+      },
+      "esempi": {
+        "seoTitle": "Esempi reali — storie vere di chi ha usato Ceremly",
+        "seoDescription": "Tre eventi della beta raccontati dai loro organizzatori, con i numeri veri delle dashboard: matrimonio, laurea e battesimo.",
+        "heroTag": "Esempi reali",
+        "heroTitlePart1": "142 eventi nella beta.",
+        "heroTitlePart2": "Tre",
+        "heroTitleMark": "storie vere",
+        "heroSub": "Nomi e dettagli condivisi con il permesso degli organizzatori. I numeri sono quelli delle loro dashboard.",
+        "cases": [
+          {
+            "occ": "Matrimonio",
+            "t": "Giulia & Tommaso",
+            "meta": "Verona · settembre 2026",
+            "statLabels": [
+              "invitati",
+              "risposte in 14 giorni",
+              "gruppi WhatsApp"
+            ],
+            "quote": "“La lista è arrivata al catering tre giorni prima — completa, con le allergie.”",
+            "who": "Francesca, sorella della sposa"
+          },
+          {
+            "occ": "Laurea",
+            "t": "La laurea di Sara",
+            "meta": "Bologna · luglio 2026",
+            "statLabels": [
+              "invitati",
+              "conferme in 48 ore",
+              "link su WhatsApp"
+            ],
+            "quote": "“Ho mandato il link alle 9 di mattina. A pranzo sapevo già in quanti eravamo.”",
+            "who": "Sara, laureanda"
+          },
+          {
+            "occ": "Battesimo",
+            "t": "Il battesimo di Leo",
+            "meta": "Lecce · marzo 2026",
+            "statLabels": [
+              "ospiti",
+              "bambini contati a parte",
+              "d'anticipo al ristorante"
+            ],
+            "quote": "“Il ristorante voleva i numeri esatti. Li ho esportati in un click.”",
+            "who": "Davide, papà di Leo"
+          }
+        ],
+        "ctaTitlePart1": "La prossima storia può essere",
+        "ctaTitleMark": "la tua",
+        "ctaSecondary": "Guarda un invito d'esempio"
+      },
+      "usecases": {
+        "matrimoni": {
+          "seoTitle": "Inviti e RSVP per matrimoni — Ceremly",
+          "seoDescription": "Lista invitati sempre aggiornata, menu e intolleranze raccolte nel form, export pulito per il catering. Il matrimonio si gode, la lista si delega a Ceremly.",
+          "tag": "Per i matrimoni",
+          "heroTitlePart1": "Il matrimonio si gode.",
+          "heroTitlePart2": "",
+          "heroTitleMark": "La lista si delega",
+          "heroSub": "Da centocinquanta invitati in su, il problema non è la festa: è sapere chi c'è, cosa mangia e con chi arriva. Ceremly se ne occupa.",
+          "heroPrimary": "Crea il tuo invito — gratis",
+          "heroSecondary": "Invito d'esempio",
+          "inviteDate": "12 · settembre · 2026",
+          "nameLine1": "Giulia &",
+          "nameLine2": "Tommaso",
+          "inviteItalic": "si sposano",
+          "inviteSub": "Villa Erba, Cernobbio",
+          "chipN": "87/142",
+          "chipL": "conferme · 89% aperture",
+          "painsTag": "Il problema",
+          "painsTitle": "Ti suona familiare?",
+          "pains": [
+            {
+              "t": "La lista cambia ogni settimana",
+              "d": "Zii aggiunti, colleghi tolti, fidanzati nuovi. Su Ceremly la lista è una sola, sempre aggiornata."
+            },
+            {
+              "t": "Menu e intolleranze a voce",
+              "d": "Celiaci, vegetariani, bimbi: il form RSVP raccoglie tutto, il catering riceve un export pulito."
+            },
+            {
+              "t": "Navette, bus e plus-one",
+              "d": "Domande logistiche nel form, risposte in dashboard. Niente più \"me lo segno dopo\"."
+            }
+          ],
+          "featsTag": "Cosa fa Ceremly",
+          "featsTitle": "Pensato per questa occasione",
+          "feats": [
+            {
+              "i": "guests",
+              "t": "Nuclei familiari",
+              "d": "Un invito per famiglia, risposte individuali. Adulti e bambini contati a parte."
+            },
+            {
+              "i": "heart",
+              "t": "Menu & allergie",
+              "d": "Preferenze alimentari raccolte nel form, senza telefonate."
+            },
+            {
+              "i": "bell",
+              "t": "Promemoria automatici",
+              "d": "Chi non risponde riceve un sollecito gentile. Tu non rincorri nessuno."
+            },
+            {
+              "i": "upload",
+              "t": "Export per il catering",
+              "d": "Lista finale con menu e note, in CSV o PDF, pronta da inoltrare."
+            }
+          ],
+          "quoteText": "\"Ho organizzato il matrimonio di mia sorella senza un solo gruppo WhatsApp.\"",
+          "quoteWho": "Francesca B.",
+          "quoteMeta": "Matrimonio · 168 ospiti · Verona",
+          "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
+          "ctaSecondary": "Guarda un esempio"
+        },
+        "lauree": {
+          "seoTitle": "Inviti e RSVP per lauree — Ceremly",
+          "seoDescription": "Un link su WhatsApp e in poche ore sai chi viene alla cerimonia e chi al brindisi. Invito pronto in cinque minuti, conteggio live delle conferme.",
+          "tag": "Per le lauree",
+          "heroTitlePart1": "Proclamazione alle 11.",
+          "heroTitlePart2": "Lista chiusa",
+          "heroTitleMark": "per pranzo",
+          "heroSub": "La data arriva all'improvviso e l'invito serve subito. Un link su WhatsApp, e in poche ore sai chi viene alla cerimonia e chi al brindisi.",
+          "heroPrimary": "Crea il tuo invito — gratis",
+          "heroSecondary": "Invito d'esempio",
+          "inviteDate": "17 · luglio · 2026",
+          "nameLine1": "Sara",
+          "nameLine2": "si laurea",
+          "inviteItalic": "",
+          "inviteSub": "Aula magna + brindisi in cortile",
+          "chipN": "47/52",
+          "chipL": "conferme in 48 ore",
+          "painsTag": "Il problema",
+          "painsTitle": "Ti suona familiare?",
+          "pains": [
+            {
+              "t": "Tutto deciso all'ultimo",
+              "d": "La data ufficiale arriva tardi. L'invito Ceremly è pronto in cinque minuti, modifiche comprese."
+            },
+            {
+              "t": "Posti contati in aula",
+              "d": "La cerimonia ha capienza limitata: sai in tempo reale quanti hanno confermato."
+            },
+            {
+              "t": "\"Vieni anche al brindisi?\"",
+              "d": "Due momenti, due conferme nello stesso form: cerimonia e festa, contati separatamente."
+            }
+          ],
+          "featsTag": "Cosa fa Ceremly",
+          "featsTitle": "Pensato per questa occasione",
+          "feats": [
+            {
+              "i": "sparkle",
+              "t": "Pronto in 5 minuti",
+              "d": "Modello Toga, foto, data e luogo. L'invito parte oggi stesso."
+            },
+            {
+              "i": "whatsapp",
+              "t": "Un link su WhatsApp",
+              "d": "Niente email formali: condividi il link dove parlate già."
+            },
+            {
+              "i": "calendar",
+              "t": "Doppia tappa",
+              "d": "Cerimonia e brindisi come momenti separati, ognuno con la sua conferma."
+            },
+            {
+              "i": "chart",
+              "t": "Conteggio live",
+              "d": "Le risposte entrano in tempo reale: prenoti il locale con i numeri giusti."
+            }
+          ],
+          "quoteText": "\"Ho mandato il link alle 9 di mattina. A pranzo sapevo già in quanti eravamo.\"",
+          "quoteWho": "Sara M.",
+          "quoteMeta": "Laurea · 52 invitati · Bologna",
+          "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
+          "ctaSecondary": "Guarda un esempio"
+        },
+        "battesimi": {
+          "seoTitle": "Inviti e RSVP per battesimi — Ceremly",
+          "seoDescription": "Gruppi famiglia, adulti e bambini contati a parte, menu e intolleranze nel form. Numeri esatti da girare al ristorante in un click.",
+          "tag": "Per i battesimi",
+          "heroTitlePart1": "Famiglia allargata,",
+          "heroTitlePart2": "numeri",
+          "heroTitleMark": "precisi",
+          "heroSub": "Nonni, cugini, bambini al seguito: il battesimo è la festa dei numeri ballerini. Il ristorante invece li vuole esatti.",
+          "heroPrimary": "Crea il tuo invito — gratis",
+          "heroSecondary": "Invito d'esempio",
+          "inviteDate": "8 · marzo · 2026",
+          "nameLine1": "Il battesimo",
+          "nameLine2": "di Leo",
+          "inviteItalic": "",
+          "inviteSub": "San Martino + pranzo in famiglia",
+          "chipN": "72/84",
+          "chipL": "ospiti · 12 bambini",
+          "painsTag": "Il problema",
+          "painsTitle": "Ti suona familiare?",
+          "pains": [
+            {
+              "t": "Inviti a voce che si perdono",
+              "d": "\"Glielo dice la zia\" non è una strategia. Ogni famiglia riceve il suo invito, con nome."
+            },
+            {
+              "t": "Bambini da contare",
+              "d": "Il ristorante vuole adulti e bambini separati. Il form li conta a parte, automaticamente."
+            },
+            {
+              "t": "Il pranzo si prenota prima",
+              "d": "Numeri chiusi con giorni d'anticipo, export pronto da girare al ristorante."
+            }
+          ],
+          "featsTag": "Cosa fa Ceremly",
+          "featsTitle": "Pensato per questa occasione",
+          "feats": [
+            {
+              "i": "home",
+              "t": "Gruppi famiglia",
+              "d": "Un invito per nucleo: risponde uno, conta per tutti."
+            },
+            {
+              "i": "guests",
+              "t": "Adulti e bambini",
+              "d": "Conteggi separati per fasce d'età, menu bimbi incluso."
+            },
+            {
+              "i": "heart",
+              "t": "Menu & intolleranze",
+              "d": "Raccolte nel form, esportate per il ristorante."
+            },
+            {
+              "i": "qr",
+              "t": "QR sul bigliettino",
+              "d": "La bomboniera resta di carta: il QR porta alla conferma digitale."
+            }
+          ],
+          "quoteText": "\"Il ristorante voleva i numeri esatti. Li ho esportati in un click.\"",
+          "quoteWho": "Davide P.",
+          "quoteMeta": "Battesimo · 84 ospiti · Lecce",
+          "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
+          "ctaSecondary": "Guarda un esempio"
+        },
+        "compleanni": {
+          "seoTitle": "Inviti e RSVP per compleanni — Ceremly",
+          "seoDescription": "Per i 18, i 40, i 70: un link, niente account, niente sondaggi nel gruppo. Conferme certe, promemoria automatici, andamento live.",
+          "tag": "Per i compleanni",
+          "heroTitlePart1": "Basta sondaggi",
+          "heroTitlePart2": "nel gruppo.",
+          "heroTitleMark": "Un link",
+          "heroSub": "Per i compleanni che contano — i 18, i 40, i 70 — serve sapere chi viene davvero. Senza pollici alzati da interpretare.",
+          "heroPrimary": "Crea il tuo invito — gratis",
+          "heroSecondary": "Invito d'esempio",
+          "inviteDate": "21 · novembre · 2026",
+          "nameLine1": "I 40",
+          "nameLine2": "di Marco",
+          "inviteItalic": "",
+          "inviteSub": "Cascina Boscaccio, ore 20",
+          "chipN": "48/64",
+          "chipL": "conferme · 9 in attesa",
+          "painsTag": "Il problema",
+          "painsTitle": "Ti suona familiare?",
+          "pains": [
+            {
+              "t": "I \"forse\" cronici",
+              "d": "Il pollice alzato non è una conferma. Il form chiede sì o no — e una scadenza."
+            },
+            {
+              "t": "La location vuole un numero",
+              "d": "Caparra e menu si bloccano in anticipo: l'andamento live ti dice quando chiudere."
+            },
+            {
+              "t": "Rincorrere nei gruppi",
+              "d": "I promemoria partono da soli. Tu non scrivi \"raga, confermate\" per la terza volta."
+            }
+          ],
+          "featsTag": "Cosa fa Ceremly",
+          "featsTitle": "Pensato per questa occasione",
+          "feats": [
+            {
+              "i": "send",
+              "t": "Un link, zero account",
+              "d": "Si apre, si risponde. Anche dalla chat di classe del 1986."
+            },
+            {
+              "i": "bell",
+              "t": "Promemoria gentili",
+              "d": "Solleciti automatici ai ritardatari, col tono giusto."
+            },
+            {
+              "i": "guests",
+              "t": "Plus-one controllati",
+              "d": "Decidi tu chi può portare qualcuno, e quanti."
+            },
+            {
+              "i": "chart",
+              "t": "Andamento live",
+              "d": "Sai sempre quanti siete. La location ringrazia."
+            }
+          ],
+          "quoteText": "\"Niente sondaggini nel gruppo. Un link e via — e per una volta sapevo chi veniva.\"",
+          "quoteWho": "Marco T.",
+          "quoteMeta": "Compleanno · 64 invitati · Milano",
+          "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
+          "ctaSecondary": "Guarda un esempio"
+        },
+        "planner": {
+          "seoTitle": "Ceremly per wedding planner — workspace col tuo brand",
+          "seoDescription": "Eventi illimitati in un solo pannello, inviti col brand del cliente, domini personalizzati e liste che si esportano da sole. Atelier a 24 euro al mese.",
+          "tag": "Atelier · per professionisti",
+          "heroTitlePart1": "Dodici eventi in parallelo.",
+          "heroTitlePart2": "",
+          "heroTitleMark": "Un solo pannello",
+          "heroSub": "Per wedding planner e organizzatori di mestiere: workspace con il tuo brand, eventi illimitati e liste che si esportano da sole.",
+          "heroPrimary": "Parla con noi",
+          "heroSecondary": "Invito d'esempio",
+          "inviteDate": "Workspace · Studio Fiore",
+          "nameLine1": "Atelier",
+          "nameLine2": "di Elisa R.",
+          "inviteItalic": "",
+          "inviteSub": "12 eventi attivi · 4 in chiusura · 1.840 ospiti",
+          "chipN": "12",
+          "chipL": "eventi attivi nel workspace",
+          "painsTag": "Il problema",
+          "painsTitle": "Ti suona familiare?",
+          "pains": [
+            {
+              "t": "Ogni cliente vuole il suo stile",
+              "d": "Inviti con i colori e il dominio del cliente: il tuo workspace, il loro brand."
+            },
+            {
+              "t": "Report settimanali ai clienti",
+              "d": "Andamento RSVP condivisibile in sola lettura: il cliente guarda, tu lavori."
+            },
+            {
+              "t": "Liste su dieci fogli diversi",
+              "d": "Tutti gli eventi in un pannello, export uniformi per catering e location."
+            }
+          ],
+          "featsTag": "Cosa fa Ceremly",
+          "featsTitle": "Pensato per chi organizza tanto",
+          "feats": [
+            {
+              "i": "settings",
+              "t": "Workspace col tuo logo",
+              "d": "Brand tuo su pannello, email e pagine invito."
+            },
+            {
+              "i": "send",
+              "t": "Domini personalizzati",
+              "d": "inviti.studiofiore.it invece di ceremly.it: più tuo di così."
+            },
+            {
+              "i": "guests",
+              "t": "Account team",
+              "d": "Assistenti e collaboratori con permessi per evento."
+            },
+            {
+              "i": "copy",
+              "t": "API & integrazioni",
+              "d": "RSVP nei tuoi sistemi: CRM, catering, fogli condivisi."
+            }
+          ],
+          "quoteText": "\"I clienti vedono il loro brand. Io vedo tutti gli eventi in una schermata.\"",
+          "quoteWho": "Elisa R.",
+          "quoteMeta": "Wedding planner · 31 eventi nel 2026 · Torino",
+          "ctaTitlePart1": "Organizzi per mestiere?",
+          "ctaTitleMark": "Parliamone",
+          "ctaSub": "Atelier costa 24 euro al mese, eventi e ospiti illimitati. Demo di 30 minuti, senza impegno.",
+          "ctaPrimary": "Parla con noi",
+          "ctaSecondary": "Vedi i prezzi"
+        }
+      },
+      "guidaRsvp": {
+        "seoTitle": "Guida RSVP: come ottenere conferme davvero",
+        "seoDescription": "Répondez s'il vous plaît, fatto bene. Quando inviare gli inviti, come scrivere la richiesta e come gestire i ritardatari per avere numeri certi.",
+        "heroTag": "Guida",
+        "heroTitlePart1": "RSVP,",
+        "heroTitleMark": "fatto bene",
+        "heroSub": "Répondez s'il vous plaît: come chiedere conferma agli ospiti — e ottenerla davvero. Dieci minuti di lettura.",
+        "tocLabel": "In questa guida",
+        "toc": [
+          "Cos'è l'RSVP (e perché si ignora)",
+          "Quando inviare e quando chiudere",
+          "Come scrivere la richiesta",
+          "Gestire i ritardatari"
+        ],
+        "s1Title": "Cos'è l'RSVP (e perché si ignora)",
+        "s1p1": "RSVP è la richiesta di confermare la propria presenza. Sembra banale, ma in Italia circa un invitato su tre non risponde mai spontaneamente: non per maleducazione, ma perché la richiesta è vaga, senza scadenza, o sepolta in un gruppo da 40 persone.",
+        "s1p2": "La buona notizia: l'RSVP non è un problema di galateo, è un problema di processo. E i processi si sistemano.",
+        "s2Title": "Quando inviare e quando chiudere",
+        "s2p1": "La regola d'oro: lavora a ritroso dalla data in cui il catering vuole i numeri definitivi. Per un matrimonio il calendario tipico è questo:",
+        "timeline": [
+          {
+            "phase": "T–60",
+            "title": "Invia gli inviti",
+            "desc": "Due mesi prima per i matrimoni, due settimane per compleanni e lauree."
+          },
+          {
+            "phase": "T–30",
+            "title": "Primo promemoria",
+            "desc": "Un sollecito gentile a chi non ha aperto o non ha risposto."
+          },
+          {
+            "phase": "T–14",
+            "title": "Secondo promemoria",
+            "desc": "Più diretto: la scadenza è vicina e serve a te, non a loro."
+          },
+          {
+            "phase": "T–7",
+            "title": "Chiudi la lista",
+            "desc": "Numeri congelati: parte l'export per catering e location."
+          }
+        ],
+        "s2p2": "Per lauree e compleanni comprimi tutto: invito due settimane prima, promemoria a una settimana, chiusura a tre giorni.",
+        "s3Title": "Come scrivere la richiesta",
+        "s3p1": "Tre ingredienti, sempre: una scadenza esplicita (\"entro il 1 luglio\"), una sola azione (un link, non \"fammi sapere\"), un tono personale (il nome dell'ospite fa metà del lavoro).",
+        "exampleLabel": "Esempio che funziona",
+        "exampleText": "\"Ciao Marta! Ci sposiamo il 12 settembre a Cernobbio 💍 Qui trovi l'invito con tutti i dettagli: ceremly.it/giulia-tommaso — confermaci entro il 1 luglio, così diamo i numeri al catering. Un abbraccio!\"",
+        "s3p2": "Nota cosa non c'è: scuse, premesse, \"quando puoi\". La gentilezza sta nel tono, non nella vaghezza.",
+        "s4Title": "Gestire i ritardatari",
+        "s4p1": "Ci saranno sempre. Il trucco è non gestirli a mano: imposta i promemoria automatici e lascia che sia \"il sistema\" a insistere — il sollecito di una piattaforma pesa meno di tre messaggi tuoi.",
+        "s4p2": "Per gli irriducibili, l'ultima settimana vale la telefonata. A quel punto saranno cinque persone, non cinquanta: è esattamente il punto.",
+        "ctaTitlePart1": "Mettila in pratica con",
+        "ctaTitleMark": "Ceremly",
+        "ctaSub": "Scadenze, promemoria ed export sono già nel prodotto. Tu scrivi solo l'invito."
+      },
+      "centroAiuto": {
+        "seoTitle": "Centro aiuto",
+        "seoDescription": "Domande frequenti, guide e risposte rapide su inviti, lista ospiti, RSVP, pagamenti e privacy. Non trovi la risposta? Scrivici.",
+        "heroTag": "Centro aiuto",
+        "heroTitlePart1": "Come possiamo",
+        "heroTitleMark": "aiutarti",
+        "searchPlaceholder": "Cerca: \"importare ospiti\", \"QR\", \"fattura\"…",
+        "cats": [
+          {
+            "t": "Primi passi"
+          },
+          {
+            "t": "Inviti & modelli"
+          },
+          {
+            "t": "Lista ospiti"
+          },
+          {
+            "t": "RSVP & form"
+          },
+          {
+            "t": "Pagamenti & fatture"
+          },
+          {
+            "t": "Privacy & dati"
+          }
+        ],
+        "articlesLabel": "articoli",
+        "faqTag": "Le più lette",
+        "faqTitle": "Domande frequenti",
+        "popular": [
+          "Come importo gli ospiti da Excel?",
+          "Posso cambiare data o luogo dopo aver inviato gli inviti?",
+          "Qual è la differenza tra link unico e inviti personali?",
+          "Come funziona il QR per gli inviti cartacei?",
+          "Un ospite dice di non aver ricevuto l'email: cosa controllo?"
+        ],
+        "contactTitle": "Non hai trovato la risposta?",
+        "contactSub": "Scrivici: rispondiamo entro un giorno lavorativo, una persona vera.",
+        "contactBtn": "Scrivici"
+      },
+      "stato": {
+        "seoTitle": "Stato servizio",
+        "seoDescription": "Stato in tempo reale di Ceremly: app organizzatore, pagine invito, RSVP, invio email e WhatsApp, API. Uptime e storico incidenti.",
+        "heroTag": "Stato servizio",
+        "allOperational": "Tutti i sistemi operativi",
+        "uptimeLine": "uptime ultimi 90 giorni · 99,97% · aggiornato 2 min fa",
+        "compsTag": "Componenti",
+        "compsTitle": "Ultimi 60 giorni",
+        "comps": [
+          {
+            "t": "App organizzatore"
+          },
+          {
+            "t": "Pagine invito & RSVP"
+          },
+          {
+            "t": "Invio email"
+          },
+          {
+            "t": "Invio WhatsApp"
+          },
+          {
+            "t": "API per partner"
+          }
+        ],
+        "statusOperational": "Operativo",
+        "legendOperational": "Operativo",
+        "legendDegraded": "Prestazioni ridotte",
+        "incidentsTag": "Storico",
+        "incidentsTitle": "Incidenti passati",
+        "incidents": [
+          {
+            "t": "Ritardi nell'invio email",
+            "desc": "Code di invio rallentate dal provider SMTP. Nessuna email persa: tutte consegnate entro 42 minuti."
+          },
+          {
+            "t": "Lentezza nella dashboard",
+            "desc": "Tempi di caricamento elevati sulla pagina Andamento per una query non ottimizzata. Risolto con rollback."
+          }
+        ],
+        "statusResolved": "Risolto"
+      },
+      "changelog": {
+        "seoTitle": "Changelog",
+        "seoDescription": "Tutto quello che cambia in Ceremly, senza giri di parole. Nuove funzioni, miglioramenti e correzioni, rilascio dopo rilascio.",
+        "heroTag": "Changelog",
+        "heroTitlePart1": "Cosa c'è di",
+        "heroTitleMark": "nuovo",
+        "heroSub": "Rilasciamo ogni poche settimane. Qui trovi tutto quello che è cambiato, senza giri di parole.",
+        "releases": [
+          {
+            "t": "Promemoria che lavorano per te",
+            "items": [
+              {
+                "tag": "Nuovo",
+                "text": "Promemoria automatici programmabili: scegli cadenza, tono e orario di invio."
+              },
+              {
+                "tag": "Nuovo",
+                "text": "Anteprima del sollecito prima dell'invio, con il nome dell'ospite."
+              },
+              {
+                "tag": "Migliorato",
+                "text": "L'import da Excel ora riconosce e unisce i duplicati con nomi simili."
+              }
+            ]
+          },
+          {
+            "t": "La carta incontra il digitale",
+            "items": [
+              {
+                "tag": "Nuovo",
+                "text": "QR code per inviti cartacei: ogni famiglia ha il suo, con risposta pre-compilata."
+              },
+              {
+                "tag": "Nuovo",
+                "text": "Due famiglie di modelli per battesimi: Acquerello e Lino."
+              },
+              {
+                "tag": "Risolto",
+                "text": "Il conteggio dei plus-one non includeva i bambini nei gruppi famiglia."
+              }
+            ]
+          },
+          {
+            "t": "Inviti personali su WhatsApp",
+            "items": [
+              {
+                "tag": "Nuovo",
+                "text": "Invio di inviti nominali via WhatsApp ed email, con link unico per ospite."
+              },
+              {
+                "tag": "Nuovo",
+                "text": "Export per il catering in CSV e PDF: menu, allergie e note in colonne separate."
+              },
+              {
+                "tag": "Migliorato",
+                "text": "Le pagine invito si caricano in metà tempo sulle reti mobili."
+              }
+            ]
+          },
+          {
+            "t": "Beta pubblica",
+            "items": [
+              {
+                "tag": "Nuovo",
+                "text": "Ceremly apre agli organizzatori italiani: inviti digitali, lista ospiti e RSVP."
+              },
+              {
+                "tag": "Nuovo",
+                "text": "Piano Free con 30 ospiti e un evento attivo, per sempre."
+              }
+            ]
+          }
+        ],
+        "newsletterTitle": "Ricevi il changelog via email",
+        "newsletterSub": "Una email al mese, solo quando c'è qualcosa di nuovo. Niente marketing.",
+        "newsletterBtn": "Avvisami"
+      },
+      "api": {
+        "seoTitle": "API per partner",
+        "seoDescription": "Un'API REST per planner, catering e location: leggi conferme, menu e numeri, e ricevi ogni RSVP in tempo reale con i webhook.",
+        "heroTag": "Atelier · API",
+        "heroTitlePart1": "Gli RSVP, anche",
+        "heroTitlePart2": "nei",
+        "heroTitleMark": "tuoi sistemi",
+        "heroSub": "Per planner, catering e location che lavorano con i propri strumenti: un'API REST per leggere conferme, menu e numeri — e webhook per saperlo subito.",
+        "bullets": [
+          "API REST con chiavi per workspace",
+          "Webhook a ogni nuova risposta",
+          "Ambiente sandbox con dati di prova",
+          "Rate limit generosi, documentazione in italiano"
+        ],
+        "heroBtnPrimary": "Richiedi accesso",
+        "heroBtnSecondary": "Documentazione",
+        "endpointsTag": "Endpoints",
+        "endpointsTitle": "Piccola per scelta",
+        "endpointsSub": "Cinque endpoint coprono il 95% dei casi d'uso. Il resto lo aggiungiamo quando un partner lo chiede davvero.",
+        "endpoints": [
+          {
+            "d": "Tutti gli eventi del workspace"
+          },
+          {
+            "d": "Risposte di un evento, con menu e note"
+          },
+          {
+            "d": "Aggiungi o aggiorna ospiti in blocco"
+          },
+          {
+            "d": "Ricevi ogni RSVP in tempo reale"
+          },
+          {
+            "d": "Export catering in CSV, già formattato"
+          }
+        ],
+        "endpointsNote": "Disponibile sul piano Atelier · chiavi generate dal workspace, revocabili in ogni momento.",
+        "ctaTitlePart1": "Integriamo",
+        "ctaTitleMark": "insieme",
+        "ctaSub": "Raccontaci il tuo caso d'uso: ti apriamo l'accesso sandbox in giornata.",
+        "ctaSecondary": "Vedi il piano Atelier"
+      },
+      "cookie": {
+        "seoTitle": "Cookie policy — Ceremly",
+        "seoDescription": "Usiamo quattro cookie, tutti nostri. Niente tracciamento pubblicitario, niente terze parti.",
+        "legalTag": "Legale",
+        "title": "Cookie policy",
+        "updatedLabel": "Ultimo aggiornamento",
+        "updated": "3 maggio 2026",
+        "company": "Ceremly Srl, Milano",
+        "intro": "In breve: usiamo quattro cookie, tutti nostri. Niente tracciamento pubblicitario, niente terze parti, quindi niente banner infiniti.",
+        "indexLabel": "Indice",
+        "contactPrefix": "Per domande:",
+        "tableHead": {
+          "name": "Nome",
+          "type": "Tipo",
+          "purpose": "Scopo",
+          "duration": "Durata"
+        },
+        "rows": [
+          {
+            "name": "ceremly_session",
+            "type": "Essenziale",
+            "purpose": "Mantiene l'accesso dell'organizzatore",
+            "duration": "Sessione"
+          },
+          {
+            "name": "ceremly_rsvp",
+            "type": "Essenziale",
+            "purpose": "Ricorda la risposta dell'ospite sul suo dispositivo",
+            "duration": "30 giorni"
+          },
+          {
+            "name": "ceremly_prefs",
+            "type": "Preferenza",
+            "purpose": "Lingua e impostazioni di visualizzazione",
+            "duration": "12 mesi"
+          },
+          {
+            "name": "ceremly_stats",
+            "type": "Statistica",
+            "purpose": "Conteggi anonimi e aggregati (senza terze parti)",
+            "duration": "6 mesi"
+          }
+        ],
+        "sections": [
+          {
+            "t": "Cosa sono e come li usiamo",
+            "ps": [
+              "I cookie sono piccoli file salvati dal browser. Ceremly li usa solo per funzioni essenziali (tenerti collegato, ricordare la risposta di un ospite) e per statistiche anonime calcolate sui nostri server — non usiamo strumenti di analisi di terze parti né pixel pubblicitari."
+            ]
+          },
+          {
+            "t": "I cookie che usiamo",
+            "ps": []
+          },
+          {
+            "t": "Come gestirli",
+            "ps": [
+              "I cookie essenziali non richiedono consenso e senza di essi il servizio non funziona. Quelli di preferenza e statistica si possono rifiutare dal banner al primo accesso o disattivare in qualsiasi momento dalle impostazioni del browser.",
+              "Bloccando tutti i cookie dal browser, le pagine invito restano consultabili ma la risposta non viene ricordata sul dispositivo."
+            ]
+          },
+          {
+            "t": "Aggiornamenti e contatti",
+            "ps": [
+              "Se introdurremo nuovi cookie aggiorneremo questa pagina e, dove richiesto, il banner di consenso."
+            ]
+          }
+        ]
       }
     },
     "signup": {

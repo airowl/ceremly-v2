@@ -36,15 +36,13 @@ const team = computed(() => (tm('ceremly.site.chiSiamo.team') as Member[]).map(x
 
 <template>
     <div>
-        <div class="l-wrap">
-            <CerSiteHero :tag="t('ceremly.site.chiSiamo.heroTag')" :sub="t('ceremly.site.chiSiamo.heroSub')">
-                <template #title>
-                    {{ t('ceremly.site.chiSiamo.heroTitlePart1') }}<br>{{ t('ceremly.site.chiSiamo.heroTitlePart2') }} <CerMark>{{ t('ceremly.site.chiSiamo.heroTitleMark') }}</CerMark>.
-                </template>
-            </CerSiteHero>
-        </div>
+        <CerSiteHero :tag="t('ceremly.site.chiSiamo.heroTag')" :sub="t('ceremly.site.chiSiamo.heroSub')">
+            <template #title>
+                {{ t('ceremly.site.chiSiamo.heroTitlePart1') }}<br>{{ t('ceremly.site.chiSiamo.heroTitlePart2') }} <CerMark>{{ t('ceremly.site.chiSiamo.heroTitleMark') }}</CerMark>.
+            </template>
+        </CerSiteHero>
 
-        <div class="l-wrap cer-cs-body">
+        <div class="cer-site-wrap cer-cs-body">
             <!-- intro -->
             <div class="cer-cs-intro">
                 <p style="font-size: 17px; line-height: 1.7; color: var(--ink-700); margin: 0;">{{ t('ceremly.site.chiSiamo.intro1') }}</p>
@@ -89,22 +87,15 @@ const team = computed(() => (tm('ceremly.site.chiSiamo.team') as Member[]).map(x
             </div>
         </div>
 
-        <div class="l-wrap">
-            <CerSiteCTA :sub="t('ceremly.site.chiSiamo.ctaSub')" :secondary="t('ceremly.site.chiSiamo.ctaSecondary')" :secondary-to="useLocalePath()('/contactUs')">
-                <template #title>
-                    {{ t('ceremly.site.chiSiamo.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.chiSiamo.ctaTitleMark') }}</CerMark>.
-                </template>
-            </CerSiteCTA>
-        </div>
+        <CerSiteCTA :sub="t('ceremly.site.chiSiamo.ctaSub')" :secondary="t('ceremly.site.chiSiamo.ctaSecondary')" :secondary-to="useLocalePath()('/contactUs')">
+            <template #title>
+                {{ t('ceremly.site.chiSiamo.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.chiSiamo.ctaTitleMark') }}</CerMark>.
+            </template>
+        </CerSiteCTA>
     </div>
 </template>
 
 <style scoped>
-.cer-cs-body {
-    padding-left: var(--site-pad-x);
-    padding-right: var(--site-pad-x);
-}
-
 .cer-cs-intro {
     display: grid;
     grid-template-columns: 1fr 1fr;

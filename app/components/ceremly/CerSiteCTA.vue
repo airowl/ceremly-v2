@@ -25,30 +25,33 @@ const primaryTo = computed(() => isActiveMode.value ? localePath('/signup') : `$
 </script>
 
 <template>
-    <div class="cer-site-cta">
-        <h2 class="serif cer-site-cta-title">
-            <slot name="title">
-                {{ t('ceremly.site.shared.ctaDefaultTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.shared.ctaDefaultTitleMark') }}</CerMark>.
-            </slot>
-        </h2>
-        <p v-if="sub" class="cer-site-cta-sub">{{ sub }}</p>
-        <div class="row cer-site-cta-actions">
-            <NuxtLink :to="primaryTo" class="cer-btn" style="background: var(--bone-50); color: var(--ink); padding: 14px 24px; font-size: 14px;">
-                <CerIcon name="sparkle" :s="14" /> {{ primaryLabel }}
-            </NuxtLink>
-            <NuxtLink
-                v-if="secondary"
-                :to="secondaryTo || localePath('/esempi')"
-                class="cer-btn"
-                style="background: var(--purple); color: var(--ink); padding: 14px 24px; font-size: 14px;"
-            >{{ secondary }}</NuxtLink>
+    <section class="cer-site-cta">
+        <div class="cer-site-wrap">
+            <h2 class="serif cer-site-cta-title">
+                <slot name="title">
+                    {{ t('ceremly.site.shared.ctaDefaultTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.shared.ctaDefaultTitleMark') }}</CerMark>.
+                </slot>
+            </h2>
+            <p v-if="sub" class="cer-site-cta-sub">{{ sub }}</p>
+            <div class="row cer-site-cta-actions">
+                <NuxtLink :to="primaryTo" class="cer-btn" style="background: var(--bone-50); color: var(--ink); padding: 14px 24px; font-size: 14px;">
+                    <CerIcon name="sparkle" :s="14" /> {{ primaryLabel }}
+                </NuxtLink>
+                <NuxtLink
+                    v-if="secondary"
+                    :to="secondaryTo || localePath('/esempi')"
+                    class="cer-btn"
+                    style="background: var(--purple); color: var(--ink); padding: 14px 24px; font-size: 14px;"
+                >{{ secondary }}</NuxtLink>
+            </div>
         </div>
-    </div>
+    </section>
 </template>
 
 <style scoped>
 .cer-site-cta {
-    padding: 80px var(--site-pad-x, clamp(20px, 5vw, 72px));
+    padding-top: 80px;
+    padding-bottom: 80px;
     background: var(--ink);
     color: #fff;
     text-align: center;

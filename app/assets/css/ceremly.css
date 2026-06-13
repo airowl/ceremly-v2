@@ -363,3 +363,14 @@ a.cer-nav-item, a.cer-nav-item:hover { text-decoration: none; }
   .cer-page { padding: 20px 16px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Sito pubblico: wrapper contenuto centrato a 1400px ──
+   Usato dalle sotto-pagine (layout public-site) e dai componenti Cer-Site*.
+   La banda/section è full-bleed; il contenuto resta centrato e con padding
+   orizzontale fluido. --site-pad-x è definito dal layout public-site. */
+.cer-site-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: var(--site-pad-x, clamp(20px, 5vw, 72px));
+  padding-right: var(--site-pad-x, clamp(20px, 5vw, 72px));
+}

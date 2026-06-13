@@ -1572,29 +1572,1040 @@
         "intro1": "The idea came the evening Andrea, three days before his wedding, called the caterer with three different numbers on three different sheets. The invitations had been beautiful. The guest list, a nightmare. We wondered why in 2026 you could book a flight in two minutes, but not know how many uncles were coming to lunch.",
         "intro2": "So we built Ceremly: digital invitations that hold their own next to paper ones, and a reply form anyone can use — no app, no account, no explaining over the phone. Today we're in beta, small by choice, growing one event at a time.",
         "nums": [
-          { "n": "2026", "l": "founded, Milan" },
-          { "n": "142", "l": "events in beta" },
-          { "n": "11,804", "l": "RSVPs collected" },
-          { "n": "3", "l": "people, for now" }
+          {
+            "n": "2026",
+            "l": "founded, Milan"
+          },
+          {
+            "n": "142",
+            "l": "events in beta"
+          },
+          {
+            "n": "11,804",
+            "l": "RSVPs collected"
+          },
+          {
+            "n": "3",
+            "l": "people, for now"
+          }
         ],
         "principiTag": "Principles",
         "principiTitle": "Three things we believe in",
         "principi": [
-          { "t": "One problem only", "d": "No gift registries, no albums, no showcase sites. Ceremly answers one question — who's coming? — and that's it. What we don't do is a choice, not a gap." },
-          { "t": "The data belongs to the hosts", "d": "Guest lists are never sold, profiled, or fed into ads. EU servers, full export anytime, real deletion when you ask for it." },
-          { "t": "Made in Italy", "d": "Italian events, Italian etiquette, Italian e-invoicing. We build for how people celebrate here: big families, late confirmations and long lunches." }
+          {
+            "t": "One problem only",
+            "d": "No gift registries, no albums, no showcase sites. Ceremly answers one question — who's coming? — and that's it. What we don't do is a choice, not a gap."
+          },
+          {
+            "t": "The data belongs to the hosts",
+            "d": "Guest lists are never sold, profiled, or fed into ads. EU servers, full export anytime, real deletion when you ask for it."
+          },
+          {
+            "t": "Made in Italy",
+            "d": "Italian events, Italian etiquette, Italian e-invoicing. We build for how people celebrate here: big families, late confirmations and long lunches."
+          }
         ],
         "teamTag": "The team",
         "teamTitle": "Who's behind it",
         "team": [
-          { "ini": "AC", "n": "Andrea C.", "r": "Product", "d": "Counted his 187 wedding guests by hand. Never again." },
-          { "ini": "LF", "n": "Lucia F.", "r": "Design", "d": "Believes an ugly invitation ruins the party before it starts." },
-          { "ini": "PV", "n": "Pietro V.", "r": "Engineering", "d": "Wants the RSVP form to open even on grandma's phone." }
+          {
+            "ini": "AC",
+            "n": "Andrea C.",
+            "r": "Product",
+            "d": "Counted his 187 wedding guests by hand. Never again."
+          },
+          {
+            "ini": "LF",
+            "n": "Lucia F.",
+            "r": "Design",
+            "d": "Believes an ugly invitation ruins the party before it starts."
+          },
+          {
+            "ini": "PV",
+            "n": "Pietro V.",
+            "r": "Engineering",
+            "d": "Wants the RSVP form to open even on grandma's phone."
+          }
         ],
         "ctaTitlePart1": "Celebrate with us.",
         "ctaTitleMark": "Literally",
         "ctaSub": "The best way to get to know us is to use Ceremly for your next event.",
         "ctaSecondary": "Write to us"
+      },
+      "comeFunziona": {
+        "seoTitle": "How Ceremly works — from invitation to final guest list",
+        "seoDescription": "Four steps to know who's coming to your event: create the invitation, import your list, share it, and collect replies. Without chasing anyone.",
+        "heroTag": "How it works",
+        "heroTitlePart1": "From first draft to final list,",
+        "heroTitlePart2": "without chasing",
+        "heroTitleMark": "anyone",
+        "heroSub": "Four steps. The first takes five minutes; the other three work on their own while you focus on the event.",
+        "steps": [
+          {
+            "k": "01 · Create",
+            "t": "Pick a template, make it yours.",
+            "d": "Wedding, graduation, christening or birthday: start from a curated template and change the colours, photos and text. No design skills needed.",
+            "bullets": [
+              "Live mobile preview",
+              "Your own photos and palette",
+              "Date, venue and dress code included"
+            ]
+          },
+          {
+            "k": "02 · Import",
+            "t": "Your list, just once.",
+            "d": "Paste it from Excel or your contacts. Ceremly spots duplicates and lets you group guests by family, side or table.",
+            "bullets": [
+              "Import from Excel and CSV",
+              "Family groups and plus-ones",
+              "Duplicates flagged instantly"
+            ]
+          },
+          {
+            "k": "03 · Share",
+            "t": "One link. Or a hundred personal invites.",
+            "d": "Drop a single link in the group chat, or send each guest their own named invitation by WhatsApp and email. A QR code for anyone still on paper.",
+            "bullets": [
+              "Single link or named invites",
+              "WhatsApp, email and QR",
+              "Guests never create an account"
+            ]
+          },
+          {
+            "k": "04 · Collect",
+            "t": "The replies come in on their own.",
+            "d": "Confirmations, menus, allergies and plus-ones land in your dashboard as they arrive. Latecomers get gentle, automatic reminders.",
+            "bullets": [
+              "Automatic reminders",
+              "Menu and allergies in the form",
+              "Export everything for the caterer"
+            ]
+          }
+        ],
+        "guestList": "Guest list",
+        "guestImported": "142 imported",
+        "distLinkLabel": "Single link",
+        "distCopy": "Copy",
+        "distWhatsapp": "WhatsApp",
+        "distEmail": "Email",
+        "distQr": "QR",
+        "dashTrend": "RSVP progress",
+        "dashToday": "+12 today",
+        "dashMeta": "confirmed · 89% invites opened",
+        "dashYes": "87 yes",
+        "dashNo": "9 no",
+        "dashPending": "46 pending",
+        "ctaSub": "Create your first invitation in five minutes. Thirty guests free, forever.",
+        "ctaSecondary": "See an example"
+      },
+      "funzionalita": {
+        "seoTitle": "Ceremly features — one problem, solved well",
+        "seoDescription": "Invitations that are a joy to open, frictionless RSVPs and a dashboard that answers one question: who's coming? Explore everything Ceremly does.",
+        "heroTag": "Features",
+        "heroTitlePart1": "One problem.",
+        "heroTitleMark": "Solved well",
+        "heroSub": "Ceremly doesn't do wedding websites, gift registries or photo albums. It does one thing: tells you who's really coming to your event.",
+        "groups": [
+          {
+            "tag": "The invitation",
+            "title": "A joy to open",
+            "desc": "First impressions count: the invitation is the cover of your event.",
+            "feats": [
+              {
+                "t": "A template for every occasion",
+                "d": "Weddings, graduations, christenings and birthdays — curated and ready in five minutes."
+              },
+              {
+                "t": "Your colours, photos and words",
+                "d": "Customise the palette and images. With Celebration, even your event's own colours."
+              },
+              {
+                "t": "QR codes for paper",
+                "d": "Love a printed invitation? The QR code still leads to the digital reply form."
+              }
+            ]
+          },
+          {
+            "tag": "The replies",
+            "title": "Frictionless RSVPs",
+            "desc": "The easier it is to reply, the sooner your list is closed.",
+            "feats": [
+              {
+                "t": "No accounts for guests",
+                "d": "Open the link, reply. No sign-up, no app to download."
+              },
+              {
+                "t": "Menu, allergies, plus-ones",
+                "d": "The form gathers everything you and the caterer need, in one go."
+              },
+              {
+                "t": "Automatic reminders",
+                "d": "Gentle nudges to anyone who hasn't replied, at the pace you choose."
+              }
+            ]
+          },
+          {
+            "tag": "The control room",
+            "title": "Everything in hand",
+            "desc": "The dashboard answers the only question that matters: who's coming?",
+            "feats": [
+              {
+                "t": "Families and groups",
+                "d": "One invitation per household, individual replies. Adults and children counted separately."
+              },
+              {
+                "t": "Real-time progress",
+                "d": "Opens, confirmations, trends. You always know where you stand."
+              },
+              {
+                "t": "Export for the caterer",
+                "d": "Final list with menus and allergies, as CSV or PDF, ready to forward."
+              }
+            ]
+          }
+        ],
+        "ctaTitlePart1": "Try them all,",
+        "ctaTitleMark": "free",
+        "ctaSub": "Thirty guests and one active event on the Free plan. Forever.",
+        "ctaSecondary": "See the pricing"
+      },
+      "modelli": {
+        "seoTitle": "Invitation templates — start out beautiful with Ceremly",
+        "seoDescription": "Six families of templates for weddings, graduations, christenings and birthdays. Everything customisable: colours, photos, text and reply form.",
+        "heroTag": "Invitation templates",
+        "heroTitlePart1": "Start out",
+        "heroTitleMark": "beautiful",
+        "heroSub": "Six families of templates, each designed for an occasion. Everything is customisable: colours, photos, text and the reply form.",
+        "chips": [
+          "All",
+          "Wedding",
+          "Graduation",
+          "Christening",
+          "Birthday"
+        ],
+        "tpls": [
+          {
+            "n": "Botanical",
+            "occ": "Wedding"
+          },
+          {
+            "n": "Summer Evening",
+            "occ": "Wedding"
+          },
+          {
+            "n": "Cap & Gown",
+            "occ": "Graduation"
+          },
+          {
+            "n": "Watercolour",
+            "occ": "Christening"
+          },
+          {
+            "n": "Confetti",
+            "occ": "Birthday"
+          },
+          {
+            "n": "Classic",
+            "occ": "Wedding"
+          }
+        ],
+        "noteText": "Three templates included on the Free plan. Every template and made-to-measure colours from the Celebration plan.",
+        "notePrices": "See the pricing",
+        "ctaTitlePart1": "Your event deserves its own",
+        "ctaTitleMark": "cover",
+        "ctaSecondary": "See an example"
+      },
+      "prezzi": {
+        "seoTitle": "Ceremly pricing — thirty guests free, forever",
+        "seoDescription": "Free to get started, Celebration as a one-off payment per event, Atelier for professional organisers. Compare Ceremly's plans and features.",
+        "tableTag": "In detail",
+        "tableTitle": "Compare the plans",
+        "colFeature": "Feature",
+        "colFree": "Free · €0",
+        "colCeleb": "Celebration · €39",
+        "colAtelier": "Atelier · €24/month",
+        "rows": [
+          {
+            "l": "Guests per event",
+            "free": "30",
+            "celeb": "250",
+            "atelier": "Unlimited"
+          },
+          {
+            "l": "Active events",
+            "free": "1",
+            "celeb": "1 per purchase",
+            "atelier": "Unlimited"
+          },
+          {
+            "l": "Invitation templates",
+            "free": "3",
+            "celeb": "All + custom colours",
+            "atelier": "All + brand workspace"
+          },
+          {
+            "l": "Personalised WhatsApp & email",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Automatic reminders",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Menu, allergies, plus-ones",
+            "free": "yes",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Export for the caterer",
+            "free": "no",
+            "celeb": "yes",
+            "atelier": "yes"
+          },
+          {
+            "l": "Custom domains & API",
+            "free": "no",
+            "celeb": "no",
+            "atelier": "yes"
+          },
+          {
+            "l": "Team accounts",
+            "free": "no",
+            "celeb": "no",
+            "atelier": "yes"
+          }
+        ],
+        "faqTag": "FAQ",
+        "faqTitle": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "Can I start free and move to Celebration later?",
+            "a": "Yes. Everything you've created — invitation, list, replies — stays put. You simply unlock the limits when you need them."
+          },
+          {
+            "q": "What happens after the event?",
+            "a": "The event stays available for 12 months: list, replies and exports included. After that you can archive it or download everything."
+          },
+          {
+            "q": "Is Celebration a subscription?",
+            "a": "No: it's a one-off payment per event. No renewals, no surprises. Only Atelier, built for professional organisers, is monthly."
+          },
+          {
+            "q": "Do you issue invoices?",
+            "a": "Yes, an electronic invoice for every purchase. For Atelier we also support recurring SDI billing."
+          },
+          {
+            "q": "What if the event is cancelled?",
+            "a": "A full refund within 30 days of purchase if you haven't sent the invitations yet. Just drop us a line."
+          },
+          {
+            "q": "Do I need a card for the Free plan?",
+            "a": "No. Sign up with an email — no payment details required until you choose a paid plan."
+          }
+        ],
+        "ctaTitlePart1": "Thirty guests free.",
+        "ctaTitleMark": "Forever",
+        "ctaSecondary": "Talk to us"
+      },
+      "esempi": {
+        "seoTitle": "Real examples — true stories from people who used Ceremly",
+        "seoDescription": "Three events from the beta, told by their organisers, with the real numbers from their dashboards: a wedding, a graduation and a christening.",
+        "heroTag": "Real examples",
+        "heroTitlePart1": "142 events in the beta.",
+        "heroTitlePart2": "Three",
+        "heroTitleMark": "true stories",
+        "heroSub": "Names and details shared with the organisers' permission. The numbers are the ones from their own dashboards.",
+        "cases": [
+          {
+            "occ": "Wedding",
+            "t": "Giulia & Tommaso",
+            "meta": "Verona · September 2026",
+            "statLabels": [
+              "invited",
+              "replies in 14 days",
+              "WhatsApp groups"
+            ],
+            "quote": "“The list reached the caterer three days early — complete, with the allergies.”",
+            "who": "Francesca, the bride's sister"
+          },
+          {
+            "occ": "Graduation",
+            "t": "Sara's graduation",
+            "meta": "Bologna · July 2026",
+            "statLabels": [
+              "invited",
+              "confirmations in 48 hours",
+              "link on WhatsApp"
+            ],
+            "quote": "“I sent the link at 9 in the morning. By lunch I already knew how many we'd be.”",
+            "who": "Sara, the graduate"
+          },
+          {
+            "occ": "Christening",
+            "t": "Leo's christening",
+            "meta": "Lecce · March 2026",
+            "statLabels": [
+              "guests",
+              "children counted separately",
+              "days' notice for the restaurant"
+            ],
+            "quote": "“The restaurant wanted exact numbers. I exported them in one click.”",
+            "who": "Davide, Leo's dad"
+          }
+        ],
+        "ctaTitlePart1": "The next story could be",
+        "ctaTitleMark": "yours",
+        "ctaSecondary": "See a sample invitation"
+      },
+      "usecases": {
+        "matrimoni": {
+          "seoTitle": "Wedding invitations and RSVP — Ceremly",
+          "seoDescription": "An always-up-to-date guest list, meals and allergies collected in the form, a clean export for the caterer. Enjoy the wedding, delegate the list to Ceremly.",
+          "tag": "For weddings",
+          "heroTitlePart1": "Enjoy the wedding.",
+          "heroTitlePart2": "",
+          "heroTitleMark": "Delegate the list",
+          "heroSub": "From a hundred and fifty guests up, the party isn't the problem: knowing who's coming, what they eat and who they're arriving with is. Ceremly handles it.",
+          "heroPrimary": "Create your invite — free",
+          "heroSecondary": "See a sample invite",
+          "inviteDate": "12 · September · 2026",
+          "nameLine1": "Giulia &",
+          "nameLine2": "Tommaso",
+          "inviteItalic": "are getting married",
+          "inviteSub": "Villa Erba, Cernobbio",
+          "chipN": "87/142",
+          "chipL": "confirmed · 89% open rate",
+          "painsTag": "The problem",
+          "painsTitle": "Sound familiar?",
+          "pains": [
+            {
+              "t": "The list changes every week",
+              "d": "Uncles added, colleagues dropped, new partners. On Ceremly there's one list, always up to date."
+            },
+            {
+              "t": "Meals and allergies by word of mouth",
+              "d": "Coeliacs, vegetarians, kids: the RSVP form collects it all, the caterer gets a clean export."
+            },
+            {
+              "t": "Shuttles, buses and plus-ones",
+              "d": "Logistics questions in the form, answers in the dashboard. No more \"I'll note it down later\"."
+            }
+          ],
+          "featsTag": "What Ceremly does",
+          "featsTitle": "Built for this occasion",
+          "feats": [
+            {
+              "i": "guests",
+              "t": "Household groups",
+              "d": "One invite per family, individual replies. Adults and children counted separately."
+            },
+            {
+              "i": "heart",
+              "t": "Menu & allergies",
+              "d": "Dietary preferences gathered in the form, no phone calls."
+            },
+            {
+              "i": "bell",
+              "t": "Automatic reminders",
+              "d": "Whoever doesn't reply gets a gentle nudge. You chase no one."
+            },
+            {
+              "i": "upload",
+              "t": "Export for the caterer",
+              "d": "A final list with meals and notes, in CSV or PDF, ready to forward."
+            }
+          ],
+          "quoteText": "\"I organised my sister's wedding without a single WhatsApp group.\"",
+          "quoteWho": "Francesca B.",
+          "quoteMeta": "Wedding · 168 guests · Verona",
+          "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
+          "ctaSecondary": "See an example"
+        },
+        "lauree": {
+          "seoTitle": "Graduation invitations and RSVP — Ceremly",
+          "seoDescription": "One WhatsApp link and within hours you know who's coming to the ceremony and who's coming to the toast. Invite ready in five minutes, live count of replies.",
+          "tag": "For graduations",
+          "heroTitlePart1": "Ceremony at 11.",
+          "heroTitlePart2": "List closed",
+          "heroTitleMark": "by lunch",
+          "heroSub": "The date lands out of nowhere and the invite is needed right away. One WhatsApp link, and within hours you know who's at the ceremony and who's at the toast.",
+          "heroPrimary": "Create your invite — free",
+          "heroSecondary": "See a sample invite",
+          "inviteDate": "17 · July · 2026",
+          "nameLine1": "Sara",
+          "nameLine2": "is graduating",
+          "inviteItalic": "",
+          "inviteSub": "Great hall + toast in the courtyard",
+          "chipN": "47/52",
+          "chipL": "confirmed in 48 hours",
+          "painsTag": "The problem",
+          "painsTitle": "Sound familiar?",
+          "pains": [
+            {
+              "t": "Everything decided last minute",
+              "d": "The official date comes late. The Ceremly invite is ready in five minutes, edits included."
+            },
+            {
+              "t": "Limited seats in the hall",
+              "d": "The ceremony has a capacity limit: you see in real time how many have confirmed."
+            },
+            {
+              "t": "\"Coming to the toast too?\"",
+              "d": "Two moments, two confirmations in the same form: ceremony and party, counted separately."
+            }
+          ],
+          "featsTag": "What Ceremly does",
+          "featsTitle": "Built for this occasion",
+          "feats": [
+            {
+              "i": "sparkle",
+              "t": "Ready in 5 minutes",
+              "d": "Cap & Gown template, photo, date and place. The invite goes out today."
+            },
+            {
+              "i": "whatsapp",
+              "t": "One WhatsApp link",
+              "d": "No formal emails: share the link where you already talk."
+            },
+            {
+              "i": "calendar",
+              "t": "Two stops",
+              "d": "Ceremony and toast as separate moments, each with its own confirmation."
+            },
+            {
+              "i": "chart",
+              "t": "Live count",
+              "d": "Replies come in real time: book the venue with the right numbers."
+            }
+          ],
+          "quoteText": "\"I sent the link at 9 in the morning. By lunch I already knew how many we were.\"",
+          "quoteWho": "Sara M.",
+          "quoteMeta": "Graduation · 52 guests · Bologna",
+          "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
+          "ctaSecondary": "See an example"
+        },
+        "battesimi": {
+          "seoTitle": "Christening invitations and RSVP — Ceremly",
+          "seoDescription": "Family groups, adults and children counted separately, meals and allergies in the form. Exact numbers to hand to the restaurant in one click.",
+          "tag": "For christenings",
+          "heroTitlePart1": "Extended family,",
+          "heroTitlePart2": "exact",
+          "heroTitleMark": "numbers",
+          "heroSub": "Grandparents, cousins, children in tow: the christening is the party of shifting numbers. The restaurant, though, wants them exact.",
+          "heroPrimary": "Create your invite — free",
+          "heroSecondary": "See a sample invite",
+          "inviteDate": "8 · March · 2026",
+          "nameLine1": "Leo's",
+          "nameLine2": "christening",
+          "inviteItalic": "",
+          "inviteSub": "San Martino + family lunch",
+          "chipN": "72/84",
+          "chipL": "guests · 12 children",
+          "painsTag": "The problem",
+          "painsTitle": "Sound familiar?",
+          "pains": [
+            {
+              "t": "Word-of-mouth invites get lost",
+              "d": "\"Auntie will tell them\" is not a strategy. Every family gets its own invite, by name."
+            },
+            {
+              "t": "Children to count",
+              "d": "The restaurant wants adults and children separate. The form counts them apart, automatically."
+            },
+            {
+              "t": "Lunch is booked in advance",
+              "d": "Numbers locked days ahead, export ready to hand to the restaurant."
+            }
+          ],
+          "featsTag": "What Ceremly does",
+          "featsTitle": "Built for this occasion",
+          "feats": [
+            {
+              "i": "home",
+              "t": "Family groups",
+              "d": "One invite per household: one replies, it counts for all."
+            },
+            {
+              "i": "guests",
+              "t": "Adults and children",
+              "d": "Separate counts by age group, kids' menu included."
+            },
+            {
+              "i": "heart",
+              "t": "Menu & allergies",
+              "d": "Gathered in the form, exported for the restaurant."
+            },
+            {
+              "i": "qr",
+              "t": "QR on the keepsake card",
+              "d": "The favour stays on paper: the QR leads to the digital confirmation."
+            }
+          ],
+          "quoteText": "\"The restaurant wanted exact numbers. I exported them in one click.\"",
+          "quoteWho": "Davide P.",
+          "quoteMeta": "Christening · 84 guests · Lecce",
+          "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
+          "ctaSecondary": "See an example"
+        },
+        "compleanni": {
+          "seoTitle": "Birthday invitations and RSVP — Ceremly",
+          "seoDescription": "For the 18th, the 40th, the 70th: one link, no accounts, no polls in the group chat. Real confirmations, automatic reminders, a live count.",
+          "tag": "For birthdays",
+          "heroTitlePart1": "No more polls",
+          "heroTitlePart2": "in the chat.",
+          "heroTitleMark": "One link",
+          "heroSub": "For the birthdays that matter — the 18th, the 40th, the 70th — you need to know who's really coming. No thumbs-up to interpret.",
+          "heroPrimary": "Create your invite — free",
+          "heroSecondary": "See a sample invite",
+          "inviteDate": "21 · November · 2026",
+          "nameLine1": "Marco's",
+          "nameLine2": "40th",
+          "inviteItalic": "",
+          "inviteSub": "Cascina Boscaccio, 8 pm",
+          "chipN": "48/64",
+          "chipL": "confirmed · 9 pending",
+          "painsTag": "The problem",
+          "painsTitle": "Sound familiar?",
+          "pains": [
+            {
+              "t": "The chronic \"maybes\"",
+              "d": "A thumbs-up isn't a confirmation. The form asks yes or no — and a deadline."
+            },
+            {
+              "t": "The venue wants a number",
+              "d": "Deposit and menu lock in advance: the live count tells you when to close."
+            },
+            {
+              "t": "Chasing people in the chat",
+              "d": "Reminders go out on their own. You don't write \"guys, please confirm\" a third time."
+            }
+          ],
+          "featsTag": "What Ceremly does",
+          "featsTitle": "Built for this occasion",
+          "feats": [
+            {
+              "i": "send",
+              "t": "One link, no account",
+              "d": "Open it, reply to it. Even from the class of '86 group chat."
+            },
+            {
+              "i": "bell",
+              "t": "Gentle reminders",
+              "d": "Automatic nudges to latecomers, in just the right tone."
+            },
+            {
+              "i": "guests",
+              "t": "Controlled plus-ones",
+              "d": "You decide who can bring someone, and how many."
+            },
+            {
+              "i": "chart",
+              "t": "Live count",
+              "d": "You always know how many you are. The venue will thank you."
+            }
+          ],
+          "quoteText": "\"No more little polls in the chat. One link and done — and for once I knew who was coming.\"",
+          "quoteWho": "Marco T.",
+          "quoteMeta": "Birthday · 64 guests · Milan",
+          "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
+          "ctaSecondary": "See an example"
+        },
+        "planner": {
+          "seoTitle": "Ceremly for wedding planners — a workspace with your brand",
+          "seoDescription": "Unlimited events in a single panel, invites with the client's brand, custom domains and lists that export themselves. Atelier at 24 euros a month.",
+          "tag": "Atelier · for professionals",
+          "heroTitlePart1": "Twelve events in parallel.",
+          "heroTitlePart2": "",
+          "heroTitleMark": "One single panel",
+          "heroSub": "For wedding planners and professional organisers: a workspace with your brand, unlimited events and lists that export themselves.",
+          "heroPrimary": "Talk to us",
+          "heroSecondary": "See a sample invite",
+          "inviteDate": "Workspace · Studio Fiore",
+          "nameLine1": "Atelier",
+          "nameLine2": "by Elisa R.",
+          "inviteItalic": "",
+          "inviteSub": "12 active events · 4 closing · 1,840 guests",
+          "chipN": "12",
+          "chipL": "active events in the workspace",
+          "painsTag": "The problem",
+          "painsTitle": "Sound familiar?",
+          "pains": [
+            {
+              "t": "Every client wants their own style",
+              "d": "Invites with the client's colours and domain: your workspace, their brand."
+            },
+            {
+              "t": "Weekly reports to clients",
+              "d": "A read-only shareable RSVP overview: the client watches, you work."
+            },
+            {
+              "t": "Lists across ten different sheets",
+              "d": "All events in one panel, uniform exports for catering and venue."
+            }
+          ],
+          "featsTag": "What Ceremly does",
+          "featsTitle": "Built for those who organise a lot",
+          "feats": [
+            {
+              "i": "settings",
+              "t": "Workspace with your logo",
+              "d": "Your brand on the panel, emails and invite pages."
+            },
+            {
+              "i": "send",
+              "t": "Custom domains",
+              "d": "invites.studiofiore.it instead of ceremly.it: as yours as it gets."
+            },
+            {
+              "i": "guests",
+              "t": "Team accounts",
+              "d": "Assistants and collaborators with per-event permissions."
+            },
+            {
+              "i": "copy",
+              "t": "API & integrations",
+              "d": "RSVPs in your systems: CRM, catering, shared sheets."
+            }
+          ],
+          "quoteText": "\"Clients see their own brand. I see every event on one screen.\"",
+          "quoteWho": "Elisa R.",
+          "quoteMeta": "Wedding planner · 31 events in 2026 · Turin",
+          "ctaTitlePart1": "Organising for a living?",
+          "ctaTitleMark": "Let's talk",
+          "ctaSub": "Atelier is 24 euros a month, unlimited events and guests. A 30-minute demo, no commitment.",
+          "ctaPrimary": "Talk to us",
+          "ctaSecondary": "See pricing"
+        }
+      },
+      "guidaRsvp": {
+        "seoTitle": "RSVP guide: how to actually get replies",
+        "seoDescription": "Répondez s'il vous plaît, done right. When to send invitations, how to word the request, and how to handle stragglers so your numbers are solid.",
+        "heroTag": "Guide",
+        "heroTitlePart1": "RSVP,",
+        "heroTitleMark": "done right",
+        "heroSub": "Répondez s'il vous plaît: how to ask guests to confirm — and actually get them to. A ten-minute read.",
+        "tocLabel": "In this guide",
+        "toc": [
+          "What RSVP is (and why it gets ignored)",
+          "When to send and when to close",
+          "How to word the request",
+          "Handling the stragglers"
+        ],
+        "s1Title": "What RSVP is (and why it gets ignored)",
+        "s1p1": "RSVP is the request to confirm your attendance. It sounds trivial, but roughly one guest in three never replies on their own — not out of rudeness, but because the request is vague, has no deadline, or is buried in a 40-person group chat.",
+        "s1p2": "The good news: RSVP isn't an etiquette problem, it's a process problem. And processes can be fixed.",
+        "s2Title": "When to send and when to close",
+        "s2p1": "The golden rule: work backwards from the date your caterer needs final numbers. For a wedding, the typical timeline looks like this:",
+        "timeline": [
+          {
+            "phase": "T–60",
+            "title": "Send the invitations",
+            "desc": "Two months ahead for weddings, two weeks for birthdays and graduations."
+          },
+          {
+            "phase": "T–30",
+            "title": "First reminder",
+            "desc": "A gentle nudge to anyone who hasn't opened or replied yet."
+          },
+          {
+            "phase": "T–14",
+            "title": "Second reminder",
+            "desc": "More direct: the deadline is close, and it's for you, not for them."
+          },
+          {
+            "phase": "T–7",
+            "title": "Close the list",
+            "desc": "Numbers frozen: the export goes out to caterer and venue."
+          }
+        ],
+        "s2p2": "For graduations and birthdays, compress everything: invite two weeks ahead, reminder at one week, close three days out.",
+        "s3Title": "How to word the request",
+        "s3p1": "Three ingredients, always: an explicit deadline (\"by July 1st\"), a single action (one link, not \"let me know\"), and a personal tone (the guest's name does half the work).",
+        "exampleLabel": "An example that works",
+        "exampleText": "\"Hi Marta! We're getting married on September 12th in Cernobbio 💍 Here's the invitation with all the details: ceremly.it/giulia-tommaso — confirm by July 1st so we can give the caterer our numbers. Hugs!\"",
+        "s3p2": "Notice what's missing: apologies, preambles, \"whenever you can\". The kindness is in the tone, not in the vagueness.",
+        "s4Title": "Handling the stragglers",
+        "s4p1": "There will always be some. The trick is not to chase them by hand: set up automatic reminders and let \"the system\" do the insisting — a nudge from a platform weighs less than three messages from you.",
+        "s4p2": "For the truly stubborn, the final week is worth a phone call. By then it'll be five people, not fifty: which is exactly the point.",
+        "ctaTitlePart1": "Put it into practice with",
+        "ctaTitleMark": "Ceremly",
+        "ctaSub": "Deadlines, reminders and exports are already in the product. You just write the invitation."
+      },
+      "centroAiuto": {
+        "seoTitle": "Help center",
+        "seoDescription": "FAQs, guides and quick answers on invitations, guest lists, RSVP, payments and privacy. Can't find the answer? Write to us.",
+        "heroTag": "Help center",
+        "heroTitlePart1": "How can we",
+        "heroTitleMark": "help",
+        "searchPlaceholder": "Search: \"import guests\", \"QR\", \"invoice\"…",
+        "cats": [
+          {
+            "t": "Getting started"
+          },
+          {
+            "t": "Invitations & templates"
+          },
+          {
+            "t": "Guest list"
+          },
+          {
+            "t": "RSVP & forms"
+          },
+          {
+            "t": "Payments & invoices"
+          },
+          {
+            "t": "Privacy & data"
+          }
+        ],
+        "articlesLabel": "articles",
+        "faqTag": "Most read",
+        "faqTitle": "Frequently asked questions",
+        "popular": [
+          "How do I import guests from Excel?",
+          "Can I change the date or venue after sending the invitations?",
+          "What's the difference between a single link and personal invitations?",
+          "How does the QR code for paper invitations work?",
+          "A guest says they didn't get the email: what should I check?"
+        ],
+        "contactTitle": "Didn't find the answer?",
+        "contactSub": "Write to us: we reply within one business day, a real person.",
+        "contactBtn": "Write to us"
+      },
+      "stato": {
+        "seoTitle": "Service status",
+        "seoDescription": "Real-time status of Ceremly: organizer app, invitation pages, RSVP, email and WhatsApp delivery, API. Uptime and incident history.",
+        "heroTag": "Service status",
+        "allOperational": "All systems operational",
+        "uptimeLine": "uptime last 90 days · 99.97% · updated 2 min ago",
+        "compsTag": "Components",
+        "compsTitle": "Last 60 days",
+        "comps": [
+          {
+            "t": "Organizer app"
+          },
+          {
+            "t": "Invitation & RSVP pages"
+          },
+          {
+            "t": "Email delivery"
+          },
+          {
+            "t": "WhatsApp delivery"
+          },
+          {
+            "t": "Partner API"
+          }
+        ],
+        "statusOperational": "Operational",
+        "legendOperational": "Operational",
+        "legendDegraded": "Degraded performance",
+        "incidentsTag": "History",
+        "incidentsTitle": "Past incidents",
+        "incidents": [
+          {
+            "t": "Delays in email delivery",
+            "desc": "Send queues slowed down by the SMTP provider. No email lost: all delivered within 42 minutes."
+          },
+          {
+            "t": "Dashboard slowness",
+            "desc": "High load times on the Insights page due to an unoptimized query. Resolved with a rollback."
+          }
+        ],
+        "statusResolved": "Resolved"
+      },
+      "changelog": {
+        "seoTitle": "Changelog",
+        "seoDescription": "Everything that changes in Ceremly, no fluff. New features, improvements and fixes, release after release.",
+        "heroTag": "Changelog",
+        "heroTitlePart1": "What's",
+        "heroTitleMark": "new",
+        "heroSub": "We ship every few weeks. Here's everything that changed, no spin.",
+        "releases": [
+          {
+            "t": "Reminders that work for you",
+            "items": [
+              {
+                "tag": "New",
+                "text": "Schedulable automatic reminders: pick the cadence, tone and send time."
+              },
+              {
+                "tag": "New",
+                "text": "Preview the nudge before sending, with the guest's name."
+              },
+              {
+                "tag": "Improved",
+                "text": "Excel import now spots and merges duplicates with similar names."
+              }
+            ]
+          },
+          {
+            "t": "Paper meets digital",
+            "items": [
+              {
+                "tag": "New",
+                "text": "QR codes for paper invitations: every family gets their own, with a pre-filled reply."
+              },
+              {
+                "tag": "New",
+                "text": "Two template families for christenings: Watercolor and Linen."
+              },
+              {
+                "tag": "Fixed",
+                "text": "The plus-one count wasn't including children in family groups."
+              }
+            ]
+          },
+          {
+            "t": "Personal invitations on WhatsApp",
+            "items": [
+              {
+                "tag": "New",
+                "text": "Named invitations sent via WhatsApp and email, with a unique link per guest."
+              },
+              {
+                "tag": "New",
+                "text": "Caterer export in CSV and PDF: menu, allergies and notes in separate columns."
+              },
+              {
+                "tag": "Improved",
+                "text": "Invitation pages load in half the time on mobile networks."
+              }
+            ]
+          },
+          {
+            "t": "Public beta",
+            "items": [
+              {
+                "tag": "New",
+                "text": "Ceremly opens to Italian organizers: digital invitations, guest list and RSVP."
+              },
+              {
+                "tag": "New",
+                "text": "Free plan with 30 guests and one active event, forever."
+              }
+            ]
+          }
+        ],
+        "newsletterTitle": "Get the changelog by email",
+        "newsletterSub": "One email a month, only when there's something new. No marketing.",
+        "newsletterBtn": "Notify me"
+      },
+      "api": {
+        "seoTitle": "Partner API",
+        "seoDescription": "A REST API for planners, caterers and venues: read confirmations, menus and numbers, and get every RSVP in real time with webhooks.",
+        "heroTag": "Atelier · API",
+        "heroTitlePart1": "RSVPs, right inside",
+        "heroTitlePart2": "your",
+        "heroTitleMark": "own systems",
+        "heroSub": "For planners, caterers and venues who work with their own tools: a REST API to read confirmations, menus and numbers — and webhooks to know right away.",
+        "bullets": [
+          "REST API with per-workspace keys",
+          "Webhook on every new reply",
+          "Sandbox environment with test data",
+          "Generous rate limits, docs in Italian"
+        ],
+        "heroBtnPrimary": "Request access",
+        "heroBtnSecondary": "Documentation",
+        "endpointsTag": "Endpoints",
+        "endpointsTitle": "Small by design",
+        "endpointsSub": "Five endpoints cover 95% of use cases. We add the rest when a partner actually asks for it.",
+        "endpoints": [
+          {
+            "d": "All events in the workspace"
+          },
+          {
+            "d": "Replies for an event, with menu and notes"
+          },
+          {
+            "d": "Add or update guests in bulk"
+          },
+          {
+            "d": "Receive every RSVP in real time"
+          },
+          {
+            "d": "Caterer export in CSV, already formatted"
+          }
+        ],
+        "endpointsNote": "Available on the Atelier plan · keys generated by the workspace, revocable at any time.",
+        "ctaTitlePart1": "Shall we integrate",
+        "ctaTitleMark": "together",
+        "ctaSub": "Tell us your use case: we'll open sandbox access the same day.",
+        "ctaSecondary": "See the Atelier plan"
+      },
+      "cookie": {
+        "seoTitle": "Cookie policy — Ceremly",
+        "seoDescription": "We use four cookies, all our own. No advertising tracking, no third parties.",
+        "legalTag": "Legal",
+        "title": "Cookie policy",
+        "updatedLabel": "Last updated",
+        "updated": "3 May 2026",
+        "company": "Ceremly Srl, Milan",
+        "intro": "In short: we use four cookies, all our own. No advertising tracking, no third parties, so no endless banners.",
+        "indexLabel": "Index",
+        "contactPrefix": "Questions?",
+        "tableHead": {
+          "name": "Name",
+          "type": "Type",
+          "purpose": "Purpose",
+          "duration": "Duration"
+        },
+        "rows": [
+          {
+            "name": "ceremly_session",
+            "type": "Essential",
+            "purpose": "Keeps the organizer signed in",
+            "duration": "Session"
+          },
+          {
+            "name": "ceremly_rsvp",
+            "type": "Essential",
+            "purpose": "Remembers the guest's reply on their device",
+            "duration": "30 days"
+          },
+          {
+            "name": "ceremly_prefs",
+            "type": "Preference",
+            "purpose": "Language and display settings",
+            "duration": "12 months"
+          },
+          {
+            "name": "ceremly_stats",
+            "type": "Statistics",
+            "purpose": "Anonymous, aggregated counts (no third parties)",
+            "duration": "6 months"
+          }
+        ],
+        "sections": [
+          {
+            "t": "What they are and how we use them",
+            "ps": [
+              "Cookies are small files saved by your browser. Ceremly uses them only for essential functions (keeping you signed in, remembering a guest's reply) and for anonymous statistics computed on our own servers — we use no third-party analytics tools or advertising pixels."
+            ]
+          },
+          {
+            "t": "The cookies we use",
+            "ps": []
+          },
+          {
+            "t": "How to manage them",
+            "ps": [
+              "Essential cookies require no consent and the service won't work without them. Preference and statistics cookies can be declined from the banner on first visit, or disabled anytime from your browser settings.",
+              "If you block all cookies in your browser, invitation pages remain viewable but the reply won't be remembered on the device."
+            ]
+          },
+          {
+            "t": "Updates and contact",
+            "ps": [
+              "If we introduce new cookies we'll update this page and, where required, the consent banner."
+            ]
+          }
+        ]
       }
     },
     "signup": {
