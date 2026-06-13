@@ -466,4 +466,4 @@ function LandingFooter() {
   );
 }
 
-Object.assign(window, { LandingPage });
+Object.assign(window, { LandingPage, LandingNav, LandingFooter, LandingPricing, Mark });

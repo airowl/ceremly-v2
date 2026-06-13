@@ -24,6 +24,11 @@
   <script type="text/babel" src="screens/app-shell.jsx"></script>
   <script type="text/babel" src="screens/brand.jsx"></script>
   <script type="text/babel" src="screens/landing.jsx"></script>
+  <script type="text/babel" src="screens/site-shared.jsx"></script>
+  <script type="text/babel" src="screens/site-product.jsx"></script>
+  <script type="text/babel" src="screens/site-usecases.jsx"></script>
+  <script type="text/babel" src="screens/site-resources.jsx"></script>
+  <script type="text/babel" src="screens/site-company.jsx"></script>
   <script type="text/babel" src="screens/auth.jsx"></script>
   <script type="text/babel" src="screens/events-home.jsx"></script>
   <script type="text/babel" src="screens/onboarding.jsx"></script>
@@ -68,6 +73,38 @@
           <DCArtboard id="landing"   label="L1 · Landing page"    width={1400} height={5300}><LandingPage /></DCArtboard>
           <DCArtboard id="login"     label="L2 · Accedi"          width={DW} height={DH}><LoginScreen /></DCArtboard>
           <DCArtboard id="register"  label="L3 · Registrati"      width={DW} height={DH}><RegisterScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="site-prodotto" title="Sito · Prodotto" subtitle="Pagine footer — colonna Prodotto">
+          <DCArtboard id="come-funziona" label="S1 · Come funziona"     width={DW} height={3014}><ComeFunzionaPage /></DCArtboard>
+          <DCArtboard id="funzionalita"  label="S2 · Funzionalità"      width={DW} height={2126}><FunzionalitaPage /></DCArtboard>
+          <DCArtboard id="modelli"       label="S3 · Modelli di invito" width={DW} height={2311}><ModelliPage /></DCArtboard>
+          <DCArtboard id="prezzi"        label="S4 · Prezzi"            width={DW} height={3080}><PrezziPage /></DCArtboard>
+          <DCArtboard id="esempi"        label="S5 · Esempi reali"      width={DW} height={1660}><EsempiPage /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="site-perchi" title="Sito · Per chi" subtitle="Pagine footer — un template, cinque occasioni">
+          <DCArtboard id="uc-matrimoni"  label="S6 · Matrimoni"       width={DW} height={2541}><MatrimoniPage /></DCArtboard>
+          <DCArtboard id="uc-lauree"     label="S7 · Lauree"          width={DW} height={2521}><LaureePage /></DCArtboard>
+          <DCArtboard id="uc-battesimi"  label="S8 · Battesimi"       width={DW} height={2521}><BattesimiPage /></DCArtboard>
+          <DCArtboard id="uc-compleanni" label="S9 · Compleanni"      width={DW} height={2521}><CompleanniPage /></DCArtboard>
+          <DCArtboard id="uc-planner"    label="S10 · Wedding planner" width={DW} height={2573}><PlannerPage /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="site-risorse" title="Sito · Risorse" subtitle="Pagine footer — guida, supporto, stato, changelog, API">
+          <DCArtboard id="guida-rsvp"  label="S11 · Guida RSVP"      width={DW} height={2607}><GuidaRSVPPage /></DCArtboard>
+          <DCArtboard id="centro-aiuto" label="S12 · Centro aiuto"   width={DW} height={1656}><CentroAiutoPage /></DCArtboard>
+          <DCArtboard id="stato"        label="S13 · Stato servizio" width={DW} height={1880}><StatoServizioPage /></DCArtboard>
+          <DCArtboard id="changelog"    label="S14 · Changelog"      width={DW} height={1832}><ChangelogPage /></DCArtboard>
+          <DCArtboard id="api-partner"  label="S15 · API per partner" width={DW} height={2052}><APIPartnerPage /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="site-ceremly" title="Sito · Ceremly" subtitle="Pagine footer — azienda e legale">
+          <DCArtboard id="chi-siamo" label="S16 · Chi siamo"      width={DW} height={2388}><ChiSiamoPage /></DCArtboard>
+          <DCArtboard id="contatti"  label="S17 · Contatti"       width={DW} height={1471}><ContattiPage /></DCArtboard>
+          <DCArtboard id="termini"   label="S18 · Termini"        width={DW} height={2453}><TerminiPage /></DCArtboard>
+          <DCArtboard id="privacy"   label="S19 · Privacy & GDPR" width={DW} height={2311}><PrivacyPage /></DCArtboard>
+          <DCArtboard id="cookie"    label="S20 · Cookie"         width={DW} height={1867}><CookiePage /></DCArtboard>
         </DCSection>
 
         <DCSection id="organizer" title="Lato organizzatore" subtitle="Desktop · 1400×900 · piano Free">
