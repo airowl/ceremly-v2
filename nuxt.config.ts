@@ -87,6 +87,10 @@ export default defineNuxtConfig({
         // Landing page con SSR/SSG
         "/": { prerender: true },
         "/en": { prerender: true }, // English landing page
+
+        // Sito pubblico (Prodotto · Per chi · Risorse · Ceremly) — SSR + prerender per SEO
+        "/chi-siamo": { prerender: true },
+        "/en/chi-siamo": { prerender: true },
         // /maintenance: SSR (non prerender) per poter rispondere 503 + Retry-After
         // sul documento durante un downtime pianificato.
         "/maintenance": { ssr: true, prerender: false },

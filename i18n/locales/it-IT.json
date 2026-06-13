@@ -1555,6 +1555,48 @@
     }
   },
   "ceremly": {
+    "site": {
+      "shared": {
+        "ctaPrimary": "Inizia gratis",
+        "ctaDefaultTitlePart1": "Il tuo prossimo evento",
+        "ctaDefaultTitleMark": "parte da qui"
+      },
+      "chiSiamo": {
+        "seoTitle": "Chi siamo — Ceremly",
+        "seoDescription": "Ceremly nasce nel 2026 da tre persone e un matrimonio organizzato a colpi di Excel. Inviti digitali e RSVP pensati per gli eventi italiani.",
+        "heroTag": "Chi siamo",
+        "heroTitlePart1": "Ci piacciono le feste.",
+        "heroTitlePart2": "Non i",
+        "heroTitleMark": "fogli di calcolo",
+        "heroSub": "Ceremly nasce nel 2026 da tre persone e un matrimonio organizzato a colpi di Excel, messaggi vocali e telefonate alla suocera.",
+        "intro1": "L'idea è arrivata la sera in cui Andrea, a tre giorni dal suo matrimonio, ha chiamato il catering con tre numeri diversi su tre fogli diversi. Gli inviti erano stati bellissimi. La lista, un incubo. Ci siamo chiesti perché nel 2026 si potesse prenotare un volo in due minuti, ma non sapere quanti zii vengono a pranzo.",
+        "intro2": "Così abbiamo costruito Ceremly: inviti digitali che non sfigurano accanto a quelli di carta, e un form di risposta che chiunque sa usare — senza app, senza account, senza spiegazioni al telefono. Oggi siamo in beta, piccoli per scelta, e cresciamo un evento alla volta.",
+        "nums": [
+          { "n": "2026", "l": "fondazione, Milano" },
+          { "n": "142", "l": "eventi nella beta" },
+          { "n": "11.804", "l": "RSVP raccolti" },
+          { "n": "3", "l": "persone, per ora" }
+        ],
+        "principiTag": "Principi",
+        "principiTitle": "Tre cose in cui crediamo",
+        "principi": [
+          { "t": "Un solo problema", "d": "Niente liste nozze, niente album, niente siti vetrina. Ceremly risponde a una domanda — chi viene? — e basta. Quello che non facciamo è una scelta, non una mancanza." },
+          { "t": "I dati sono degli sposi", "d": "Le liste ospiti non si vendono, non si profilano, non alimentano pubblicità. Server in UE, export completo in ogni momento, cancellazione vera quando la chiedi." },
+          { "t": "Fatto in Italia", "d": "Eventi italiani, galateo italiano, fattura elettronica italiana. Costruiamo per come si festeggia qui: famiglie larghe, conferme tardive e pranzi lunghi." }
+        ],
+        "teamTag": "Il team",
+        "teamTitle": "Chi c'è dietro",
+        "team": [
+          { "ini": "AC", "n": "Andrea C.", "r": "Prodotto", "d": "Ha contato a mano i 187 invitati del suo matrimonio. Mai più." },
+          { "ini": "LF", "n": "Lucia F.", "r": "Design", "d": "Crede che un invito brutto rovini la festa prima che inizi." },
+          { "ini": "PV", "n": "Pietro V.", "r": "Ingegneria", "d": "Vuole che il form RSVP si apra anche sul telefono della nonna." }
+        ],
+        "ctaTitlePart1": "Festeggia con noi.",
+        "ctaTitleMark": "Letteralmente",
+        "ctaSub": "Il modo migliore per conoscerci è usare Ceremly per il tuo prossimo evento.",
+        "ctaSecondary": "Scrivici"
+      }
+    },
     "signup": {
       "seoTitle": "Crea il tuo account — Ceremly",
       "seoDescription": "Crea il tuo account Ceremly: inviti digitali e RSVP per matrimoni, lauree, battesimi e compleanni. Fino a 30 ospiti gratis.",

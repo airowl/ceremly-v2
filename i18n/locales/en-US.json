@@ -1555,6 +1555,48 @@
     }
   },
   "ceremly": {
+    "site": {
+      "shared": {
+        "ctaPrimary": "Start for free",
+        "ctaDefaultTitlePart1": "Your next event",
+        "ctaDefaultTitleMark": "starts here"
+      },
+      "chiSiamo": {
+        "seoTitle": "About us — Ceremly",
+        "seoDescription": "Ceremly was born in 2026 from three people and a wedding organized with spreadsheets. Digital invitations and RSVPs built for events.",
+        "heroTag": "About us",
+        "heroTitlePart1": "We love parties.",
+        "heroTitlePart2": "Not",
+        "heroTitleMark": "spreadsheets",
+        "heroSub": "Ceremly was born in 2026 from three people and a wedding organized with spreadsheets, voice notes and calls to the mother-in-law.",
+        "intro1": "The idea came the evening Andrea, three days before his wedding, called the caterer with three different numbers on three different sheets. The invitations had been beautiful. The guest list, a nightmare. We wondered why in 2026 you could book a flight in two minutes, but not know how many uncles were coming to lunch.",
+        "intro2": "So we built Ceremly: digital invitations that hold their own next to paper ones, and a reply form anyone can use — no app, no account, no explaining over the phone. Today we're in beta, small by choice, growing one event at a time.",
+        "nums": [
+          { "n": "2026", "l": "founded, Milan" },
+          { "n": "142", "l": "events in beta" },
+          { "n": "11,804", "l": "RSVPs collected" },
+          { "n": "3", "l": "people, for now" }
+        ],
+        "principiTag": "Principles",
+        "principiTitle": "Three things we believe in",
+        "principi": [
+          { "t": "One problem only", "d": "No gift registries, no albums, no showcase sites. Ceremly answers one question — who's coming? — and that's it. What we don't do is a choice, not a gap." },
+          { "t": "The data belongs to the hosts", "d": "Guest lists are never sold, profiled, or fed into ads. EU servers, full export anytime, real deletion when you ask for it." },
+          { "t": "Made in Italy", "d": "Italian events, Italian etiquette, Italian e-invoicing. We build for how people celebrate here: big families, late confirmations and long lunches." }
+        ],
+        "teamTag": "The team",
+        "teamTitle": "Who's behind it",
+        "team": [
+          { "ini": "AC", "n": "Andrea C.", "r": "Product", "d": "Counted his 187 wedding guests by hand. Never again." },
+          { "ini": "LF", "n": "Lucia F.", "r": "Design", "d": "Believes an ugly invitation ruins the party before it starts." },
+          { "ini": "PV", "n": "Pietro V.", "r": "Engineering", "d": "Wants the RSVP form to open even on grandma's phone." }
+        ],
+        "ctaTitlePart1": "Celebrate with us.",
+        "ctaTitleMark": "Literally",
+        "ctaSub": "The best way to get to know us is to use Ceremly for your next event.",
+        "ctaSecondary": "Write to us"
+      }
+    },
     "signup": {
       "seoTitle": "Create your account — Ceremly",
       "seoDescription": "Create your Ceremly account: digital invitations and RSVPs for weddings, graduations, baptisms and birthdays. Up to 30 guests free.",

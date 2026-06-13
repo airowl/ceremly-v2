@@ -7,14 +7,15 @@
 // sezione CTA); in waitinglist mode i CTA puntano al form lista d'attesa
 // (#lista-attesa) che chiama /api/waiting-list/subscribe.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
+import CerSitePricing from '~/components/ceremly/CerSitePricing.vue'
+import CerSiteFooter from '~/components/ceremly/CerSiteFooter.vue'
 
 definePageMeta({
     auth: false,
     layout: false,
 })
 
-const NuxtLink = resolveComponent('NuxtLink')
-const { t, locale, setLocale } = useI18n()
+const { t } = useI18n()
 
 const { isActiveMode } = useSiteMode()
 const runtimeConfig = useRuntimeConfig()
@@ -152,112 +153,6 @@ const feats: Feat[] = [
     { icon: 'chart', t: t('ceremly.home.feats.realtime.title'), d: t('ceremly.home.feats.realtime.desc') },
 ]
 
-interface Tier {
-    n: string
-    p: string
-    sub: string
-    desc: string
-    feats: string[]
-    cta: string
-    kind?: 'ghost'
-    highlight?: boolean
-    tag?: string
-}
-const tiers: Tier[] = [
-    {
-        n: t('ceremly.home.pricing.free.name'),
-        p: '0',
-        sub: t('ceremly.home.pricing.free.sub'),
-        desc: t('ceremly.home.pricing.free.desc'),
-        feats: [
-            t('ceremly.home.pricing.free.feat1'),
-            t('ceremly.home.pricing.free.feat2'),
-            t('ceremly.home.pricing.free.feat3'),
-            t('ceremly.home.pricing.free.feat4'),
-            t('ceremly.home.pricing.free.feat5'),
-        ],
-        cta: t('ceremly.home.pricing.free.cta'),
-        kind: 'ghost',
-    },
-    {
-        n: t('ceremly.home.pricing.celebration.name'),
-        p: '39',
-        sub: t('ceremly.home.pricing.celebration.sub'),
-        desc: t('ceremly.home.pricing.celebration.desc'),
-        feats: [
-            t('ceremly.home.pricing.celebration.feat1'),
-            t('ceremly.home.pricing.celebration.feat2'),
-            t('ceremly.home.pricing.celebration.feat3'),
-            t('ceremly.home.pricing.celebration.feat4'),
-            t('ceremly.home.pricing.celebration.feat5'),
-            t('ceremly.home.pricing.celebration.feat6'),
-        ],
-        cta: t('ceremly.home.pricing.celebration.cta'),
-        highlight: true,
-        tag: t('ceremly.home.pricing.celebration.tag'),
-    },
-    {
-        n: t('ceremly.home.pricing.atelier.name'),
-        p: '24',
-        sub: t('ceremly.home.pricing.atelier.sub'),
-        desc: t('ceremly.home.pricing.atelier.desc'),
-        feats: [
-            t('ceremly.home.pricing.atelier.feat1'),
-            t('ceremly.home.pricing.atelier.feat2'),
-            t('ceremly.home.pricing.atelier.feat3'),
-            t('ceremly.home.pricing.atelier.feat4'),
-            t('ceremly.home.pricing.atelier.feat5'),
-            t('ceremly.home.pricing.atelier.feat6'),
-        ],
-        cta: t('ceremly.home.pricing.atelier.cta'),
-        kind: 'ghost',
-    },
-]
-
-interface FooterItem { label: string, to?: string, anchor?: string }
-interface FooterCol { t: string, items: FooterItem[] }
-const footerCols: FooterCol[] = [
-    {
-        t: t('ceremly.home.footer.cols.product.title'),
-        items: [
-            { label: t('ceremly.home.nav.howItWorks'), anchor: 'come-funziona' },
-            { label: t('ceremly.home.nav.features'), anchor: 'funzionalita' },
-            { label: t('ceremly.home.footer.cols.product.inviteTemplates') },
-            { label: t('ceremly.home.nav.pricing'), anchor: 'prezzi' },
-            { label: t('ceremly.home.footer.cols.product.realExamples'), anchor: 'esempi' },
-        ],
-    },
-    {
-        t: t('ceremly.home.footer.cols.forWho.title'),
-        items: [
-            { label: t('ceremly.home.footer.cols.forWho.weddings') },
-            { label: t('ceremly.home.footer.cols.forWho.graduations') },
-            { label: t('ceremly.home.footer.cols.forWho.baptisms') },
-            { label: t('ceremly.home.footer.cols.forWho.birthdays') },
-            { label: t('ceremly.home.footer.cols.forWho.weddingPlanners') },
-        ],
-    },
-    {
-        t: t('ceremly.home.footer.cols.resources.title'),
-        items: [
-            { label: t('ceremly.home.footer.cols.resources.rsvpGuide'), to: '/blogs' },
-            { label: t('ceremly.home.footer.cols.resources.helpCenter') },
-            { label: t('ceremly.home.footer.cols.resources.serviceStatus') },
-            { label: t('ceremly.home.footer.cols.resources.changelog') },
-            { label: t('ceremly.home.footer.cols.resources.apiPartners') },
-        ],
-    },
-    {
-        t: 'Ceremly',
-        items: [
-            { label: t('ceremly.home.footer.cols.company.about') },
-            { label: t('ceremly.home.footer.cols.company.contact'), to: '/contactUs' },
-            { label: t('ceremly.home.footer.cols.company.terms'), to: '/legal/tos' },
-            { label: t('ceremly.home.footer.cols.company.privacy'), to: '/legal/privacy' },
-            { label: t('ceremly.home.footer.cols.company.cookies') },
-        ],
-    },
-]
 </script>
 
 <template>
@@ -484,74 +379,7 @@ const footerCols: FooterCol[] = [
         <!-- ───────────────────────────────  PRICING  -->
         <section id="prezzi" class="l-target">
             <div class="l-wrap l-pricing reveal reveal-up">
-                <div style="text-align: center; margin-bottom: 52px;">
-                    <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent; display: inline-flex;">{{ $t('ceremly.home.nav.pricing') }}</span>
-                    <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 12px; letter-spacing: -0.035em;">
-                        <span style="color: var(--purple);">{{ $t('ceremly.home.pricing.titleMark') }}</span>, {{ $t('ceremly.home.pricing.titlePart1') }}<br>{{ $t('ceremly.home.pricing.titlePart2') }}
-                    </h2>
-                    <p style="font-size: 16px; color: var(--ink-700); max-width: 540px; margin: 0 auto; line-height: 1.6;">
-                        {{ $t('ceremly.home.pricing.subtitle') }}
-                    </p>
-                </div>
-
-                <div class="l-price-grid">
-                    <div
-                        v-for="tier in tiers"
-                        :key="tier.n"
-                        class="l-tier"
-                        :style="{
-                            background: tier.highlight ? 'var(--ink)' : 'var(--bone-50)',
-                            color: tier.highlight ? '#fff' : 'var(--ink)',
-                            boxShadow: tier.highlight ? '8px 8px 0 var(--ink)' : 'none',
-                            marginTop: tier.highlight ? '-8px' : '8px',
-                        }"
-                    >
-                        <div v-if="tier.tag" style="position: absolute; top: -14px; left: 28px; background: var(--orange); color: var(--ink); font-size: 12px; padding: 4px 12px; border-radius: 999px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border: 2px solid var(--ink);">{{ tier.tag }}</div>
-                        <div class="serif" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">{{ tier.n }}</div>
-                        <div style="margin-top: 14px; display: flex; align-items: baseline; gap: 6px;">
-                            <span class="serif" style="font-size: 66px; font-weight: 800; line-height: 1; letter-spacing: -0.03em;">€{{ tier.p }}</span>
-                            <span :style="{ fontSize: '13px', color: tier.highlight ? 'var(--blue-soft)' : 'var(--ink-500)' }">{{ tier.sub }}</span>
-                        </div>
-                        <div :style="{ fontSize: '13px', marginTop: '12px', lineHeight: 1.55, color: tier.highlight ? 'rgba(255,255,255,0.85)' : 'var(--ink-700)', minHeight: '58px' }">
-                            {{ tier.desc }}
-                        </div>
-                        <div :style="{ height: '1px', background: tier.highlight ? 'rgba(255,255,255,0.25)' : 'var(--line)', margin: '20px 0' }" />
-                        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 11px;">
-                            <li
-                                v-for="f in tier.feats"
-                                :key="f"
-                                class="row"
-                                :style="{ gap: '10px', fontSize: '14px', color: tier.highlight ? 'rgba(255,255,255,0.92)' : 'var(--ink-700)' }"
-                            >
-                                <span :style="{ color: tier.highlight ? 'var(--blue)' : 'var(--purple)' }"><CerIcon name="check" :s="15" /></span> {{ f }}
-                            </li>
-                        </ul>
-                        <component
-                            :is="isActiveMode ? NuxtLink : 'a'"
-                            v-bind="isActiveMode ? { to: tier.kind === 'ghost' && tier.n === $t('ceremly.home.pricing.atelier.name') ? '/contactUs' : '/signup' } : { href: '#lista-attesa' }"
-                            class="cer-btn"
-                            :class="{ ghost: tier.kind === 'ghost' }"
-                            :style="{
-                                width: '100%',
-                                justifyContent: 'center',
-                                marginTop: '28px',
-                                padding: '13px 16px',
-                                background: tier.highlight ? 'var(--orange)' : undefined,
-                                color: tier.highlight ? 'var(--ink)' : undefined,
-                                borderColor: 'var(--ink)',
-                            }"
-                            @click="onSignupCta"
-                        >
-                            {{ isActiveMode ? tier.cta : $t('ceremly.home.waitingList.submit') }} <CerIcon name="chevR" :s="13" />
-                        </component>
-                    </div>
-                </div>
-
-                <div class="row" style="justify-content: center; gap: 20px; margin-top: 36px; font-size: 13px; color: var(--ink-500); flex-wrap: wrap;">
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust1') }}</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust2') }}</span>
-                    <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.pricing.trust3') }}</span>
-                </div>
+                <CerSitePricing />
             </div>
         </section>
 
@@ -599,55 +427,7 @@ const footerCols: FooterCol[] = [
         </section>
 
         <!-- ───────────────────────────────  FOOTER  -->
-        <footer style="background: var(--bone);">
-            <div class="l-wrap l-footer">
-                <div class="l-footer-grid">
-                    <div>
-                        <div class="row" style="gap: 7px;">
-                            <span class="serif" style="font-size: 32px; font-weight: 800; letter-spacing: -0.03em;">Ceremly</span>
-                            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--orange); display: inline-block;" />
-                        </div>
-                        <p style="font-size: 14px; color: var(--ink-500); line-height: 1.6; margin-top: 12px; max-width: 280px;">
-                            {{ $t('ceremly.home.footer.tagline') }}
-                        </p>
-                        <div class="mono" style="font-size: 12px; color: var(--ink-400); margin-top: 18px;">
-                            {{ $t('ceremly.home.footer.copyright') }}
-                        </div>
-                    </div>
-                    <div v-for="c in footerCols" :key="c.t" class="col" style="gap: 10px;">
-                        <div class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-400);">{{ c.t }}</div>
-                        <template v-for="it in c.items" :key="it.label">
-                            <NuxtLink v-if="it.to" :to="it.to" class="l-footer-link">{{ it.label }}</NuxtLink>
-                            <a v-else-if="it.anchor" :href="`#${it.anchor}`" class="l-footer-link" @click.prevent="scrollToId(it.anchor)">{{ it.label }}</a>
-                            <span v-else style="font-size: 14px; color: var(--ink-700);">{{ it.label }}</span>
-                        </template>
-                    </div>
-                </div>
-                <div style="height: 1px; background: var(--line); margin: 40px 0 16px;" />
-                <div class="row l-footer-bottom" style="justify-content: space-between; font-size: 13px; color: var(--ink-500);">
-                    <span>{{ $t('ceremly.home.footer.legal') }}</span>
-                    <span class="row" style="gap: 14px;" :aria-label="$t('common.language')">
-                        <span
-                            role="button"
-                            tabindex="0"
-                            style="cursor: pointer;"
-                            :style="{ fontWeight: locale.startsWith('it') ? 700 : 400, color: locale.startsWith('it') ? 'var(--ink)' : 'var(--ink-400)' }"
-                            @click="setLocale('it')"
-                            @keydown.enter="setLocale('it')"
-                        >IT</span>
-                        <span style="color: var(--ink-300);">·</span>
-                        <span
-                            role="button"
-                            tabindex="0"
-                            style="cursor: pointer;"
-                            :style="{ fontWeight: locale.startsWith('en') ? 700 : 400, color: locale.startsWith('en') ? 'var(--ink)' : 'var(--ink-400)' }"
-                            @click="setLocale('en')"
-                            @keydown.enter="setLocale('en')"
-                        >EN</span>
-                    </span>
-                </div>
-            </div>
-        </footer>
+        <CerSiteFooter />
     </div>
 </template>
 
