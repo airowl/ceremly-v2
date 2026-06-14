@@ -2766,7 +2766,9 @@
         "howItWorks": "How it works",
         "features": "Features",
         "pricing": "Pricing",
-        "examples": "Examples"
+        "examples": "Examples",
+        "menuOpen": "Open menu",
+        "menuClose": "Close menu"
       },
       "hero": {
         "badge": "v0.1 · open to Italian organizers",

@@ -2766,7 +2766,9 @@
         "howItWorks": "Come funziona",
         "features": "Funzionalità",
         "pricing": "Prezzi",
-        "examples": "Esempi"
+        "examples": "Esempi",
+        "menuOpen": "Apri menu",
+        "menuClose": "Chiudi menu"
       },
       "hero": {
         "badge": "v0.1 · aperto agli organizzatori italiani",
