@@ -1,0 +1,3620 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ceremly API",
+    "version": "1.0.0",
+    "description": "API backend (Nuxt/Nitro). Auth di sessione via cookie Better Auth; gli endpoint admin usano l'header X-Admin-API-Key. Tutte le risorse tenant sono org-scoped. Escludono route interne cron/jobs/auth."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Server attivo"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Contact",
+      "description": "Form di contatto pubblico."
+    },
+    {
+      "name": "Waiting List",
+      "description": "Iscrizioni alla waiting list."
+    },
+    {
+      "name": "Organizations",
+      "description": "Gestione organizzazioni (tenant) e membri."
+    },
+    {
+      "name": "Projects",
+      "description": "Entità progetto org-scoped (pattern di esempio)."
+    },
+    {
+      "name": "Events",
+      "description": "Gestione eventi: creazione, invio inviti, reminder, statistiche."
+    },
+    {
+      "name": "Guests",
+      "description": "Invitati di un evento: CRUD, import bulk, QR code."
+    },
+    {
+      "name": "File",
+      "description": "Upload file (diretto e presigned) su R2."
+    },
+    {
+      "name": "Limits",
+      "description": "Limiti di piano per organizzazione."
+    },
+    {
+      "name": "User",
+      "description": "Profilo, account ed export dati GDPR."
+    },
+    {
+      "name": "Public",
+      "description": "Endpoint pubblici per invitati (invito, RSVP, tracking)."
+    },
+    {
+      "name": "Admin",
+      "description": "Operazioni amministrative (header X-Admin-API-Key)."
+    }
+  ],
+  "paths": {
+    "/api/contact": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "summary": "Invia un messaggio dal form di contatto",
+        "operationId": "post_api_contact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "it",
+                      "en"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "subject",
+                  "message"
+                ]
+              }
+            }
+          }
+        },
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/waiting-list/subscribe": {
+      "post": {
+        "tags": [
+          "Waiting List"
+        ],
+        "summary": "Iscrizione alla waiting list",
+        "operationId": "post_api_waiting-list_subscribe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "language": {
+                    "default": "it",
+                    "type": "string",
+                    "enum": [
+                      "it",
+                      "en"
+                    ]
+                  },
+                  "website": {
+                    "type": "string"
+                  },
+                  "_t": {
+                    "type": "number"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "utmSource": {
+                    "type": "string"
+                  },
+                  "utmMedium": {
+                    "type": "string"
+                  },
+                  "utmCampaign": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/organizations": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Lista organizzazioni dell'utente",
+        "operationId": "get_api_organizations",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Crea organizzazione",
+        "operationId": "post_api_organizations",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 50,
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "logo": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/organizations/{id}": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Dettaglio organizzazione",
+        "operationId": "get_api_organizations__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Aggiorna organizzazione",
+        "operationId": "put_api_organizations__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 50,
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "logo": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Elimina organizzazione",
+        "operationId": "delete_api_organizations__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/organizations/{id}/members": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Lista membri dell'organizzazione",
+        "operationId": "get_api_organizations__id__members",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Lista progetti (org-scoped)",
+        "operationId": "get_api_projects",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Crea progetto",
+        "operationId": "post_api_projects",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "default": "active",
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "archived"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Dettaglio progetto",
+        "operationId": "get_api_projects__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Aggiorna progetto",
+        "operationId": "put_api_projects__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "archived"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Elimina progetto",
+        "operationId": "delete_api_projects__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Lista eventi",
+        "operationId": "get_api_events",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Crea evento",
+        "operationId": "post_api_events",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "matrimonio",
+                      "laurea",
+                      "compleanno",
+                      "battesimo"
+                    ]
+                  },
+                  "templateKey": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "eventDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "eventTime": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "locationName": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "locationAddress": {
+                    "type": "string",
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "type",
+                  "templateKey",
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Dettaglio evento",
+        "operationId": "get_api_events__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Aggiorna evento",
+        "operationId": "put_api_events__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "eventDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "eventTime": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "locationName": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "locationAddress": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 300
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "active",
+                      "closed"
+                    ]
+                  },
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "header"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "eyebrow": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "intro": {
+                                  "type": "string",
+                                  "maxLength": 300
+                                },
+                                "names": {
+                                  "minItems": 1,
+                                  "maxItems": 4,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "maxLength": 80
+                                  }
+                                },
+                                "dateText": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "timeText": {
+                                  "type": "string",
+                                  "maxLength": 40
+                                }
+                              },
+                              "required": [
+                                "eyebrow",
+                                "intro",
+                                "names",
+                                "dateText",
+                                "timeText"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "message"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                }
+                              },
+                              "required": [
+                                "text"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "program"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "items": {
+                                  "maxItems": 20,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "time": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                      },
+                                      "label": {
+                                        "type": "string",
+                                        "maxLength": 120
+                                      },
+                                      "description": {
+                                        "type": "string",
+                                        "maxLength": 300
+                                      }
+                                    },
+                                    "required": [
+                                      "time",
+                                      "label",
+                                      "description"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "items"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "location"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                },
+                                "address": {
+                                  "type": "string",
+                                  "maxLength": 300
+                                },
+                                "showMap": {
+                                  "type": "boolean"
+                                },
+                                "mapsUrl": {
+                                  "type": "string",
+                                  "maxLength": 1000
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "name",
+                                "address",
+                                "showMap",
+                                "mapsUrl"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "dresscode"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "headline": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                },
+                                "note": {
+                                  "type": "string",
+                                  "maxLength": 300
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "headline",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "logistics"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "text": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "text"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "countdown"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                }
+                              },
+                              "required": [
+                                "title"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "gallery"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "images": {
+                                  "maxItems": 5,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "url": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                      },
+                                      "alt": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      }
+                                    },
+                                    "required": [
+                                      "url",
+                                      "alt"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "images"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "rsvp"
+                            },
+                            "data": {
+                              "type": "object",
+                              "properties": {
+                                "buttonLabel": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 80
+                                }
+                              },
+                              "required": [
+                                "buttonLabel"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "data"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "rsvpConfig": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "description": {
+                          "type": "string",
+                          "maxLength": 500
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "single",
+                            "multiple",
+                            "number",
+                            "boolean"
+                          ]
+                        },
+                        "options": {
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "min": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "max": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "required": {
+                          "type": "boolean"
+                        },
+                        "perPerson": {
+                          "type": "boolean"
+                        },
+                        "perPersonScope": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "companions"
+                          ]
+                        },
+                        "condition": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "questionId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "op": {
+                                  "type": "string",
+                                  "enum": [
+                                    "eq",
+                                    "neq",
+                                    "gt"
+                                  ]
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "questionId",
+                                "op",
+                                "value"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "locked": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "type",
+                        "required",
+                        "perPerson"
+                      ]
+                    }
+                  },
+                  "rsvpDeadline": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rsvpClosedMessage": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "distribution": {
+                    "type": "object",
+                    "properties": {
+                      "emailSubject": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "emailBody": {
+                        "type": "string",
+                        "maxLength": 5000
+                      },
+                      "whatsappTemplate": {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      "senderName": {
+                        "type": "string",
+                        "maxLength": 120
+                      }
+                    },
+                    "required": [
+                      "emailSubject",
+                      "emailBody",
+                      "whatsappTemplate",
+                      "senderName"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Elimina evento",
+        "operationId": "delete_api_events__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/export": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Esporta evento (CSV)",
+        "operationId": "get_api_events__id__export",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/stats": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Statistiche evento",
+        "operationId": "get_api_events__id__stats",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/send": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Invia inviti",
+        "operationId": "post_api_events__id__send",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "guestIds": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 5000
+                  }
+                },
+                "required": [
+                  "guestIds",
+                  "subject",
+                  "body"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/send-test": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Invia invito di test",
+        "operationId": "post_api_events__id__send-test",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 5000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/mark-sent": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Segna inviti come inviati",
+        "operationId": "post_api_events__id__mark-sent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "guestIds": {
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "guestIds"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/reminders": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Configurazione reminder",
+        "operationId": "get_api_events__id__reminders",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Aggiorna reminder",
+        "operationId": "put_api_events__id__reminders",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reminders": {
+                    "maxItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "daysBefore": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 60
+                        },
+                        "subject": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "daysBefore",
+                        "subject",
+                        "message",
+                        "enabled"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "reminders"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/guests": {
+      "get": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Lista invitati",
+        "operationId": "get_api_events__id__guests",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Aggiungi invitato",
+        "operationId": "post_api_events__id__guests",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "phone": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "groupName": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "firstName",
+                  "lastName"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/guests/import": {
+      "post": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Import invitati (bulk)",
+        "operationId": "post_api_events__id__guests_import",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rows": {
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "firstName": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        },
+                        "lastName": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        },
+                        "email": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "email",
+                              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": ""
+                            }
+                          ]
+                        },
+                        "phone": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "groupName": {
+                          "type": "string",
+                          "maxLength": 80
+                        },
+                        "notes": {
+                          "type": "string",
+                          "maxLength": 1000
+                        }
+                      },
+                      "required": [
+                        "firstName",
+                        "lastName"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "rows"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/guests/{guestId}": {
+      "get": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Dettaglio invitato",
+        "operationId": "get_api_events__id__guests__guestId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Aggiorna invitato",
+        "operationId": "put_api_events__id__guests__guestId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "email",
+                            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": ""
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "groupName": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "remindersDisabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "Elimina invitato",
+        "operationId": "delete_api_events__id__guests__guestId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/guests/{guestId}/qr": {
+      "get": {
+        "tags": [
+          "Guests"
+        ],
+        "summary": "QR code invitato",
+        "operationId": "get_api_events__id__guests__guestId__qr",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/file/upload": {
+      "post": {
+        "tags": [
+          "File"
+        ],
+        "summary": "Upload diretto file",
+        "operationId": "post_api_file_upload",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/file/presign": {
+      "post": {
+        "tags": [
+          "File"
+        ],
+        "summary": "Genera URL presigned per upload",
+        "operationId": "post_api_file_presign",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "mimeType": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fileSize": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "fileName",
+                  "mimeType",
+                  "fileSize"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/file/confirm": {
+      "post": {
+        "tags": [
+          "File"
+        ],
+        "summary": "Conferma upload presigned",
+        "operationId": "post_api_file_confirm",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "fileId"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/file/{id}/url": {
+      "get": {
+        "tags": [
+          "File"
+        ],
+        "summary": "URL firmato di download",
+        "operationId": "get_api_file__id__url",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/file/{id}": {
+      "delete": {
+        "tags": [
+          "File"
+        ],
+        "summary": "Elimina file",
+        "operationId": "delete_api_file__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/limits": {
+      "get": {
+        "tags": [
+          "Limits"
+        ],
+        "summary": "Limiti di piano per l'organizzazione",
+        "operationId": "get_api_limits",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/limits/validate-downgrade": {
+      "post": {
+        "tags": [
+          "Limits"
+        ],
+        "summary": "Valida un downgrade di piano",
+        "operationId": "post_api_limits_validate-downgrade",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPlan": {
+                    "type": "string",
+                    "enum": [
+                      "starter",
+                      "premium",
+                      "agency"
+                    ]
+                  }
+                },
+                "required": [
+                  "newPlan"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/profile": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Profilo utente",
+        "operationId": "get_api_user_profile",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Aggiorna profilo",
+        "operationId": "patch_api_user_profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bio": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "locale": {
+                    "type": "string",
+                    "enum": [
+                      "it",
+                      "en"
+                    ]
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 50
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "image": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/account": {
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Elimina account",
+        "operationId": "delete_api_user_account",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/data-export/request": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Richiedi export dati (GDPR)",
+        "operationId": "post_api_user_data-export_request",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/data-export/status": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Stato export dati",
+        "operationId": "get_api_user_data-export_status",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/data-export/history": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Storico export dati",
+        "operationId": "get_api_user_data-export_history",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/user/data-export/download/{token}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Download export dati (via token)",
+        "operationId": "get_api_user_data-export_download__token",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/public/invite/{token}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Dettaglio invito pubblico",
+        "operationId": "get_api_public_invite__token",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/public/invite/{token}/rsvp": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Invia RSVP",
+        "operationId": "post_api_public_invite__token__rsvp",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "attending": {
+                    "type": "string",
+                    "enum": [
+                      "yes",
+                      "no",
+                      "maybe"
+                    ]
+                  },
+                  "companionsCount": {
+                    "default": 0,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  "answers": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "declineMessage": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "attending"
+                ]
+              }
+            }
+          }
+        },
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/public/pixel/{token}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Tracking pixel apertura email",
+        "operationId": "get_api_public_pixel__token",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          }
+        }
+      }
+    },
+    "/api/admin/site-mode": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Stato modalità sito",
+        "operationId": "get_api_admin_site-mode",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Imposta modalità sito",
+        "operationId": "post_api_admin_site-mode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "waitinglist",
+                      "maintenance"
+                    ]
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Reset modalità sito",
+        "operationId": "delete_api_admin_site-mode",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/cleanup-files": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Cleanup file orfani",
+        "operationId": "post_api_admin_cleanup-files",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Lista audit log",
+        "operationId": "get_api_admin_audit-logs",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/subscriptions": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Lista subscription",
+        "operationId": "get_api_admin_subscriptions",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/subscriptions/{id}": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Aggiorna subscription",
+        "operationId": "patch_api_admin_subscriptions__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plan": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "canceled",
+                      "incomplete",
+                      "incomplete_expired",
+                      "past_due",
+                      "trialing",
+                      "unpaid",
+                      "paused"
+                    ]
+                  },
+                  "periodStart": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "periodEnd": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "cancelAtPeriodEnd": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/waiting-list/export": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Export waiting list",
+        "operationId": "get_api_admin_waiting-list_export",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Lista utenti",
+        "operationId": "get_api_admin_users",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Dettaglio utente",
+        "operationId": "get_api_admin_users__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Aggiorna utente",
+        "operationId": "patch_api_admin_users__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin"
+                    ]
+                  },
+                  "banned": {
+                    "type": "boolean"
+                  },
+                  "banReason": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "banExpires": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/audit-logs": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Audit log di un utente",
+        "operationId": "get_api_admin_users__id__audit-logs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/limits": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Limiti custom di un utente",
+        "operationId": "get_api_admin_users__id__limits",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Aggiorna limiti custom utente",
+        "operationId": "patch_api_admin_users__id__limits",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "max_organizations": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -1,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "storage_mb": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -1,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "team_members": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -1,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Statistiche piattaforma",
+        "operationId": "get_api_admin_stats",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Input non valido (Zod)"
+          },
+          "401": {
+            "description": "Non autenticato"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "better-auth.session_token",
+        "description": "Cookie di sessione Better Auth (login via /api/auth)."
+      },
+      "adminApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Admin-API-Key",
+        "description": "Chiave admin (env NUXT_ADMIN_API_KEY)."
+      }
+    }
+  }
+}
