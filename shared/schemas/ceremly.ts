@@ -56,7 +56,13 @@ export const blockSchema = z.discriminatedUnion("type", [
             name: z.string().max(200),
             address: z.string().max(300),
             showMap: z.boolean(),
-            mapsUrl: z.string().max(1000),
+            // Solo http(s) o vuoto: blocca schemi pericolosi (javascript:, data:)
+            // che verrebbero resi in :href sulla pagina invito pubblica (XSS al
+            // click). z.url() da solo NON basta: accetta javascript: come URL valido.
+            mapsUrl: z.string().max(1000).refine(
+                (v) => v.trim() === "" || /^https?:\/\//i.test(v.trim()),
+                { message: "L'URL della mappa deve iniziare con http:// o https://" },
+            ),
         }),
     }),
     z.object({

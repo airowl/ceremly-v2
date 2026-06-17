@@ -23,7 +23,16 @@ console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
 export const createBetterAuth = () =>
     betterAuth({
         baseURL: runtimeConfig.public.baseURL,
-        trustedOrigins: ["http://localhost:8787", runtimeConfig.public.baseURL, "https://scholarships-adoption-cadillac-expanded.trycloudflare.com"],
+        // In produzione solo il baseURL è trusted. localhost e il tunnel
+        // Cloudflare (effimero e riassegnabile → superficie CSRF/open-redirect se
+        // rivendicato) restano SOLO in dev, dietro import.meta.dev (tree-shaked
+        // a false nel build di produzione).
+        trustedOrigins: [
+            runtimeConfig.public.baseURL,
+            ...(import.meta.dev
+                ? ["http://localhost:8787", "https://scholarships-adoption-cadillac-expanded.trycloudflare.com"]
+                : []),
+        ],
         secret: runtimeConfig.betterAuthSecret,
         database: drizzleAdapter(
             getDB(),

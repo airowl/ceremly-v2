@@ -63,6 +63,13 @@ export const generateRuntimeConfig = () => {
                 bucketName: process.env.NUXT_CF_R2_BUCKET_NAME!,
                 publicUrl: process.env.NUXT_CF_R2_PUBLIC_URL!,
             },
+            // Senza questi due campi le guard in upload/presign erano sempre
+            // saltate: un utente autenticato poteva caricare content-type
+            // arbitrari (text/html, octet-stream...). Allowlist raster sicura
+            // (NO image/svg+xml → vettore XSS) — copre ciò che l'app carica
+            // (profilo + editor evento). 5MB allineato al cap di nuxt-security.
+            maxFileSize: 5 * 1024 * 1024,
+            allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
             uploadRateLimit: {
                 maxUploadsPerWindow: 100,
                 windowSizeMinutes: 1,

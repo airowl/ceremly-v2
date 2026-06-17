@@ -151,7 +151,12 @@ function headerDateLine(d: HeaderBlockData): string {
 }
 
 function mapsHref(d: LocationBlockData): string {
-    return d.mapsUrl?.trim() || `https://maps.google.com/?q=${encodeURIComponent(d.address)}`;
+    // Difesa in profondità: rende solo http(s). Un mapsUrl legacy/malevolo con
+    // schema javascript:/data: (lo schema guarda solo le scritture nuove) ricade
+    // sul link Google Maps sicuro invece di eseguire al click.
+    const url = d.mapsUrl?.trim();
+    if (url && /^https?:\/\//i.test(url)) return url;
+    return `https://maps.google.com/?q=${encodeURIComponent(d.address)}`;
 }
 
 const daysToEvent = computed<number | null>(() => {

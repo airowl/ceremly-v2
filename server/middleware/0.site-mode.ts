@@ -44,6 +44,12 @@ export default defineEventHandler(async (event) => {
     // deve poter riaccendere il sito, altrimenti la maintenance è irreversibile via API.
     if (path.startsWith("/api/admin/")) return;
 
+    // Webhook Creem (billing): mai gate. Con persistSubscriptions il webhook è la
+    // source-of-truth della tabella creem_subscription e Creem ritenta solo per
+    // una finestra limitata: un 503 in waitinglist/maintenance può perdere eventi
+    // di pagamento (pagante mostrato come non-pagante, o accesso non revocato).
+    if (path.startsWith("/api/auth/creem/webhook")) return;
+
     // Risorse interne di Nuxt / payload prerenderizzati: mai gate
     // (evita anche un round-trip Redis inutile sugli asset).
     if (path.startsWith("/_")) return;
