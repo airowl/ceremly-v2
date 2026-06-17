@@ -22,6 +22,7 @@
     "verify:isolation-api": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-isolation-api.ts",
     "verify:plan-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-plan-limit.ts",
     "verify:rate-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-rate-limit.ts",
+    "verify:account-purge": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-account-purge.ts",
     "openapi:generate": "npx tsx scripts/generate-openapi.ts"
   },
   "dependencies": {

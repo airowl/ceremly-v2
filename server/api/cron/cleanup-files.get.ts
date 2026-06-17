@@ -1,18 +1,23 @@
 import { useFileManagerConfig } from '~~/server/services/file/fileService'
 import { createR2Storage } from '~~/server/services/file/storage/r2'
 import { cleanupOrphanFiles } from '~~/server/services/file/cleanup'
+import { purgeDueDeletedAccounts } from '~~/server/services/gdpr.service'
 import { logAudit } from '~~/server/utils/audit'
 import { requireAdminApiKey } from '~~/server/utils/requireAdminApiKey'
 
 /**
- * Vercel Cron endpoint: delete orphaned pending uploads past their grace
- * period. Idempotent — safe on missed/duplicate runs.
+ * Vercel Cron endpoint: housekeeping quotidiano.
+ *  - elimina gli upload pending orfani oltre la grace period (R2);
+ *  - hard-delete definitivo degli account la cui grace window è scaduta
+ *    (diritto all'oblio GDPR — vedi gdpr.service.purgeDueDeletedAccounts).
+ * Idempotente — safe su run mancati/duplicati. (Il purge è agganciato qui per
+ * non superare il limite di cron job dei piani Vercel Hobby; resta disponibile
+ * anche l'endpoint dedicato /api/cron/purge-deleted-accounts per il trigger
+ * manuale admin.)
  *
  * Auth a 3 vie (coerente con send-reminders): header `x-vercel-cron` (la
  * piattaforma lo strippa dalle richieste esterne) OPPURE `Authorization:
  * Bearer ${CRON_SECRET}` OPPURE, per il trigger manuale, X-Admin-API-Key.
- * (Prima accettava SOLO il Bearer: se il deployer settava un nome env diverso
- * il cron tornava 401 a ogni run e gli upload orfani si accumulavano su R2.)
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -30,16 +35,27 @@ export default defineEventHandler(async (event) => {
   const fileConfig = useFileManagerConfig()
   const storage = createR2Storage(fileConfig.storage)
 
-  const result = await cleanupOrphanFiles(storage, 1)
+  const files = await cleanupOrphanFiles(storage, 1)
+
+  // Hard-delete degli account programmati la cui grace window è scaduta.
+  // Isolato: un suo errore non deve far fallire la pulizia file.
+  let accounts: Awaited<ReturnType<typeof purgeDueDeletedAccounts>> | { error: string }
+  try {
+    accounts = await purgeDueDeletedAccounts()
+  } catch (e) {
+    accounts = { error: e instanceof Error ? e.message : 'purge failed' }
+    console.error('[cron.cleanup-files] purgeDueDeletedAccounts error:', e)
+  }
 
   await logAudit(event, 'admin.cleanup_files', {
     targetType: 'system',
     details: {
       graceHours: 1,
       trigger: 'cron',
-      ...result,
+      files,
+      accounts,
     },
   })
 
-  return result
+  return { files, accounts }
 })

@@ -105,6 +105,7 @@ export const AUDIT_ACTIONS = {
   // User
   'user.profile_updated': 'user.profile_updated',
   'user.account_deleted': 'user.account_deleted',
+  'user.account_purged': 'user.account_purged',
   'user.data_export_requested': 'user.data_export_requested',
 
   // Admin

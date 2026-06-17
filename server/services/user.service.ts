@@ -14,6 +14,8 @@ import {
 } from '../utils/dataExport'
 import { dispatch } from '~~/server/queue'
 import { useServerAuth } from '../utils/auth'
+import { ACCOUNT_DELETION_GRACE_DAYS } from './gdpr.service'
+import { ACCOUNT_DELETION_REASON_PREFIX } from '../repositories/gdprRepository'
 import type { UpdateProfileInput } from '~~/shared/schemas/auth'
 
 // --- User Read Operations ---
@@ -200,21 +202,29 @@ export async function deleteAccount(
   try {
     const db = getDB()
 
-    // Soft delete: Mark user as banned with a deletion reason
+    // Cancellazione con GRACE WINDOW (diritto all'oblio): l'account viene
+    // bloccato e PROGRAMMATO per la cancellazione definitiva. Il ban è
+    // PERMANENTE durante la grace (banExpires = null, così Better Auth non lo
+    // sblocca mai e l'utente non può rientrare); la data di purge è codificata
+    // nel banReason. Un cron giornaliero (gdpr.service.purgeDueDeletedAccounts)
+    // esegue l'hard-delete (PII + dati, R2 inclusi) dopo la scadenza.
+    const purgeAt = new Date(Date.now() + ACCOUNT_DELETION_GRACE_DAYS * 24 * 60 * 60 * 1000)
     await db
       .update(user)
       .set({
         banned: true,
-        banReason: 'Account deleted by user',
+        banReason: `${ACCOUNT_DELETION_REASON_PREFIX}${purgeAt.toISOString()}`,
+        banExpires: null,
         updatedAt: new Date(),
       })
       .where(eq(user.id, userId))
 
-    // Revoca tutte le sessioni dell'utente corrente (DB + secondaryStorage Redis):
-    // senza questo l'account "cancellato" resta loggato fino alla scadenza della
-    // sessione cachata. revokeSessions opera sull'utente della sessione corrente.
+    // Revoca SUBITO le sessioni (Redis secondaryStorage): senza questo l'account
+    // "cancellato" resterebbe loggato fino alla scadenza della sessione cachata.
+    // Stesso meccanismo dell'admin ban (internalAdapter.deleteSessions by userId).
     try {
-      await useServerAuth().api.revokeSessions({ headers: h3Event.headers })
+      const ctx = await useServerAuth().$context
+      await ctx.internalAdapter.deleteSessions(userId)
     } catch (err) {
       console.error('[user.service] deleteAccount: revoca sessioni fallita:', err)
     }
@@ -222,12 +232,13 @@ export async function deleteAccount(
     await logAudit(h3Event, 'user.account_deleted', {
       targetType: 'user',
       targetId: userId,
-      details: { reason: 'self_deletion' },
+      details: { reason: 'self_deletion', purgeAt: purgeAt.toISOString(), graceDays: ACCOUNT_DELETION_GRACE_DAYS },
     })
 
     return {
       success: true,
-      message: 'Account deleted successfully',
+      message: 'Account scheduled for deletion',
+      purgeAt: purgeAt.toISOString(),
     }
   } catch (e) {
     console.error('[user.service] deleteAccount error:', e)
