@@ -38,7 +38,11 @@ Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi 
 > - B (#9, #7) `cacheClient.increment` atomico + `isEndpointRateLimited` async/Redis-backed + `getClientIp`; applicato a RSVP POST (30/min/IP) e waiting-list. Verify `pnpm verify:rate-limit`.
 > - C (#10b) il rateLimiter globale nuxt-security resta best-effort per-istanza *by design* (no SPOF Redis su ogni richiesta); le superfici reali (auth + POST pubblici) sono coperte da A+B. *(Part A non runtime-testabile in dev: Better Auth rateLimit è attivo solo in prod.)*
 >
-> **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #16 CSP `unsafe-inline`, #17 validazione env a boot, #19–22 GDPR (erasure/export — decisioni di prodotto/PRD) & unicità email guest, più i nice-to-have.
+> **Aggiornamento 2026-06-17 — commit `ae49b56`.** Risolti **#20** (erasure) e **#19** (file orfani R2) con hard-delete + grace window (scelta utente):
+> - `deleteAccount` programma la cancellazione: ban permanente (`banExpires=null`) + data purge (30gg) nel `banReason` + revoca sessioni; niente più soft-delete che lascia i PII.
+> - `purgeDueDeletedAccounts` (cron giornaliero su `cleanup-files` + endpoint dedicato manuale): org solo-membro eliminata (R2 + cascade DB), org con altri membri → **ownership trasferita** (mai distruggere dati altrui); subscription Creem pulite; user cascade. Verify `pnpm verify:account-purge` (fixture usa-e-getta + tripwire org reali). Nessuna migration; nulla cancella prima di 30gg dal deploy.
+>
+> **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #16 CSP `unsafe-inline`, #17 validazione env a boot, **#21 export GDPR** (stub — possibile rinvio Phase 2/3, da confermare con PRD), #22 unicità email guest (serve migration), più i nice-to-have.
 
 ## 🏗️ Build health (ground-truth, exit code reali)
 
