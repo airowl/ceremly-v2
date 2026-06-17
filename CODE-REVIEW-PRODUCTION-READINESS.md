@@ -17,6 +17,14 @@ La codebase è solida sulle dimensioni più critiche per un SaaS multi-tenant: l
 
 Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi bug di correttezza su monetizzazione, distribuzione email e GDPR che vanno chiusi prima di onboardare clienti paganti e inviare inviti reali.
 
+> **Aggiornamento 2026-06-17 — commit `0bd62fd`.** Risolti i fix prioritari **#1, #3, #4, #5**:
+> - #1 piano risolto dall'owner org (helper `isOrgFreePlan`/`resolveOrgOwnerId` in `planLimit.service`, riusato da `auth.ts`); nuovo `pnpm verify:plan-limit` che prova il toggle owner-sub contro il DB.
+> - #3 idempotenza at-most-once dei job: guard su `upstash-message-id` nel consumer (`jobs/[job].post.ts`, set-after-success) + `hasReminderActivity` nel reminder handler.
+> - #4 `processDueReminders`: dispatch per-guest in try/catch + `markReminderSent` sempre eseguito (niente re-invio di massa).
+> - #5 `sendInvites`: dispatch-prima, `markSent`/activity solo per gli enqueue riusciti; conteggio `failed` esposto nel riepilogo distribuzione (i18n it/en).
+>
+> Verificato: typecheck ✅, build ✅, lint pulito sui file toccati, `verify:plan-limit` ✅. **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #7–10 rate-limit durevole, #11–18 (ban/trustedOrigin/webhook Creem/upload MIME/XSS mapsUrl/CSP/env-boot/cron cleanup), #19–22 GDPR & unicità guest, più i nice-to-have.
+
 ## 🏗️ Build health (ground-truth, exit code reali)
 
 | Check | Comando | Esito |
