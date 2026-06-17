@@ -1563,30 +1563,30 @@
       },
       "chiSiamo": {
         "seoTitle": "Chi siamo — Ceremly",
-        "seoDescription": "Ceremly nasce nel 2026 da tre persone e un matrimonio organizzato a colpi di Excel. Inviti digitali e RSVP pensati per gli eventi italiani.",
+        "seoDescription": "Ceremly nasce nel 2026 a Milano, da un matrimonio organizzato a colpi di Excel. Inviti digitali e RSVP pensati per gli eventi italiani.",
         "heroTag": "Chi siamo",
         "heroTitlePart1": "Ci piacciono le feste.",
         "heroTitlePart2": "Non i",
         "heroTitleMark": "fogli di calcolo",
-        "heroSub": "Ceremly nasce nel 2026 da tre persone e un matrimonio organizzato a colpi di Excel, messaggi vocali e telefonate alla suocera.",
-        "intro1": "L'idea è arrivata la sera in cui Andrea, a tre giorni dal suo matrimonio, ha chiamato il catering con tre numeri diversi su tre fogli diversi. Gli inviti erano stati bellissimi. La lista, un incubo. Ci siamo chiesti perché nel 2026 si potesse prenotare un volo in due minuti, ma non sapere quanti zii vengono a pranzo.",
-        "intro2": "Così abbiamo costruito Ceremly: inviti digitali che non sfigurano accanto a quelli di carta, e un form di risposta che chiunque sa usare — senza app, senza account, senza spiegazioni al telefono. Oggi siamo in beta, piccoli per scelta, e cresciamo un evento alla volta.",
+        "heroSub": "Ceremly nasce nel 2026, a Milano, da un matrimonio organizzato a colpi di Excel, messaggi vocali e telefonate alla suocera.",
+        "intro1": "L'idea è arrivata da un matrimonio: a tre giorni dalla festa, il catering chiamato con tre numeri diversi su tre fogli diversi. Gli inviti erano bellissimi. La lista, un incubo. Ci si chiede perché nel 2026 si possa prenotare un volo in due minuti, ma non sapere quanti zii vengono a pranzo.",
+        "intro2": "Così è nato Ceremly: inviti digitali che non sfigurano accanto a quelli di carta, e un form di risposta che chiunque sa usare — senza app, senza account, senza spiegazioni al telefono. Oggi è in beta, piccola per scelta, e cresce un evento alla volta.",
         "nums": [
           {
             "n": "2026",
-            "l": "fondazione, Milano"
+            "l": "fondata a Milano"
           },
           {
-            "n": "142",
-            "l": "eventi nella beta"
+            "n": "1",
+            "l": "persona, per ora"
           },
           {
-            "n": "11.804",
-            "l": "RSVP raccolti"
+            "n": "0",
+            "l": "percentuali sugli ospiti"
           },
           {
-            "n": "3",
-            "l": "persone, per ora"
+            "n": "4",
+            "l": "tipi di evento"
           }
         ],
         "principiTag": "Principi",
@@ -1605,26 +1605,14 @@
             "d": "Eventi italiani, galateo italiano, fattura elettronica italiana. Costruiamo per come si festeggia qui: famiglie larghe, conferme tardive e pranzi lunghi."
           }
         ],
-        "teamTag": "Il team",
+        "teamTag": "Il fondatore",
         "teamTitle": "Chi c'è dietro",
         "team": [
           {
-            "ini": "AC",
-            "n": "Andrea C.",
-            "r": "Prodotto",
-            "d": "Ha contato a mano i 187 invitati del suo matrimonio. Mai più."
-          },
-          {
-            "ini": "LF",
-            "n": "Lucia F.",
-            "r": "Design",
-            "d": "Crede che un invito brutto rovini la festa prima che inizi."
-          },
-          {
-            "ini": "PV",
-            "n": "Pietro V.",
-            "r": "Ingegneria",
-            "d": "Vuole che il form RSVP si apra anche sul telefono della nonna."
+            "ini": "AW",
+            "n": "Airowl",
+            "r": "Fondatore · prodotto, design e codice",
+            "d": "Ha visto un matrimonio gestito a colpi di Excel e ha deciso di costruire l'alternativa. Mai più fogli di calcolo."
           }
         ],
         "ctaTitlePart1": "Festeggia con noi.",
@@ -1683,7 +1671,7 @@
           }
         ],
         "guestList": "Lista ospiti",
-        "guestImported": "142 importati",
+        "guestImported": "120 importati",
         "distLinkLabel": "Link unico",
         "distCopy": "Copia",
         "distWhatsapp": "WhatsApp",
@@ -1913,54 +1901,54 @@
         "ctaSecondary": "Parla con noi"
       },
       "esempi": {
-        "seoTitle": "Esempi reali — storie vere di chi ha usato Ceremly",
-        "seoDescription": "Tre eventi della beta raccontati dai loro organizzatori, con i numeri veri delle dashboard: matrimonio, laurea e battesimo.",
-        "heroTag": "Esempi reali",
-        "heroTitlePart1": "142 eventi nella beta.",
-        "heroTitlePart2": "Tre",
-        "heroTitleMark": "storie vere",
-        "heroSub": "Nomi e dettagli condivisi con il permesso degli organizzatori. I numeri sono quelli delle loro dashboard.",
-        "cases": [
+        "seoTitle": "Esempi di invito — guarda un invito Ceremly",
+        "seoDescription": "Sfoglia inviti d'esempio per matrimonio, laurea, battesimo e compleanno. Personalizzabili in pochi minuti, con RSVP, menu e allergie.",
+        "heroTag": "Esempi di invito",
+        "heroTitlePart1": "Un invito",
+        "heroTitlePart2": "per ogni",
+        "heroTitleMark": "evento",
+        "heroSub": "Ecco come appare un invito Ceremly. Quattro modelli d'esempio, uno per tipo di evento — colori, foto e testi li personalizzi tu in pochi minuti.",
+        "samples": [
           {
             "occ": "Matrimonio",
-            "t": "Giulia & Tommaso",
-            "meta": "Verona · settembre 2026",
-            "statLabels": [
-              "invitati",
-              "risposte in 14 giorni",
-              "gruppi WhatsApp"
-            ],
-            "quote": "“La lista è arrivata al catering tre giorni prima — completa, con le allergie.”",
-            "who": "Francesca, sorella della sposa"
+            "names1": "Giulia &",
+            "names2": "Tommaso",
+            "italic": "si sposano",
+            "date": "12 · settembre · 2026",
+            "sub": "Villa Erba, Cernobbio",
+            "caption": "Cerimonia e ricevimento separati, dress code, mappa e RSVP con menu e allergie."
           },
           {
             "occ": "Laurea",
-            "t": "La laurea di Sara",
-            "meta": "Bologna · luglio 2026",
-            "statLabels": [
-              "invitati",
-              "conferme in 48 ore",
-              "link su WhatsApp"
-            ],
-            "quote": "“Ho mandato il link alle 9 di mattina. A pranzo sapevo già in quanti eravamo.”",
-            "who": "Sara, laureanda"
+            "names1": "La laurea",
+            "names2": "di Marta",
+            "italic": "",
+            "date": "8 · luglio · 2026",
+            "sub": "Aula Magna + brindisi in cortile",
+            "caption": "Cerimonia e rinfresco, numero di accompagnatori, auguri e brindisi."
           },
           {
             "occ": "Battesimo",
-            "t": "Il battesimo di Leo",
-            "meta": "Lecce · marzo 2026",
-            "statLabels": [
-              "ospiti",
-              "bambini contati a parte",
-              "d'anticipo al ristorante"
-            ],
-            "quote": "“Il ristorante voleva i numeri esatti. Li ho esportati in un click.”",
-            "who": "Davide, papà di Leo"
+            "names1": "Il battesimo",
+            "names2": "di Bianca",
+            "italic": "",
+            "date": "15 · marzo · 2026",
+            "sub": "Chiesa di San Martino + pranzo",
+            "caption": "Chiesa e pranzo in famiglia, bambini contati a parte, allergie e plus-one."
+          },
+          {
+            "occ": "Compleanno",
+            "names1": "I 40",
+            "names2": "di Marco",
+            "italic": "",
+            "date": "20 · giugno · 2026",
+            "sub": "Cascina Boscaccio, ore 20",
+            "caption": "Orario, tema della festa, conferme e intolleranze — un link nel gruppo."
           }
         ],
-        "ctaTitlePart1": "La prossima storia può essere",
-        "ctaTitleMark": "la tua",
-        "ctaSecondary": "Guarda un invito d'esempio"
+        "ctaTitlePart1": "Crea il tuo invito",
+        "ctaTitleMark": "in cinque minuti",
+        "ctaSecondary": "Vedi i prezzi"
       },
       "usecases": {
         "matrimoni": {
@@ -1978,7 +1966,7 @@
           "nameLine2": "Tommaso",
           "inviteItalic": "si sposano",
           "inviteSub": "Villa Erba, Cernobbio",
-          "chipN": "87/142",
+          "chipN": "96/120",
           "chipL": "conferme · 89% aperture",
           "painsTag": "Il problema",
           "painsTitle": "Ti suona familiare?",
@@ -2020,9 +2008,7 @@
               "d": "Lista finale con menu e note, in CSV o PDF, pronta da inoltrare."
             }
           ],
-          "quoteText": "\"Ho organizzato il matrimonio di mia sorella senza un solo gruppo WhatsApp.\"",
-          "quoteWho": "Francesca B.",
-          "quoteMeta": "Matrimonio · 168 ospiti · Verona",
+          "quoteText": "Cerimonia o solo ricevimento, menu e allergie, plus-one: tutto in una lista sola.",
           "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
           "ctaSecondary": "Guarda un esempio"
         },
@@ -2083,9 +2069,7 @@
               "d": "Le risposte entrano in tempo reale: prenoti il locale con i numeri giusti."
             }
           ],
-          "quoteText": "\"Ho mandato il link alle 9 di mattina. A pranzo sapevo già in quanti eravamo.\"",
-          "quoteWho": "Sara M.",
-          "quoteMeta": "Laurea · 52 invitati · Bologna",
+          "quoteText": "Mandi il link la mattina. Sai i numeri per il rinfresco entro sera.",
           "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
           "ctaSecondary": "Guarda un esempio"
         },
@@ -2146,9 +2130,7 @@
               "d": "La bomboniera resta di carta: il QR porta alla conferma digitale."
             }
           ],
-          "quoteText": "\"Il ristorante voleva i numeri esatti. Li ho esportati in un click.\"",
-          "quoteWho": "Davide P.",
-          "quoteMeta": "Battesimo · 84 ospiti · Lecce",
+          "quoteText": "Conferme, accompagnatori e allergie, pronti da passare al ristorante.",
           "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
           "ctaSecondary": "Guarda un esempio"
         },
@@ -2209,9 +2191,7 @@
               "d": "Sai sempre quanti siete. La location ringrazia."
             }
           ],
-          "quoteText": "\"Niente sondaggini nel gruppo. Un link e via — e per una volta sapevo chi veniva.\"",
-          "quoteWho": "Marco T.",
-          "quoteMeta": "Compleanno · 64 invitati · Milano",
+          "quoteText": "Un link nel gruppo, e per una volta sai davvero chi viene.",
           "ctaSub": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
           "ctaSecondary": "Guarda un esempio"
         },
@@ -2227,7 +2207,7 @@
           "heroSecondary": "Invito d'esempio",
           "inviteDate": "Workspace · Studio Fiore",
           "nameLine1": "Atelier",
-          "nameLine2": "di Elisa R.",
+          "nameLine2": "del tuo studio",
           "inviteItalic": "",
           "inviteSub": "12 eventi attivi · 4 in chiusura · 1.840 ospiti",
           "chipN": "12",
@@ -2272,9 +2252,7 @@
               "d": "RSVP nei tuoi sistemi: CRM, catering, fogli condivisi."
             }
           ],
-          "quoteText": "\"I clienti vedono il loro brand. Io vedo tutti gli eventi in una schermata.\"",
-          "quoteWho": "Elisa R.",
-          "quoteMeta": "Wedding planner · 31 eventi nel 2026 · Torino",
+          "quoteText": "Ogni cliente vede il suo brand. Tu vedi tutti gli eventi in una schermata.",
           "ctaTitlePart1": "Organizzi per mestiere?",
           "ctaTitleMark": "Parliamone",
           "ctaSub": "Atelier costa 24 euro al mese, eventi e ospiti illimitati. Demo di 30 minuti, senza impegno.",
@@ -2614,9 +2592,7 @@
       "shellLabel": "Registrati",
       "shellBody": "Crea il tuo primo evento in cinque minuti. Niente carta richiesta — paghi solo se decidi di crescere.",
       "shellFoot": "Fino a 30 ospiti gratis",
-      "quoteText": "\"Cinque minuti per creare l'invito. Cinque giorni per ricevere tutte le risposte.\"",
-      "quoteWho": "Andrea M.",
-      "quoteWhere": "Laurea magistrale · Bologna",
+      "quoteText": "Crea l'invito in cinque minuti. Le risposte arrivano da sole.",
       "titleLine1": "Inizia",
       "titleLine2": "a invitare.",
       "titleHighlight": "Trenta ospiti",
@@ -2996,8 +2972,7 @@
       "successDescription": "Accesso effettuato con successo.",
       "shellLabel": "Accedi",
       "shellBody": "Riprendi da dove avevi lasciato — i tuoi eventi, gli RSVP e i promemoria sono tutti qui.",
-      "quoteText": "“In due settimane di RSVP ho recuperato dieci ore della mia vita.”",
-      "quoteWhere": "Matrimonio · Cernobbio",
+      "quoteText": "Un link, una dashboard. Sai chi viene davvero.",
       "shellFoot": "Server in UE · GDPR",
       "titleLine1": "Bentornato.",
       "titleLine2": "Gli ospiti",

@@ -1563,30 +1563,30 @@
       },
       "chiSiamo": {
         "seoTitle": "About us — Ceremly",
-        "seoDescription": "Ceremly was born in 2026 from three people and a wedding organized with spreadsheets. Digital invitations and RSVPs built for events.",
+        "seoDescription": "Ceremly was born in 2026 in Milan, out of a wedding organized with spreadsheets. Digital invitations and RSVPs built for events.",
         "heroTag": "About us",
         "heroTitlePart1": "We love parties.",
         "heroTitlePart2": "Not",
         "heroTitleMark": "spreadsheets",
-        "heroSub": "Ceremly was born in 2026 from three people and a wedding organized with spreadsheets, voice notes and calls to the mother-in-law.",
-        "intro1": "The idea came the evening Andrea, three days before his wedding, called the caterer with three different numbers on three different sheets. The invitations had been beautiful. The guest list, a nightmare. We wondered why in 2026 you could book a flight in two minutes, but not know how many uncles were coming to lunch.",
-        "intro2": "So we built Ceremly: digital invitations that hold their own next to paper ones, and a reply form anyone can use — no app, no account, no explaining over the phone. Today we're in beta, small by choice, growing one event at a time.",
+        "heroSub": "Ceremly was born in 2026, in Milan, out of a wedding organized with spreadsheets, voice notes and calls to the mother-in-law.",
+        "intro1": "The idea came from a wedding: three days before the party, the caterer called with three different numbers on three different sheets. The invitations had been beautiful. The guest list, a nightmare. You wonder why in 2026 you can book a flight in two minutes, but not know how many uncles are coming to lunch.",
+        "intro2": "So Ceremly was built: digital invitations that hold their own next to paper ones, and a reply form anyone can use — no app, no account, no explaining over the phone. Today it's in beta, small by choice, growing one event at a time.",
         "nums": [
           {
             "n": "2026",
-            "l": "founded, Milan"
+            "l": "founded in Milan"
           },
           {
-            "n": "142",
-            "l": "events in beta"
+            "n": "1",
+            "l": "person, for now"
           },
           {
-            "n": "11,804",
-            "l": "RSVPs collected"
+            "n": "0",
+            "l": "cuts on your guests"
           },
           {
-            "n": "3",
-            "l": "people, for now"
+            "n": "4",
+            "l": "event types"
           }
         ],
         "principiTag": "Principles",
@@ -1605,26 +1605,14 @@
             "d": "Italian events, Italian etiquette, Italian e-invoicing. We build for how people celebrate here: big families, late confirmations and long lunches."
           }
         ],
-        "teamTag": "The team",
+        "teamTag": "The founder",
         "teamTitle": "Who's behind it",
         "team": [
           {
-            "ini": "AC",
-            "n": "Andrea C.",
-            "r": "Product",
-            "d": "Counted his 187 wedding guests by hand. Never again."
-          },
-          {
-            "ini": "LF",
-            "n": "Lucia F.",
-            "r": "Design",
-            "d": "Believes an ugly invitation ruins the party before it starts."
-          },
-          {
-            "ini": "PV",
-            "n": "Pietro V.",
-            "r": "Engineering",
-            "d": "Wants the RSVP form to open even on grandma's phone."
+            "ini": "AW",
+            "n": "Airowl",
+            "r": "Founder · product, design and code",
+            "d": "Watched a wedding run on spreadsheets and decided to build the alternative. Never again."
           }
         ],
         "ctaTitlePart1": "Celebrate with us.",
@@ -1683,7 +1671,7 @@
           }
         ],
         "guestList": "Guest list",
-        "guestImported": "142 imported",
+        "guestImported": "120 imported",
         "distLinkLabel": "Single link",
         "distCopy": "Copy",
         "distWhatsapp": "WhatsApp",
@@ -1913,54 +1901,54 @@
         "ctaSecondary": "Talk to us"
       },
       "esempi": {
-        "seoTitle": "Real examples — true stories from people who used Ceremly",
-        "seoDescription": "Three events from the beta, told by their organisers, with the real numbers from their dashboards: a wedding, a graduation and a christening.",
-        "heroTag": "Real examples",
-        "heroTitlePart1": "142 events in the beta.",
-        "heroTitlePart2": "Three",
-        "heroTitleMark": "true stories",
-        "heroSub": "Names and details shared with the organisers' permission. The numbers are the ones from their own dashboards.",
-        "cases": [
+        "seoTitle": "Invitation examples — see a Ceremly invitation",
+        "seoDescription": "Browse sample invitations for weddings, graduations, christenings and birthdays. Customisable in minutes, with RSVP, menu and allergies built in.",
+        "heroTag": "Invitation examples",
+        "heroTitlePart1": "An invitation",
+        "heroTitlePart2": "for every",
+        "heroTitleMark": "event",
+        "heroSub": "Here's what a Ceremly invitation looks like. Four sample templates, one per event type — colours, photos and text are yours to customise in minutes.",
+        "samples": [
           {
             "occ": "Wedding",
-            "t": "Giulia & Tommaso",
-            "meta": "Verona · September 2026",
-            "statLabels": [
-              "invited",
-              "replies in 14 days",
-              "WhatsApp groups"
-            ],
-            "quote": "“The list reached the caterer three days early — complete, with the allergies.”",
-            "who": "Francesca, the bride's sister"
+            "names1": "Giulia &",
+            "names2": "Tommaso",
+            "italic": "are getting married",
+            "date": "12 · September · 2026",
+            "sub": "Villa Erba, Cernobbio",
+            "caption": "Separate ceremony and reception, dress code, map, and RSVP with menu and allergies."
           },
           {
             "occ": "Graduation",
-            "t": "Sara's graduation",
-            "meta": "Bologna · July 2026",
-            "statLabels": [
-              "invited",
-              "confirmations in 48 hours",
-              "link on WhatsApp"
-            ],
-            "quote": "“I sent the link at 9 in the morning. By lunch I already knew how many we'd be.”",
-            "who": "Sara, the graduate"
+            "names1": "Marta's",
+            "names2": "graduation",
+            "italic": "",
+            "date": "8 · July · 2026",
+            "sub": "Great hall + toast in the courtyard",
+            "caption": "Ceremony and reception, number of guests, wishes and toast."
           },
           {
             "occ": "Christening",
-            "t": "Leo's christening",
-            "meta": "Lecce · March 2026",
-            "statLabels": [
-              "guests",
-              "children counted separately",
-              "days' notice for the restaurant"
-            ],
-            "quote": "“The restaurant wanted exact numbers. I exported them in one click.”",
-            "who": "Davide, Leo's dad"
+            "names1": "Bianca's",
+            "names2": "christening",
+            "italic": "",
+            "date": "15 · March · 2026",
+            "sub": "San Martino church + lunch",
+            "caption": "Church and family lunch, children counted separately, allergies and plus-ones."
+          },
+          {
+            "occ": "Birthday",
+            "names1": "Marco's",
+            "names2": "40th",
+            "italic": "",
+            "date": "20 · June · 2026",
+            "sub": "Cascina Boscaccio, 8 pm",
+            "caption": "Time, party theme, confirmations and dietary needs — one link in the chat."
           }
         ],
-        "ctaTitlePart1": "The next story could be",
-        "ctaTitleMark": "yours",
-        "ctaSecondary": "See a sample invitation"
+        "ctaTitlePart1": "Create your invitation",
+        "ctaTitleMark": "in five minutes",
+        "ctaSecondary": "See pricing"
       },
       "usecases": {
         "matrimoni": {
@@ -1978,7 +1966,7 @@
           "nameLine2": "Tommaso",
           "inviteItalic": "are getting married",
           "inviteSub": "Villa Erba, Cernobbio",
-          "chipN": "87/142",
+          "chipN": "96/120",
           "chipL": "confirmed · 89% open rate",
           "painsTag": "The problem",
           "painsTitle": "Sound familiar?",
@@ -2020,9 +2008,7 @@
               "d": "A final list with meals and notes, in CSV or PDF, ready to forward."
             }
           ],
-          "quoteText": "\"I organised my sister's wedding without a single WhatsApp group.\"",
-          "quoteWho": "Francesca B.",
-          "quoteMeta": "Wedding · 168 guests · Verona",
+          "quoteText": "Ceremony or reception only, menu and allergies, plus-ones: all in one list.",
           "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
           "ctaSecondary": "See an example"
         },
@@ -2083,9 +2069,7 @@
               "d": "Replies come in real time: book the venue with the right numbers."
             }
           ],
-          "quoteText": "\"I sent the link at 9 in the morning. By lunch I already knew how many we were.\"",
-          "quoteWho": "Sara M.",
-          "quoteMeta": "Graduation · 52 guests · Bologna",
+          "quoteText": "Send the link in the morning. Know the numbers for the reception by evening.",
           "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
           "ctaSecondary": "See an example"
         },
@@ -2146,9 +2130,7 @@
               "d": "The favour stays on paper: the QR leads to the digital confirmation."
             }
           ],
-          "quoteText": "\"The restaurant wanted exact numbers. I exported them in one click.\"",
-          "quoteWho": "Davide P.",
-          "quoteMeta": "Christening · 84 guests · Lecce",
+          "quoteText": "Confirmations, guests and allergies, ready to hand to the restaurant.",
           "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
           "ctaSecondary": "See an example"
         },
@@ -2209,9 +2191,7 @@
               "d": "You always know how many you are. The venue will thank you."
             }
           ],
-          "quoteText": "\"No more little polls in the chat. One link and done — and for once I knew who was coming.\"",
-          "quoteWho": "Marco T.",
-          "quoteMeta": "Birthday · 64 guests · Milan",
+          "quoteText": "One link in the chat, and for once you know who's actually coming.",
           "ctaSub": "Create your first invite in five minutes. Thirty guests free, forever.",
           "ctaSecondary": "See an example"
         },
@@ -2227,7 +2207,7 @@
           "heroSecondary": "See a sample invite",
           "inviteDate": "Workspace · Studio Fiore",
           "nameLine1": "Atelier",
-          "nameLine2": "by Elisa R.",
+          "nameLine2": "for your studio",
           "inviteItalic": "",
           "inviteSub": "12 active events · 4 closing · 1,840 guests",
           "chipN": "12",
@@ -2272,9 +2252,7 @@
               "d": "RSVPs in your systems: CRM, catering, shared sheets."
             }
           ],
-          "quoteText": "\"Clients see their own brand. I see every event on one screen.\"",
-          "quoteWho": "Elisa R.",
-          "quoteMeta": "Wedding planner · 31 events in 2026 · Turin",
+          "quoteText": "Every client sees their own brand. You see every event on one screen.",
           "ctaTitlePart1": "Organising for a living?",
           "ctaTitleMark": "Let's talk",
           "ctaSub": "Atelier is 24 euros a month, unlimited events and guests. A 30-minute demo, no commitment.",
@@ -2614,9 +2592,7 @@
       "shellLabel": "Sign up",
       "shellBody": "Create your first event in five minutes. No card required — pay only if you decide to grow.",
       "shellFoot": "Up to 30 guests free",
-      "quoteText": "\"Five minutes to create the invitation. Five days to receive all the responses.\"",
-      "quoteWho": "Andrea M.",
-      "quoteWhere": "Master's graduation · Bologna",
+      "quoteText": "Create your invitation in five minutes. The replies come in on their own.",
       "titleLine1": "Start",
       "titleLine2": "inviting.",
       "titleHighlight": "Thirty guests",
@@ -2996,8 +2972,7 @@
       "successDescription": "Signed in successfully.",
       "shellLabel": "Sign in",
       "shellBody": "Pick up where you left off — your events, RSVPs and reminders are all here.",
-      "quoteText": "“In two weeks of RSVPs I got ten hours of my life back.”",
-      "quoteWhere": "Wedding · Cernobbio",
+      "quoteText": "One link, one dashboard. Know who's really coming.",
       "shellFoot": "EU servers · GDPR",
       "titleLine1": "Welcome back.",
       "titleLine2": "Your guests",

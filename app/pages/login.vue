@@ -90,8 +90,7 @@ async function onSubmit() {
         :label="$t('ceremly.login.shellLabel')"
         :body="$t('ceremly.login.shellBody')"
         :quote="{
-            text: $t('ceremly.login.quoteText'),
-            av: 'GT', who: 'Giulia T.', where: $t('ceremly.login.quoteWhere')
+            text: $t('ceremly.login.quoteText')
         }"
         :foot="$t('ceremly.login.shellFoot')"
     >

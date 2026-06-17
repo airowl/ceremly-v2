@@ -5,9 +5,9 @@
 // Sotto i 900px il pannello sinistro è nascosto e il form è centrato.
 export interface AuthShellQuote {
     text: string;
-    av: string;
-    who: string;
-    where: string;
+    av?: string;
+    who?: string;
+    where?: string;
 }
 
 defineProps<{
@@ -52,7 +52,7 @@ defineProps<{
                     <p class="serif" style="font-size: 19px; font-weight: 600; line-height: 1.35; margin: 0; letter-spacing: -0.01em;">
                         {{ quote.text }}
                     </p>
-                    <div class="row" style="gap: 10px; margin-top: 14px;">
+                    <div v-if="quote.who" class="row" style="gap: 10px; margin-top: 14px;">
                         <div class="av lg" style="background: var(--orange); color: var(--ink); border-color: var(--ink);">{{ quote.av }}</div>
                         <div class="col">
                             <span style="font-size: 13px; font-weight: 600;">{{ quote.who }}</span>

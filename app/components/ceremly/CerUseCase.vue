@@ -55,8 +55,6 @@ const feats = computed(() => {
     return (tm(`${base.value}.feats`) as Feat[]).map((x, i) => ({ i: icons[i] || 'sparkle', t: rt(x.t), d: rt(x.d) }))
 })
 
-const quoteIni = computed(() => t(`${base.value}.quoteWho`).split(' ').map(w => w[0]).join(''))
-
 const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') : localePath('/signup'))
 </script>
 
@@ -148,13 +146,6 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') 
             <div class="cer-site-wrap" style="padding: 64px 0;">
                 <div style="max-width: 860px; margin: 0 auto; text-align: center;">
                     <blockquote class="serif" style="font-size: 32px; font-weight: 700; line-height: 1.25; margin: 0; letter-spacing: -0.025em;">{{ t(`${base}.quoteText`) }}</blockquote>
-                    <div class="row" style="justify-content: center; gap: 12px; margin-top: 22px;">
-                        <div class="av lg">{{ quoteIni }}</div>
-                        <div class="col" style="align-items: flex-start;">
-                            <span style="font-size: 14px; font-weight: 600;">{{ t(`${base}.quoteWho`) }}</span>
-                            <span class="small muted">{{ t(`${base}.quoteMeta`) }}</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
