@@ -2932,11 +2932,10 @@
         }
       },
       "testimonial": {
-        "tag": "Beta · 142 events managed",
-        "quotePart1": "I organized my sister's wedding without",
-        "quoteMark": "a single WhatsApp group",
-        "quotePart2": "The guest list reached the caterer three days early — complete, with all the allergies.",
-        "authorMeta": "Wedding · 168 guests · Verona"
+        "tag": "For your guests",
+        "quotePart1": "RSVP in",
+        "quoteMark": "under 60 seconds",
+        "quotePart2": "No account, no app."
       },
       "cta": {
         "titlePart1": "Your next event",

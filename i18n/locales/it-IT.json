@@ -2932,11 +2932,10 @@
         }
       },
       "testimonial": {
-        "tag": "Beta · 142 eventi gestiti",
-        "quotePart1": "Ho organizzato il matrimonio di mia sorella senza",
-        "quoteMark": "un solo gruppo WhatsApp",
-        "quotePart2": "La lista è arrivata al catering tre giorni prima — completa, con le allergie.",
-        "authorMeta": "Matrimonio · 168 ospiti · Verona"
+        "tag": "Per i tuoi ospiti",
+        "quotePart1": "RSVP in",
+        "quoteMark": "meno di 60 secondi",
+        "quotePart2": "Nessun account, nessuna app."
       },
       "cta": {
         "titlePart1": "Il tuo prossimo evento",

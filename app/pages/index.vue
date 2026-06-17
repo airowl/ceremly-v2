@@ -388,17 +388,10 @@ const feats: Feat[] = [
             <div class="l-wrap l-quote reveal reveal-up">
                 <div style="max-width: 980px; margin: 0 auto; text-align: center;">
                     <span class="cer-tag" style="background: var(--blue-soft); color: var(--blue-deep); border-color: transparent; display: inline-flex;">{{ $t('ceremly.home.testimonial.tag') }}</span>
-                    <blockquote class="serif l-blockquote" style="font-weight: 700; line-height: 1.2; margin: 24px 0 28px; letter-spacing: -0.03em; color: var(--ink);">
-                        "{{ $t('ceremly.home.testimonial.quotePart1') }} <span style="color: var(--purple);">{{ $t('ceremly.home.testimonial.quoteMark') }}</span>.
-                        {{ $t('ceremly.home.testimonial.quotePart2') }}"
+                    <blockquote class="serif l-blockquote" style="font-weight: 700; line-height: 1.2; margin: 24px 0 0; letter-spacing: -0.03em; color: var(--ink);">
+                        {{ $t('ceremly.home.testimonial.quotePart1') }} <span style="color: var(--purple);">{{ $t('ceremly.home.testimonial.quoteMark') }}</span>.
+                        {{ $t('ceremly.home.testimonial.quotePart2') }}
                     </blockquote>
-                    <div class="row" style="justify-content: center; gap: 12px;">
-                        <div class="av lg" aria-hidden="true">FB</div>
-                        <div class="col" style="align-items: flex-start;">
-                            <span style="font-size: 14px; font-weight: 600;">Francesca B.</span>
-                            <span class="small muted">{{ $t('ceremly.home.testimonial.authorMeta') }}</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
