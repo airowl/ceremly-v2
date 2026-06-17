@@ -47,7 +47,13 @@ Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi 
 > - #6 `sendInvites`/`processDueReminders`: dispatch QStash concorrente a chunk (`Promise.allSettled`, concorrenza 10) → niente timeout su liste grandi.
 > - #2 TOCTOU limiti piano: documentato come rischio accettato (impatto basso; fix atomico non fattibile sul driver Neon HTTP serverless).
 >
-> **Restano aperti**: #16 CSP `unsafe-inline` (CSP nonce-based — rischio SSR, da fare con cura), **#21 export GDPR** (stub — possibile rinvio Phase 2/3, da confermare con PRD), #22 unicità email guest (serve una migration), più i nice-to-have.
+> **Aggiornamento 2026-06-17 — commit `a2ee975` + `a6dbf31`.** Risolti **#21, #22, #8**; **#16** documentato come aperto:
+> - #21 export GDPR: `collectUserData` raccoglie eventi delle org dell'utente (non più stub vuoto).
+> - #22 unicità email guest: indice unique parziale `(event_id, lower(email))` (migration `0005`, **da applicare con `db:migrate`**; in prod risolvere eventuali duplicati prima) + dedup in createGuest (409) / importGuests (skip).
+> - #8 anti-spam form contatti: honeypot + timing + rate-limit IP + disposable-email (come waitingList, ora che il rate-limiter è durevole).
+> - #16 CSP `unsafe-inline`: **NON risolto** — verificato empiricamente che il nonce-based emette `script-src 'none'` sulle pagine prerendered (rompe il sito marketing). Fix corretto = `security.ssg.hashScripts` + nonce con verifica browser. Defense-in-depth (nessun sink XSS attuale).
+>
+> **Stato finale should-fix: 20/22 risolti**, #2 (TOCTOU) documentato come rischio accettato, **#16 unico aperto** (richiede lavoro CSP browser-verificato). Restano i nice-to-have. Tutti i fix verificati (typecheck/build/lint + 4 verify script: plan-limit/rate-limit/account-purge); migration `0005` da applicare; commit NON pushati.
 
 ## 🏗️ Build health (ground-truth, exit code reali)
 
