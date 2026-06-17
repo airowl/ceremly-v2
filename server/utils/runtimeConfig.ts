@@ -82,6 +82,8 @@ export const generateRuntimeConfig = () => {
             appEnv: process.env.NODE_ENV,
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
             appContactEmail: process.env.NUXT_PUBLIC_APP_CONTACT_EMAIL,
+            // Sentry (error tracking). DSN pubblico per design; vuoto = Sentry off.
+            sentry: { dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || "" },
             creemProductIdStarterMonth: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH,
             creemProductIdStarterYear: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_YEAR,
             creemProductIdPremiumMonth: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_MONTH,

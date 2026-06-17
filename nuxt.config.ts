@@ -30,7 +30,17 @@ export default defineNuxtConfig({
         "nuxt-security",
         "@nuxt/fonts",
         "@pinia/nuxt",
+        "@sentry/nuxt/module",
     ],
+
+    // Error tracking (Sentry). Si attiva SOLO se NUXT_PUBLIC_SENTRY_DSN è
+    // configurato (vedi sentry.*.config.ts). Upload source-map disabilitato
+    // (niente dipendenza da SENTRY_AUTH_TOKEN al build); il server SDK viene
+    // iniettato nell'entry Nitro per catturare gli errori serverless.
+    sentry: {
+        sourceMapsUploadOptions: { enabled: false },
+        autoInjectServerSentry: "top-level-import",
+    },
 
     components: true, // Abilita auto-import componenti
 
