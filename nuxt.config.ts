@@ -270,6 +270,15 @@ export default defineNuxtConfig({
                 "default-src": ["'self'"],
                 "script-src": [
                     "'self'",
+                    // #16 (NON risolto — vedi CODE-REVIEW): passare a nonce-based
+                    // ('nonce-{{nonce}}', rimuovendo 'unsafe-inline') ROMPE le pagine
+                    // PRERENDERED: nuxt-security non può iniettare un nonce
+                    // per-richiesta nell'HTML statico → emette `script-src 'none'`
+                    // (verificato: home prerendered → tutti gli script bloccati).
+                    // Il fix corretto richiede `security.ssg.hashScripts` (CSP basata
+                    // su hash per le pagine statiche) + nonce per le SSR, con verifica
+                    // browser su ogni modalità di rendering. È defense-in-depth
+                    // (nessun sink XSS di first-order oggi), quindi resta aperto.
                     "'unsafe-inline'",
                     "'wasm-unsafe-eval'",
                     "https://www.googletagmanager.com",

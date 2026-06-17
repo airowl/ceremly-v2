@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 import { organization } from "./auth";
@@ -43,6 +43,13 @@ export const guests = pgTable(
         index("guests_organization_id_idx").on(table.organizationId),
         index("guests_event_id_idx").on(table.eventId),
         uniqueIndex("guests_token_idx").on(table.token),
+        // #22: un solo ospite ATTIVO per (evento, email). Parziale: ignora email
+        // nulle (ospiti senza email) e i soft-deleted (removedAt), così un
+        // re-import o un doppio add con la stessa email viene rifiutato (23505)
+        // invece di creare duplicati → inviti/reminder doppi e count gonfiato.
+        uniqueIndex("guests_event_email_unique_idx")
+            .on(table.eventId, sql`lower(${table.email})`)
+            .where(sql`${table.email} IS NOT NULL AND ${table.removedAt} IS NULL`),
     ],
 );
 

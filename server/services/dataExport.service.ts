@@ -11,6 +11,8 @@ import {
     file,
     auditLog,
     creem_subscription,
+    member,
+    events,
     type ExportStatus,
 } from '../database/schema';
 
@@ -118,9 +120,47 @@ export async function collectUserData(userId: string): Promise<ExportData> {
         throw new Error('User not found');
     }
 
-    // STUB phase 1a — query su schema.events/eventUsers rimossa insieme alla tabella.
-    // 1c: ripristinare con organization/member lookup via Better Auth org plugin.
-    const allEvents: ExportEvent[] = [];
+    // Eventi delle org di cui l'utente è membro (portabilità dati GDPR): si
+    // risolvono le membership (ruolo) e si raccolgono gli eventi org-scoped.
+    const memberships = await db
+        .select({ organizationId: member.organizationId, role: member.role })
+        .from(member)
+        .where(eq(member.userId, userId));
+    const orgIds = memberships.map((m) => m.organizationId);
+    const roleByOrg = new Map(memberships.map((m) => [m.organizationId, m.role]));
+
+    let allEvents: ExportEvent[] = [];
+    if (orgIds.length > 0) {
+        const rows = await db
+            .select({
+                id: events.id,
+                title: events.title,
+                slug: events.slug,
+                type: events.type,
+                eventDate: events.eventDate,
+                locationName: events.locationName,
+                organizationId: events.organizationId,
+                createdAt: events.createdAt,
+            })
+            .from(events)
+            .where(inArray(events.organizationId, orgIds))
+            .orderBy(desc(events.createdAt))
+            .limit(1000);
+        allEvents = rows.map((e) => {
+            const role = roleByOrg.get(e.organizationId) ?? 'member';
+            return {
+                id: e.id,
+                name: e.title,
+                slug: e.slug,
+                description: e.type,
+                date: e.eventDate ? e.eventDate.toISOString() : '',
+                location: e.locationName,
+                isOwner: role === 'owner',
+                role,
+                createdAt: e.createdAt,
+            };
+        });
+    }
 
     // Get files (metadata only, no content)
     const userFiles = await db.query.file.findMany({

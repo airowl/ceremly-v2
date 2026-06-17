@@ -179,6 +179,45 @@ export async function findActiveGuestNames(organizationId: string, eventId: stri
         );
 }
 
+/** Email (lowercase) degli ospiti attivi con email — per la dedup dell'import bulk. */
+export async function findActiveGuestEmails(organizationId: string, eventId: string): Promise<string[]> {
+    const db = getDB();
+    const rows = await db
+        .select({ email: schema.guests.email })
+        .from(schema.guests)
+        .where(
+            and(
+                eq(schema.guests.organizationId, organizationId),
+                eq(schema.guests.eventId, eventId),
+                isNull(schema.guests.removedAt),
+                sql`${schema.guests.email} IS NOT NULL`,
+            ),
+        );
+    return rows.map((r) => (r.email as string).toLowerCase());
+}
+
+/** True se esiste già un ospite ATTIVO con quell'email (case-insensitive) nell'evento. */
+export async function activeGuestEmailExists(
+    organizationId: string,
+    eventId: string,
+    email: string,
+): Promise<boolean> {
+    const db = getDB();
+    const rows = await db
+        .select({ id: schema.guests.id })
+        .from(schema.guests)
+        .where(
+            and(
+                eq(schema.guests.organizationId, organizationId),
+                eq(schema.guests.eventId, eventId),
+                isNull(schema.guests.removedAt),
+                sql`lower(${schema.guests.email}) = ${email.toLowerCase()}`,
+            ),
+        )
+        .limit(1);
+    return rows.length > 0;
+}
+
 /** Ultima response di un ospite (al più una: guestId UNIQUE su rsvp_responses). */
 export async function findResponseByGuestScoped(organizationId: string, guestId: string) {
     const db = getDB();

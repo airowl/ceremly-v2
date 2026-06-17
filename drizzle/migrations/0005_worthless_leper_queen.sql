@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "guests_event_email_unique_idx" ON "guests" USING btree ("event_id",lower("email")) WHERE "guests"."email" IS NOT NULL AND "guests"."removed_at" IS NULL;

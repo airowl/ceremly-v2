@@ -17,9 +17,11 @@ import type {
 import { CEREMLY_FREE_LIMITS } from "~~/shared/constants/pricing";
 import { findEventByIdScoped } from "../repositories/eventRepository";
 import {
+    activeGuestEmailExists,
     countActiveGuests,
     createGuestRow,
     createGuestsBulk,
+    findActiveGuestEmails,
     findActiveGuestNames,
     findActivitiesByGuestScoped,
     findGuestByIdScoped,
@@ -35,6 +37,13 @@ import { generateGuestToken } from "../utils/guestToken";
 import { isOrgFreePlan } from "./planLimit.service";
 
 const FREE_GUEST_LIMIT_REASON = "Limite piano Free (30 ospiti) raggiunto";
+
+/** True se il 23505 viene dall'indice unique email (non dalla collisione token). */
+function isEmailUniqueViolation(e: unknown): boolean {
+    const err = e as { constraint?: string; message?: string; detail?: string };
+    const haystack = `${err.constraint ?? ""} ${err.message ?? ""} ${err.detail ?? ""}`;
+    return haystack.includes("guests_event_email_unique_idx");
+}
 
 /** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
@@ -152,7 +161,20 @@ export async function createGuest(
         }
     }
 
+    const normalizedEmail = normalizeEmail(data.email);
+
+    // #22: unicità email per evento (ospiti attivi). Pre-check per un 409 chiaro
+    // nel caso comune; l'indice unique parziale resta il guard reale sulle race.
+    if (normalizedEmail && await activeGuestEmailExists(organizationId, eventId, normalizedEmail)) {
+        throw createError({
+            statusCode: 409,
+            statusMessage: `Esiste già un ospite con l'email ${normalizedEmail} per questo evento.`,
+        });
+    }
+
     // Collisione token (unique) astronomicamente rara: retry difensivo su 23505.
+    // Un 23505 dall'indice email (race) → 409 chiaro, NON retry (il token nuovo
+    // non risolverebbe il conflitto di email).
     let created: Awaited<ReturnType<typeof createGuestRow>>;
     const maxAttempts = 3;
     for (let attempt = 1; ; attempt++) {
@@ -160,7 +182,7 @@ export async function createGuest(
             created = await createGuestRow(organizationId, eventId, {
                 firstName: data.firstName,
                 lastName: data.lastName,
-                email: normalizeEmail(data.email),
+                email: normalizedEmail,
                 phone: data.phone?.trim() || null,
                 groupName: data.groupName?.trim() || null,
                 notes: data.notes ?? null,
@@ -168,7 +190,15 @@ export async function createGuest(
             });
             break;
         } catch (e: unknown) {
-            if ((e as { code?: string }).code === "23505" && attempt < maxAttempts) continue;
+            if ((e as { code?: string }).code === "23505") {
+                if (isEmailUniqueViolation(e)) {
+                    throw createError({
+                        statusCode: 409,
+                        statusMessage: `Esiste già un ospite con l'email ${normalizedEmail} per questo evento.`,
+                    });
+                }
+                if (attempt < maxAttempts) continue; // collisione token → retry
+            }
             throw e;
         }
     }
@@ -265,10 +295,11 @@ export async function importGuests(
 ) {
     const { organizationId } = await requireEventScoped(event, eventId);
 
-    const [free, current, existingNames] = await Promise.all([
+    const [free, current, existingNames, existingEmails] = await Promise.all([
         isOrgFreePlan(organizationId),
         countActiveGuests(organizationId, eventId),
         findActiveGuestNames(organizationId, eventId),
+        findActiveGuestEmails(organizationId, eventId),
     ]);
     let capacity = free
         ? Math.max(0, CEREMLY_FREE_LIMITS.maxGuestsPerEvent - current)
@@ -277,6 +308,10 @@ export async function importGuests(
     const nameKey = (firstName: string, lastName: string) =>
         `${firstName.trim().toLowerCase()}|${lastName.trim().toLowerCase()}`;
     const knownNames = new Set(existingNames.map((n) => nameKey(n.firstName, n.lastName)));
+    // #22: email già attive (DB + intra-batch). L'indice unique parziale rifiuta
+    // i duplicati di email, quindi qui li si SALTA (skip rigido) invece di farli
+    // fallire l'intero insert bulk con un 23505.
+    const knownEmails = new Set(existingEmails);
 
     const toInsert: CreateGuestValues[] = [];
     const skipped: ImportRowIssue[] = [];
@@ -288,9 +323,20 @@ export async function importGuests(
             skipped.push({ row: rowNumber, reason: FREE_GUEST_LIMIT_REASON });
             return;
         }
+        const email = normalizeEmail(row.email);
+        if (email && knownEmails.has(email.toLowerCase())) {
+            // Email duplicata (ospite attivo esistente o già vista nel file): skip.
+            skipped.push({
+                row: rowNumber,
+                reason: `Email «${email}» già presente per questo evento`,
+            });
+            return;
+        }
+        if (email) knownEmails.add(email.toLowerCase());
+
         const key = nameKey(row.firstName, row.lastName);
         if (knownNames.has(key)) {
-            // Duplicato (DB o intra-batch): si importa comunque, ma si segnala.
+            // Duplicato di NOME (DB o intra-batch): si importa comunque, ma si segnala.
             warnings.push({
                 row: rowNumber,
                 reason: `Possibile duplicato: «${row.firstName} ${row.lastName}» è già in lista`,
@@ -300,7 +346,7 @@ export async function importGuests(
         toInsert.push({
             firstName: row.firstName,
             lastName: row.lastName,
-            email: normalizeEmail(row.email),
+            email,
             phone: row.phone?.trim() || null,
             groupName: row.groupName?.trim() || null,
             notes: row.notes ?? null,
