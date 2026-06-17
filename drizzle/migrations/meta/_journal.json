@@ -43,6 +43,13 @@
       "when": 1781702296584,
       "tag": "0005_worthless_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781713281901,
+      "tag": "0006_stiff_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

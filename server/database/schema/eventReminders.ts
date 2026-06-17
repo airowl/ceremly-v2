@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { boolean, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 import { organization } from "./auth";
@@ -33,6 +33,12 @@ export const eventReminders = pgTable(
     (table) => [
         index("event_reminders_organization_id_idx").on(table.organizationId),
         index("event_reminders_event_id_idx").on(table.eventId),
+        // Hot-path del cron giornaliero findDueReminders: trova i reminder
+        // abilitati e non ancora inviati. Indice PARZIALE → niente seq scan
+        // cross-org. Indicizza eventId per agganciare il join con events.
+        index("event_reminders_due_idx")
+            .on(table.eventId)
+            .where(sql`${table.enabled} = true AND ${table.sentAt} IS NULL`),
     ],
 );
 

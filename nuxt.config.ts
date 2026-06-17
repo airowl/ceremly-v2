@@ -89,9 +89,9 @@ export default defineNuxtConfig({
         "/_nuxt/**": {
             headers: { "Cache-Control": "public, max-age=31536000, immutable" },
         },
-        "/api/**": {
-            cors: true,
-        },
+        // CORS gestito da un'unica autorità: il `corsHandler` di nuxt-security
+        // (security block). Rimosso il `cors:true` di Nitro su /api/** che
+        // emetteva header CORS in conflitto/duplicati.
         // 🚧 MANUTENZIONE - Redirect home alla pagina maintenance
         // "/": { redirect: "/maintenance" },
         // Landing page con SSR/SSG

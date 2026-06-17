@@ -2,6 +2,8 @@ import { count, eq, ilike, or, desc, asc, sql } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { getDB } from "~~/server/utils/db";
+import { parseQueryParams } from "~~/server/utils/validateBody";
+import { adminUsersQuerySchema } from "~~/shared/schemas/admin";
 
 export interface AdminUserListItem {
     id: string;
@@ -30,19 +32,9 @@ export default defineEventHandler(async (event): Promise<AdminUserListResponse> 
     await requireAdminApiKey(event);
 
     const db = getDB();
-    const query = getQuery(event);
-
-    // Pagination
-    const page = Math.max(1, parseInt(query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 20));
+    const { page, limit, search, role: roleFilter, status: statusFilter, sortBy, sortOrder }
+        = await parseQueryParams(event, adminUsersQuerySchema);
     const offset = (page - 1) * limit;
-
-    // Filters
-    const search = (query.search as string) || "";
-    const roleFilter = query.role as string | undefined;
-    const statusFilter = query.status as string | undefined;
-    const sortBy = (query.sortBy as string) || "createdAt";
-    const sortOrder = (query.sortOrder as string) || "desc";
 
     // Build where conditions
     const conditions = [];

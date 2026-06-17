@@ -1,0 +1,1 @@
+CREATE INDEX "event_reminders_due_idx" ON "event_reminders" USING btree ("event_id") WHERE "event_reminders"."enabled" = true AND "event_reminders"."sent_at" IS NULL;

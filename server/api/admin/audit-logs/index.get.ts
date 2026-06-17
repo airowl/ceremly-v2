@@ -7,27 +7,16 @@ import { eq, desc, and, gte, lte, like, or, count } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { getDB } from "~~/server/utils/db";
+import { parseQueryParams } from "~~/server/utils/validateBody";
+import { adminAuditLogsQuerySchema } from "~~/shared/schemas/admin";
 
 export default defineEventHandler(async (event) => {
     await requireAdminApiKey(event);
 
     const db = getDB();
-    const query = getQuery(event);
-
-    // Pagination
-    const page = Math.max(1, parseInt(query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 50));
+    const { page, limit, category, action, userId, eventId, status, startDate, endDate, search }
+        = await parseQueryParams(event, adminAuditLogsQuerySchema);
     const offset = (page - 1) * limit;
-
-    // Filters
-    const category = query.category as string | undefined;
-    const action = query.action as string | undefined;
-    const userId = query.userId as string | undefined;
-    const eventId = query.eventId as string | undefined;
-    const status = query.status as string | undefined;
-    const startDate = query.startDate as string | undefined;
-    const endDate = query.endDate as string | undefined;
-    const search = query.search as string | undefined;
 
     // Build conditions
     const conditions = [];

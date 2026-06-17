@@ -2,6 +2,8 @@ import { count, eq, desc, asc, sql } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { getDB } from "~~/server/utils/db";
+import { parseQueryParams } from "~~/server/utils/validateBody";
+import { adminSubscriptionsQuerySchema } from "~~/shared/schemas/admin";
 
 export interface AdminSubscriptionListItem {
     id: string;
@@ -30,18 +32,9 @@ export default defineEventHandler(async (event): Promise<AdminSubscriptionListRe
     await requireAdminApiKey(event);
 
     const db = getDB();
-    const query = getQuery(event);
-
-    // Pagination
-    const page = Math.max(1, parseInt(query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 20));
+    const { page, limit, search, status: statusFilter, sortBy, sortOrder }
+        = await parseQueryParams(event, adminSubscriptionsQuerySchema);
     const offset = (page - 1) * limit;
-
-    // Filters
-    const search = (query.search as string) || "";
-    const statusFilter = query.status as string | undefined;
-    const sortBy = (query.sortBy as string) || "periodEnd";
-    const sortOrder = (query.sortOrder as string) || "desc";
 
     // Build conditions
     const conditions = [];
