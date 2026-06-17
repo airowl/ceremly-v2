@@ -41,7 +41,7 @@ Il timing è favorevole per tre ragioni convergenti. La prima è culturale: la p
 | Activation organizzatore | % utenti registrati che creano un invito e inviano almeno 1 link | 60% | Entro 30 giorni dalla registrazione |
 | Engagement ospite | % link personalizzati aperti / link inviati | >70% | Ongoing |
 | Conversione RSVP | % RSVP compilati / link aperti | >60% | Ongoing |
-| Conversion free→paid | % utenti free che acquistano Premium o Wedding per almeno 1 evento | 8% | Entro 6 mesi dal lancio |
+| Conversion free→paid | % utenti free che acquistano Celebrazione o Atelier per almeno 1 evento | 8% | Entro 6 mesi dal lancio |
 | Revenue | MRR equivalente (one-time purchases annualizzati) | €3.000 | 12 mesi |
 | Soddisfazione ospite | Rating medio post-RSVP ("Quanto è stato facile rispondere?") | >4.2/5 | 6 mesi |
 | Stabilità | Uptime | 99.5% | Mensile |
@@ -155,7 +155,7 @@ Il primo vantaggio è il **posizionamento multi-evento con profondità culturale
 
 Il secondo vantaggio è la **focalizzazione radicale sull'esperienza invito + RSVP**. Invece di costruire un ecosistema all-in-one (sito web, registry, hotel booking, vendor directory), Ceremly fa una cosa sola — inviti e RSVP — e la fa in modo eccezionale, con link personalizzati per ospite, form condizionali, reminder automatici, e dashboard in tempo reale.
 
-Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup nascosti su prodotti, niente pubblicità nell'esperienza ospite. Pricing chiaro: tier gratuito generoso + pagamento una tantum per evento premium.
+Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup nascosti su prodotti, niente pubblicità nell'esperienza ospite, nessuna percentuale o costo per ospite/RSVP. Pricing chiaro e ibrido: tier gratuito generoso (Free) + pagamento una tantum per evento (Celebrazione) per gli organizzatori privati + abbonamento mensile (Atelier) per chi organizza eventi per lavoro.
 
 ---
 
@@ -577,7 +577,7 @@ Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup 
 - **Resend API** per email transazionali (inviti, reminder, broadcast).
 - **Google Maps Embed API** per mappa location negli inviti (o link deep link senza embed per ridurre costi).
 - **Cloudflare R2** S3-compatible API per storage immagini (gallery, header invito).
-- **Creem API** per pagamenti one-time (upgrade Premium/Wedding).
+- **Creem API** per pagamenti: one-time per evento (Celebrazione) e abbonamento ricorrente (Atelier).
 
 ### Non-Functional Requirements
 
@@ -624,7 +624,7 @@ Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup 
 - **Design freeze (Phase 1):** 2026-06-15
 - **Beta chiusa (10-20 utenti reali):** 2026-08-01
 - **Lancio pubblico MVP:** 2026-09-01
-- **Prima vendita Premium/Wedding:** 2026-09-30
+- **Prima vendita Celebrazione/Atelier:** 2026-09-30
 
 ---
 
@@ -693,9 +693,9 @@ Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup 
 
 - [ ] Come gestire l'ospite che vuole aggiungere un +1 non previsto dall'organizzatore? Opzione A: l'ospite può aggiungere liberamente. Opzione B: l'ospite deve contattare l'organizzatore. **Decision:** da validare con i beta tester.
 - [ ] Servono notifiche push (web push notification) all'organizzatore quando un ospite risponde, o basta l'aggiornamento in dashboard + email digest giornaliero? **Decision:** partire con email digest, aggiungere push se richiesto.
-- [ ] Il tier Free dovrebbe avere un watermark "Creato con Ceremly" nell'invito? Pro: brand awareness e viralità. Contro: può infastidire organizzatori attenti all'estetica. **Decision:** sì, con possibilità di rimuoverlo nel tier Premium.
+- [ ] Il tier Free dovrebbe avere un watermark "Creato con Ceremly" nell'invito? Pro: brand awareness e viralità. Contro: può infastidire organizzatori attenti all'estetica. **Decision:** sì, con possibilità di rimuoverlo nei tier a pagamento (Celebrazione/Atelier).
 - [ ] Come gestire gli inviti per eventi ricorrenti (es. compleanno ogni anno)? Opzione: duplicazione evento con ospiti pre-caricati. **Decision:** defer to Phase 3.
-- [ ] Prezzi definitivi dei tier Premium (€9 vs €12 vs €15) e Wedding (€29 vs €35 vs €39) — da definire con analisi di willingness-to-pay durante la beta.
+- [x] Prezzi dei tier — **DEFINITI:** Free €0 · Celebrazione €39 una tantum/evento · Atelier €24/mese (per planner). Da validare con analisi di willingness-to-pay durante la beta.
 
 ---
 
@@ -719,7 +719,7 @@ Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup 
 
 - Si assume che gli italiani siano pronti a usare inviti digitali per eventi oltre il matrimonio (lauree, battesimi, compleanni). Validazione: i beta tester coprono almeno 2 tipi di evento diversi.
 - Si assume che la distribuzione via "copia link per WhatsApp" sia sufficientemente fluida, anche senza invio diretto via WhatsApp API.
-- Si assume che il modello di pricing one-time per evento (non subscription) generi revenue sufficiente a coprire i costi operativi (Neon, Resend, R2, dominio).
+- Si assume che il modello di pricing ibrido — una tantum per evento (Celebrazione) per gli organizzatori privati + abbonamento mensile (Atelier) per i planner professionali — generi revenue sufficiente a coprire i costi operativi (Neon, Resend, R2, dominio).
 - Si assume che gli ospiti aprano il link personalizzato e compilino l'RSVP senza frizioni. La barriera psicologica "non conosco questo sito, è sicuro?" potrebbe essere un ostacolo — mitigato dal fatto che il link arriva da una persona conosciuta.
 - Si assume che Resend rimanga affidabile e a costi ragionevoli per l'invio di email transazionali nella scala prevista (< 10.000 email/mese nel primo anno).
 
@@ -738,7 +738,7 @@ Il terzo vantaggio è la **trasparenza del modello di business**. Niente markup 
 
 - **Resend:** servizio email transazionale. Se Resend ha downtime, gli inviti email e i reminder non partono. Mitigation: WhatsApp come canale alternativo sempre disponibile.
 - **Neon:** database PostgreSQL serverless. Se Neon ha downtime, l'intero servizio è offline. Mitigation: backup automatici, monitoring uptime.
-- **Creem:** payment gateway. Se Creem ha problemi, gli utenti non possono acquistare tier Premium/Wedding. Mitigation: i pagamenti non bloccano l'uso del tier Free.
+- **Creem:** payment gateway. Se Creem ha problemi, gli utenti non possono acquistare tier Celebrazione/Atelier. Mitigation: i pagamenti non bloccano l'uso del tier Free.
 - **Cloudflare R2:** storage immagini. Se R2 è offline, le immagini negli inviti e nella gallery non si caricano. Mitigation: CDN caching minimizza l'impatto.
 
 ---
