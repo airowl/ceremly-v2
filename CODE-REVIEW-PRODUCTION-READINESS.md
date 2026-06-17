@@ -42,7 +42,12 @@ Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi 
 > - `deleteAccount` programma la cancellazione: ban permanente (`banExpires=null`) + data purge (30gg) nel `banReason` + revoca sessioni; niente più soft-delete che lascia i PII.
 > - `purgeDueDeletedAccounts` (cron giornaliero su `cleanup-files` + endpoint dedicato manuale): org solo-membro eliminata (R2 + cascade DB), org con altri membri → **ownership trasferita** (mai distruggere dati altrui); subscription Creem pulite; user cascade. Verify `pnpm verify:account-purge` (fixture usa-e-getta + tripwire org reali). Nessuna migration; nulla cancella prima di 30gg dal deploy.
 >
-> **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #16 CSP `unsafe-inline`, #17 validazione env a boot, **#21 export GDPR** (stub — possibile rinvio Phase 2/3, da confermare con PRD), #22 unicità email guest (serve migration), più i nice-to-have.
+> **Aggiornamento 2026-06-17 — commit `701ac5f`.** Risolti **#17, #6** e documentato **#2**:
+> - #17 plugin Nitro `0.validate-env`: boot fail-fast in prod con la lista dei secret critici mancanti (no più 500 opachi per-richiesta); dev=warning; skip in prerender.
+> - #6 `sendInvites`/`processDueReminders`: dispatch QStash concorrente a chunk (`Promise.allSettled`, concorrenza 10) → niente timeout su liste grandi.
+> - #2 TOCTOU limiti piano: documentato come rischio accettato (impatto basso; fix atomico non fattibile sul driver Neon HTTP serverless).
+>
+> **Restano aperti**: #16 CSP `unsafe-inline` (CSP nonce-based — rischio SSR, da fare con cura), **#21 export GDPR** (stub — possibile rinvio Phase 2/3, da confermare con PRD), #22 unicità email guest (serve una migration), più i nice-to-have.
 
 ## 🏗️ Build health (ground-truth, exit code reali)
 
