@@ -33,7 +33,12 @@ Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi 
 > - #14 `runtimeConfig.fileManager`: `maxFileSize` 5MB + `allowedMimeTypes` raster (no svg) → guard upload non più saltate. *(Behaviour change: cover non-raster ora 415.)*
 > - #15 `mapsUrl` refine http(s)-only nello schema + `mapsHref` difensivo → stop XSS al click sulla pagina invito pubblica (test refine 5/5).
 >
-> **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #7–10 rate-limit durevole, #16 CSP `unsafe-inline`, #17 validazione env a boot, #19–22 GDPR (erasure/export — decisioni di prodotto/PRD) & unicità email guest, più i nice-to-have.
+> **Aggiornamento 2026-06-17 — commit `76173ba`.** Risolti **#7, #9, #10** (rate-limit durevole Redis):
+> - A (#10a) Better Auth `rateLimit` su `secondary-storage` (Upstash) + customRules sui path sensibili (`/sign-in/email`, `/request-password-reset`, `/reset-password`).
+> - B (#9, #7) `cacheClient.increment` atomico + `isEndpointRateLimited` async/Redis-backed + `getClientIp`; applicato a RSVP POST (30/min/IP) e waiting-list. Verify `pnpm verify:rate-limit`.
+> - C (#10b) il rateLimiter globale nuxt-security resta best-effort per-istanza *by design* (no SPOF Redis su ogni richiesta); le superfici reali (auth + POST pubblici) sono coperte da A+B. *(Part A non runtime-testabile in dev: Better Auth rateLimit è attivo solo in prod.)*
+>
+> **Restano aperti**: #2 TOCTOU, #6 batch dispatch, #16 CSP `unsafe-inline`, #17 validazione env a boot, #19–22 GDPR (erasure/export — decisioni di prodotto/PRD) & unicità email guest, più i nice-to-have.
 
 ## 🏗️ Build health (ground-truth, exit code reali)
 
