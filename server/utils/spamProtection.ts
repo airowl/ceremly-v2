@@ -1,7 +1,12 @@
 /**
- * Anti-spam utilities for public forms (waiting list, contact, etc.)
- * Platform-agnostic: no external dependencies.
+ * Anti-spam utilities for public forms (waiting list, contact, RSVP, etc.).
+ *
+ * Il rate limiter è backed da Upstash Redis (cacheClient) così il conteggio è
+ * CONDIVISO tra le istanze serverless Vercel (una Map in-process si resetta a
+ * ogni cold start e non è condivisa → inefficace). Fallback in-memory
+ * best-effort quando Redis non è configurato (dev / self-host).
  */
+import { cacheClient } from "./drivers";
 
 // --- Disposable Email Blocking ---
 
@@ -58,54 +63,23 @@ export function isDisposableEmail(email: string): boolean {
     return DISPOSABLE_DOMAINS.has(domain);
 }
 
-// --- Endpoint-Specific Rate Limiter ---
-
-interface RateLimitEntry {
-    count: number;
-    startTime: number;
-}
-
-const endpointLimits = new Map<string, RateLimitEntry>();
-
-// Cleanup stale entries every 30 minutes
-const CLEANUP_INTERVAL = 30 * 60 * 1000;
-let lastCleanup = Date.now();
-
-function cleanupStaleEntries(windowMs: number) {
-    const now = Date.now();
-    if (now - lastCleanup < CLEANUP_INTERVAL) return;
-    lastCleanup = now;
-
-    for (const [key, entry] of endpointLimits) {
-        if (now - entry.startTime > windowMs) {
-            endpointLimits.delete(key);
-        }
-    }
-}
+// --- Endpoint-Specific Rate Limiter (Redis-backed, shared across instances) ---
 
 /**
  * Check if an IP has exceeded the rate limit for a specific endpoint.
- * Returns true if the request should be blocked.
+ * Returns true if the request should be blocked (count oltre maxRequests nella
+ * finestra). Conteggio condiviso via Upstash (cacheClient.increment).
  */
-export function isEndpointRateLimited(
+export async function isEndpointRateLimited(
     ip: string,
     endpoint: string,
     maxRequests: number = 5,
     windowMs: number = 60 * 60 * 1000, // 1 hour default
-): boolean {
-    cleanupStaleEntries(windowMs);
-
-    const now = Date.now();
-    const key = `${ip}:${endpoint}`;
-    const entry = endpointLimits.get(key);
-
-    if (!entry || now - entry.startTime > windowMs) {
-        endpointLimits.set(key, { count: 1, startTime: now });
-        return false;
-    }
-
-    entry.count++;
-    return entry.count > maxRequests;
+): Promise<boolean> {
+    const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
+    const key = `rl:${endpoint}:${ip}`;
+    const count = await cacheClient.increment(key, windowSeconds);
+    return count > maxRequests;
 }
 
 // --- Honeypot Validation ---

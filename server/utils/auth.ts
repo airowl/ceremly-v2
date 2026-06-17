@@ -150,6 +150,23 @@ export const createBetterAuth = () =>
             },
         },
         secondaryStorage: cacheClient,
+        // Rate limiting CONDIVISO tra istanze serverless: storage su
+        // secondary-storage (Upstash via cacheClient) invece del default
+        // in-memory (per-istanza, resettato a ogni cold start su Vercel).
+        // enabled è il default di Better Auth (attivo in produzione); i
+        // customRules stringono i path sensibili al brute-force. NB: i path key
+        // sono gli endpoint REALI di Better Auth 1.4.x (request-password-reset,
+        // non forget-password) — verificati nei sorgenti.
+        rateLimit: {
+            storage: "secondary-storage",
+            window: 60,
+            max: 100,
+            customRules: {
+                "/sign-in/email": { window: 60, max: 10 },
+                "/request-password-reset": { window: 60, max: 5 },
+                "/reset-password": { window: 60, max: 10 },
+            },
+        },
         emailAndPassword: {
             enabled: true,
             requireEmailVerification: true,

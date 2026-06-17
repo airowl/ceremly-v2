@@ -13,6 +13,7 @@ import {
     isHoneypotTriggered,
     isSubmittedTooFast,
 } from '../utils/spamProtection';
+import { getClientIp } from '../utils/clientIp';
 import { logAudit } from '../utils/audit';
 
 /**
@@ -47,13 +48,10 @@ export async function subscribe(
         return { success: true, alreadySubscribed: false, emailSent: true };
     }
 
-    // 3. Endpoint rate limit: max 5 submissions per hour per IP
-    const clientIP =
-        event.node.req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
-        event.node.req.socket.remoteAddress ||
-        'unknown';
+    // 3. Endpoint rate limit: max 5 submissions per hour per IP (Redis-backed)
+    const clientIP = getClientIp(event);
 
-    if (isEndpointRateLimited(clientIP, 'waiting-list-subscribe', 5, 60 * 60 * 1000)) {
+    if (await isEndpointRateLimited(clientIP, 'waiting-list-subscribe', 5, 60 * 60 * 1000)) {
         throw createError({
             statusCode: 429,
             message: 'Too many requests. Please try again later.',

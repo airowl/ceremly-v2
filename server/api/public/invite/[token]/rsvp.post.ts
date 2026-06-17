@@ -7,12 +7,22 @@
 import { publicRsvpSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";
 import { submitRsvp } from "~~/server/services/publicInvite.service";
+import { isEndpointRateLimited } from "~~/server/utils/spamProtection";
+import { getClientIp } from "~~/server/utils/clientIp";
 
 export default defineEventHandler(async (event) => {
     const token = getRouterParam(event, "token");
     if (!token) {
         throw createError({ statusCode: 404, statusMessage: "Invito non disponibile" });
     }
+
+    // Rate limit per-IP (Redis): difesa contro RSVP forgiati/flood sull'endpoint
+    // pubblico non autenticato. Limite generoso (30/min) per non bloccare più
+    // ospiti dietro lo stesso IP (NAT/CGNAT/WiFi evento); letale per gli script.
+    if (await isEndpointRateLimited(getClientIp(event), "public-rsvp", 30, 60 * 1000)) {
+        throw createError({ statusCode: 429, statusMessage: "Troppe richieste. Riprova tra poco." });
+    }
+
     const data = await parseBody(event, publicRsvpSchema);
 
     try {
