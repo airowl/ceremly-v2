@@ -139,9 +139,25 @@ export async function sendInvites(
         ...(eventRow.status === "draft" ? { status: "active" } : {}),
     });
 
-    if (withEmail.length > 0) {
-        await markSent(organizationId, withEmail.map((g) => g.id), "email");
-        await insertActivities(withEmail.map((g) => ({
+    // 1 job per ospite. Dispatch PRIMA, poi si marcano "inviato" + activity SOLO
+    // gli ospiti effettivamente accodati: un enqueue fallito non deve apparire
+    // come "Inviato" in dashboard (l'organizzatore può ritentare). L'idempotenza
+    // lato consumer (upstash-message-id) evita doppioni sui retry QStash.
+    const enqueued: typeof withEmail = [];
+    const failedIds: string[] = [];
+    for (const guest of withEmail) {
+        try {
+            await dispatch("send-invite-email", { guestId: guest.id });
+            enqueued.push(guest);
+        } catch (e) {
+            failedIds.push(guest.id);
+            console.error(`[distribution] dispatch send-invite-email fallito per guest ${guest.id}:`, e);
+        }
+    }
+
+    if (enqueued.length > 0) {
+        await markSent(organizationId, enqueued.map((g) => g.id), "email");
+        await insertActivities(enqueued.map((g) => ({
             organizationId,
             eventId,
             guestId: g.id,
@@ -150,26 +166,17 @@ export async function sendInvites(
         })));
     }
 
-    // 1 job per ospite. Il fallimento di un singolo dispatch non blocca gli
-    // altri: viene loggato e l'ospite non è conteggiato in `queued`.
-    let queued = 0;
-    for (const guest of withEmail) {
-        try {
-            await dispatch("send-invite-email", { guestId: guest.id });
-            queued++;
-        } catch (e) {
-            console.error(`[distribution] dispatch send-invite-email fallito per guest ${guest.id}:`, e);
-        }
-    }
+    const queued = enqueued.length;
+    const failed = failedIds.length;
 
     await logAudit(event, "invite.sent", {
         organizationId,
         targetType: "event",
         targetId: eventId,
-        details: { channel: "email", queued, skippedNoEmail },
+        details: { channel: "email", queued, skippedNoEmail, failed },
     });
 
-    return { queued, skippedNoEmail };
+    return { queued, skippedNoEmail, failed };
 }
 
 // ---------------------------------------------------------------------------

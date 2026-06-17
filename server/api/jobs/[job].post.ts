@@ -2,6 +2,10 @@ import { Receiver } from '@upstash/qstash'
 import { runJob } from '~~/server/queue/handlers'
 import { isJobName } from '~~/server/queue/types'
 import type { JobName, JobPayload } from '~~/server/queue/types'
+import { cacheClient } from '~~/server/utils/drivers'
+
+/** TTL della chiave di dedup (24h): copre ampiamente la finestra di retry QStash. */
+const JOB_DEDUPE_TTL_SECONDS = 24 * 60 * 60
 
 /**
  * QStash job consumer. Authorization is the QStash HMAC signature, NOT the
@@ -54,10 +58,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Invalid signature' })
   }
 
+  // Idempotenza at-most-once. QStash garantisce at-least-once: su risposta
+  // non-2xx o timeout ritenta lo STESSO messaggio (stesso upstash-message-id).
+  // Dedup keyed sul message id, con la chiave settata SOLO DOPO il successo:
+  // un job che lancia NON viene de-dupato → QStash ritenta correttamente.
+  // Copre tutti i job in modo uniforme (invito, reminder, export, image).
+  const messageId = getHeader(event, 'upstash-message-id')
+  const dedupeKey = messageId ? `job:dedupe:${messageId}` : undefined
+  if (dedupeKey && (await cacheClient.get(dedupeKey))) {
+    return { ok: true, deduped: true }
+  }
+
   // Parse ONLY after the signature is verified.
   const payload = JSON.parse(body) as JobPayload<typeof job>
 
   await runJob(job, payload)
+
+  if (dedupeKey) {
+    await cacheClient.set(dedupeKey, '1', JOB_DEDUPE_TTL_SECONDS)
+  }
 
   return { ok: true }
 })

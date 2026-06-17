@@ -111,3 +111,25 @@ export async function insertActivities(values: GuestActivityValues[]): Promise<v
     if (values.length === 0) return;
     await db.insert(schema.guestActivities).values(values);
 }
+
+/**
+ * True se esiste già un'attività 'reminder_sent' per (guest, reminder).
+ * Guardia di idempotenza per i retry QStash dell'email di reminder: l'handler
+ * scrive 'reminder_sent' SOLO a invio riuscito, quindi questa presenza significa
+ * "già inviato a questo ospite per questo reminder".
+ */
+export async function hasReminderActivity(guestId: string, reminderId: string): Promise<boolean> {
+    const db = getDB();
+    const rows = await db
+        .select({ id: schema.guestActivities.id })
+        .from(schema.guestActivities)
+        .where(
+            and(
+                eq(schema.guestActivities.guestId, guestId),
+                eq(schema.guestActivities.type, "reminder_sent"),
+                sql`${schema.guestActivities.meta}->>'reminderId' = ${reminderId}`,
+            ),
+        )
+        .limit(1);
+    return rows.length > 0;
+}

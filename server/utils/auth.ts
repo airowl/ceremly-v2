@@ -13,24 +13,12 @@ import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
 import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
-import { canAddTeamMember, canCreateOrganization } from "../services/planLimit.service";
-import { findMembers } from "../repositories/memberRepository";
+import { canAddTeamMember, canCreateOrganization, resolveOrgOwnerId } from "../services/planLimit.service";
 import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.service";
 import { setupCreem } from "./creem";
 import { runtimeConfig } from "./runtimeConfig";
 
 console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
-
-/**
- * Risolve l'userId dell'owner di un'org (per usarne i plan-limit).
- * Deterministico: primo membro con role 'owner'. Fallback: primo membro.
- */
-async function resolveOrgOwnerId(organizationId: string): Promise<string | null> {
-    const members = await findMembers(organizationId);
-    if (members.length === 0) return null;
-    const owner = members.find((m) => m.role === "owner");
-    return (owner ?? members[0]!).userId;
-}
 
 export const createBetterAuth = () =>
     betterAuth({

@@ -35,7 +35,7 @@ import {
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { generateEventSlug } from "../utils/guestToken";
-import { getUserPlanInfo } from "./planLimit.service";
+import { isOrgFreePlan } from "./planLimit.service";
 
 /** Default italiano per il messaggio a form chiuso (SPEC §2). */
 export const DEFAULT_RSVP_CLOSED_MESSAGE
@@ -51,20 +51,6 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
         });
     }
     return orgId;
-}
-
-/**
- * True se l'org è sul piano Free: nessuna subscription Creem attiva.
- * Come da boilerplate (planLimit.service) il piano è verificato sull'utente
- * corrente (referenceId della subscription = userId).
- */
-export async function isFreePlan(event: H3Event<EventHandlerRequest>): Promise<boolean> {
-    const userId = event.context.user?.id;
-    if (!userId) {
-        throw createError({ statusCode: 401, statusMessage: "Non autenticato" });
-    }
-    const planInfo = await getUserPlanInfo(userId);
-    return planInfo.subscription === null;
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +203,8 @@ export async function createEvent(
     }
 
     // Enforcement piano Free: max 1 evento attivo (status != 'closed').
-    if (await isFreePlan(event)) {
+    // Il piano è risolto dall'OWNER dell'org (non dal richiedente).
+    if (await isOrgFreePlan(organizationId)) {
         const activeCount = await countActiveEventsByOrg(organizationId);
         if (activeCount >= CEREMLY_FREE_LIMITS.maxActiveEvents) {
             throw createError({

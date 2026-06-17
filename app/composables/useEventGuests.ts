@@ -55,6 +55,8 @@ export interface GuestImportResult {
 export interface SendInvitesResult {
     queued: number;
     skippedNoEmail: number;
+    /** Ospiti con email il cui accodamento è fallito (non marcati "Inviato"). */
+    failed: number;
 }
 
 export function useEventGuests() {

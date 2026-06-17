@@ -3752,6 +3752,7 @@
         "doneSummaryOk": "{queued} invitations queued",
         "doneSummaryPartial": "{queued} of {total} queued before an error",
         "doneSkipped": "{n} skipped (no email)",
+        "doneFailed": "{n} not sent (retry)",
         "doneNote": "Real deliveries will update in the dashboard as they are sent.",
         "doneClose": "Done"
       }

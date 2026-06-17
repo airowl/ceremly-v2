@@ -71,6 +71,40 @@ export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
 }
 
 /**
+ * Risolve l'userId dell'owner di un'org (per usarne i plan-limit).
+ * Deterministico: primo membro con role 'owner'. Fallback: primo membro.
+ * Centralizzato qui: riusato sia da auth.ts (gate accept-invitation) sia dai
+ * check di piano org-scoped, così la risoluzione owner è identica ovunque.
+ */
+export async function resolveOrgOwnerId(organizationId: string): Promise<string | null> {
+    const members = await findMembers(organizationId);
+    if (members.length === 0) return null;
+    const owner = members.find((m) => m.role === "owner");
+    return (owner ?? members[0]!).userId;
+}
+
+/**
+ * True se l'ORGANIZZAZIONE è sul piano Free: l'owner dell'org non ha una
+ * subscription Creem attiva.
+ *
+ * Le risorse Ceremly (eventi/ospiti) sono org-scoped, quindi il piano DEVE
+ * essere risolto dall'owner che detiene l'abbonamento — NON dall'utente che fa
+ * la richiesta. Risolvere dal richiedente (com'era prima) trattava ogni
+ * teammate di un'org pagante come Free (nessuna subscription personale),
+ * bloccandolo con un 402 pur essendo l'org a pagamento.
+ */
+export async function isOrgFreePlan(organizationId: string): Promise<boolean> {
+    const ownerId = await resolveOrgOwnerId(organizationId);
+    if (!ownerId) {
+        // Invariante: ogni org ha un owner (Better Auth lo crea alla creazione).
+        // Se manca è corruzione dati: meglio fallire chiaro che mis-applicare i limiti.
+        throw createError({ statusCode: 500, statusMessage: "Owner dell'organizzazione non risolto" });
+    }
+    const planInfo = await getUserPlanInfo(ownerId);
+    return planInfo.subscription === null;
+}
+
+/**
  * Get user's custom limits override (if any)
  * Returns null if no custom limits are set
  */

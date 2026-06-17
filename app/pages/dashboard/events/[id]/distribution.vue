@@ -222,6 +222,7 @@ const sentN = ref(0); // ospiti accodati finora
 const sendTotal = ref(0); // ospiti da accodare in questo invio
 const sentQueued = ref(0); // job effettivamente accodati (esito)
 const sentSkipped = ref(0); // ospiti senza email saltati (esito)
+const sentFailedCount = ref(0); // ospiti con email il cui accodamento è fallito
 const sendFailed = ref(false); // l'invio si è interrotto a metà
 const sendErrMsg = ref<string | null>(null);
 const sendEta = ref<number | null>(null); // secondi rimanenti stimati
@@ -259,6 +260,7 @@ async function doSend() {
     sentN.value = 0;
     sentQueued.value = 0;
     sentSkipped.value = 0;
+    sentFailedCount.value = 0;
     sendFailed.value = false;
     sendErrMsg.value = null;
     sendEta.value = null;
@@ -275,6 +277,7 @@ async function doSend() {
             });
             sentQueued.value += res.queued;
             sentSkipped.value += res.skippedNoEmail;
+            sentFailedCount.value += res.failed;
             sentN.value = Math.min(ids.length, i + slice.length);
 
             // ETA onesta: tempo medio per ospite finora × ospiti rimanenti.
@@ -740,6 +743,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                         <template v-if="sendFailed">{{ $t('ceremly.event.distribution.doneSummaryPartial', { queued: sentQueued, total: sendTotal }) }}</template>
                         <template v-else>{{ $t('ceremly.event.distribution.doneSummaryOk', { queued: sentQueued }) }}</template>
                         <template v-if="sentSkipped > 0"> · {{ $t('ceremly.event.distribution.doneSkipped', { n: sentSkipped }) }}</template>
+                        <template v-if="sentFailedCount > 0"> · <span style="color: var(--decline);">{{ $t('ceremly.event.distribution.doneFailed', { n: sentFailedCount }) }}</span></template>
                     </div>
                     <div v-if="sendFailed && sendErrMsg" class="small" style="margin-top: 8px; color: var(--decline);">{{ sendErrMsg }}</div>
                     <p v-else class="small muted" style="margin: 10px 0 0; line-height: 1.45;">{{ $t('ceremly.event.distribution.doneNote') }}</p>

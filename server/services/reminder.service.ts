@@ -133,11 +133,20 @@ export async function processDueReminders(): Promise<{ processed: number; queued
             reminder.eventId,
         );
         for (const guest of guests) {
-            await dispatch("send-reminder-email", {
-                guestId: guest.id,
-                reminderId: reminder.id,
-            });
-            queued++;
+            // Il fallimento di un singolo dispatch NON deve abortire il run: senza
+            // try/catch un errore qui salterebbe markReminderSent, lasciando il
+            // reminder non inviato → il cron del giorno dopo lo ri-accoderebbe a
+            // TUTTI gli ospiti pendenti (re-invio di massa). Lo si logga e si
+            // prosegue; l'idempotenza lato handler/consumer evita comunque doppioni.
+            try {
+                await dispatch("send-reminder-email", {
+                    guestId: guest.id,
+                    reminderId: reminder.id,
+                });
+                queued++;
+            } catch (e) {
+                console.error(`[cron:send-reminders] dispatch fallito per guest ${guest.id} reminder ${reminder.id}:`, e);
+            }
         }
         await markReminderSent(reminder.organizationId, reminder.id);
         processed++;

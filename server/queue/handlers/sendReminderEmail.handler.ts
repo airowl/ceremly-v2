@@ -2,6 +2,7 @@ import type { JobPayload } from '../types'
 import {
   findGuestForEmail,
   findReminderById,
+  hasReminderActivity,
   insertActivities,
 } from '~~/server/repositories/distributionRepository'
 import { renderGuestReminderEmail } from '~~/server/emailTemplates'
@@ -36,6 +37,12 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
   // Guardia difensiva: il reminder deve esistere ed appartenere allo stesso evento.
   if (!reminder || reminder.eventId !== guest.eventId) {
     console.warn(`[job:send-reminder-email] reminder ${payload.reminderId} non valido per guest ${payload.guestId}, skip`)
+    return
+  }
+
+  // Idempotenza (difesa in profondità sul path più visibile): se questo reminder
+  // è già stato inviato all'ospite, non re-inviare su un retry QStash.
+  if (await hasReminderActivity(guest.id, reminder.id)) {
     return
   }
 

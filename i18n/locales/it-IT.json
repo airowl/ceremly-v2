@@ -3752,6 +3752,7 @@
         "doneSummaryOk": "{queued} inviti accodati",
         "doneSummaryPartial": "{queued} di {total} accodati prima di un errore",
         "doneSkipped": "{n} senza email saltati",
+        "doneFailed": "{n} non inviati (riprova)",
         "doneNote": "Le consegne reali si aggiorneranno nella dashboard a mano a mano che partono.",
         "doneClose": "Fatto"
       }

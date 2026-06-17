@@ -32,7 +32,7 @@ import {
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { generateGuestToken } from "../utils/guestToken";
-import { isFreePlan } from "./event.service";
+import { isOrgFreePlan } from "./planLimit.service";
 
 const FREE_GUEST_LIMIT_REASON = "Limite piano Free (30 ospiti) raggiunto";
 
@@ -140,7 +140,7 @@ export async function createGuest(
 ) {
     const { organizationId } = await requireEventScoped(event, eventId);
 
-    if (await isFreePlan(event)) {
+    if (await isOrgFreePlan(organizationId)) {
         const current = await countActiveGuests(organizationId, eventId);
         if (current >= CEREMLY_FREE_LIMITS.maxGuestsPerEvent) {
             throw createError({
@@ -264,7 +264,7 @@ export async function importGuests(
     const { organizationId } = await requireEventScoped(event, eventId);
 
     const [free, current, existingNames] = await Promise.all([
-        isFreePlan(event),
+        isOrgFreePlan(organizationId),
         countActiveGuests(organizationId, eventId),
         findActiveGuestNames(organizationId, eventId),
     ]);
