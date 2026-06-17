@@ -140,6 +140,8 @@ export async function createGuest(
 ) {
     const { organizationId } = await requireEventScoped(event, eventId);
 
+    // #2 TOCTOU: check-then-insert non atomico (rischio accettato, impatto basso
+    // — limit-bypass, no leak; fix atomico non fattibile sul driver Neon HTTP).
     if (await isOrgFreePlan(organizationId)) {
         const current = await countActiveGuests(organizationId, eventId);
         if (current >= CEREMLY_FREE_LIMITS.maxGuestsPerEvent) {

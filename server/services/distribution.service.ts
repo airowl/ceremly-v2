@@ -26,6 +26,9 @@ import { sendEmail } from "../utils/email";
 import { emailSubjects, renderGuestInviteEmail } from "../emailTemplates";
 import { dispatch } from "../queue";
 
+/** Concorrenza massima dei dispatch QStash per invio (#6: evita timeout su liste grandi). */
+const DISPATCH_CONCURRENCY = 10;
+
 /** Token fittizio per il link/pixel dell'email di test (il 404 pubblico è cortese). */
 const TEST_TOKEN = "anteprima";
 
@@ -143,16 +146,27 @@ export async function sendInvites(
     // gli ospiti effettivamente accodati: un enqueue fallito non deve apparire
     // come "Inviato" in dashboard (l'organizzatore può ritentare). L'idempotenza
     // lato consumer (upstash-message-id) evita doppioni sui retry QStash.
+    //
+    // Dispatch concorrente a chunk (#6): N round-trip QStash seriali rischiano il
+    // timeout della function serverless su liste grandi (import bulk → centinaia).
+    // I chunk riducono il wall-clock ~DISPATCH_CONCURRENCY× mantenendo
+    // l'isolamento per-ospite (un fallimento non blocca gli altri).
     const enqueued: typeof withEmail = [];
     const failedIds: string[] = [];
-    for (const guest of withEmail) {
-        try {
-            await dispatch("send-invite-email", { guestId: guest.id });
-            enqueued.push(guest);
-        } catch (e) {
-            failedIds.push(guest.id);
-            console.error(`[distribution] dispatch send-invite-email fallito per guest ${guest.id}:`, e);
-        }
+    for (let i = 0; i < withEmail.length; i += DISPATCH_CONCURRENCY) {
+        const chunk = withEmail.slice(i, i + DISPATCH_CONCURRENCY);
+        const settled = await Promise.allSettled(
+            chunk.map((g) => dispatch("send-invite-email", { guestId: g.id })),
+        );
+        settled.forEach((res, idx) => {
+            const guest = chunk[idx]!;
+            if (res.status === "fulfilled") {
+                enqueued.push(guest);
+            } else {
+                failedIds.push(guest.id);
+                console.error(`[distribution] dispatch send-invite-email fallito per guest ${guest.id}:`, res.reason);
+            }
+        });
     }
 
     if (enqueued.length > 0) {

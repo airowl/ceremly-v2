@@ -204,6 +204,13 @@ export async function createEvent(
 
     // Enforcement piano Free: max 1 evento attivo (status != 'closed').
     // Il piano è risolto dall'OWNER dell'org (non dal richiedente).
+    //
+    // #2 TOCTOU (rischio accettato): check-then-insert non atomico. Due richieste
+    // concorrenti possono entrambe leggere il count sotto soglia e inserire,
+    // sforando il limite Free. Impatto BASSO: limit-bypass (max qualche risorsa
+    // in più per un utente Free), nessun leak/escalation. Un fix atomico
+    // richiederebbe un lock/transazione interattiva che il driver Neon HTTP
+    // (serverless) non supporta; un indice unique parziale non esprime "max N".
     if (await isOrgFreePlan(organizationId)) {
         const activeCount = await countActiveEventsByOrg(organizationId);
         if (activeCount >= CEREMLY_FREE_LIMITS.maxActiveEvents) {

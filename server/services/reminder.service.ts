@@ -33,6 +33,9 @@ import { dispatch } from "../queue";
  */
 const MAX_REMINDERS = CEREMLY_FREE_LIMITS.maxReminders;
 
+/** Concorrenza massima dei dispatch QStash per reminder (#6: evita timeout su liste grandi). */
+const REMINDER_DISPATCH_CONCURRENCY = 10;
+
 /** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
@@ -132,21 +135,22 @@ export async function processDueReminders(): Promise<{ processed: number; queued
             reminder.organizationId,
             reminder.eventId,
         );
-        for (const guest of guests) {
-            // Il fallimento di un singolo dispatch NON deve abortire il run: senza
-            // try/catch un errore qui salterebbe markReminderSent, lasciando il
-            // reminder non inviato → il cron del giorno dopo lo ri-accoderebbe a
-            // TUTTI gli ospiti pendenti (re-invio di massa). Lo si logga e si
-            // prosegue; l'idempotenza lato handler/consumer evita comunque doppioni.
-            try {
-                await dispatch("send-reminder-email", {
-                    guestId: guest.id,
-                    reminderId: reminder.id,
-                });
-                queued++;
-            } catch (e) {
-                console.error(`[cron:send-reminders] dispatch fallito per guest ${guest.id} reminder ${reminder.id}:`, e);
-            }
+        // Dispatch concorrente a chunk (#6): un fallimento singolo NON aborta il
+        // run (Promise.allSettled), così markReminderSent gira sempre e non si
+        // ha re-invio di massa il giorno dopo; l'idempotenza handler/consumer
+        // evita comunque doppioni. I chunk evitano il timeout su liste grandi.
+        for (let i = 0; i < guests.length; i += REMINDER_DISPATCH_CONCURRENCY) {
+            const chunk = guests.slice(i, i + REMINDER_DISPATCH_CONCURRENCY);
+            const settled = await Promise.allSettled(
+                chunk.map((g) => dispatch("send-reminder-email", { guestId: g.id, reminderId: reminder.id })),
+            );
+            settled.forEach((res, idx) => {
+                if (res.status === "fulfilled") {
+                    queued++;
+                } else {
+                    console.error(`[cron:send-reminders] dispatch fallito per guest ${chunk[idx]!.id} reminder ${reminder.id}:`, res.reason);
+                }
+            });
         }
         await markReminderSent(reminder.organizationId, reminder.id);
         processed++;
