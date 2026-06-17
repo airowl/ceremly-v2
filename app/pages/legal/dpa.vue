@@ -4,6 +4,9 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+
+// Email brand: fuori da i18n (il carattere '@' rompe i file vue-i18n)
+const legalEmail = 'legal@ceremly.it'
 </script>
 
 <template>
@@ -12,7 +15,7 @@ const { t } = useI18n()
       <UContainer>
         <div class="max-w-4xl mx-auto">
           <UPageHeader
-            headline="Legale"
+            :headline="t('dpa.meta.headline')"
             :title="t('dpa.meta.title')"
             :description="t('dpa.meta.effectiveDate')"
             class="px-0"
@@ -227,12 +230,12 @@ const { t } = useI18n()
               <div class="space-y-4">
                 <div class="text-muted">
                   <p class="mb-2"><strong class="text-default">{{ t('dpa.cta.processor') }}:</strong> {{ t('dpa.cta.company') }}</p>
-                  <p><strong class="text-default">{{ t('dpa.cta.email') }}:</strong> <a href="mailto:legal@example.com" class="text-primary hover:underline">legal@example.com</a></p>
+                  <p><strong class="text-default">{{ t('dpa.cta.email') }}:</strong> <a :href="`mailto:${legalEmail}`" class="text-primary hover:underline">{{ legalEmail }}</a></p>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
                   <UButton
-                    href="mailto:legal@example.com"
+                    :href="`mailto:${legalEmail}`"
                     color="primary"
                     size="lg"
                     leading-icon="i-lucide-mail"
@@ -254,6 +257,14 @@ const { t } = useI18n()
                     size="lg"
                   >
                     {{ t('dpa.cta.terms') }}
+                  </UButton>
+                  <UButton
+                    to="/legal/subprocessors"
+                    color="neutral"
+                    variant="outline"
+                    size="lg"
+                  >
+                    {{ t('dpa.cta.subprocessors') }}
                   </UButton>
                 </div>
               </div>

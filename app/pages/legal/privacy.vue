@@ -4,6 +4,9 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+
+// Email brand: fuori da i18n (il carattere '@' rompe i file vue-i18n)
+const privacyEmail = 'privacy@ceremly.it'
 </script>
 
 <template>
@@ -12,7 +15,7 @@ const { t } = useI18n()
       <UContainer>
         <div class="max-w-4xl mx-auto">
           <UPageHeader
-            headline="Legale"
+            :headline="t('privacy.meta.headline')"
             :title="t('privacy.meta.title')"
             :description="t('privacy.meta.effectiveDate')"
             class="px-0"
@@ -141,7 +144,7 @@ const { t } = useI18n()
 
               <p class="text-default leading-relaxed mb-4">
                 {{ t('privacy.sections.rights.description') }}
-                <a href="mailto:privacy@example.com" class="text-primary hover:underline">privacy@example.com</a>.
+                <a :href="`mailto:${privacyEmail}`" class="text-primary hover:underline">{{ privacyEmail }}</a>.
               </p>
 
               <p class="text-muted leading-relaxed mb-4">
@@ -237,12 +240,12 @@ const { t } = useI18n()
               <div class="space-y-4">
                 <div class="text-muted">
                   <p class="mb-2"><strong class="text-default">{{ t('privacy.cta.controller') }}:</strong> {{ t('privacy.cta.company') }}</p>
-                  <p><strong class="text-default">{{ t('privacy.cta.email') }}:</strong> <a href="mailto:privacy@example.com" class="text-primary hover:underline">privacy@example.com</a></p>
+                  <p><strong class="text-default">{{ t('privacy.cta.email') }}:</strong> <a :href="`mailto:${privacyEmail}`" class="text-primary hover:underline">{{ privacyEmail }}</a></p>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
                   <UButton
-                    href="mailto:privacy@example.com"
+                    :href="`mailto:${privacyEmail}`"
                     color="primary"
                     size="lg"
                     leading-icon="i-lucide-mail"

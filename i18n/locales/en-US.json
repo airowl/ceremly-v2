@@ -682,6 +682,7 @@
   },
   "tos": {
     "meta": {
+      "headline": "Legal",
       "title": "Terms and Conditions of Use",
       "effectiveDate": "Effective from: January 1, 2025"
     },
@@ -715,22 +716,22 @@
         "number": "4",
         "title": "Plans and pricing",
         "freelance": {
-          "name": "Free",
-          "price": "$0",
+          "name": "Starter",
+          "price": "€9",
           "period": "/month",
           "description": "Basic features for individuals getting started."
         },
         "studio": {
-          "name": "Pro",
-          "price": "$29",
+          "name": "Premium",
+          "price": "€39",
           "period": "/month",
           "description": "Advanced features for growing teams."
         },
         "venuePartner": {
-          "name": "Enterprise",
-          "price": "Custom",
-          "period": "",
-          "description": "Custom solutions for large organizations."
+          "name": "Agency",
+          "price": "€49",
+          "period": "/month",
+          "description": "Solutions for agencies and wedding planners with more events and collaborators."
         },
         "fairUse": {
           "text": "We reserve the right to apply fair use policies on anomalous usage to ensure fair service to all users."
@@ -783,13 +784,13 @@
       "law": {
         "number": "11",
         "title": "Applicable law and jurisdiction",
-        "description": "These Terms and Conditions are governed by applicable law. Disputes will be resolved in the appropriate jurisdiction."
+        "description": "These Terms and Conditions are governed by Italian law. For non-consumer clients, the courts of Milan (Italy) shall have exclusive jurisdiction. For consumer clients under the Italian Consumer Code, the court of the consumer's place of residence or domicile remains competent."
       }
     },
     "cta": {
       "title": "Questions about Terms and Conditions?",
-      "company": "Your Company Name",
-      "location": "Your Location",
+      "company": "Ceremly Srl",
+      "location": "Milan, Italy",
       "legalEmail": "Legal email",
       "contact": "Contact us",
       "privacy": "Privacy Policy",
@@ -798,6 +799,7 @@
   },
   "privacy": {
     "meta": {
+      "headline": "Legal",
       "title": "Privacy Policy (GDPR)",
       "effectiveDate": "Effective from: January 1, 2025"
     },
@@ -854,8 +856,8 @@
         "number": "6",
         "title": "Your rights",
         "description": "You can request access to, modification, or deletion of your personal data at any time by contacting us at",
-        "complaint": "You also have the right to file a complaint with your local",
-        "authority": "Data Protection Authority",
+        "complaint": "You also have the right to file a complaint with the",
+        "authority": "Italian Data Protection Authority (Garante)",
         "gdprRights": "Your GDPR rights include",
         "gdprList": "access, rectification, deletion, processing restriction, data portability and objection to processing"
       },
@@ -894,7 +896,7 @@
     "cta": {
       "title": "Questions about this privacy policy?",
       "controller": "Data Controller",
-      "company": "Your Company Name",
+      "company": "Ceremly Srl",
       "email": "Privacy email",
       "contact": "Contact us",
       "terms": "Terms of service",
@@ -903,6 +905,7 @@
   },
   "dpa": {
     "meta": {
+      "headline": "Legal",
       "title": "Data Processing Agreement (DPA)",
       "subtitle": "Data Processing Agreement (DPA) art. 28 GDPR",
       "effectiveDate": "Effective from: January 1, 2025"
@@ -1002,12 +1005,40 @@
     "cta": {
       "title": "Questions about the DPA?",
       "processor": "Data Processor",
-      "company": "Your Company Name",
+      "company": "Ceremly Srl",
       "email": "Legal email",
       "contact": "Contact us",
       "privacy": "Privacy Policy",
-      "terms": "Terms of service"
+      "terms": "Terms of service",
+      "subprocessors": "Sub-processors"
     }
+  },
+  "subprocessors": {
+    "meta": {
+      "headline": "Legal",
+      "title": "Sub-processors"
+    },
+    "seoTitle": "Sub-processors",
+    "seoDescription": "List of the sub-processors engaged by Ceremly Srl to deliver the service.",
+    "intro": "To deliver the service, Ceremly Srl engages the following sub-processors pursuant to Art. 28 GDPR. This list may be updated over time; material changes are notified as set out in the DPA.",
+    "draftWarning": "Draft — the list of vendors, locations and transfer legal bases are provisional and must be verified against each vendor's DPA before publication.",
+    "table": {
+      "provider": "Vendor",
+      "purpose": "Purpose",
+      "location": "Location",
+      "transfer": "Non-EU transfer basis"
+    },
+    "rows": [
+      { "provider": "Vercel Inc.", "purpose": "Hosting and serverless functions", "location": "USA", "transfer": "Standard Contractual Clauses (SCC)" },
+      { "provider": "Neon Inc.", "purpose": "PostgreSQL database", "location": "EU / USA", "transfer": "EU region / SCC" },
+      { "provider": "Cloudflare, Inc.", "purpose": "File storage (R2)", "location": "EU / USA", "transfer": "Standard Contractual Clauses (SCC)" },
+      { "provider": "Upstash, Inc.", "purpose": "Cache, rate limiting and queues (Redis, QStash)", "location": "EU / USA", "transfer": "Standard Contractual Clauses (SCC)" },
+      { "provider": "Resend", "purpose": "Transactional email delivery", "location": "USA", "transfer": "Standard Contractual Clauses (SCC)" },
+      { "provider": "Creem", "purpose": "Payment processing and billing", "location": "EU", "transfer": "Vendor DPA" },
+      { "provider": "Functional Software, Inc. (Sentry)", "purpose": "Error tracking and monitoring", "location": "USA", "transfer": "Standard Contractual Clauses (SCC)" },
+      { "provider": "Google Ireland Ltd", "purpose": "OAuth authentication", "location": "EU / USA", "transfer": "Standard Contractual Clauses (SCC)" }
+    ],
+    "note": "For questions about sub-processors, contact us at the address listed in the DPA."
   },
   "twoFactor": {
     "title": "Two-Factor Authentication",

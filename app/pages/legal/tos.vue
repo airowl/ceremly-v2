@@ -4,6 +4,9 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+
+// Email brand: fuori da i18n (il carattere '@' rompe i file vue-i18n)
+const legalEmail = 'legal@ceremly.it'
 </script>
 
 <template>
@@ -12,7 +15,7 @@ const { t } = useI18n()
             <UContainer>
                 <div class="max-w-4xl mx-auto">
                     <UPageHeader
-headline="Legale" :title="t('tos.meta.title')"
+:headline="t('tos.meta.headline')" :title="t('tos.meta.title')"
                         :description="t('tos.meta.effectiveDate')" class="px-0" />
 
                     <!-- Intro -->
@@ -244,13 +247,13 @@ headline="Legale" :title="t('tos.meta.title')"
                                     <p class="mb-2"><strong class="text-default">{{ t('tos.cta.company') }}</strong></p>
                                     <p class="mb-2">{{ t('tos.cta.location') }}</p>
                                     <p><strong class="text-default">{{ t('tos.cta.legalEmail') }}:</strong> <a
-                                            href="mailto:legal@example.com"
-                                            class="text-primary hover:underline">legal@example.com</a></p>
+                                            :href="`mailto:${legalEmail}`"
+                                            class="text-primary hover:underline">{{ legalEmail }}</a></p>
                                 </div>
 
                                 <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
                                     <UButton
-href="mailto:legal@example.com" color="primary" size="lg"
+:href="`mailto:${legalEmail}`" color="primary" size="lg"
                                         leading-icon="i-lucide-mail">
                                         {{ t('tos.cta.contact') }}
                                     </UButton>

@@ -682,6 +682,7 @@
   },
   "tos": {
     "meta": {
+      "headline": "Legale",
       "title": "Termini e Condizioni d'Uso",
       "effectiveDate": "Effettivi dal: 1 gennaio 2025"
     },
@@ -715,22 +716,22 @@
         "number": "4",
         "title": "Piani e prezzi",
         "freelance": {
-          "name": "Free",
-          "price": "€0",
+          "name": "Starter",
+          "price": "€9",
           "period": "/mese",
           "description": "Funzionalità base per chi inizia."
         },
         "studio": {
-          "name": "Pro",
-          "price": "€29",
+          "name": "Premium",
+          "price": "€39",
           "period": "/mese",
           "description": "Funzionalità avanzate per team in crescita."
         },
         "venuePartner": {
-          "name": "Enterprise",
-          "price": "Custom",
-          "period": "",
-          "description": "Soluzioni personalizzate per grandi organizzazioni."
+          "name": "Agency",
+          "price": "€49",
+          "period": "/mese",
+          "description": "Soluzioni per agenzie e wedding planner con più eventi e collaboratori."
         },
         "fairUse": {
           "text": "Ci riserviamo di applicare politiche di fair use su utilizzi anomali per garantire un servizio equo a tutti gli utenti."
@@ -783,13 +784,13 @@
       "law": {
         "number": "11",
         "title": "Legge applicabile e foro competente",
-        "description": "Questi Termini e Condizioni sono disciplinati dalla legge applicabile. Le controversie saranno risolte nella giurisdizione appropriata."
+        "description": "Questi Termini e Condizioni sono disciplinati dalla legge italiana. Per i clienti non consumatori, il foro competente in via esclusiva è quello di Milano. Per i clienti consumatori ai sensi del Codice del Consumo, resta competente il foro del luogo di residenza o domicilio del consumatore."
       }
     },
     "cta": {
       "title": "Domande sui Termini e Condizioni?",
-      "company": "Nome Azienda",
-      "location": "Sede",
+      "company": "Ceremly Srl",
+      "location": "Milano, Italia",
       "legalEmail": "Email legale",
       "contact": "Contattaci",
       "privacy": "Privacy Policy",
@@ -798,6 +799,7 @@
   },
   "privacy": {
     "meta": {
+      "headline": "Legale",
       "title": "Privacy Policy (GDPR)",
       "effectiveDate": "Effettiva dal: 1 gennaio 2025"
     },
@@ -894,7 +896,7 @@
     "cta": {
       "title": "Domande su questa privacy policy?",
       "controller": "Titolare del trattamento",
-      "company": "Nome Azienda",
+      "company": "Ceremly Srl",
       "email": "Email privacy",
       "contact": "Contattaci",
       "terms": "Termini di servizio",
@@ -903,6 +905,7 @@
   },
   "dpa": {
     "meta": {
+      "headline": "Legale",
       "title": "Data Processing Agreement (DPA)",
       "subtitle": "Data Processing Agreement (DPA) art. 28 GDPR",
       "effectiveDate": "Effettivo dal: 1 gennaio 2025"
@@ -1002,12 +1005,40 @@
     "cta": {
       "title": "Domande sul DPA?",
       "processor": "Responsabile del trattamento",
-      "company": "Nome Azienda",
+      "company": "Ceremly Srl",
       "email": "Email legale",
       "contact": "Contattaci",
       "privacy": "Privacy Policy",
-      "terms": "Termini di servizio"
+      "terms": "Termini di servizio",
+      "subprocessors": "Sub-responsabili"
     }
+  },
+  "subprocessors": {
+    "meta": {
+      "headline": "Legale",
+      "title": "Sub-responsabili del trattamento"
+    },
+    "seoTitle": "Sub-responsabili del trattamento",
+    "seoDescription": "Elenco dei sub-responsabili (sub-processor) di cui Ceremly Srl si avvale per l'erogazione del servizio.",
+    "intro": "Per erogare il servizio, Ceremly Srl si avvale dei seguenti sub-responsabili del trattamento ai sensi dell'art. 28 GDPR. L'elenco può essere aggiornato nel tempo; le modifiche sostanziali sono comunicate secondo quanto previsto dal DPA.",
+    "draftWarning": "Bozza — l'elenco dei fornitori, le ubicazioni e le basi giuridiche dei trasferimenti sono provvisori e devono essere verificati con i DPA dei singoli fornitori prima della pubblicazione.",
+    "table": {
+      "provider": "Fornitore",
+      "purpose": "Finalità",
+      "location": "Ubicazione",
+      "transfer": "Base trasferimento extra-UE"
+    },
+    "rows": [
+      { "provider": "Vercel Inc.", "purpose": "Hosting e funzioni serverless", "location": "USA", "transfer": "Clausole Contrattuali Standard (SCC)" },
+      { "provider": "Neon Inc.", "purpose": "Database PostgreSQL", "location": "UE / USA", "transfer": "Regione UE / SCC" },
+      { "provider": "Cloudflare, Inc.", "purpose": "Archiviazione file (R2)", "location": "UE / USA", "transfer": "Clausole Contrattuali Standard (SCC)" },
+      { "provider": "Upstash, Inc.", "purpose": "Cache, rate limiting e code (Redis, QStash)", "location": "UE / USA", "transfer": "Clausole Contrattuali Standard (SCC)" },
+      { "provider": "Resend", "purpose": "Invio email transazionali", "location": "USA", "transfer": "Clausole Contrattuali Standard (SCC)" },
+      { "provider": "Creem", "purpose": "Elaborazione pagamenti e fatturazione", "location": "UE", "transfer": "DPA del fornitore" },
+      { "provider": "Functional Software, Inc. (Sentry)", "purpose": "Tracciamento errori e monitoraggio", "location": "USA", "transfer": "Clausole Contrattuali Standard (SCC)" },
+      { "provider": "Google Ireland Ltd", "purpose": "Autenticazione OAuth", "location": "UE / USA", "transfer": "Clausole Contrattuali Standard (SCC)" }
+    ],
+    "note": "Per domande sui sub-responsabili puoi contattarci all'indirizzo indicato nel DPA."
   },
   "twoFactor": {
     "title": "Autenticazione a Due Fattori",
