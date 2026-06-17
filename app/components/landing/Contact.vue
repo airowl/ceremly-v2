@@ -24,6 +24,11 @@ const submitted = ref(false)
 const isLoading = ref(false)
 const toast = useToast()
 
+// Anti-spam (#8): honeypot (deve restare vuoto) + timestamp di rendering del form.
+const website = ref('')
+const loadedAt = ref(0)
+onMounted(() => { loadedAt.value = Date.now() })
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (isLoading.value) return
 
@@ -35,6 +40,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             body: {
                 ...event.data,
                 language: locale.value === 'en' ? 'en' : 'it',
+                website: website.value,
+                _t: loadedAt.value,
             },
         });
 
@@ -119,6 +126,17 @@ class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto an
                         class="space-y-4"
                         @submit="onSubmit"
                     >
+                        <!-- Honeypot anti-spam (#8): nascosto agli umani, i bot lo compilano. -->
+                        <input
+                            v-model="website"
+                            type="text"
+                            name="website"
+                            tabindex="-1"
+                            autocomplete="off"
+                            aria-hidden="true"
+                            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;"
+                        >
+
                         <!-- Name & Email Row -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <UFormField

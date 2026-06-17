@@ -13,6 +13,13 @@ import {
     type SupportedLanguage,
 } from '../emailTemplates';
 import { logAudit } from '../utils/audit';
+import {
+    isDisposableEmail,
+    isEndpointRateLimited,
+    isHoneypotTriggered,
+    isSubmittedTooFast,
+} from '../utils/spamProtection';
+import { getClientIp } from '../utils/clientIp';
 
 const MAX_MESSAGES_PER_DAY = 3;
 
@@ -28,12 +35,45 @@ export async function sendContactMessage(
         subject: string;
         message: string;
         language?: string;
+        website?: string;
+        _t?: number;
     },
 ) {
-    const { name, email, subject, message, language } = data;
+    const { name, email, subject, message, language, website, _t } = data;
 
     const db = getDB();
     const config = useRuntimeConfig();
+
+    // --- Anti-spam (#8): endpoint pubblico non autenticato che invia email ---
+    // 1. Honeypot: campo nascosto compilato = bot → finto successo (non tippare il bot).
+    if (isHoneypotTriggered(website)) {
+        return { success: true, message: 'Contact form submitted successfully' };
+    }
+    // 2. Timing: form inviato in meno di 3s dal render = bot → finto successo.
+    if (isSubmittedTooFast(_t)) {
+        return { success: true, message: 'Contact form submitted successfully' };
+    }
+    // 3. Rate limit per-IP (Redis condiviso): il limite per-email sotto è
+    //    aggirabile variando l'email → senza questo, email-bombing dell'inbox
+    //    admin e burn di quota/reputazione Resend illimitati.
+    const clientIP = getClientIp(event);
+    if (await isEndpointRateLimited(clientIP, 'contact', 5, 60 * 60 * 1000)) {
+        throw createError({
+            statusCode: 429,
+            statusMessage: language === 'it'
+                ? 'Troppe richieste. Riprova più tardi.'
+                : 'Too many requests. Please try again later.',
+        });
+    }
+    // 4. Email usa-e-getta.
+    if (isDisposableEmail(email.toLowerCase())) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: language === 'it'
+                ? 'Usa un indirizzo email permanente.'
+                : 'Please use a permanent email address.',
+        });
+    }
 
     // Rate limiting: check messages sent today by this email
     const oneDayAgo = new Date();
