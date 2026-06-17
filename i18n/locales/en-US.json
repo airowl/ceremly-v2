@@ -2960,6 +2960,7 @@
     "login": {
       "seoTitle": "Sign in to Ceremly",
       "seoDescription": "Sign in to your Ceremly account to manage events, invitations and RSVPs.",
+      "verifying": "Verifying login...",
       "validationEmail": "Please enter a valid email address",
       "validationPassword": "Password must be at least 8 characters",
       "validationGeneric": "Please check the fields you entered.",

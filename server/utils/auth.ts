@@ -18,7 +18,9 @@ import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.se
 import { setupCreem } from "./creem";
 import { runtimeConfig } from "./runtimeConfig";
 
-console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
+if (import.meta.dev) {
+    console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
+}
 
 export const createBetterAuth = () =>
     betterAuth({

@@ -21,6 +21,15 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 
+// Redirect post-login SOLO se same-origin relativo (deve iniziare con un singolo
+// '/'): blocca l'open-redirect `?redirect=//evil.com` o `?redirect=https://…`
+// (phishing post-auth). Altrimenti fallback a /dashboard.
+function safeRedirect(): string {
+    const raw = route.query.redirect
+    const path = typeof raw === 'string' ? raw : ''
+    return /^\/(?!\/)/.test(path) ? path : '/dashboard'
+}
+
 const email = ref('')
 const password = ref('')
 const remember = ref(true)
@@ -36,7 +45,7 @@ async function signInWithGoogle() {
         loading.value = true
         await signIn.social({
             provider: 'google',
-            callbackURL: (route.query.redirect as string) || '/dashboard'
+            callbackURL: safeRedirect()
         })
     } catch (error) {
         toast.add({ title: t('ceremly.login.errorTitle'), description: error instanceof Error && error.message ? error.message : t('ceremly.login.errorGoogle') })
@@ -60,7 +69,7 @@ async function onSubmit() {
         const { error } = await signIn.email({
             email: parsed.data.email,
             password: parsed.data.password,
-            callbackURL: (route.query.redirect as string) || '/dashboard'
+            callbackURL: safeRedirect()
         })
 
         if (error) {
@@ -76,7 +85,7 @@ async function onSubmit() {
 
         toast.add({ title: t('ceremly.login.successTitle'), description: t('ceremly.login.successDescription') })
         await fetchSession()
-        await reloadNuxtApp({ path: (route.query.redirect as string) || '/dashboard' })
+        await reloadNuxtApp({ path: safeRedirect() })
     } catch (error) {
         toast.add({ title: t('ceremly.login.errorTitle'), description: error instanceof Error && error.message ? error.message : t('ceremly.login.errorFallback') })
     } finally {

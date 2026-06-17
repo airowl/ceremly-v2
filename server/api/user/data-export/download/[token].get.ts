@@ -20,8 +20,10 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Check if expired
-    if (dataExport.expiresAt && new Date(dataExport.expiresAt) < new Date()) {
+    // Fail-closed: un export completato senza expiresAt è trattato come SCADUTO.
+    // Oggi processExport setta sempre expiresAt; questo evita che un futuro
+    // percorso senza set lasci un dump GDPR scaricabile a tempo indeterminato.
+    if (!dataExport.expiresAt || new Date(dataExport.expiresAt) < new Date()) {
         throw createError({
             statusCode: 410,
             statusMessage: "This download link has expired",

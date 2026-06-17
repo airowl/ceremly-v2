@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 
 /**
@@ -36,17 +37,12 @@ export async function requireAdminApiKey(event: H3Event<EventHandlerRequest>): P
 }
 
 /**
- * Constant-time string comparison to prevent timing attacks
+ * Confronto constant-time anti-timing. Si confrontano gli HASH SHA-256 (lunghezza
+ * fissa) invece delle stringhe grezze: timingSafeEqual richiede buffer di pari
+ * lunghezza e così non si rivela la lunghezza della chiave tramite l'early-return.
  */
 function secureCompare(a: string, b: string): boolean {
-    if (a.length !== b.length) {
-        return false;
-    }
-
-    let result = 0;
-    for (let i = 0; i < a.length; i++) {
-        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-    }
-
-    return result === 0;
+    const ha = createHash("sha256").update(a).digest();
+    const hb = createHash("sha256").update(b).digest();
+    return timingSafeEqual(ha, hb);
 }
