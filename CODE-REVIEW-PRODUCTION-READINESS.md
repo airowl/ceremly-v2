@@ -53,7 +53,10 @@ Verdetto operativo: nessun difetto di sicurezza che imponga lo stop, ma diversi 
 > - #8 anti-spam form contatti: honeypot + timing + rate-limit IP + disposable-email (come waitingList, ora che il rate-limiter è durevole).
 > - #16 CSP `unsafe-inline`: **NON risolto** — verificato empiricamente che il nonce-based emette `script-src 'none'` sulle pagine prerendered (rompe il sito marketing). Fix corretto = `security.ssg.hashScripts` + nonce con verifica browser. Defense-in-depth (nessun sink XSS attuale).
 >
-> **Stato finale should-fix: 20/22 risolti**, #2 (TOCTOU) documentato come rischio accettato, **#16 unico aperto** (richiede lavoro CSP browser-verificato). Restano i nice-to-have. Tutti i fix verificati (typecheck/build/lint + 4 verify script: plan-limit/rate-limit/account-purge); migration `0005` da applicare; commit NON pushati.
+> **Stato finale should-fix: 20/22 risolti**, #2 (TOCTOU) documentato come rischio accettato, **#16 unico aperto** (richiede lavoro CSP browser-verificato). Tutti i fix verificati (typecheck/build/lint + 4 verify script: plan-limit/rate-limit/account-purge); migration `0005` da applicare; commit NON pushati.
+>
+> **Aggiornamento nice-to-have — commit `02de5b2` + `bc26b17`.** Chiusi 8 dei 13: secureCompare via `timingSafeEqual` su hash (no leak lunghezza), download export expiry fail-closed, open-redirect login/callback (path same-origin), `getOrgRole` esplicito su GET org, `console.log` baseURL solo in dev, stringa callback OAuth localizzata, rimosso middleware morto `plan-required`, cap `.max()` su `updateEventSchema.blocks/rsvpConfig`.
+> **Nice-to-have rimasti** (richiedono decisione/migration/coordinamento): Sentry assente (integrazione + DSN), conflitto CORS Nitro vs nuxt-security (scegliere un'autorità), admin list `getQuery`→`parseQueryParams`, indice reminder `(enabled, sent_at)` (serve migration), path nav hardcoded → `useLocalePath()` (frontend, in evoluzione).
 
 ## 🏗️ Build health (ground-truth, exit code reali)
 
