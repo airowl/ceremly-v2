@@ -250,29 +250,29 @@ export async function renderGuestReminderEmail(options: {
 // Email subject lines by language (brand injected via appName)
 export const emailSubjects = {
     verification: {
-        it: `Verifica il tuo indirizzo email - ${appName()}`,
-        en: `Verify your email address - ${appName()}`,
+        it: 'Confermiamo che sei tu',
+        en: "Let's confirm it's you",
     },
     resetPassword: {
-        it: `Reimposta la tua password - ${appName()}`,
-        en: `Reset your password - ${appName()}`,
+        it: 'Reimposta la password',
+        en: 'Reset your password',
     },
     changeEmail: {
-        it: `Conferma il cambio del tuo indirizzo email - ${appName()}`,
-        en: `Confirm your email address change - ${appName()}`,
+        it: 'Confermi il nuovo indirizzo?',
+        en: 'Confirm your new address?',
     },
     waitingList: {
-        it: `Benvenuto nella Waiting List di ${appName()}!`,
-        en: `Welcome to ${appName()}'s Waiting List!`,
+        it: 'Ci sei. Ti avvisiamo noi.',
+        en: "You're in. We'll be in touch.",
     },
     contactConfirmation: {
-        it: `Abbiamo ricevuto il tuo messaggio - ${appName()}`,
-        en: `We received your message - ${appName()}`,
+        it: 'Ci pensiamo noi',
+        en: "We're on it",
     },
     contactNotification: (subject: string) => `[Contatto] ${subject}`,
     orgInvite: (orgName: string) => ({
-        it: `Sei stato invitato a unirti a ${orgName} - ${appName()}`,
-        en: `You've been invited to join ${orgName} - ${appName()}`,
+        it: `Ti hanno invitato nel team — ${orgName}`,
+        en: `You're invited to the team — ${orgName}`,
     }),
     // Ceremly (solo italiano, SPEC §0): fallback quando l'organizzatore non ha
     // definito un oggetto in event.distribution / nel reminder.

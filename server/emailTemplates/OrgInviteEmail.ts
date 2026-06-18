@@ -1,162 +1,47 @@
-// React Email template for organization invitation (phase 1b)
-// Genericizzato da EventInviteEmail: "evento" → "organization".
-// Supports Italian and English. Uses React.createElement to avoid JSX/Vue conflicts.
+// React Email template — invito a un team / organizzazione (Phase 1b).
+// Design "Soft Meadow" (token/stili condivisi da ./_softMeadow).
+// Uses React.createElement to avoid JSX/Vue conflicts. Lingue: it/en.
 
 import * as React from 'react';
-import {
-    Html,
-    Head,
-    Preview,
-    Body,
-    Container,
-    Section,
-    Text,
-    Link,
-    Button,
-    Hr,
-} from '@react-email/components';
+import { Html, Head, Preview, Body, Container, Section, Text, Button } from '@react-email/components';
+import { styles, renderFooter, renderFallback, type LegalLinks, type SoftMeadowLang } from './_softMeadow';
 
 interface OrgInviteEmailProps {
-    language?: 'it' | 'en';
+    language?: SoftMeadowLang;
     inviteUrl: string;
     orgName: string;
     invitedByName: string;
     expiresInDays?: number;
     appName: string;
-    legalLinks: { privacy: string; tos: string; dpa: string };
+    legalLinks: LegalLinks;
 }
 
-const buildTranslations = (appName: string) => ({
+const buildTranslations = (appName: string, orgName: string, invitedByName: string, expiresInDays: number) => ({
     it: {
-        preview: (org: string) => `Sei stato invitato a unirti a ${org} su ${appName}`,
-        title: 'Sei stato invitato!',
-        greeting: 'Ciao,',
-        intro: (invitedBy: string, org: string) =>
-            `${invitedBy} ti ha invitato a unirti all'organizzazione "${org}" su ${appName}.`,
-        joinTitle: 'Unisciti al team',
-        joinText: 'Clicca il pulsante qui sotto per accettare l\'invito e unirti all\'organizzazione.',
-        ctaButton: 'Accetta Invito',
-        expiryNote: (days: number) => `Questo invito scadrà tra ${days} giorni.`,
-        alternativeText: 'Se il pulsante non funziona, copia e incolla questo link nel tuo browser:',
-        accountNote: `Se non hai ancora un account su ${appName}, potrai crearne uno gratuitamente.`,
-        ignoreText: 'Se non ti aspettavi questo invito o non vuoi unirti, puoi semplicemente ignorare questa email.',
-        signature: 'Cordiali saluti,',
-        team: `Il Team di ${appName}`,
-        copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
-        privacy: 'Privacy Policy',
-        terms: 'Termini di Servizio',
-        dpa: 'Data Processing Agreement',
-        footer: `Hai ricevuto questa email perché qualcuno ti ha invitato su ${appName}.`,
+        preview: `Ti hanno invitato nel team — ${appName}`,
+        eyebrow: 'Un invito',
+        title: 'Ti hanno invitato nel team',
+        body1: `${invitedByName} ti ha invitato a collaborare nello spazio di ${orgName} su ${appName}.`,
+        boxLabel: 'Organizzazione',
+        body2: 'Accetta l’invito per accedere agli eventi del team, gestire gli inviti e seguire le risposte insieme — tutto da un unico posto.',
+        ctaButton: 'Accetta l’invito',
+        noteExpiry: `Questo invito scade tra ${expiresInDays} giorni.`,
+        noteIgnore: 'Se non ti aspettavi questo invito, puoi ignorare l’email senza problemi.',
+        fallbackLabel: 'Se il pulsante non funziona, copia e incolla questo link nel browser:',
     },
     en: {
-        preview: (org: string) => `You've been invited to join ${org} on ${appName}`,
-        title: "You've been invited!",
-        greeting: 'Hi,',
-        intro: (invitedBy: string, org: string) =>
-            `${invitedBy} has invited you to join the "${org}" organization on ${appName}.`,
-        joinTitle: 'Join the team',
-        joinText: 'Click the button below to accept the invitation and join the organization.',
-        ctaButton: 'Accept Invitation',
-        expiryNote: (days: number) => `This invitation will expire in ${days} days.`,
-        alternativeText: "If the button doesn't work, copy and paste this link into your browser:",
-        accountNote: `If you don't have a ${appName} account yet, you can create one for free.`,
-        ignoreText: "If you weren't expecting this invitation or don't want to join, you can simply ignore this email.",
-        signature: 'Best regards,',
-        team: `The ${appName} Team`,
-        copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
-        privacy: 'Privacy Policy',
-        terms: 'Terms of Service',
-        dpa: 'Data Processing Agreement',
-        footer: `You received this email because someone invited you to ${appName}.`,
+        preview: `You're invited to the team — ${appName}`,
+        eyebrow: 'An invitation',
+        title: "You're invited to the team",
+        body1: `${invitedByName} has invited you to collaborate in the ${orgName} workspace on ${appName}.`,
+        boxLabel: 'Organization',
+        body2: "Accept the invitation to access the team's events, manage invites and track responses together — all in one place.",
+        ctaButton: 'Accept the invitation',
+        noteExpiry: `This invitation expires in ${expiresInDays} days.`,
+        noteIgnore: "If you weren't expecting this invitation, you can safely ignore this email.",
+        fallbackLabel: "If the button doesn't work, copy and paste this link into your browser:",
     },
 });
-
-const colors = {
-    primary: '#19baf0',
-    primaryDark: '#0ea5d6',
-    background: '#f8fbfc',
-    white: '#ffffff',
-    text: '#0d181c',
-    textLight: '#4b879b',
-    textMuted: '#7ca8b8',
-    highlight: '#e0f3fe',
-    info: '#e0f3fe',
-    infoBorder: '#19baf0',
-};
-
-const styles = {
-    body: {
-        margin: 0,
-        padding: 0,
-        fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-        backgroundColor: colors.background,
-    },
-    container: { maxWidth: '600px', margin: '0 auto', backgroundColor: colors.white },
-    header: {
-        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-        padding: '40px 20px',
-        textAlign: 'center' as const,
-    },
-    headerBrand: {
-        color: colors.white,
-        fontSize: '28px',
-        fontWeight: '800',
-        letterSpacing: '-0.5px',
-        margin: '0',
-    },
-    content: { padding: '40px 30px', color: colors.text, lineHeight: '1.6' },
-    title: { color: colors.primary, fontSize: '24px', marginBottom: '20px', fontWeight: 'normal' },
-    paragraph: { fontSize: '16px', marginBottom: '15px', lineHeight: '1.6' },
-    highlightBox: {
-        backgroundColor: colors.highlight,
-        borderLeft: `4px solid ${colors.primary}`,
-        padding: '15px',
-        margin: '20px 0',
-    },
-    highlightTitle: { fontWeight: 'bold', margin: '0 0 10px 0' },
-    highlightText: { margin: 0 },
-    buttonContainer: { textAlign: 'center' as const, margin: '25px 0' },
-    button: {
-        display: 'inline-block',
-        padding: '14px 35px',
-        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-        color: colors.white,
-        textDecoration: 'none',
-        borderRadius: '6px',
-        fontWeight: '600',
-        fontSize: '16px',
-    },
-    expiryNote: {
-        fontSize: '14px',
-        color: colors.textLight,
-        textAlign: 'center' as const,
-        marginBottom: '20px',
-    },
-    alternativeText: { fontSize: '14px', color: colors.textLight, marginTop: '20px' },
-    linkText: { fontSize: '12px', wordBreak: 'break-all' as const, marginBottom: '20px' },
-    link: { color: colors.primary, textDecoration: 'underline' },
-    ignoreText: {
-        fontSize: '14px',
-        color: colors.textMuted,
-        fontStyle: 'italic',
-        marginTop: '20px',
-        marginBottom: '20px',
-    },
-    footer: {
-        backgroundColor: colors.background,
-        padding: '30px',
-        textAlign: 'center' as const,
-        fontSize: '14px',
-        color: colors.textLight,
-    },
-    copyright: { margin: '0 0 15px 0' },
-    footerLinks: { marginTop: '15px' },
-    footerLink: { color: colors.primary, textDecoration: 'none', margin: '0 10px' },
-    footerSeparator: { display: 'inline', margin: '0 5px', color: colors.textLight },
-    divider: { borderColor: '#e7f0f3', margin: '20px 0' },
-    footerNote: { marginTop: '20px', fontSize: '12px', color: colors.textMuted },
-};
 
 const h = React.createElement;
 
@@ -169,56 +54,30 @@ export function OrgInviteEmail({
     appName,
     legalLinks,
 }: OrgInviteEmailProps): React.ReactElement {
-    const t = buildTranslations(appName)[language];
+    const t = buildTranslations(appName, orgName, invitedByName, expiresInDays)[language];
 
     return h(Html, { lang: language },
         h(Head),
-        h(Preview, null, t.preview(orgName)),
+        h(Preview, null, t.preview),
         h(Body, { style: styles.body },
             h(Container, { style: styles.container },
-                h(Section, { style: styles.header },
-                    h(Text, { style: styles.headerBrand }, appName)
-                ),
-                h(Section, { style: styles.content },
+                h(Section, { style: styles.card },
+                    h(Text, { style: styles.eyebrow }, t.eyebrow),
                     h(Text, { style: styles.title }, t.title),
-                    h(Text, { style: styles.paragraph }, t.greeting),
-                    h(Text, { style: styles.paragraph }, t.intro(invitedByName, orgName)),
-                    h(Section, { style: styles.highlightBox },
-                        h(Text, { style: styles.highlightTitle }, t.joinTitle),
-                        h(Text, { style: styles.highlightText }, t.joinText)
+                    h(Text, { style: styles.text }, t.body1),
+                    h(Section, { style: styles.box },
+                        h(Text, { style: styles.boxLbl }, t.boxLabel),
+                        h(Text, { style: styles.boxValSerif }, orgName),
                     ),
-                    h(Section, { style: styles.buttonContainer },
-                        h(Button, { href: inviteUrl, style: styles.button }, t.ctaButton)
-                    ),
-                    h(Text, { style: styles.expiryNote }, t.expiryNote(expiresInDays)),
-                    h(Text, { style: styles.alternativeText }, t.alternativeText),
-                    h(Text, { style: styles.linkText },
-                        h(Link, { href: inviteUrl, style: styles.link }, inviteUrl)
-                    ),
-                    h(Text, { style: styles.paragraph }, t.accountNote),
-                    h(Text, { style: styles.ignoreText }, t.ignoreText),
-                    h(Text, { style: styles.paragraph },
-                        t.signature,
-                        h('br'),
-                        h('strong', null, t.team)
-                    )
+                    h(Text, { style: styles.text }, t.body2),
+                    h(Button, { href: inviteUrl, style: styles.btn }, t.ctaButton),
+                    h(Text, { style: styles.note }, t.noteExpiry),
+                    h(Text, { style: styles.note }, t.noteIgnore),
+                    ...renderFallback(t.fallbackLabel, inviteUrl),
+                    ...renderFooter({ appName, lang: language, legalLinks }),
                 ),
-                h(Section, { style: styles.footer },
-                    h(Text, { style: styles.copyright }, t.copyright),
-                    h(Section, { style: styles.footerLinks },
-                        h(Link, { href: legalLinks.privacy, style: styles.footerLink }, t.privacy),
-                        h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: legalLinks.tos, style: styles.footerLink }, t.terms),
-                        h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: legalLinks.dpa, style: styles.footerLink }, t.dpa)
-                    ),
-                    h(Hr, { style: styles.divider }),
-                    h(Text, { style: styles.footerNote },
-                        t.footer
-                    )
-                )
-            )
-        )
+            ),
+        ),
     );
 }
 

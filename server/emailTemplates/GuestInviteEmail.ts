@@ -17,6 +17,7 @@ import {
     Text,
     Button,
 } from '@react-email/components';
+import { colors, fonts } from './_softMeadow';
 
 export interface GuestInviteEmailProps {
     eventTitle: string;
@@ -32,22 +33,7 @@ export interface GuestInviteEmailProps {
     appHost: string;
 }
 
-// Palette Soft Meadow (SPEC §1)
-const colors = {
-    bone: '#fefae0',
-    card: '#ffffff',
-    border: '#e9e4ce',
-    accent: '#d4a373',
-    ink: '#3F3622',
-    wineDeep: '#5E4426',
-    muted: '#a89e7e',
-};
-
-const fonts = {
-    sans: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    mono: "'Space Mono', 'Courier New', monospace",
-};
+// Palette/font Soft Meadow: token condivisi importati da ./_softMeadow
 
 const styles = {
     body: {
