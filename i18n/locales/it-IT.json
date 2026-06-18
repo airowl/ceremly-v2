@@ -2265,7 +2265,7 @@
             {
               "i": "send",
               "t": "Domini personalizzati",
-              "d": "inviti.studiofiore.it invece di ceremly.it: più tuo di così."
+              "d": "inviti.studiofiore.it invece di ceremly.com: più tuo di così."
             },
             {
               "i": "guests",
@@ -2331,7 +2331,7 @@
         "s3Title": "Come scrivere la richiesta",
         "s3p1": "Tre ingredienti, sempre: una scadenza esplicita (\"entro il 1 luglio\"), una sola azione (un link, non \"fammi sapere\"), un tono personale (il nome dell'ospite fa metà del lavoro).",
         "exampleLabel": "Esempio che funziona",
-        "exampleText": "\"Ciao Marta! Ci sposiamo il 12 settembre a Cernobbio 💍 Qui trovi l'invito con tutti i dettagli: ceremly.it/giulia-tommaso — confermaci entro il 1 luglio, così diamo i numeri al catering. Un abbraccio!\"",
+        "exampleText": "\"Ciao Marta! Ci sposiamo il 12 settembre a Cernobbio 💍 Qui trovi l'invito con tutti i dettagli: ceremly.com/giulia-tommaso — confermaci entro il 1 luglio, così diamo i numeri al catering. Un abbraccio!\"",
         "s3p2": "Nota cosa non c'è: scuse, premesse, \"quando puoi\". La gentilezza sta nel tono, non nella vaghezza.",
         "s4Title": "Gestire i ritardatari",
         "s4p1": "Ci saranno sempre. Il trucco è non gestirli a mano: imposta i promemoria automatici e lascia che sia \"il sistema\" a insistere — il sollecito di una piattaforma pesa meno di tre messaggi tuoi.",

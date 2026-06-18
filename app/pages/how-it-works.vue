@@ -123,7 +123,7 @@ const distChannels = computed(() => [
                         <div class="cer-card" style="padding: 16px;">
                             <div class="mono" style="font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 10px;">{{ t('ceremly.site.comeFunziona.distLinkLabel') }}</div>
                             <div class="row" style="gap: 8px;">
-                                <div class="mono" style="flex: 1; font-size: 12px; padding: 10px 12px; background: var(--bone-100); border: 1px solid var(--line); border-radius: 8px; color: var(--ink-700); white-space: nowrap; overflow: hidden;">ceremly.it/giulia-tommaso</div>
+                                <div class="mono" style="flex: 1; font-size: 12px; padding: 10px 12px; background: var(--bone-100); border: 1px solid var(--line); border-radius: 8px; color: var(--ink-700); white-space: nowrap; overflow: hidden;">ceremly.com/giulia-tommaso</div>
                                 <button class="cer-btn small ghost" type="button"><CerIcon name="copy" :s="13" /> {{ t('ceremly.site.comeFunziona.distCopy') }}</button>
                             </div>
                         </div>

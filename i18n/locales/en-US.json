@@ -2265,7 +2265,7 @@
             {
               "i": "send",
               "t": "Custom domains",
-              "d": "invites.studiofiore.it instead of ceremly.it: as yours as it gets."
+              "d": "invites.studiofiore.it instead of ceremly.com: as yours as it gets."
             },
             {
               "i": "guests",
@@ -2331,7 +2331,7 @@
         "s3Title": "How to word the request",
         "s3p1": "Three ingredients, always: an explicit deadline (\"by July 1st\"), a single action (one link, not \"let me know\"), and a personal tone (the guest's name does half the work).",
         "exampleLabel": "An example that works",
-        "exampleText": "\"Hi Marta! We're getting married on September 12th in Cernobbio 💍 Here's the invitation with all the details: ceremly.it/giulia-tommaso — confirm by July 1st so we can give the caterer our numbers. Hugs!\"",
+        "exampleText": "\"Hi Marta! We're getting married on September 12th in Cernobbio 💍 Here's the invitation with all the details: ceremly.com/giulia-tommaso — confirm by July 1st so we can give the caterer our numbers. Hugs!\"",
         "s3p2": "Notice what's missing: apologies, preambles, \"whenever you can\". The kindness is in the tone, not in the vagueness.",
         "s4Title": "Handling the stragglers",
         "s4p1": "There will always be some. The trick is not to chase them by hand: set up automatic reminders and let \"the system\" do the insisting — a nudge from a platform weighs less than three messages from you.",

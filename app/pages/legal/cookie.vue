@@ -7,8 +7,8 @@ const { t, tm, rt } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
-// Email brand: fuori da i18n (il carattere '@' rompe i file vue-i18n)
-const privacyEmail = 'privacy@ceremly.it'
+// Email brand: env-driven (fuori da i18n per il carattere '@')
+const privacyEmail = runtimeConfig.public.privacyEmail
 
 const seoTitle = t('ceremly.site.cookie.seoTitle')
 const seoDescription = t('ceremly.site.cookie.seoDescription')

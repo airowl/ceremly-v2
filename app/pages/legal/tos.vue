@@ -5,8 +5,8 @@ definePageMeta({
 
 const { t } = useI18n()
 
-// Email brand: fuori da i18n (il carattere '@' rompe i file vue-i18n)
-const legalEmail = 'legal@ceremly.it'
+// Email brand: env-driven (fuori da i18n per il carattere '@')
+const legalEmail = useRuntimeConfig().public.legalEmail
 </script>
 
 <template>

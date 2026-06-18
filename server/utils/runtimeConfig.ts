@@ -82,6 +82,9 @@ export const generateRuntimeConfig = () => {
             appEnv: process.env.NODE_ENV,
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
             appContactEmail: process.env.NUXT_PUBLIC_APP_CONTACT_EMAIL,
+            // Email legali (pagine privacy/tos/dpa/cookie). Env-driven: prod @ceremly.com, dev/test @airowlgasga.dev.
+            privacyEmail: process.env.NUXT_PUBLIC_PRIVACY_EMAIL || "privacy@ceremly.com",
+            legalEmail: process.env.NUXT_PUBLIC_LEGAL_EMAIL || "legal@ceremly.com",
             // Sentry (error tracking). DSN pubblico per design; vuoto = Sentry off.
             sentry: { dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || "" },
             creemProductIdStarterMonth: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH,
