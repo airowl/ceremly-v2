@@ -221,7 +221,7 @@ const privacyEmail = 'privacy@ceremly.it'
                 <div class="space-y-3 text-muted">
                   <p class="flex items-start gap-2">
                     <UIcon name="i-lucide-shield-check" class="size-5 text-primary mt-0.5 shrink-0" />
-                    <span><strong class="text-default">{{ t('privacy.sections.additionalNotes.transfers') }}:</strong> {{ t('privacy.sections.additionalNotes.transfersDesc') }}</span>
+                    <span><strong class="text-default">{{ t('privacy.sections.additionalNotes.transfers') }}:</strong> {{ t('privacy.sections.additionalNotes.transfersDesc') }} <NuxtLink to="/legal/subprocessors" class="text-primary hover:underline">{{ t('privacy.sections.additionalNotes.subprocessorsLink') }}</NuxtLink>.</span>
                   </p>
                   <p class="flex items-start gap-2">
                     <UIcon name="i-lucide-users" class="size-5 text-warning mt-0.5 shrink-0" />

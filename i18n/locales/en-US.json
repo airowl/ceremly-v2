@@ -888,7 +888,8 @@
       "additionalNotes": {
         "title": "Additional notes",
         "transfers": "International transfers",
-        "transfersDesc": "If present, Standard Contractual Clauses apply.",
+        "transfersDesc": "Part of our infrastructure and that of our sub-processors is located outside the European Economic Area, including the United States (e.g. Vercel, Cloudflare, Resend, Sentry). For such transfers we apply the Standard Contractual Clauses (SCC) approved by the European Commission or other appropriate safeguards under Chapter V of the GDPR.",
+        "subprocessorsLink": "See the full list of sub-processors",
         "minors": "Minors",
         "minorsDesc": "This is a B2B service not intended for minors."
       }
