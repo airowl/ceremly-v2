@@ -789,8 +789,6 @@
     },
     "cta": {
       "title": "Questions about Terms and Conditions?",
-      "company": "Ceremly Srl",
-      "location": "Milan, Italy",
       "legalEmail": "Legal email",
       "contact": "Contact us",
       "privacy": "Privacy Policy",
@@ -896,8 +894,6 @@
     },
     "cta": {
       "title": "Questions about this privacy policy?",
-      "controller": "Data Controller",
-      "company": "Ceremly Srl",
       "email": "Privacy email",
       "contact": "Contact us",
       "terms": "Terms of service",
@@ -1005,8 +1001,6 @@
     },
     "cta": {
       "title": "Questions about the DPA?",
-      "processor": "Data Processor",
-      "company": "Ceremly Srl",
       "email": "Legal email",
       "contact": "Contact us",
       "privacy": "Privacy Policy",
@@ -1020,8 +1014,8 @@
       "title": "Sub-processors"
     },
     "seoTitle": "Sub-processors",
-    "seoDescription": "List of the sub-processors engaged by Ceremly Srl to deliver the service.",
-    "intro": "To deliver the service, Ceremly Srl engages the following sub-processors pursuant to Art. 28 GDPR. This list may be updated over time; material changes are notified as set out in the DPA.",
+    "seoDescription": "List of the sub-processors engaged by Ceremly to deliver the service.",
+    "intro": "To deliver the service, Ceremly engages the following sub-processors pursuant to Art. 28 GDPR. This list may be updated over time; material changes are notified as set out in the DPA.",
     "draftWarning": "Draft — the list of vendors, locations and transfer legal bases are provisional and must be verified against each vendor's DPA before publication.",
     "table": {
       "provider": "Vendor",
@@ -2555,7 +2549,7 @@
         "title": "Cookie policy",
         "updatedLabel": "Last updated",
         "updated": "3 May 2026",
-        "company": "Ceremly Srl, Milan",
+        "company": "Ceremly",
         "intro": "In short: we use four cookies, all our own. No advertising tracking, no third parties, so no endless banners.",
         "indexLabel": "Index",
         "contactPrefix": "Questions?",
@@ -2954,7 +2948,7 @@
       },
       "footer": {
         "tagline": "Digital invitations and smart RSVPs, for events that truly matter. Made in Italy.",
-        "copyright": "© 2026 Ceremly Srl",
+        "copyright": "© 2026 Ceremly",
         "legal": "EU servers · GDPR compliant · secure payments via Creem",
         "enSoon": "EN — soon",
         "cols": {

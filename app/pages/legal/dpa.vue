@@ -229,7 +229,6 @@ const legalEmail = 'legal@ceremly.it'
 
               <div class="space-y-4">
                 <div class="text-muted">
-                  <p class="mb-2"><strong class="text-default">{{ t('dpa.cta.processor') }}:</strong> {{ t('dpa.cta.company') }}</p>
                   <p><strong class="text-default">{{ t('dpa.cta.email') }}:</strong> <a :href="`mailto:${legalEmail}`" class="text-primary hover:underline">{{ legalEmail }}</a></p>
                 </div>
 

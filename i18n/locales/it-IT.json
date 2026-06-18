@@ -789,8 +789,6 @@
     },
     "cta": {
       "title": "Domande sui Termini e Condizioni?",
-      "company": "Ceremly Srl",
-      "location": "Milano, Italia",
       "legalEmail": "Email legale",
       "contact": "Contattaci",
       "privacy": "Privacy Policy",
@@ -896,8 +894,6 @@
     },
     "cta": {
       "title": "Domande su questa privacy policy?",
-      "controller": "Titolare del trattamento",
-      "company": "Ceremly Srl",
       "email": "Email privacy",
       "contact": "Contattaci",
       "terms": "Termini di servizio",
@@ -1005,8 +1001,6 @@
     },
     "cta": {
       "title": "Domande sul DPA?",
-      "processor": "Responsabile del trattamento",
-      "company": "Ceremly Srl",
       "email": "Email legale",
       "contact": "Contattaci",
       "privacy": "Privacy Policy",
@@ -1020,8 +1014,8 @@
       "title": "Sub-responsabili del trattamento"
     },
     "seoTitle": "Sub-responsabili del trattamento",
-    "seoDescription": "Elenco dei sub-responsabili (sub-processor) di cui Ceremly Srl si avvale per l'erogazione del servizio.",
-    "intro": "Per erogare il servizio, Ceremly Srl si avvale dei seguenti sub-responsabili del trattamento ai sensi dell'art. 28 GDPR. L'elenco può essere aggiornato nel tempo; le modifiche sostanziali sono comunicate secondo quanto previsto dal DPA.",
+    "seoDescription": "Elenco dei sub-responsabili (sub-processor) di cui Ceremly si avvale per l'erogazione del servizio.",
+    "intro": "Per erogare il servizio, Ceremly si avvale dei seguenti sub-responsabili del trattamento ai sensi dell'art. 28 GDPR. L'elenco può essere aggiornato nel tempo; le modifiche sostanziali sono comunicate secondo quanto previsto dal DPA.",
     "draftWarning": "Bozza — l'elenco dei fornitori, le ubicazioni e le basi giuridiche dei trasferimenti sono provvisori e devono essere verificati con i DPA dei singoli fornitori prima della pubblicazione.",
     "table": {
       "provider": "Fornitore",
@@ -2555,7 +2549,7 @@
         "title": "Cookie policy",
         "updatedLabel": "Ultimo aggiornamento",
         "updated": "3 maggio 2026",
-        "company": "Ceremly Srl, Milano",
+        "company": "Ceremly",
         "intro": "In breve: usiamo quattro cookie, tutti nostri. Niente tracciamento pubblicitario, niente terze parti, quindi niente banner infiniti.",
         "indexLabel": "Indice",
         "contactPrefix": "Per domande:",
@@ -2954,7 +2948,7 @@
       },
       "footer": {
         "tagline": "Inviti digitali e RSVP intelligenti, per eventi che contano davvero. Fatto in Italia.",
-        "copyright": "© 2026 Ceremly Srl",
+        "copyright": "© 2026 Ceremly",
         "legal": "Server in UE · GDPR compliant · pagamenti sicuri via Creem",
         "enSoon": "EN — soon",
         "cols": {

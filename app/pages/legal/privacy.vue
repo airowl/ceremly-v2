@@ -239,7 +239,6 @@ const privacyEmail = 'privacy@ceremly.it'
 
               <div class="space-y-4">
                 <div class="text-muted">
-                  <p class="mb-2"><strong class="text-default">{{ t('privacy.cta.controller') }}:</strong> {{ t('privacy.cta.company') }}</p>
                   <p><strong class="text-default">{{ t('privacy.cta.email') }}:</strong> <a :href="`mailto:${privacyEmail}`" class="text-primary hover:underline">{{ privacyEmail }}</a></p>
                 </div>
 
