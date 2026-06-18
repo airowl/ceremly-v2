@@ -73,7 +73,7 @@ const popular = computed(() => (tm('ceremly.site.centroAiuto.popular') as string
                     <span class="serif" style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em;">{{ t('ceremly.site.centroAiuto.contactTitle') }}</span>
                     <span style="font-size: 14px; color: var(--bone-200);">{{ t('ceremly.site.centroAiuto.contactSub') }}</span>
                 </div>
-                <NuxtLink :to="localePath('/contactUs')" class="cer-btn" style="background: var(--orange); flex-shrink: 0;">
+                <NuxtLink :to="localePath('/contact')" class="cer-btn" style="background: var(--orange); flex-shrink: 0;">
                     <CerIcon name="mail" :s="14" /> {{ t('ceremly.site.centroAiuto.contactBtn') }}
                 </NuxtLink>
             </div>

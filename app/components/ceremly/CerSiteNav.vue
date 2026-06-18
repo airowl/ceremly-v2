@@ -9,10 +9,10 @@ const route = useRoute()
 const { isActiveMode } = useSiteMode()
 
 const links = computed(() => [
-    { to: localePath('/come-funziona'), label: t('ceremly.home.nav.howItWorks') },
-    { to: localePath('/funzionalita'), label: t('ceremly.home.nav.features') },
-    { to: localePath('/prezzi'), label: t('ceremly.home.nav.pricing') },
-    { to: localePath('/esempi'), label: t('ceremly.home.nav.examples') },
+    { to: localePath('/how-it-works'), label: t('ceremly.home.nav.howItWorks') },
+    { to: localePath('/features'), label: t('ceremly.home.nav.features') },
+    { to: localePath('/pricing'), label: t('ceremly.home.nav.pricing') },
+    { to: localePath('/examples'), label: t('ceremly.home.nav.examples') },
 ])
 
 const mobileOpen = ref(false)

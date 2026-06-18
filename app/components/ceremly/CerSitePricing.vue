@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sezione prezzi condivisa (landing #prezzi + pagina /prezzi). Estratta da
+// Sezione prezzi condivisa (landing #prezzi + pagina /pricing). Estratta da
 // index.vue per evitare duplicazione: il mockup PrezziPage rende <LandingPricing/>.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 
@@ -75,7 +75,7 @@ const atelierName = computed(() => t('ceremly.home.pricing.atelier.name'))
 
 function tierTo(tier: Tier): string {
     if (!isActiveMode.value) return `${localePath('/')}#lista-attesa`
-    if (tier.kind === 'ghost' && tier.n === atelierName.value) return localePath('/contactUs')
+    if (tier.kind === 'ghost' && tier.n === atelierName.value) return localePath('/contact')
     return localePath('/signup')
 }
 </script>

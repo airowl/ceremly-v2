@@ -171,7 +171,7 @@ const distChannels = computed(() => [
             </div>
         </div>
 
-        <CerSiteCTA :sub="t('ceremly.site.comeFunziona.ctaSub')" :secondary="t('ceremly.site.comeFunziona.ctaSecondary')" :secondary-to="localePath('/esempi')" />
+        <CerSiteCTA :sub="t('ceremly.site.comeFunziona.ctaSub')" :secondary="t('ceremly.site.comeFunziona.ctaSecondary')" :secondary-to="localePath('/examples')" />
     </div>
 </template>
 

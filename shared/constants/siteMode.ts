@@ -61,7 +61,7 @@ export const WAITINGLIST_BLOCKED_PREFIXES = [
     "/logout",
     "/auth",
     "/invite",
-    "/contactUs",
+    "/contact",
 ] as const;
 
 /** True se `path` (qualsiasi locale) è una pagina app/auth da bloccare in waitinglist. */

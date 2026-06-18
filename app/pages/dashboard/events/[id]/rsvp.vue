@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Form RSVP builder — port fedele di docs/ui/project/screens/rsvp-builder.jsx.
 // Sinistra: lista domande (drag + frecce, attendance fissa a indice 0).
-// Destra: inspector (label/tipo/stato, opzioni, logica condizionale, anteprima).
+// Destra: inspector (label/tipo/status, opzioni, logica condizionale, anteprima).
 // Salvataggio: PUT /api/events/:id { rsvpConfig } con validazione client.
 import draggable from "vuedraggable";
 import type {

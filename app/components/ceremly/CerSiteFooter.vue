@@ -11,29 +11,29 @@ const footerCols = computed<FooterCol[]>(() => [
     {
         t: t('ceremly.home.footer.cols.product.title'),
         items: [
-            { label: t('ceremly.home.nav.howItWorks'), to: localePath('/come-funziona') },
-            { label: t('ceremly.home.nav.features'), to: localePath('/funzionalita') },
-            { label: t('ceremly.home.footer.cols.product.inviteTemplates'), to: localePath('/modelli') },
-            { label: t('ceremly.home.nav.pricing'), to: localePath('/prezzi') },
-            { label: t('ceremly.home.footer.cols.product.realExamples'), to: localePath('/esempi') },
+            { label: t('ceremly.home.nav.howItWorks'), to: localePath('/how-it-works') },
+            { label: t('ceremly.home.nav.features'), to: localePath('/features') },
+            { label: t('ceremly.home.footer.cols.product.inviteTemplates'), to: localePath('/templates') },
+            { label: t('ceremly.home.nav.pricing'), to: localePath('/pricing') },
+            { label: t('ceremly.home.footer.cols.product.realExamples'), to: localePath('/examples') },
         ],
     },
     {
         t: t('ceremly.home.footer.cols.forWho.title'),
         items: [
-            { label: t('ceremly.home.footer.cols.forWho.weddings'), to: localePath('/matrimoni') },
-            { label: t('ceremly.home.footer.cols.forWho.graduations'), to: localePath('/lauree') },
-            { label: t('ceremly.home.footer.cols.forWho.baptisms'), to: localePath('/battesimi') },
-            { label: t('ceremly.home.footer.cols.forWho.birthdays'), to: localePath('/compleanni') },
+            { label: t('ceremly.home.footer.cols.forWho.weddings'), to: localePath('/weddings') },
+            { label: t('ceremly.home.footer.cols.forWho.graduations'), to: localePath('/graduations') },
+            { label: t('ceremly.home.footer.cols.forWho.baptisms'), to: localePath('/baptisms') },
+            { label: t('ceremly.home.footer.cols.forWho.birthdays'), to: localePath('/birthdays') },
             { label: t('ceremly.home.footer.cols.forWho.weddingPlanners'), to: localePath('/wedding-planner') },
         ],
     },
     {
         t: t('ceremly.home.footer.cols.resources.title'),
         items: [
-            { label: t('ceremly.home.footer.cols.resources.rsvpGuide'), to: localePath('/guida-rsvp') },
-            { label: t('ceremly.home.footer.cols.resources.helpCenter'), to: localePath('/centro-aiuto') },
-            { label: t('ceremly.home.footer.cols.resources.serviceStatus'), to: localePath('/stato') },
+            { label: t('ceremly.home.footer.cols.resources.rsvpGuide'), to: localePath('/rsvp-guide') },
+            { label: t('ceremly.home.footer.cols.resources.helpCenter'), to: localePath('/help-center') },
+            { label: t('ceremly.home.footer.cols.resources.serviceStatus'), to: localePath('/status') },
             { label: t('ceremly.home.footer.cols.resources.changelog'), to: localePath('/changelog') },
             { label: t('ceremly.home.footer.cols.resources.apiPartners'), to: localePath('/api') },
         ],
@@ -41,8 +41,8 @@ const footerCols = computed<FooterCol[]>(() => [
     {
         t: 'Ceremly',
         items: [
-            { label: t('ceremly.home.footer.cols.company.about'), to: localePath('/chi-siamo') },
-            { label: t('ceremly.home.footer.cols.company.contact'), to: localePath('/contactUs') },
+            { label: t('ceremly.home.footer.cols.company.about'), to: localePath('/about') },
+            { label: t('ceremly.home.footer.cols.company.contact'), to: localePath('/contact') },
             { label: t('ceremly.home.footer.cols.company.terms'), to: localePath('/legal/tos') },
             { label: t('ceremly.home.footer.cols.company.privacy'), to: localePath('/legal/privacy') },
             { label: t('ceremly.home.footer.cols.company.cookies'), to: localePath('/legal/cookie') },

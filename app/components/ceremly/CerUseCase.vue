@@ -55,7 +55,7 @@ const feats = computed(() => {
     return (tm(`${base.value}.feats`) as Feat[]).map((x, i) => ({ i: icons[i] || 'sparkle', t: rt(x.t), d: rt(x.d) }))
 })
 
-const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') : localePath('/signup'))
+const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contact') : localePath('/signup'))
 </script>
 
 <template>
@@ -76,7 +76,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') 
                         <NuxtLink :to="heroPrimaryTo" class="cer-btn" style="padding: 14px 22px; font-size: 14px;">
                             <CerIcon name="sparkle" :s="14" /> {{ t(`${base}.heroPrimary`) }}
                         </NuxtLink>
-                        <NuxtLink :to="localePath('/esempi')" class="cer-btn ghost" style="padding: 14px 22px; font-size: 14px;">
+                        <NuxtLink :to="localePath('/examples')" class="cer-btn ghost" style="padding: 14px 22px; font-size: 14px;">
                             <CerIcon name="eye" :s="14" /> {{ t(`${base}.heroSecondary`) }}
                         </NuxtLink>
                     </div>
@@ -156,7 +156,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') 
             :sub="t(`${base}.ctaSub`)"
             :primary="t(`${base}.ctaPrimary`)"
             :secondary="t(`${base}.ctaSecondary`)"
-            :secondary-to="localePath('/prezzi')"
+            :secondary-to="localePath('/pricing')"
         >
             <template #title>
                 {{ t(`${base}.ctaTitlePart1`) }} <CerMark c="var(--orange)">{{ t(`${base}.ctaTitleMark`) }}</CerMark>.
@@ -166,7 +166,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contactUs') 
             v-else
             :sub="t(`${base}.ctaSub`)"
             :secondary="t(`${base}.ctaSecondary`)"
-            :secondary-to="localePath('/esempi')"
+            :secondary-to="localePath('/examples')"
         />
     </div>
 </template>

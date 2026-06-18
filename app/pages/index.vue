@@ -5,7 +5,7 @@
 // 0.site-mode.global.ts (client) + server/middleware/0.site-mode.ts: qui
 // isActiveMode gata link auth + tutti i CTA /signup (nav, hero, pricing,
 // sezione CTA); in waitinglist mode i CTA puntano al form lista d'attesa
-// (#lista-attesa) che chiama /api/waiting-list/subscribe.
+// (#waiting-list) che chiama /api/waiting-list/subscribe.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerSitePricing from '~/components/ceremly/CerSitePricing.vue'
 import CerSiteFooter from '~/components/ceremly/CerSiteFooter.vue'
@@ -115,15 +115,15 @@ async function submitWaitingList() {
 function onSignupCta(e: Event) {
     if (!isActiveMode.value) {
         e.preventDefault()
-        scrollToId('lista-attesa')
+        scrollToId('waiting-list')
     }
 }
 
 const navAnchors = [
-    { id: 'come-funziona', label: t('ceremly.home.nav.howItWorks') },
-    { id: 'funzionalita', label: t('ceremly.home.nav.features') },
-    { id: 'prezzi', label: t('ceremly.home.nav.pricing') },
-    { id: 'esempi', label: t('ceremly.home.nav.examples') },
+    { id: 'how-it-works', label: t('ceremly.home.nav.howItWorks') },
+    { id: 'features', label: t('ceremly.home.nav.features') },
+    { id: 'pricing', label: t('ceremly.home.nav.pricing') },
+    { id: 'examples', label: t('ceremly.home.nav.examples') },
 ]
 
 // ── Dati sezioni (1:1 dal mockup) ──
@@ -198,12 +198,12 @@ const feats: Feat[] = [
                     <NuxtLink to="/signup" class="cer-btn" style="padding: 15px 24px; font-size: 14px;">
                         <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.hero.ctaPrimary') }}
                     </NuxtLink>
-                    <a href="#esempi" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('esempi')">
+                    <a href="#examples" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('examples')">
                         <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
                     </a>
                 </div>
                 <!-- Waiting list mode: form di iscrizione al posto del CTA /signup -->
-                <div v-else id="lista-attesa" class="l-target" style="margin-top: 32px;">
+                <div v-else id="waiting-list" class="l-target" style="margin-top: 32px;">
                     <form v-if="!wlSubmitted" class="row" style="gap: 12px; flex-wrap: wrap;" @submit.prevent="submitWaitingList">
                         <div class="l-wl-hp" aria-hidden="true">
                             <label for="wl-website">Website</label>
@@ -237,7 +237,7 @@ const feats: Feat[] = [
                     </div>
                     <div v-if="wlError" role="alert" style="margin-top: 8px; font-size: 13px; color: var(--decline);">{{ wlError }}</div>
                     <div class="row" style="margin-top: 14px;">
-                        <a href="#esempi" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('esempi')">
+                        <a href="#examples" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('examples')">
                             <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
                         </a>
                     </div>
@@ -330,7 +330,7 @@ const feats: Feat[] = [
         </section>
 
         <!-- ───────────────────────────────  HOW IT WORKS  -->
-        <section id="come-funziona" class="l-target">
+        <section id="how-it-works" class="l-target">
             <div class="l-wrap l-how reveal reveal-up">
                 <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent;">{{ $t('ceremly.home.nav.howItWorks') }}</span>
                 <h2 class="serif l-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 0; letter-spacing: -0.035em; max-width: 820px;">
@@ -353,7 +353,7 @@ const feats: Feat[] = [
         </section>
 
         <!-- ───────────────────────────────  FEATURES  -->
-        <section id="funzionalita" class="l-target" style="background: var(--ink); color: var(--bone-50);">
+        <section id="features" class="l-target" style="background: var(--ink); color: var(--bone-50);">
             <div class="l-wrap l-features reveal reveal-up">
                 <div class="l-feat-grid">
                     <div>
@@ -377,14 +377,14 @@ const feats: Feat[] = [
         </section>
 
         <!-- ───────────────────────────────  PRICING  -->
-        <section id="prezzi" class="l-target">
+        <section id="pricing" class="l-target">
             <div class="l-wrap l-pricing reveal reveal-up">
                 <CerSitePricing />
             </div>
         </section>
 
         <!-- ───────────────────────────────  TESTIMONIAL  -->
-        <section id="esempi" class="l-target" style="background: var(--bone-100); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+        <section id="examples" class="l-target" style="background: var(--bone-100); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
             <div class="l-wrap l-quote reveal reveal-up">
                 <div style="max-width: 980px; margin: 0 auto; text-align: center;">
                     <span class="cer-tag" style="background: var(--blue-soft); color: var(--blue-deep); border-color: transparent; display: inline-flex;">{{ $t('ceremly.home.testimonial.tag') }}</span>
@@ -409,10 +409,10 @@ const feats: Feat[] = [
                     <NuxtLink v-if="isActiveMode" to="/signup" class="cer-btn" style="background: var(--bone-50); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;">
                         <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.cta.ctaPrimary') }}
                     </NuxtLink>
-                    <a v-else href="#lista-attesa" class="cer-btn" style="background: var(--bone-50); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;" @click="onSignupCta">
+                    <a v-else href="#waiting-list" class="cer-btn" style="background: var(--bone-50); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;" @click="onSignupCta">
                         <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.waitingList.submit') }}
                     </a>
-                    <NuxtLink to="/contactUs" class="cer-btn" style="background: var(--purple); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;">
+                    <NuxtLink to="/contact" class="cer-btn" style="background: var(--purple); color: var(--ink); border-color: var(--ink); padding: 15px 26px; font-size: 14px;">
                         <CerIcon name="mail" :s="14" /> {{ $t('ceremly.home.cta.ctaTeam') }}
                     </NuxtLink>
                 </div>

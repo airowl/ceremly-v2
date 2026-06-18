@@ -87,7 +87,7 @@ const team = computed(() => (tm('ceremly.site.chiSiamo.team') as Member[]).map(x
             </div>
         </div>
 
-        <CerSiteCTA :sub="t('ceremly.site.chiSiamo.ctaSub')" :secondary="t('ceremly.site.chiSiamo.ctaSecondary')" :secondary-to="useLocalePath()('/contactUs')">
+        <CerSiteCTA :sub="t('ceremly.site.chiSiamo.ctaSub')" :secondary="t('ceremly.site.chiSiamo.ctaSecondary')" :secondary-to="useLocalePath()('/contact')">
             <template #title>
                 {{ t('ceremly.site.chiSiamo.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.chiSiamo.ctaTitleMark') }}</CerMark>.
             </template>

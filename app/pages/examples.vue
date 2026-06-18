@@ -73,7 +73,7 @@ const samples = computed(() => (tm('ceremly.site.esempi.samples') as Sample[]).m
             </div>
         </div>
 
-        <CerSiteCTA :secondary="t('ceremly.site.esempi.ctaSecondary')" :secondary-to="localePath('/prezzi')">
+        <CerSiteCTA :secondary="t('ceremly.site.esempi.ctaSecondary')" :secondary-to="localePath('/pricing')">
             <template #title>
                 {{ t('ceremly.site.esempi.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.esempi.ctaTitleMark') }}</CerMark>.
             </template>

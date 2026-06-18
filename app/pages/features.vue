@@ -76,7 +76,7 @@ const groups = computed(() => (tm('ceremly.site.funzionalita.groups') as Group[]
             </div>
         </div>
 
-        <CerSiteCTA :sub="t('ceremly.site.funzionalita.ctaSub')" :secondary="t('ceremly.site.funzionalita.ctaSecondary')" :secondary-to="localePath('/prezzi')">
+        <CerSiteCTA :sub="t('ceremly.site.funzionalita.ctaSub')" :secondary="t('ceremly.site.funzionalita.ctaSecondary')" :secondary-to="localePath('/pricing')">
             <template #title>
                 {{ t('ceremly.site.funzionalita.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.funzionalita.ctaTitleMark') }}</CerMark>.
             </template>

@@ -80,11 +80,11 @@ const tpls = computed(() => (tm('ceremly.site.modelli.tpls') as Tpl[]).map((x, i
                     <span style="color: var(--purple-bright);"><CerIcon name="sparkle" :s="20" /></span>
                     <span style="font-size: 14px; color: var(--ink-700);">{{ t('ceremly.site.modelli.noteText') }}</span>
                 </div>
-                <NuxtLink :to="localePath('/prezzi')" class="cer-btn small ghost" style="white-space: nowrap;">{{ t('ceremly.site.modelli.notePrices') }} <CerIcon name="chevR" :s="12" /></NuxtLink>
+                <NuxtLink :to="localePath('/pricing')" class="cer-btn small ghost" style="white-space: nowrap;">{{ t('ceremly.site.modelli.notePrices') }} <CerIcon name="chevR" :s="12" /></NuxtLink>
             </div>
         </div>
 
-        <CerSiteCTA :secondary="t('ceremly.site.modelli.ctaSecondary')" :secondary-to="localePath('/esempi')">
+        <CerSiteCTA :secondary="t('ceremly.site.modelli.ctaSecondary')" :secondary-to="localePath('/examples')">
             <template #title>
                 {{ t('ceremly.site.modelli.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.modelli.ctaTitleMark') }}</CerMark>.
             </template>

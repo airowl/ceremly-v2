@@ -11,7 +11,7 @@
  *
  * WAITINGLIST:
  *   - API: tutte 503 tranne /api/waiting-list/** (+ jobs/cron/public sempre liberi)
- *   - Pagine: /dashboard, /login, /signup, /logout, /auth, /invite, /contactUs
+ *   - Pagine: /dashboard, /login, /signup, /logout, /auth, /invite, /contact
  *     (in ogni locale) → redirect "/"
  * MAINTENANCE:
  *   - API: tutte 503 (tranne jobs/cron/public)

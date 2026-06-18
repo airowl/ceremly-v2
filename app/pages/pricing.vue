@@ -95,7 +95,7 @@ const faq = computed(() => (tm('ceremly.site.prezzi.faq') as Faq[]).map(x => ({ 
             <CerFaqGrid :items="faq" />
         </div>
 
-        <CerSiteCTA :secondary="t('ceremly.site.prezzi.ctaSecondary')" :secondary-to="localePath('/contactUs')">
+        <CerSiteCTA :secondary="t('ceremly.site.prezzi.ctaSecondary')" :secondary-to="localePath('/contact')">
             <template #title>
                 {{ t('ceremly.site.prezzi.ctaTitlePart1') }}<br><CerMark c="var(--orange)">{{ t('ceremly.site.prezzi.ctaTitleMark') }}</CerMark>.
             </template>

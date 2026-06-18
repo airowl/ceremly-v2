@@ -79,10 +79,10 @@ const codeSample = `GET /v1/events/evt_8h2k/rsvps
                         </span>
                     </div>
                     <div class="row" style="gap: 12px; margin-top: 28px;">
-                        <NuxtLink :to="localePath('/contactUs')" class="cer-btn">
+                        <NuxtLink :to="localePath('/contact')" class="cer-btn">
                             <CerIcon name="mail" :s="14" /> {{ t('ceremly.site.api.heroBtnPrimary') }}
                         </NuxtLink>
-                        <NuxtLink :to="localePath('/contactUs')" class="cer-btn ghost">{{ t('ceremly.site.api.heroBtnSecondary') }}</NuxtLink>
+                        <NuxtLink :to="localePath('/contact')" class="cer-btn ghost">{{ t('ceremly.site.api.heroBtnSecondary') }}</NuxtLink>
                     </div>
                 </div>
                 <div style="background: var(--ink); border-radius: 16px; border: 2px solid var(--ink); box-shadow: 8px 8px 0 var(--purple); padding: 26px; color: var(--bone-200);">
@@ -110,7 +110,7 @@ const codeSample = `GET /v1/events/evt_8h2k/rsvps
             </div>
         </div>
 
-        <CerSiteCTA :sub="t('ceremly.site.api.ctaSub')" :secondary="t('ceremly.site.api.ctaSecondary')" :secondary-to="localePath('/prezzi')">
+        <CerSiteCTA :sub="t('ceremly.site.api.ctaSub')" :secondary="t('ceremly.site.api.ctaSecondary')" :secondary-to="localePath('/pricing')">
             <template #title>
                 {{ t('ceremly.site.api.ctaTitlePart1') }} <CerMark c="var(--orange)">{{ t('ceremly.site.api.ctaTitleMark') }}</CerMark>?
             </template>

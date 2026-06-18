@@ -39,7 +39,7 @@ const primaryTo = computed(() => isActiveMode.value ? localePath('/signup') : `$
                 </NuxtLink>
                 <NuxtLink
                     v-if="secondary"
-                    :to="secondaryTo || localePath('/esempi')"
+                    :to="secondaryTo || localePath('/examples')"
                     class="cer-btn"
                     style="background: var(--purple); color: var(--ink); padding: 14px 24px; font-size: 14px;"
                 >{{ secondary }}</NuxtLink>
