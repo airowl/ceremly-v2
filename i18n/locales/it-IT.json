@@ -608,6 +608,7 @@
     "password": "Password",
     "passwordDescription": "Aggiorna la password del tuo account.",
     "oauthPasswordInfo": "La gestione della password è gestita dal tuo provider di accesso social (Google, GitHub, ecc.). Per cambiare la password, visita le impostazioni del tuo provider.",
+    "oauthEmailInfo": "Il tuo indirizzo email è gestito dal tuo provider di accesso (Google, ecc.) e non può essere modificato qui.",
     "currentPassword": "Password attuale",
     "newPassword": "Nuova password",
     "confirmPassword": "Conferma nuova password",
@@ -618,7 +619,7 @@
     "passwordUpdateError": "Impossibile aggiornare la password. Riprova.",
     "invalidCurrentPassword": "La password attuale non è corretta.",
     "emailUpdateRequested": "Aggiornamento email richiesto",
-    "emailConfirmationSent": "È stata inviata un'email di conferma al tuo nuovo indirizzo.",
+    "emailConfirmationSent": "Ti abbiamo inviato un'email di conferma alla tua casella attuale. Clicca il link per completare il cambio.",
     "saveAll": "Salva tutto",
     "validation": {
       "nameTooShort": "Il nome deve contenere almeno 2 caratteri",

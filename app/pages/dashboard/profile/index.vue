@@ -345,10 +345,11 @@ v-model="profile.fullName" autocomplete="off" class="w-full"
                             :disabled="profileStore.isLoading" />
                     </UFormField>
 
-                    <UFormField name="email" :label="t('profile.email')" required>
+                    <UFormField name="email" :label="t('profile.email')" required
+                        :help="profileStore.isOAuthUser ? t('profile.oauthEmailInfo') : undefined">
                         <UInput
 v-model="profile.email" type="email" autocomplete="off" class="w-full"
-                            :disabled="profileStore.isLoading" />
+                            :disabled="profileStore.isLoading || profileStore.isOAuthUser" />
                     </UFormField>
 
                     <UFormField name="phone" :label="t('profile.phone')">

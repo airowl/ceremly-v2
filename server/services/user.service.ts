@@ -4,7 +4,7 @@
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3"
 import { eq, desc } from 'drizzle-orm'
-import { user, dataExports } from '../database/schema'
+import { user, account, dataExports } from '../database/schema'
 import { getDB } from '../utils/db'
 import { logAudit } from '../utils/audit'
 import {
@@ -51,6 +51,21 @@ export async function getUserProfile(userId: string) {
     })
   }
 
+  // Provider di accesso: Better Auth usa 'credential' per email/password.
+  // Se l'utente ha un account 'credential' può gestire email/password localmente
+  // ('email'); altrimenti è OAuth-only (es. 'google') → il cambio email/password
+  // va fatto dal provider, quindi la UI disabilita quei campi.
+  const accounts = await db
+    .select({ providerId: account.providerId })
+    .from(account)
+    .where(eq(account.userId, userId))
+
+  const providerIds = accounts.map((a) => a.providerId)
+  const hasCredential = providerIds.includes('credential')
+  const authProvider = hasCredential
+    ? 'email'
+    : (providerIds.find((p) => p !== 'credential') ?? 'email')
+
   return {
     profile: {
       id: userData.id,
@@ -64,6 +79,7 @@ export async function getUserProfile(userId: string) {
       createdAt: userData.createdAt?.toISOString(),
       updatedAt: userData.updatedAt?.toISOString(),
     },
+    authProvider,
   }
 }
 

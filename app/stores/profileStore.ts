@@ -62,16 +62,14 @@ export const useProfileStore = defineStore('profile', () => {
                 return null;
             }
 
-            // Detect auth provider - Better Auth uses 'credential' for email/password
-            // For now, default to 'email' since we don't have easy access to provider info
-            authProvider.value = 'email';
-
-            // Fetch profile from API
-            const data = await $fetch<{ profile: UserProfile }>('/api/user/profile');
+            // Fetch profile + auth provider from API. Il server determina il provider
+            // reale (email/password vs OAuth-only) leggendo la tabella account.
+            const data = await $fetch<{ profile: UserProfile; authProvider?: AuthProvider }>('/api/user/profile');
 
             if (data.profile) {
                 profile.value = data.profile;
             }
+            authProvider.value = data.authProvider ?? 'email';
             return profile.value;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to fetch profile';

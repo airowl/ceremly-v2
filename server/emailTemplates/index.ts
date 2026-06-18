@@ -5,6 +5,7 @@ import { render } from '@react-email/render';
 import * as React from 'react';
 import { VerificationEmail } from './VerificationEmail';
 import { ResetPasswordEmail } from './ResetPasswordEmail';
+import { ChangeEmailEmail } from './ChangeEmailEmail';
 import { WaitingListEmail } from './WaitingListEmail';
 import { ContactConfirmationEmail } from './ContactConfirmationEmail';
 import { ContactNotificationEmail } from './ContactNotificationEmail';
@@ -32,6 +33,7 @@ const appHost = (): string => {
 // Re-export components
 export { VerificationEmail } from './VerificationEmail';
 export { ResetPasswordEmail } from './ResetPasswordEmail';
+export { ChangeEmailEmail } from './ChangeEmailEmail';
 export { WaitingListEmail } from './WaitingListEmail';
 export { ContactConfirmationEmail } from './ContactConfirmationEmail';
 export { ContactNotificationEmail } from './ContactNotificationEmail';
@@ -67,6 +69,25 @@ export async function renderResetPasswordEmail(options: {
     const element = React.createElement(ResetPasswordEmail, {
         language: options.language || 'it',
         resetUrl: options.resetUrl,
+        userName: options.userName,
+        appName: appName(),
+    });
+    return await render(element);
+}
+
+/**
+ * Render change-email confirmation email to HTML (sent to the CURRENT address)
+ */
+export async function renderChangeEmailEmail(options: {
+    language?: SupportedLanguage;
+    confirmUrl: string;
+    newEmail: string;
+    userName?: string;
+}): Promise<string> {
+    const element = React.createElement(ChangeEmailEmail, {
+        language: options.language || 'it',
+        confirmUrl: options.confirmUrl,
+        newEmail: options.newEmail,
         userName: options.userName,
         appName: appName(),
     });
@@ -204,6 +225,10 @@ export const emailSubjects = {
     resetPassword: {
         it: `Reimposta la tua password - ${appName()}`,
         en: `Reset your password - ${appName()}`,
+    },
+    changeEmail: {
+        it: `Conferma il cambio del tuo indirizzo email - ${appName()}`,
+        en: `Confirm your email address change - ${appName()}`,
     },
     waitingList: {
         it: `Benvenuto nella Waiting List di ${appName()}!`,

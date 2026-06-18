@@ -1,6 +1,7 @@
-// React Email template for email verification
-// Supports Italian and English languages
-// Uses React.createElement to avoid JSX/Vue conflicts
+// React Email template for email-change confirmation (step 1)
+// Sent to the user's CURRENT address to confirm an email change request.
+// Supports Italian and English languages.
+// Uses React.createElement to avoid JSX/Vue conflicts.
 
 import * as React from 'react';
 import {
@@ -16,9 +17,10 @@ import {
     Hr,
 } from '@react-email/components';
 
-interface VerificationEmailProps {
+interface ChangeEmailEmailProps {
     language?: 'it' | 'en';
-    verificationUrl: string;
+    confirmUrl: string;
+    newEmail: string;
     userName?: string;
     appName: string;
 }
@@ -26,42 +28,44 @@ interface VerificationEmailProps {
 // Translations
 const buildTranslations = (appName: string) => ({
     it: {
-        preview: `Verifica il tuo indirizzo email per ${appName}`,
-        title: 'Verifica il tuo indirizzo email',
+        preview: `Conferma il cambio del tuo indirizzo email per ${appName}`,
+        title: 'Conferma il cambio email',
         greeting: (name?: string) => name ? `Ciao ${name},` : 'Ciao,',
-        intro: `Conferma il tuo indirizzo email per il tuo account ${appName}.`,
-        verifyTitle: 'Verifica il tuo indirizzo email',
-        verifyText: 'Clicca il pulsante qui sotto per verificare il tuo indirizzo email.',
-        ctaButton: 'Verifica Email',
-        expiryNote: 'Questo link scadrà tra 24 ore.',
+        intro: `Abbiamo ricevuto una richiesta di cambiare l'indirizzo email del tuo account ${appName}.`,
+        confirmTitle: 'Nuovo indirizzo email',
+        confirmText: 'Confermi di voler usare questo indirizzo:',
+        ctaButton: 'Conferma cambio email',
+        afterCta: 'Dopo la conferma ti invieremo un’email di verifica al nuovo indirizzo per completare il cambio.',
+        securityNote: 'Per la tua sicurezza, questo link ha una durata limitata.',
         alternativeText: 'Se il pulsante non funziona, copia e incolla questo link nel tuo browser:',
-        ignoreText: `Se non hai richiesto tu questa verifica, puoi ignorare questa email.`,
+        ignoreText: `Se non hai richiesto tu questo cambio, ignora questa email: il tuo indirizzo resterà invariato. Ti consigliamo di cambiare la password per sicurezza.`,
         signature: 'Cordiali saluti,',
         team: `Il Team di ${appName}`,
         copyright: `© ${new Date().getFullYear()} ${appName}. Tutti i diritti riservati.`,
         privacy: 'Privacy Policy',
         terms: 'Termini di Servizio',
         dpa: 'Data Processing Agreement',
-        footer: `Hai ricevuto questa email perché è stata richiesta la verifica di questo indirizzo per ${appName}.`,
+        footer: `Hai ricevuto questa email perché è stato richiesto un cambio di indirizzo per il tuo account ${appName}.`,
     },
     en: {
-        preview: `Verify your email address for ${appName}`,
-        title: 'Verify your email address',
+        preview: `Confirm your email address change for ${appName}`,
+        title: 'Confirm your email change',
         greeting: (name?: string) => name ? `Hi ${name},` : 'Hi,',
-        intro: `Confirm your email address for your ${appName} account.`,
-        verifyTitle: 'Verify your email address',
-        verifyText: 'Click the button below to verify your email address.',
-        ctaButton: 'Verify Email',
-        expiryNote: 'This link will expire in 24 hours.',
+        intro: `We received a request to change the email address for your ${appName} account.`,
+        confirmTitle: 'New email address',
+        confirmText: 'Confirm you want to use this address:',
+        ctaButton: 'Confirm email change',
+        afterCta: 'After you confirm, we’ll send a verification email to the new address to complete the change.',
+        securityNote: 'For your security, this link is valid for a limited time.',
         alternativeText: "If the button doesn't work, copy and paste this link into your browser:",
-        ignoreText: `If you didn't request this verification, you can ignore this email.`,
+        ignoreText: `If you didn't request this change, ignore this email: your address will stay the same. We recommend changing your password to be safe.`,
         signature: 'Best regards,',
         team: `The ${appName} Team`,
         copyright: `© ${new Date().getFullYear()} ${appName}. All rights reserved.`,
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         dpa: 'Data Processing Agreement',
-        footer: `You received this email because verification was requested for this address on ${appName}.`,
+        footer: `You received this email because an address change was requested for your ${appName} account.`,
     },
 });
 
@@ -132,6 +136,13 @@ const styles = {
     highlightText: {
         margin: 0,
     },
+    newEmail: {
+        margin: '10px 0 0 0',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: colors.text,
+        wordBreak: 'break-all' as const,
+    },
     buttonContainer: {
         textAlign: 'center' as const,
         margin: '25px 0',
@@ -146,7 +157,13 @@ const styles = {
         fontWeight: '600',
         fontSize: '16px',
     },
-    expiryNote: {
+    afterCta: {
+        fontSize: '14px',
+        color: colors.textLight,
+        textAlign: 'center' as const,
+        marginBottom: '10px',
+    },
+    securityNote: {
         fontSize: '14px',
         color: colors.textLight,
         textAlign: 'center' as const,
@@ -209,12 +226,13 @@ const styles = {
 
 const h = React.createElement;
 
-export function VerificationEmail({
+export function ChangeEmailEmail({
     language = 'it',
-    verificationUrl,
+    confirmUrl,
+    newEmail,
     userName,
     appName,
-}: VerificationEmailProps): React.ReactElement {
+}: ChangeEmailEmailProps): React.ReactElement {
     const t = buildTranslations(appName)[language];
 
     return h(Html, { lang: language },
@@ -235,18 +253,20 @@ export function VerificationEmail({
                             i === 0 ? [part] : [h('strong', { key: i }, appName), part]
                         )
                     ),
-                    // Highlight Box
+                    // Highlight Box with the new email address
                     h(Section, { style: styles.highlightBox },
-                        h(Text, { style: styles.highlightTitle }, t.verifyTitle),
-                        h(Text, { style: styles.highlightText }, t.verifyText)
+                        h(Text, { style: styles.highlightTitle }, t.confirmTitle),
+                        h(Text, { style: styles.highlightText }, t.confirmText),
+                        h(Text, { style: styles.newEmail }, newEmail)
                     ),
                     h(Section, { style: styles.buttonContainer },
-                        h(Button, { href: verificationUrl, style: styles.button }, t.ctaButton)
+                        h(Button, { href: confirmUrl, style: styles.button }, t.ctaButton)
                     ),
-                    h(Text, { style: styles.expiryNote }, t.expiryNote),
+                    h(Text, { style: styles.afterCta }, t.afterCta),
+                    h(Text, { style: styles.securityNote }, t.securityNote),
                     h(Text, { style: styles.alternativeText }, t.alternativeText),
                     h(Text, { style: styles.linkText },
-                        h(Link, { href: verificationUrl, style: styles.link }, verificationUrl)
+                        h(Link, { href: confirmUrl, style: styles.link }, confirmUrl)
                     ),
                     h(Text, { style: styles.ignoreText }, t.ignoreText),
                     h(Text, { style: styles.paragraph },
@@ -273,4 +293,4 @@ export function VerificationEmail({
     );
 }
 
-export default VerificationEmail;
+export default ChangeEmailEmail;

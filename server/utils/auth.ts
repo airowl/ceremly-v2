@@ -64,6 +64,31 @@ export const createBetterAuth = () =>
                     input: false,
                 },
             },
+            changeEmail: {
+                enabled: true,
+                // Step 1: la conferma è inviata all'indirizzo CORRENTE (titolare account).
+                // Solo dopo il click Better Auth invia la verifica al NUOVO indirizzo
+                // riusando emailVerification.sendVerificationEmail (vedi sotto).
+                sendChangeEmailVerification: async ({ user, newEmail, url }) => {
+                    const language = ((user as { locale?: string }).locale as SupportedLanguage) || 'it';
+                    const result = await sendEmail({
+                        type: "change_email",
+                        to: user.email,
+                        userId: user.id,
+                        confirmUrl: url,
+                        newEmail,
+                        userName: user.name || undefined,
+                        language,
+                    });
+
+                    if (!result.success) {
+                        throw createError({
+                            statusCode: 500,
+                            statusMessage: "Internal Server Error",
+                        });
+                    }
+                },
+            },
         },
         databaseHooks: {
             user: {

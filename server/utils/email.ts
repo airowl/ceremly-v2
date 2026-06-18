@@ -6,6 +6,7 @@ import type { CreateEmailResponse } from "resend";
 import {
     renderVerificationEmail,
     renderResetPasswordEmail,
+    renderChangeEmailEmail,
     renderWaitingListEmail,
     renderOrgInviteEmail,
     emailSubjects,
@@ -19,6 +20,7 @@ import { runtimeConfig } from "./runtimeConfig";
 export type EmailType =
     | "verification"
     | "reset_password"
+    | "change_email"
     | "waiting_list"
     | "invitation"
     | "custom";
@@ -40,6 +42,13 @@ export interface VerificationEmailOptions extends BaseEmailOptions {
 export interface ResetPasswordEmailOptions extends BaseEmailOptions {
     type: "reset_password";
     resetUrl: string;
+    userName?: string;
+}
+
+export interface ChangeEmailEmailOptions extends BaseEmailOptions {
+    type: "change_email";
+    confirmUrl: string;
+    newEmail: string;
     userName?: string;
 }
 
@@ -66,6 +75,7 @@ export interface CustomEmailOptions extends BaseEmailOptions {
 export type EmailOptions =
     | VerificationEmailOptions
     | ResetPasswordEmailOptions
+    | ChangeEmailEmailOptions
     | WaitingListEmailOptions
     | InvitationEmailOptions
     | CustomEmailOptions;
@@ -109,6 +119,17 @@ async function buildEmailContent(
                 html: await renderResetPasswordEmail({
                     language,
                     resetUrl: options.resetUrl,
+                    userName: options.userName,
+                }),
+            };
+
+        case "change_email":
+            return {
+                subject: emailSubjects.changeEmail[language],
+                html: await renderChangeEmailEmail({
+                    language,
+                    confirmUrl: options.confirmUrl,
+                    newEmail: options.newEmail,
                     userName: options.userName,
                 }),
             };
