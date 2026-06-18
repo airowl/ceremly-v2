@@ -68,6 +68,7 @@ export interface CustomEmailOptions extends BaseEmailOptions {
     type: "custom";
     subject: string;
     html: string;
+    text: string;
     replyTo?: string;
 }
 
@@ -99,63 +100,59 @@ export function getDefaultSender(): string {
  */
 async function buildEmailContent(
     options: EmailOptions
-): Promise<{ subject: string; html: string }> {
+): Promise<{ subject: string; html: string; text: string }> {
     const language = options.language || "it";
 
     switch (options.type) {
-        case "verification":
-            return {
-                subject: emailSubjects.verification[language],
-                html: await renderVerificationEmail({
-                    language,
-                    verificationUrl: options.verificationUrl,
-                    userName: options.userName,
-                }),
-            };
+        case "verification": {
+            const { html, text } = await renderVerificationEmail({
+                language,
+                verificationUrl: options.verificationUrl,
+                userName: options.userName,
+            });
+            return { subject: emailSubjects.verification[language], html, text };
+        }
 
-        case "reset_password":
-            return {
-                subject: emailSubjects.resetPassword[language],
-                html: await renderResetPasswordEmail({
-                    language,
-                    resetUrl: options.resetUrl,
-                    userName: options.userName,
-                }),
-            };
+        case "reset_password": {
+            const { html, text } = await renderResetPasswordEmail({
+                language,
+                resetUrl: options.resetUrl,
+                userName: options.userName,
+            });
+            return { subject: emailSubjects.resetPassword[language], html, text };
+        }
 
-        case "change_email":
-            return {
-                subject: emailSubjects.changeEmail[language],
-                html: await renderChangeEmailEmail({
-                    language,
-                    confirmUrl: options.confirmUrl,
-                    newEmail: options.newEmail,
-                    userName: options.userName,
-                }),
-            };
+        case "change_email": {
+            const { html, text } = await renderChangeEmailEmail({
+                language,
+                confirmUrl: options.confirmUrl,
+                newEmail: options.newEmail,
+                userName: options.userName,
+            });
+            return { subject: emailSubjects.changeEmail[language], html, text };
+        }
 
-        case "waiting_list":
-            return {
-                subject: emailSubjects.waitingList[language],
-                html: await renderWaitingListEmail({ language }),
-            };
+        case "waiting_list": {
+            const { html, text } = await renderWaitingListEmail({ language });
+            return { subject: emailSubjects.waitingList[language], html, text };
+        }
 
-        case "invitation":
-            return {
-                subject: emailSubjects.orgInvite(options.orgName)[language],
-                html: await renderOrgInviteEmail({
-                    language,
-                    inviteUrl: options.inviteUrl,
-                    orgName: options.orgName,
-                    invitedByName: options.invitedByName,
-                    expiresInDays: options.expiresInDays,
-                }),
-            };
+        case "invitation": {
+            const { html, text } = await renderOrgInviteEmail({
+                language,
+                inviteUrl: options.inviteUrl,
+                orgName: options.orgName,
+                invitedByName: options.invitedByName,
+                expiresInDays: options.expiresInDays,
+            });
+            return { subject: emailSubjects.orgInvite(options.orgName)[language], html, text };
+        }
 
         case "custom":
             return {
                 subject: options.subject,
                 html: options.html,
+                text: options.text,
             };
     }
 }
@@ -204,7 +201,7 @@ async function logEmailEvent(
  */
 export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
-        const { subject, html } = await buildEmailContent(options);
+        const { subject, html, text } = await buildEmailContent(options);
         const from = getDefaultSender();
 
         const response = await getResendInstance().emails.send({
@@ -212,6 +209,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
             to: options.to,
             subject,
             html,
+            text,
             ...(options.type === "custom" && options.replyTo
                 ? { replyTo: options.replyTo }
                 : {}),

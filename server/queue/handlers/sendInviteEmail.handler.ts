@@ -42,7 +42,7 @@ export async function handleSendInviteEmail(payload: JobPayload<'send-invite-ema
     values,
   )
 
-  const html = await renderGuestInviteEmail({
+  const { html, text } = await renderGuestInviteEmail({
     eventTitle: event.title,
     firstName: guest.firstName,
     message,
@@ -50,7 +50,7 @@ export async function handleSendInviteEmail(payload: JobPayload<'send-invite-ema
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html })
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text })
   if (!result.success) {
     throw new Error(`[job:send-invite-email] invio fallito per guest ${guest.id}: ${result.error}`)
   }

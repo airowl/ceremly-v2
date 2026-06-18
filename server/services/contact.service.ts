@@ -126,7 +126,7 @@ export async function sendContactMessage(
     });
 
     // Render email templates
-    const [confirmationHtml, notificationHtml] = await Promise.all([
+    const [confirmation, notification] = await Promise.all([
         renderContactConfirmationEmail({
             language: lang,
             userName: name,
@@ -150,7 +150,8 @@ export async function sendContactMessage(
             to: email,
             subject: emailSubjects.contactConfirmation[lang],
             type: 'custom',
-            html: confirmationHtml,
+            html: confirmation.html,
+            text: confirmation.text,
         }),
         // Notification email to admin
         ...(adminEmail
@@ -158,7 +159,8 @@ export async function sendContactMessage(
                 to: adminEmail,
                 subject: emailSubjects.contactNotification(subject),
                 type: 'custom',
-                html: notificationHtml,
+                html: notification.html,
+                text: notification.text,
                 replyTo: email,
             })]
             : []),

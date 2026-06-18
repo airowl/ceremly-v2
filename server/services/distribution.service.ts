@@ -226,7 +226,7 @@ export async function sendTest(
         values,
     );
 
-    const html = await renderGuestInviteEmail({
+    const { html, text } = await renderGuestInviteEmail({
         eventTitle: eventRow.title,
         firstName: TEST_GUEST_NAME,
         message,
@@ -239,6 +239,7 @@ export async function sendTest(
         to: user.email,
         subject,
         html,
+        text,
         userId: user.id,
     });
     if (!result.success) {

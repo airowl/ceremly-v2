@@ -16,6 +16,13 @@ import { runtimeConfig } from '../utils/runtimeConfig';
 
 export type SupportedLanguage = 'it' | 'en';
 
+// Rendered email: both HTML and a plain-text alternative (better deliverability,
+// avoids spam filters). Generated once per template via renderBoth().
+export interface RenderedEmail {
+    html: string;
+    text: string;
+}
+
 // Brand name from env (env-driven, fallback empty string)
 const appName = (): string => runtimeConfig.public.appName || '';
 
@@ -30,6 +37,24 @@ const appHost = (): string => {
     }
 };
 
+// Base URL del sito (senza trailing slash) per link assoluti nelle email.
+const baseUrl = (): string => ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '');
+
+// Link alle pagine legali reali (non-prefissati: stesso documento per ogni lingua).
+const legalLinks = (): { privacy: string; tos: string; dpa: string } => ({
+    privacy: `${baseUrl()}/legal/privacy`,
+    tos: `${baseUrl()}/legal/tos`,
+    dpa: `${baseUrl()}/legal/dpa`,
+});
+
+// Render sia HTML sia testo da un singolo React element (React Email plainText).
+async function renderBoth(element: React.ReactElement): Promise<RenderedEmail> {
+    return {
+        html: await render(element),
+        text: await render(element, { plainText: true }),
+    };
+}
+
 // Re-export components
 export { VerificationEmail } from './VerificationEmail';
 export { ResetPasswordEmail } from './ResetPasswordEmail';
@@ -42,92 +67,97 @@ export { GuestInviteEmail } from './GuestInviteEmail';
 export { GuestReminderEmail } from './GuestReminderEmail';
 
 /**
- * Render verification email to HTML
+ * Render verification email (HTML + text)
  */
 export async function renderVerificationEmail(options: {
     language?: SupportedLanguage;
     verificationUrl: string;
     userName?: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(VerificationEmail, {
         language: options.language || 'it',
         verificationUrl: options.verificationUrl,
         userName: options.userName,
         appName: appName(),
+        legalLinks: legalLinks(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render reset password email to HTML
+ * Render reset password email (HTML + text)
  */
 export async function renderResetPasswordEmail(options: {
     language?: SupportedLanguage;
     resetUrl: string;
     userName?: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(ResetPasswordEmail, {
         language: options.language || 'it',
         resetUrl: options.resetUrl,
         userName: options.userName,
         appName: appName(),
+        legalLinks: legalLinks(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render change-email confirmation email to HTML (sent to the CURRENT address)
+ * Render change-email confirmation email (sent to the CURRENT address) — HTML + text
  */
 export async function renderChangeEmailEmail(options: {
     language?: SupportedLanguage;
     confirmUrl: string;
     newEmail: string;
     userName?: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(ChangeEmailEmail, {
         language: options.language || 'it',
         confirmUrl: options.confirmUrl,
         newEmail: options.newEmail,
         userName: options.userName,
         appName: appName(),
+        legalLinks: legalLinks(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render waiting list email to HTML
+ * Render waiting list email (HTML + text)
  */
 export async function renderWaitingListEmail(options: {
     language?: SupportedLanguage;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(WaitingListEmail, {
         language: options.language || 'it',
         appName: appName(),
+        siteUrl: baseUrl(),
+        legalLinks: legalLinks(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render contact confirmation email to HTML (sent to user)
+ * Render contact confirmation email (sent to user) — HTML + text
  */
 export async function renderContactConfirmationEmail(options: {
     language?: SupportedLanguage;
     userName: string;
     subject: string;
     siteUrl?: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(ContactConfirmationEmail, {
         language: options.language || 'it',
         userName: options.userName,
         subject: options.subject,
-        siteUrl: options.siteUrl,
+        siteUrl: options.siteUrl || baseUrl(),
         appName: appName(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render contact notification email to HTML (sent to admin)
+ * Render contact notification email (sent to admin) — HTML + text
  */
 export async function renderContactNotificationEmail(options: {
     senderName: string;
@@ -136,7 +166,7 @@ export async function renderContactNotificationEmail(options: {
     message: string;
     language: string;
     submittedAt: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(ContactNotificationEmail, {
         senderName: options.senderName,
         senderEmail: options.senderEmail,
@@ -146,11 +176,11 @@ export async function renderContactNotificationEmail(options: {
         submittedAt: options.submittedAt,
         appName: appName(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render organization invite email to HTML (phase 1b)
+ * Render organization invite email (phase 1b) — HTML + text
  */
 export async function renderOrgInviteEmail(options: {
     language?: SupportedLanguage;
@@ -158,7 +188,7 @@ export async function renderOrgInviteEmail(options: {
     orgName: string;
     invitedByName: string;
     expiresInDays?: number;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(OrgInviteEmail, {
         language: options.language || 'it',
         inviteUrl: options.inviteUrl,
@@ -166,12 +196,13 @@ export async function renderOrgInviteEmail(options: {
         invitedByName: options.invitedByName,
         expiresInDays: options.expiresInDays || 7,
         appName: appName(),
+        legalLinks: legalLinks(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render guest invite email to HTML (Ceremly, SPEC §6 — owner B3).
+ * Render guest invite email (Ceremly, SPEC §6 — owner B3) — HTML + text.
  * `message` arriva con i placeholder {nome}/{link} già sostituiti.
  */
 export async function renderGuestInviteEmail(options: {
@@ -180,7 +211,7 @@ export async function renderGuestInviteEmail(options: {
     message: string;
     ctaUrl: string;
     pixelUrl: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(GuestInviteEmail, {
         eventTitle: options.eventTitle,
         firstName: options.firstName,
@@ -190,11 +221,11 @@ export async function renderGuestInviteEmail(options: {
         appName: appName(),
         appHost: appHost(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 /**
- * Render guest reminder email to HTML (Ceremly, SPEC §6 — owner B3).
+ * Render guest reminder email (Ceremly, SPEC §6 — owner B3) — HTML + text.
  * `message` arriva con i placeholder {nome}/{link} già sostituiti.
  */
 export async function renderGuestReminderEmail(options: {
@@ -203,7 +234,7 @@ export async function renderGuestReminderEmail(options: {
     message: string;
     ctaUrl: string;
     pixelUrl: string;
-}): Promise<string> {
+}): Promise<RenderedEmail> {
     const element = React.createElement(GuestReminderEmail, {
         eventTitle: options.eventTitle,
         firstName: options.firstName,
@@ -213,7 +244,7 @@ export async function renderGuestReminderEmail(options: {
         appName: appName(),
         appHost: appHost(),
     });
-    return await render(element);
+    return renderBoth(element);
 }
 
 // Email subject lines by language (brand injected via appName)

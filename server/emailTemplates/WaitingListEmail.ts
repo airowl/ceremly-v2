@@ -19,6 +19,8 @@ import {
 interface WaitingListEmailProps {
     language?: 'it' | 'en';
     appName: string;
+    siteUrl: string;
+    legalLinks: { privacy: string; tos: string; dpa: string };
 }
 
 // Translations
@@ -185,6 +187,8 @@ const h = React.createElement;
 export function WaitingListEmail({
     language = 'it',
     appName,
+    siteUrl,
+    legalLinks,
 }: WaitingListEmailProps): React.ReactElement {
     const t = buildTranslations(appName)[language];
 
@@ -211,7 +215,7 @@ export function WaitingListEmail({
                     ),
                     h(Text, { style: styles.paragraph }, t.ctaIntro),
                     h(Section, { style: styles.buttonContainer },
-                        h(Button, { href: 'https://example.com', style: styles.button }, t.ctaButton)
+                        h(Button, { href: siteUrl, style: styles.button }, t.ctaButton)
                     ),
                     h(Text, { style: styles.paragraph }, t.contactText),
                     h(Text, { style: styles.paragraph },
@@ -224,11 +228,11 @@ export function WaitingListEmail({
                 h(Section, { style: styles.footer },
                     h(Text, { style: styles.copyright }, t.copyright),
                     h(Section, { style: styles.footerLinks },
-                        h(Link, { href: 'https://example.com/privacy', style: styles.footerLink }, t.privacy),
+                        h(Link, { href: legalLinks.privacy, style: styles.footerLink }, t.privacy),
                         h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: 'https://example.com/tos', style: styles.footerLink }, t.terms),
+                        h(Link, { href: legalLinks.tos, style: styles.footerLink }, t.terms),
                         h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: 'https://example.com/dpa', style: styles.footerLink }, t.dpa)
+                        h(Link, { href: legalLinks.dpa, style: styles.footerLink }, t.dpa)
                     ),
                     h(Text, { style: styles.socialText }, t.social),
                     h(Hr, { style: styles.divider }),

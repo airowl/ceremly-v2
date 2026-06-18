@@ -200,7 +200,7 @@ export function ContactConfirmationEmail({
     userName,
     subject,
     appName,
-    siteUrl = 'https://example.com',
+    siteUrl = '',
 }: ContactConfirmationEmailProps): React.ReactElement {
     const t = buildTranslations(appName)[language];
 

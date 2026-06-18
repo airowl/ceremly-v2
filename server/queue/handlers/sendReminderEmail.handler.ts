@@ -51,7 +51,7 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
   const subject = applyInvitePlaceholders(reminder.subject, values)
   const message = applyInvitePlaceholders(reminder.message, values)
 
-  const html = await renderGuestReminderEmail({
+  const { html, text } = await renderGuestReminderEmail({
     eventTitle: event.title,
     firstName: guest.firstName,
     message,
@@ -59,7 +59,7 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html })
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text })
   if (!result.success) {
     throw new Error(`[job:send-reminder-email] invio fallito per guest ${guest.id}: ${result.error}`)
   }

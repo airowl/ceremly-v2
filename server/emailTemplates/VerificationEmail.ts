@@ -21,6 +21,7 @@ interface VerificationEmailProps {
     verificationUrl: string;
     userName?: string;
     appName: string;
+    legalLinks: { privacy: string; tos: string; dpa: string };
 }
 
 // Translations
@@ -214,6 +215,7 @@ export function VerificationEmail({
     verificationUrl,
     userName,
     appName,
+    legalLinks,
 }: VerificationEmailProps): React.ReactElement {
     const t = buildTranslations(appName)[language];
 
@@ -259,11 +261,11 @@ export function VerificationEmail({
                 h(Section, { style: styles.footer },
                     h(Text, { style: styles.copyright }, t.copyright),
                     h(Section, { style: styles.footerLinks },
-                        h(Link, { href: 'https://example.com/privacy', style: styles.footerLink }, t.privacy),
+                        h(Link, { href: legalLinks.privacy, style: styles.footerLink }, t.privacy),
                         h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: 'https://example.com/tos', style: styles.footerLink }, t.terms),
+                        h(Link, { href: legalLinks.tos, style: styles.footerLink }, t.terms),
                         h(Text, { style: styles.footerSeparator }, '|'),
-                        h(Link, { href: 'https://example.com/dpa', style: styles.footerLink }, t.dpa)
+                        h(Link, { href: legalLinks.dpa, style: styles.footerLink }, t.dpa)
                     ),
                     h(Hr, { style: styles.divider }),
                     h(Text, { style: styles.footerNote }, t.footer)
