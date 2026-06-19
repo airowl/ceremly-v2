@@ -66,7 +66,7 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
 
     const byPlan: Record<string, number> = {};
     for (const sub of activeSubsList) {
-        const plan = getPlanFromProductId(sub.productId);
+        const plan = getPlanFromProductId(sub.productId) ?? "unknown";
         byPlan[plan] = (byPlan[plan] || 0) + 1;
     }
 

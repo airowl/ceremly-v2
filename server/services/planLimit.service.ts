@@ -55,12 +55,12 @@ export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
 
     const userSubscription = subscriptions[0] ?? null;
 
+    // getPlanFromProductId ora ritorna CeremlyTier|null: l'unico prodotto a
+    // subscription è Atelier → mappato al tier B2B legacy "agency" (limiti
+    // illimitati) finché il modello org/team boilerplate non viene rimosso.
     let plan: PlanName = "starter";
-    if (userSubscription) {
-        const planName = getPlanFromProductId(userSubscription.productId);
-        if (planName === "starter" || planName === "premium" || planName === "agency") {
-            plan = planName;
-        }
+    if (userSubscription && getPlanFromProductId(userSubscription.productId) === "atelier") {
+        plan = "agency";
     }
 
     return {
