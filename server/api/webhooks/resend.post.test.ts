@@ -2,18 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Nitro auto-import globals must be set BEFORE the module under test is evaluated.
 // vi.hoisted() runs before any import/vi.mock() in the file.
+// vi.stubGlobal() is used so Vitest auto-restores these stubs after this file (no process-wide leaks).
 const { readRawBodyMock, getHeaderMock, createErrorMock } = vi.hoisted(() => {
     const readRawBodyMock = vi.fn(() => Promise.resolve('{"type":"email.delivered"}'));
     const getHeaderMock = vi.fn((_e: unknown, n: string) => (n === "svix-id" ? "id1" : "x"));
     const createErrorMock = vi.fn((o: { statusCode: number }) => Object.assign(new Error("err"), o));
 
-    // Stub globals before module evaluation
-    Object.assign(globalThis, {
-        defineEventHandler: (h: unknown) => h,
-        readRawBody: readRawBodyMock,
-        getHeader: getHeaderMock,
-        createError: createErrorMock,
-    });
+    // Use vi.stubGlobal so Vitest restores the originals after this file runs
+    vi.stubGlobal("defineEventHandler", (h: unknown) => h);
+    vi.stubGlobal("readRawBody", readRawBodyMock);
+    vi.stubGlobal("getHeader", getHeaderMock);
+    vi.stubGlobal("createError", createErrorMock);
 
     return { readRawBodyMock, getHeaderMock, createErrorMock };
 });
