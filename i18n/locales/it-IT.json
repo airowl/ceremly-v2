@@ -1349,15 +1349,6 @@
       "cancelSubscription": "Annulla abbonamento",
       "currentPlan": "Piano Corrente"
     },
-    "changePlan": {
-      "title": "Piani disponibili",
-      "description": "Scegli il piano più adatto alle tue esigenze",
-      "monthly": "Mensile",
-      "yearly": "Annuale",
-      "current": "Attuale",
-      "customPlan": "Hai bisogno di un piano personalizzato?",
-      "contactUs": "Contattaci"
-    },
     "cancelModal": {
       "title": "Annulla abbonamento",
       "confirmMessage": "Sei sicuro di voler annullare il tuo abbonamento",
@@ -1429,30 +1420,6 @@
     "gdprInfo": "Secondo il GDPR, hai il diritto di richiedere e scaricare una copia di tutti i dati personali che conserviamo su di te. L'export include il tuo profilo, le tue organizzazioni, i metadati dei file e i log delle attività.",
     "history": "Storico Export",
     "noHistory": "Nessun export precedente"
-  },
-  "plan": {
-    "starter": {
-      "organizations": "2 organizzazioni",
-      "team": "1 membro del team",
-      "emails": "200 email al mese",
-      "storage": "500 MB di storage",
-      "support": "Supporto email"
-    },
-    "premium": {
-      "organizations": "5 organizzazioni",
-      "team": "5 membri del team",
-      "emails": "2000 email al mese",
-      "storage": "2 GB di storage",
-      "support": "Supporto prioritario"
-    },
-    "agency": {
-      "organizations": "Organizzazioni illimitate",
-      "team": "Membri del team illimitati",
-      "emails": "Email illimitate",
-      "storage": "10 GB di storage",
-      "support": "Supporto 24/7",
-      "api": "Accesso API"
-    }
   },
   "blog": {
     "seo": {

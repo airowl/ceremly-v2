@@ -189,13 +189,6 @@ export const useUserStore = defineStore("user", () => {
 
     // ─── Permission Helpers ──────────────────────────────────────────
 
-    function hasWritePermissions(): boolean {
-        const sub = subscription.value;
-        if (!sub) return false;
-        const plan = sub.plan;
-        return plan === 'starter' || plan === 'premium' || plan === 'agency';
-    }
-
     function isReadOnlyPlan(): boolean {
         const sub = subscription.value;
         if (!sub) return true;
@@ -255,7 +248,6 @@ export const useUserStore = defineStore("user", () => {
         checkOrgCreationLimit,
         validatePlanDowngrade,
         // Permission helpers
-        hasWritePermissions,
         isReadOnlyPlan,
     };
 });

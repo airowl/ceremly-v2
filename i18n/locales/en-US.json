@@ -1349,15 +1349,6 @@
       "cancelSubscription": "Cancel subscription",
       "currentPlan": "Current Plan"
     },
-    "changePlan": {
-      "title": "Available plans",
-      "description": "Choose the plan that best suits your needs",
-      "monthly": "Monthly",
-      "yearly": "Yearly",
-      "current": "Current",
-      "customPlan": "Need a custom plan?",
-      "contactUs": "Contact us"
-    },
     "cancelModal": {
       "title": "Cancel subscription",
       "confirmMessage": "Are you sure you want to cancel your subscription",
@@ -1429,30 +1420,6 @@
     "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, your organizations, files metadata, and activity logs.",
     "history": "Export History",
     "noHistory": "No previous exports"
-  },
-  "plan": {
-    "starter": {
-      "organizations": "2 organizations",
-      "team": "1 team member",
-      "emails": "200 emails per month",
-      "storage": "500 MB storage",
-      "support": "Email support"
-    },
-    "premium": {
-      "organizations": "5 organizations",
-      "team": "5 team members",
-      "emails": "2000 emails per month",
-      "storage": "2 GB storage",
-      "support": "Priority support"
-    },
-    "agency": {
-      "organizations": "Unlimited organizations",
-      "team": "Unlimited team members",
-      "emails": "Unlimited emails",
-      "storage": "10 GB storage",
-      "support": "24/7 support",
-      "api": "API access"
-    }
   },
   "blog": {
     "seo": {
