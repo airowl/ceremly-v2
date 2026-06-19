@@ -5,24 +5,17 @@
 import { creem } from "@creem_io/better-auth";
 import { logAudit } from "./audit";
 import { runtimeConfig } from "./runtimeConfig";
+import type { CeremlyTier } from "~~/shared/constants/pricing";
 
 /**
- * Map Creem product ID to internal plan name
+ * Mappa un product ID Creem al tier interno. Atelier è l'unico prodotto a
+ * subscription ricorrente → unico mappato qui. Celebrazione è one-time
+ * per-evento (sblocco gestito via metadata.eventId nel webhook, Fase 3) e NON
+ * ha un tier-org. Ritorna null se il product ID è sconosciuto.
  */
-export function getPlanFromProductId(productId: string): string {
-    if (
-        productId === runtimeConfig.creemProductIdStarterMonth ||
-        productId === runtimeConfig.creemProductIdStarterYear
-    ) return "starter";
-    if (
-        productId === runtimeConfig.creemProductIdPremiumMonth ||
-        productId === runtimeConfig.creemProductIdPremiumYear
-    ) return "premium";
-    if (
-        productId === runtimeConfig.creemProductIdAgencyMonth ||
-        productId === runtimeConfig.creemProductIdAgencyYear
-    ) return "agency";
-    return "starter";
+export function getPlanFromProductId(productId: string): CeremlyTier | null {
+    if (productId && productId === runtimeConfig.creemProductIdAtelier) return "atelier";
+    return null;
 }
 
 export const setupCreem = () =>
