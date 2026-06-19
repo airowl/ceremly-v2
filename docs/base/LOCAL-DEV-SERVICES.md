@@ -16,26 +16,47 @@ anche in dev. Si tengono sul cloud, con risorse dedicate per ambiente (gratis).
 
 ## Eseguire i job in dev
 
-Due terminali:
+Lo script `dev:local` **carica `.env.local`** (gitignored) col flag `--dotenv` di Nuxt
+(parser sicuro: gestisce `&`, spazi, `$` nei valori — a differenza del `source` di shell)
+e avvia `nuxt dev --host 127.0.0.1`:
+
+```jsonc
+// package.json
+"dev:local": "nuxt dev --dotenv .env.local --host 127.0.0.1"
+```
+
+### 1. Una volta — prepara `.env.local`
+
+Parti da `cp .env.example .env.local` e riempi la config dev (DB, auth, Redis/R2 cloud
+dev). Per **testare i job**, aggiungi il blocco del dev server QStash (valori pubblici e
+fissi, stampati dal banner di `pnpm qstash:dev`):
+
+```bash
+# .env.local — blocco QStash dev server (IPv4!)
+NUXT_QSTASH_URL=http://127.0.0.1:8080
+NUXT_QSTASH_TOKEN=eyJVc2VySUQiOiJkZWZhdWx0VXNlciIsIlBhc3N3b3JkIjoiZGVmYXVsdFBhc3N3b3JkIn0=
+NUXT_QSTASH_CURRENT_SIGNING_KEY=sig_7kYjw48mhY7kAjqNGcy6cr29RJ6r
+NUXT_QSTASH_NEXT_SIGNING_KEY=sig_5ZB6DVzB1wjE8S6rZ7eenA8Pdnhs
+NUXT_PUBLIC_BASE_URL=http://127.0.0.1:3000
+```
+
+I valori del dev server sono deterministici: se un giorno cambiassero, aggiornali in
+`.env.local` (non nello script). Redis e R2 in `.env.local` puntano al **cloud dev**.
+
+### 2. Due terminali
 
 ```bash
 # Terminale 1 — avvia il QStash dev server (porta 8080, resta attivo)
 pnpm qstash:dev
 
-# Terminale 2 — avvia l'app puntando al dev server
+# Terminale 2 — avvia l'app caricando .env.local
 pnpm dev:local
 ```
 
-- `pnpm dev:local` imposta inline `NUXT_QSTASH_URL` + token/signing keys del dev server
-  (valori pubblici e fissi), `NUXT_PUBLIC_BASE_URL=http://127.0.0.1:3000`, e avvia
-  `nuxt dev --host 127.0.0.1`. Redis e R2 restano quelli del tuo `.env` (cloud dev).
-  **Apri il browser su `http://127.0.0.1:3000`** (non `localhost`).
-- `pnpm dev` "liscio" resta valido per l'editing che non tocca i job: usa il QStash
-  cloud (i job NON vengono consegnati a localhost — atteso) e Redis/R2 cloud.
+**Apri il browser su `http://127.0.0.1:3000`** (non `localhost`).
 
-Al primo avvio `pnpm qstash:dev` stampa un banner con token e signing keys: sono
-deterministici e già cablati in `dev:local`. Se un giorno cambiassero, aggiornali nello
-script.
+`pnpm dev` "liscio" resta valido per l'editing che non tocca i job: usa il QStash cloud
+(i job NON vengono consegnati a localhost — atteso) e Redis/R2 cloud.
 
 > **Perché `127.0.0.1` e non `localhost`.** Nuxt dev di default ascolta solo su `[::1]`
 > (IPv6), mentre il dev server QStash consegna le callback su IPv4. Con `localhost` i due
@@ -76,8 +97,8 @@ il public URL R2 è un placeholder.
 
 1. Crea un bucket R2 **dev** e uno **test** (oltre a quello prod esistente).
 2. Aggiorna le env:
-   - `.env` (dev): `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (no più `cdn.yourdomain.com`).
-   - `.env.staging`: bucket + public URL **test**, distinti da prod.
+   - `.env.local` (dev): `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (no più `cdn.yourdomain.com`).
+   - staging: bucket + public URL **test**, distinti da prod.
 3. Stesso account R2 basta per separare i *dati*. Per separare anche la *quota*
    servirebbe un account distinto (opzionale, fuori scope).
 
