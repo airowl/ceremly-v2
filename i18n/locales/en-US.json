@@ -647,6 +647,7 @@
     "save": "Save",
     "saved": "Saved",
     "updating": "updating",
+    "close": "Close",
     "cookieConsent": {
       "message": "We use first-party cookies to enhance your experience on our website.",
       "accept": "Accept",
@@ -3776,6 +3777,20 @@
         "doneNote": "Real deliveries will update in the dashboard as they are sent.",
         "doneClose": "Done"
       }
+    },
+    "paywall": {
+      "title": "Unlock this event",
+      "subtitle": "With Celebration you get more guests, unlimited invites and reminders for this event — pay once, yours forever.",
+      "once": "one-time payment",
+      "feat1": "Up to 250 guests per event",
+      "feat2": "Unlimited invitations and RSVPs",
+      "feat3": "Automatic reminders",
+      "feat4": "Access to all premium layouts",
+      "cta": "Unlock for {price}",
+      "loading": "Redirecting to payment…",
+      "later": "Maybe later",
+      "errorTitle": "Something went wrong",
+      "errorDesc": "We could not start the payment. Please try again in a few seconds."
     }
   }
 }

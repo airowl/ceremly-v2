@@ -647,6 +647,7 @@
     "save": "Salva",
     "saved": "Salvato",
     "updating": "aggiornamento",
+    "close": "Chiudi",
     "cookieConsent": {
       "message": "Utilizziamo cookie di prima parte per migliorare la tua esperienza sul nostro sito.",
       "accept": "Accetta",
@@ -3776,6 +3777,20 @@
         "doneNote": "Le consegne reali si aggiorneranno nella dashboard a mano a mano che partono.",
         "doneClose": "Fatto"
       }
+    },
+    "paywall": {
+      "title": "Sblocca questo evento",
+      "subtitle": "Con Celebrazione ottieni piu ospiti, inviti illimitati e promemoria per questo evento — paghi una volta sola.",
+      "once": "pagamento unico",
+      "feat1": "Fino a 250 ospiti per evento",
+      "feat2": "Inviti e RSVP illimitati",
+      "feat3": "Promemoria automatici",
+      "feat4": "Accesso a tutti i layout premium",
+      "cta": "Sblocca per {price}",
+      "loading": "Reindirizzo al pagamento…",
+      "later": "Forse dopo",
+      "errorTitle": "Qualcosa non ha funzionato",
+      "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo."
     }
   }
 }
