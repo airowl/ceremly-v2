@@ -45,13 +45,17 @@ export async function handleCheckoutCompleted(data: FlatCheckoutCompleted): Prom
         && typeof organizationId === "string"
         && data.order.id
     ) {
-        await unlockEvent(eventId, organizationId, data.order.id);
-        await logAudit(null, "event.unlocked", {
-            organizationId,
-            targetType: "event",
-            targetId: eventId,
-            details: { provider: "creem", creemOrderId: data.order.id },
-        });
+        try {
+            await unlockEvent(eventId, organizationId, data.order.id);
+            await logAudit(null, "event.unlocked", {
+                organizationId,
+                targetType: "event",
+                targetId: eventId,
+                details: { provider: "creem", creemOrderId: data.order.id },
+            });
+        } catch (err) {
+            console.error("[creem] checkout unlock error", err);
+        }
     }
 }
 
@@ -70,12 +74,16 @@ function extractCreemOrderId(data: FlatRefundCreated | FlatDisputeCreated): stri
 export async function handleRefundCreated(data: FlatRefundCreated | FlatDisputeCreated): Promise<void> {
     const creemOrderId = extractCreemOrderId(data);
     if (!creemOrderId) return;
-    await relockEventByOrder(creemOrderId);
-    await logAudit(null, "event.relocked", {
-        targetType: "event",
-        targetId: creemOrderId,
-        details: { provider: "creem", event: data.webhookEventType, creemOrderId },
-    });
+    try {
+        await relockEventByOrder(creemOrderId);
+        await logAudit(null, "event.relocked", {
+            targetType: "event",
+            targetId: creemOrderId,
+            details: { provider: "creem", event: data.webhookEventType, creemOrderId },
+        });
+    } catch (err) {
+        console.error("[creem] refund relock error", err);
+    }
 }
 
 export const setupCreem = () =>

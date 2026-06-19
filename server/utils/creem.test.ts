@@ -154,4 +154,24 @@ describe("handleRefundCreated", () => {
         expect(evt.creemOrderId).toBeNull();
         expect(evt.unlockedAt).toBeNull();
     });
+
+    it("(f) orderId solo via checkout.order.id → relock (tier='free')", async () => {
+        // Forza il branch 3 di extractCreemOrderId: nessun campo order (branch 1+2 falliscono),
+        // orderId leggibile solo da checkout.order.id
+        const payload = {
+            webhookEventType: "refund.created",
+            webhookId: "wh_test_f",
+            webhookCreatedAt: Date.now(),
+            checkout: { order: { id: ORDER_ID } },
+            transaction: { id: "txn_test_f" },
+        } as unknown as FlatRefundCreated;
+
+        await handleRefundCreated(payload);
+
+        const rows = await db.select().from(schema.events).where(eq(schema.events.id, EVT_ID));
+        const evt = rows[0];
+        expect(evt.tier).toBe("free");
+        expect(evt.creemOrderId).toBeNull();
+        expect(evt.unlockedAt).toBeNull();
+    });
 });
