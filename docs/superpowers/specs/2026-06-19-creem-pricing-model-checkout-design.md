@@ -56,7 +56,7 @@ creemOrderId   text       NULL                      -- order Creem del pagamento
 
 ### 3.2 Riscrittura `shared/constants/pricing.ts`
 
-Rimuovere `PRICING_PLANS` (starter/premium/agency), `PlanLimits` boilerplate (`max_organizations`/`team_members`/`storage_mb`) e relativi helper non più usati. Sostituire con il modello Ceremly:
+**ADD-only (correzione emersa in review):** NON rimuovere `PRICING_PLANS` (starter/premium/agency) né `PlanLimits` (`max_organizations`/`team_members`/`storage_mb`). Verificato sul codice: quel modello è il **sistema gate org/team B2B ancora vivo** — cablato in `server/utils/auth.ts` (`canCreateOrganization`/`canAddTeamMember`), `server/services/organization.service.ts`, `server/api/admin/users/[id]/limits.*`, `server/api/limits/*`, `server/database/seed/verify-*.ts`. Rimuoverlo è un refactoring fuori scope di questo lavoro. Si **aggiunge** il modello Ceremly *accanto* a quello esistente; l'alias `CEREMLY_FREE_LIMITS = CEREMLY_TIER_LIMITS.free` tiene compilanti i consumatori durante la migrazione. La bonifica del boilerplate B2B è un follow-up separato. Modello Ceremly da aggiungere:
 
 ```
 export type CeremlyTier = 'free' | 'celebration' | 'atelier'
@@ -292,4 +292,4 @@ Un evento è eliminabile se **concluso AND inattivo**:
 - Refund test → evento torna `tier='free'`.
 - Subscription Atelier attiva → eventi/ospiti illimitati per l'org.
 - Cron cleanup: un evento concluso+inattivo oltre soglia riceve avviso e poi viene eliminato; un evento futuro/attivo no.
-- `pnpm typecheck` e `pnpm lint` puliti; nessun riferimento residuo a starter/premium/agency.
+- `pnpm typecheck` e `pnpm lint` puliti; nessun riferimento a starter/premium/agency nel **nuovo** codice pricing-tier (il sistema B2B legacy `PRICING_PLANS` resta intatto — vedi §3.2, bonifica fuori scope).
