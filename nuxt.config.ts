@@ -419,6 +419,12 @@ export default defineNuxtConfig({
                         path: "/api/cron/send-reminders",
                         schedule: "0 7 * * *",
                     },
+                    {
+                        // Cleanup eventi conclusi+inattivi (SPEC §9): warn+delete
+                        // giornaliero 04:00 UTC (dopo send-reminders).
+                        path: "/api/cron/cleanup-stale-events",
+                        schedule: "0 4 * * *",
+                    },
                 ],
             },
             // NOTE: per-route functionRules (e.g. raising maxDuration for slow
