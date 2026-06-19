@@ -22,12 +22,8 @@ export const generateRuntimeConfig = () => {
         // Creem
         creemApiKey: process.env.NUXT_CREEM_API_KEY,
         creemWebhookSecret: process.env.NUXT_CREEM_WEBHOOK_SECRET,
-        creemProductIdStarterMonth: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH,
-        creemProductIdStarterYear: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_YEAR,
-        creemProductIdPremiumMonth: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_MONTH,
-        creemProductIdPremiumYear: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_YEAR,
-        creemProductIdAgencyMonth: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_MONTH,
-        creemProductIdAgencyYear: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_YEAR,
+        creemProductIdCelebration: process.env.NUXT_CREEM_PRODUCT_ID_CELEBRATION,
+        creemProductIdAtelier: process.env.NUXT_CREEM_PRODUCT_ID_ATELIER,
         // Resend
         resendApiKey: process.env.NUXT_RESEND_API_KEY,
         // Contact
@@ -91,12 +87,8 @@ export const generateRuntimeConfig = () => {
             legalEmail: process.env.NUXT_PUBLIC_LEGAL_EMAIL || "legal@ceremly.com",
             // Sentry (error tracking). DSN pubblico per design; vuoto = Sentry off.
             sentry: { dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || "" },
-            creemProductIdStarterMonth: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH,
-            creemProductIdStarterYear: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_YEAR,
-            creemProductIdPremiumMonth: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_MONTH,
-            creemProductIdPremiumYear: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_YEAR,
-            creemProductIdAgencyMonth: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_MONTH,
-            creemProductIdAgencyYear: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_YEAR,
+            creemProductIdCelebration: process.env.NUXT_CREEM_PRODUCT_ID_CELEBRATION,
+            creemProductIdAtelier: process.env.NUXT_CREEM_PRODUCT_ID_ATELIER,
             siteMode: process.env.NUXT_PUBLIC_SITE_MODE || "active",
             auth: {
                 redirectUserTo: "/",
