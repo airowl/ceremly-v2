@@ -1,77 +1,42 @@
 /**
- * usePricing Composable
- * Provides reactive access to static pricing plans
+ * usePricing — modello Ceremly a 3 tier (Free / Celebrazione / Atelier).
+ * Le label/feature vivono in i18n (ceremly.home.pricing.*); i numeri di limite
+ * arrivano da CEREMLY_TIER_LIMITS. Niente toggle mensile/annuale.
  */
-
 import {
-    PRICING_PLANS_LIST,
-    calculateYearlySavings,
-    type PricingPlan,
-} from '~~/shared/constants/pricing'
-import { formatCurrencyAmount } from '~~/shared/utils/currency'
+    CEREMLY_TIER_LIMITS,
+    CELEBRATION_PRICE_CENTS,
+    ATELIER_PRICE_CENTS,
+    type CeremlyTier,
+} from "~~/shared/constants/pricing";
 
-export interface PricingPlanView extends PricingPlan {
-    pricing: PricingPlan['pricing'] & {
-        monthlyFormatted: string
-        yearlyFormatted: string
-        yearlySavingsPercent: number
-    }
+export interface CeremlyTierView {
+    id: CeremlyTier;
+    /** Prezzo in centesimi EUR; 0 per Free. */
+    priceCents: number;
+    /** 'free' | 'once' (Celebrazione) | 'month' (Atelier). */
+    billing: "free" | "once" | "month";
+    maxGuestsPerEvent: number;
+    maxActiveEvents: number;
+    maxReminders: number;
+    unlimited: boolean;
 }
 
-export interface UsePricingReturn {
-    plans: Ref<PricingPlanView[]>
-    isLoading: Ref<boolean>
-    getPlan: (planId: string) => PricingPlanView | undefined
-    getPrice: (planId: string, interval: 'monthly' | 'yearly') => number
-    getFormattedPrice: (planId: string, interval: 'monthly' | 'yearly') => string
-    getSavingsPercent: (planId: string) => number
-}
+const TIERS: CeremlyTierView[] = [
+    { id: "free", priceCents: 0, billing: "free", ...CEREMLY_TIER_LIMITS.free },
+    { id: "celebration", priceCents: CELEBRATION_PRICE_CENTS, billing: "once", ...CEREMLY_TIER_LIMITS.celebration },
+    { id: "atelier", priceCents: ATELIER_PRICE_CENTS, billing: "month", ...CEREMLY_TIER_LIMITS.atelier },
+];
 
-const buildPlans = (): PricingPlanView[] =>
-    PRICING_PLANS_LIST.map(plan => ({
-        ...plan,
-        pricing: {
-            ...plan.pricing,
-            monthlyFormatted: formatCurrencyAmount(plan.pricing.monthly),
-            yearlyFormatted: formatCurrencyAmount(plan.pricing.yearly),
-            yearlySavingsPercent: calculateYearlySavings(plan.pricing.monthly, plan.pricing.yearly),
-        },
-    }))
+export const usePricing = () => {
+    const tiers = shallowRef<CeremlyTierView[]>(TIERS);
+    const getTier = (id: CeremlyTier): CeremlyTierView | undefined => TIERS.find(t => t.id === id);
+    return { tiers, getTier };
+};
 
-// Built once at module level — static data, no reactivity needed
-const staticPlans: PricingPlanView[] = buildPlans()
+/** True se un limite è illimitato (-1). */
+export const isUnlimited = (value: number): boolean => value === -1;
 
-export const usePricing = (): UsePricingReturn => {
-    const plans = shallowRef<PricingPlanView[]>(staticPlans)
-    const isLoading = ref(false)
-
-    const getPlan = (planId: string): PricingPlanView | undefined =>
-        staticPlans.find(p => p.id === planId)
-
-    const getPrice = (planId: string, interval: 'monthly' | 'yearly'): number =>
-        getPlan(planId)?.pricing[interval] ?? 0
-
-    const getFormattedPrice = (planId: string, interval: 'monthly' | 'yearly'): string => {
-        const plan = getPlan(planId)
-        if (!plan) return formatCurrencyAmount(0)
-        return interval === 'monthly'
-            ? plan.pricing.monthlyFormatted
-            : plan.pricing.yearlyFormatted
-    }
-
-    const getSavingsPercent = (planId: string): number =>
-        getPlan(planId)?.pricing.yearlySavingsPercent ?? 0
-
-    return { plans, isLoading, getPlan, getPrice, getFormattedPrice, getSavingsPercent }
-}
-
-/** Format price amount (cents) to display string */
-export const formatPriceAmount = (amountInCents: number): string =>
-    formatCurrencyAmount(amountInCents)
-
-/** Check if a limit is unlimited (-1) */
-export const isUnlimited = (value: number): boolean => value === -1
-
-/** Format limit for display */
-export const formatLimit = (value: number, unlimitedText: string = 'Illimitati'): string =>
-    isUnlimited(value) ? unlimitedText : value.toString()
+/** Formatta un limite per display (-1 → testo "illimitati"). */
+export const formatLimit = (value: number, unlimitedText = "Illimitati"): string =>
+    isUnlimited(value) ? unlimitedText : value.toString();
