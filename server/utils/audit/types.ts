@@ -75,6 +75,7 @@ export const AUDIT_ACTIONS = {
   'event.deleted': 'event.deleted',
   'event.unlocked': 'event.unlocked',
   'event.relocked': 'event.relocked',
+  'event.cleanup_warned': 'event.cleanup_warned',
 
   // Guest (Ceremly — ospiti evento, SPEC §6)
   'guest.created': 'guest.created',
