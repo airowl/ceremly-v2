@@ -25,8 +25,8 @@ export async function createCelebrationCheckout(
 ): Promise<{ url: string }> {
     const organizationId = getOrgId(event);
 
-    const row = await findEventByIdScoped(organizationId, eventId);
-    assertOwnership(row, organizationId);
+    const rawRow = await findEventByIdScoped(organizationId, eventId);
+    const row = assertOwnership(rawRow, organizationId);
 
     if (await isOrgAtelier(organizationId)) {
         throw createError({ statusCode: 409, statusMessage: "L'organizzazione Atelier ha già eventi illimitati" });
