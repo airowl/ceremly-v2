@@ -5,7 +5,7 @@
  * pattern projectRepository: mai una query che possa restituire dati di
  * un'altra organization.
  */
-import { and, desc, eq, isNull, lt, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 import type { EventDistribution, InviteBlock, RsvpQuestion } from "~~/shared/types/ceremly";
@@ -284,4 +284,103 @@ export async function findNeedsAttentionGuests(
         )
         .orderBy(schema.guests.firstOpenedAt)
         .limit(limit);
+}
+
+// ---------------------------------------------------------------------------
+// Cleanup eventi conclusi+inattivi (SPEC §9)
+// ---------------------------------------------------------------------------
+
+const STALE_DAYS_FREE = 30;
+const STALE_DAYS_CELEBRATION = 90;
+
+/**
+ * Predicato "concluso AND inattivo" valutato a `ref` (warn: now+7gg, delete: now).
+ * Tier-aware sulle soglie; edge eventDate NULL → solo status='closed' + 30gg.
+ * Esclusione Atelier NON qui: il service la applica via isOrgAtelier (le subscription
+ * sono fuori scope di questo repository, che è org-agnostic sulle sub).
+ *
+ * SICUREZZA CRITICA: `freeStale` richiede `eventDate < ref` per evitare di eliminare
+ * eventi futuri con rsvpDeadline già passata (es. matrimonio tra 15gg con RSVP chiuse
+ * da 5gg → `concluded` via rsvpDeadline-branch, ma eventDate è ancora nel futuro).
+ */
+function stalePredicate(ref: Date) {
+    const refMs = ref.getTime();
+    const freeCutoff = new Date(refMs - STALE_DAYS_FREE * 24 * 60 * 60 * 1000);
+    const celebrationCutoff = new Date(refMs - STALE_DAYS_CELEBRATION * 24 * 60 * 60 * 1000);
+
+    const concluded = or(
+        eq(schema.events.status, "closed"),
+        lt(schema.events.eventDate, ref),
+        and(isNotNull(schema.events.rsvpDeadline), lt(schema.events.rsvpDeadline, ref)),
+    );
+
+    // Nessuna guest_activity nelle ultime STALE_DAYS_FREE (30gg) dalla ref.
+    // Gli RSVP degli ospiti scrivono su guest_activities, non su events.updatedAt,
+    // per cui controllare solo updatedAt lascerebbe passare eventi ancora attivi.
+    const noRecentActivity = sql`not exists (
+        select 1 from ${schema.guestActivities}
+        where ${schema.guestActivities.eventId} = ${schema.events.id}
+          and ${schema.guestActivities.createdAt} >= ${freeCutoff}
+    )`;
+
+    // Celebration: soglia 90gg dopo eventDate. Richiede eventDate nel passato.
+    const celebrationStale = and(
+        eq(schema.events.tier, "celebration"),
+        isNotNull(schema.events.eventDate),
+        lt(schema.events.eventDate, celebrationCutoff),
+        lt(schema.events.updatedAt, freeCutoff),
+        noRecentActivity,
+    );
+
+    // Edge case: eventDate IS NULL → eliminabile solo se status='closed' e inattivo 30gg.
+    // Non si elimina mai una bozza con data ignota (potenzialmente futura).
+    const nullDateStale = and(
+        isNull(schema.events.eventDate),
+        eq(schema.events.status, "closed"),
+        lt(schema.events.updatedAt, freeCutoff),
+        noRecentActivity,
+    );
+
+    // Free (e tier ignoti): soglia 30gg. RICHIEDE eventDate < ref per sicurezza:
+    // un evento futuro con rsvpDeadline passata soddisferebbe `concluded` via
+    // rsvpDeadline-branch, ma non deve mai essere candidato alla cancellazione.
+    const freeStale = and(
+        ne(schema.events.tier, "celebration"),
+        isNotNull(schema.events.eventDate),
+        lt(schema.events.eventDate, ref), // guard: eventDate deve essere nel passato
+        lt(schema.events.updatedAt, freeCutoff),
+        noRecentActivity,
+    );
+
+    return and(concluded, or(celebrationStale, nullDateStale, freeStale));
+}
+
+/** Eventi che soddisferanno il predicato stale entro ~7 giorni e non hanno ancora un avviso. */
+export async function findStaleEventsToWarn(
+    now: Date,
+): Promise<Array<{ id: string; organizationId: string }>> {
+    const db = getDB();
+    const ref = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return db
+        .select({ id: schema.events.id, organizationId: schema.events.organizationId })
+        .from(schema.events)
+        .where(and(stalePredicate(ref), isNull(schema.events.cleanupWarnedAt)));
+}
+
+/** Eventi che soddisfano il predicato stale ora e sono stati avvisati ≥7 giorni fa. */
+export async function findStaleEventsToDelete(
+    now: Date,
+): Promise<Array<{ id: string; organizationId: string }>> {
+    const db = getDB();
+    const warnedBefore = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return db
+        .select({ id: schema.events.id, organizationId: schema.events.organizationId })
+        .from(schema.events)
+        .where(
+            and(
+                stalePredicate(now),
+                isNotNull(schema.events.cleanupWarnedAt),
+                lt(schema.events.cleanupWarnedAt, warnedBefore),
+            ),
+        );
 }
