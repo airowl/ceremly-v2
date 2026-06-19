@@ -14,7 +14,6 @@ import type {
     RsvpPerPersonAnswer,
     RsvpQuestion,
 } from "~~/shared/types/ceremly";
-import { CEREMLY_FREE_LIMITS } from "~~/shared/constants/pricing";
 import { findEventByIdScoped } from "../repositories/eventRepository";
 import {
     activeGuestEmailExists,
@@ -34,9 +33,9 @@ import {
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { generateGuestToken } from "../utils/guestToken";
-import { isOrgFreePlan } from "./planLimit.service";
+import { getEventLimits } from "./eventAccess.service";
 
-const FREE_GUEST_LIMIT_REASON = "Limite piano Free (30 ospiti) raggiunto";
+const GUEST_CAPACITY_REASON = "Limite ospiti dell'evento raggiunto";
 
 /** True se il 23505 viene dall'indice unique email (non dalla collisione token). */
 function isEmailUniqueViolation(e: unknown): boolean {
@@ -147,16 +146,18 @@ export async function createGuest(
     eventId: string,
     data: CreateGuestInput,
 ) {
-    const { organizationId } = await requireEventScoped(event, eventId);
+    const { organizationId, eventRow } = await requireEventScoped(event, eventId);
 
+    // Limite ospiti tier-aware (design §5): -1 = illimitato (atelier).
     // #2 TOCTOU: check-then-insert non atomico (rischio accettato, impatto basso
     // — limit-bypass, no leak; fix atomico non fattibile sul driver Neon HTTP).
-    if (await isOrgFreePlan(organizationId)) {
+    const limits = await getEventLimits(eventRow);
+    if (limits.maxGuestsPerEvent !== -1) {
         const current = await countActiveGuests(organizationId, eventId);
-        if (current >= CEREMLY_FREE_LIMITS.maxGuestsPerEvent) {
+        if (current >= limits.maxGuestsPerEvent) {
             throw createError({
                 statusCode: 402,
-                statusMessage: `Il piano Free include fino a ${CEREMLY_FREE_LIMITS.maxGuestsPerEvent} ospiti per evento. Passa a Celebrazione per aggiungerne altri.`,
+                statusMessage: `Questo evento include fino a ${limits.maxGuestsPerEvent} ospiti. Sblocca con Celebrazione per aggiungerne altri.`,
             });
         }
     }
@@ -293,17 +294,18 @@ export async function importGuests(
     eventId: string,
     data: ImportGuestsInput,
 ) {
-    const { organizationId } = await requireEventScoped(event, eventId);
+    const { organizationId, eventRow } = await requireEventScoped(event, eventId);
 
-    const [free, current, existingNames, existingEmails] = await Promise.all([
-        isOrgFreePlan(organizationId),
+    const [limits, current, existingNames, existingEmails] = await Promise.all([
+        getEventLimits(eventRow),
         countActiveGuests(organizationId, eventId),
         findActiveGuestNames(organizationId, eventId),
         findActiveGuestEmails(organizationId, eventId),
     ]);
-    let capacity = free
-        ? Math.max(0, CEREMLY_FREE_LIMITS.maxGuestsPerEvent - current)
-        : Number.POSITIVE_INFINITY;
+    // -1 = illimitato (atelier) -> Infinity. Altrimenti spazio residuo nel limite.
+    let capacity = limits.maxGuestsPerEvent === -1
+        ? Number.POSITIVE_INFINITY
+        : Math.max(0, limits.maxGuestsPerEvent - current);
 
     const nameKey = (firstName: string, lastName: string) =>
         `${firstName.trim().toLowerCase()}|${lastName.trim().toLowerCase()}`;
@@ -320,7 +322,7 @@ export async function importGuests(
     data.rows.forEach((row, index) => {
         const rowNumber = index + 1;
         if (capacity <= 0) {
-            skipped.push({ row: rowNumber, reason: FREE_GUEST_LIMIT_REASON });
+            skipped.push({ row: rowNumber, reason: GUEST_CAPACITY_REASON });
             return;
         }
         const email = normalizeEmail(row.email);
