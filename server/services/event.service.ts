@@ -20,7 +20,7 @@ import type {
 } from "~~/shared/types/ceremly";
 import { getDefaultDistribution, getTemplate } from "~~/shared/constants/templates";
 import { RSVP_PRESETS } from "~~/shared/constants/rsvpPresets";
-import { CEREMLY_FREE_LIMITS } from "~~/shared/constants/pricing";
+import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
 import {
     countActiveEventsByOrg,
     createEventRow,
@@ -35,7 +35,7 @@ import {
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { generateEventSlug } from "../utils/guestToken";
-import { isOrgFreePlan } from "./planLimit.service";
+import { isOrgAtelier } from "./eventAccess.service";
 
 /** Default italiano per il messaggio a form chiuso (SPEC §2). */
 export const DEFAULT_RSVP_CLOSED_MESSAGE
@@ -202,18 +202,16 @@ export async function createEvent(
         throw createError({ statusCode: 404, statusMessage: "Template non trovato per questo tipo di evento" });
     }
 
-    // Enforcement piano Free: max 1 evento attivo (status != 'closed').
-    // Il piano è risolto dall'OWNER dell'org (non dal richiedente).
+    // Enforcement eventi attivi (design §5). Limite PER-ORG (Free=1, Atelier=∞):
+    // - org Atelier -> nessun limite (skip);
+    // - altrimenti conta gli eventi free non chiusi (gli sbloccati non consumano
+    //   lo slot, già filtrati in countActiveEventsByOrg) vs il limite Free.
     //
-    // #2 TOCTOU (rischio accettato): check-then-insert non atomico. Due richieste
-    // concorrenti possono entrambe leggere il count sotto soglia e inserire,
-    // sforando il limite Free. Impatto BASSO: limit-bypass (max qualche risorsa
-    // in più per un utente Free), nessun leak/escalation. Un fix atomico
-    // richiederebbe un lock/transazione interattiva che il driver Neon HTTP
-    // (serverless) non supporta; un indice unique parziale non esprime "max N".
-    if (await isOrgFreePlan(organizationId)) {
+    // #2 TOCTOU (rischio accettato): check-then-insert non atomico sul driver
+    // Neon HTTP. Impatto BASSO: limit-bypass, nessun leak.
+    if (!(await isOrgAtelier(organizationId))) {
         const activeCount = await countActiveEventsByOrg(organizationId);
-        if (activeCount >= CEREMLY_FREE_LIMITS.maxActiveEvents) {
+        if (activeCount >= CEREMLY_TIER_LIMITS.free.maxActiveEvents) {
             throw createError({
                 statusCode: 402,
                 statusMessage: "Il piano Free include 1 evento alla volta (bozze incluse). Concludi l'evento in corso o passa a Celebrazione per crearne altri.",
