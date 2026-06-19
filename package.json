@@ -9,6 +9,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "nuxt typecheck",
     "auth:schema": "npx @better-auth/cli generate --config server/utils/auth.ts --output server/database/schema/auth.ts -y",
     "db:generate": "drizzle-kit generate --config ./server/database/drizzle.config.ts",
@@ -77,6 +79,7 @@
     "react-dom": "^19.2.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "vitest": "^2.1.9",
     "vue-tsc": "^3.1.2",
     "wrangler": "^4.45.4"
   },
