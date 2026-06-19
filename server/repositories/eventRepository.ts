@@ -384,3 +384,34 @@ export async function findStaleEventsToDelete(
             ),
         );
 }
+
+/** Marca un evento come avvisato (cleanupWarnedAt=now) — org-scoped. */
+export async function markEventCleanupWarned(
+    organizationId: string,
+    eventId: string,
+    now: Date,
+): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.events)
+        .set({ cleanupWarnedAt: now })
+        .where(and(eq(schema.events.id, eventId), eq(schema.events.organizationId, organizationId)));
+}
+
+/** Titolo evento + email/locale dell'owner dell'org (per l'avviso cleanup). */
+export async function findEventWarnTargetInfo(
+    organizationId: string,
+    eventId: string,
+    ownerUserId: string,
+): Promise<{ title: string; email: string; locale: string } | undefined> {
+    const db = getDB();
+    const rows = await db
+        .select({ title: schema.events.title, email: schema.user.email, locale: schema.user.locale })
+        .from(schema.events)
+        .innerJoin(schema.user, eq(schema.user.id, ownerUserId))
+        .where(and(eq(schema.events.id, eventId), eq(schema.events.organizationId, organizationId)))
+        .limit(1);
+    const row = rows[0];
+    if (!row) return undefined;
+    return { title: row.title, email: row.email, locale: row.locale ?? "it" };
+}
