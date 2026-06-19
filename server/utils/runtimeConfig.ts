@@ -47,6 +47,10 @@ export const generateRuntimeConfig = () => {
         qstashToken: process.env.NUXT_QSTASH_TOKEN,
         qstashCurrentSigningKey: process.env.NUXT_QSTASH_CURRENT_SIGNING_KEY,
         qstashNextSigningKey: process.env.NUXT_QSTASH_NEXT_SIGNING_KEY,
+        // Dev locale: redirige il publish al QStash dev server (npx) invece del
+        // cloud — il cloud non può fare callback a localhost. Vuoto in prod →
+        // default cloud, comportamento invariato.
+        qstashUrl: process.env.NUXT_QSTASH_URL,
         // Vercel Cron
         cronSecret: process.env.NUXT_CRON_SECRET,
         // Upstash Redis (HTTP cache / Better Auth secondaryStorage)
