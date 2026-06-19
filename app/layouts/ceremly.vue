@@ -22,7 +22,7 @@ const { t, locale, setLocale } = useI18n();
 const route = useRoute();
 const userStore = useUserStore();
 const { user } = useAuth();
-const { hasActiveSubscription, currentPlan, refreshSubscription } = useSubscription();
+const { hasActiveSubscription, isAtelier, refreshSubscription } = useSubscription();
 
 // ─── Nav statica ─────────────────────────────────────────────────────
 // Nota: niente voce 'Home' — /dashboard È la lista eventi, una 'Home'
@@ -110,9 +110,8 @@ const initials = computed(() => {
 });
 
 const planLabel = computed(() => {
-    if (!hasActiveSubscription.value) return t("ceremly.layout.planFree");
-    const plan = currentPlan.value;
-    return t("ceremly.layout.planPaid", { plan: plan.charAt(0).toUpperCase() + plan.slice(1) });
+    if (!hasActiveSubscription.value || !isAtelier.value) return t("ceremly.layout.planFree");
+    return t("ceremly.layout.planAtelier");
 });
 
 onMounted(async () => {

@@ -10,14 +10,13 @@ export function useSubscription() {
     const hasAccess = useState<boolean>("creem:hasAccess", () => false);
 
     /**
-     * Map product ID → plan name
+     * Map product ID → tier (free | atelier)
      */
-    function getPlanNameFromProductId(productId: string): string {
+    function getTierFromProductId(productId: string | undefined | null): "free" | "atelier" {
+        if (!productId) return "free";
         const pub = runtimeConfig.public;
-        // Atelier è l'unico prodotto a subscription ricorrente; mappato al tier
-        // B2B legacy "agency" per coerenza con il resto della UI piano corrente.
-        if (productId === pub.creemProductIdAtelier) return "agency";
-        return "starter";
+        if (productId === pub.creemProductIdAtelier) return "atelier";
+        return "free";
     }
 
     /**
@@ -26,12 +25,17 @@ export function useSubscription() {
     const hasActiveSubscription = computed(() => hasAccess.value);
 
     /**
-     * Get current plan name
+     * Current tier (free | atelier)
      */
-    const currentPlan = computed(() => {
-        if (!subscription.value?.productId) return "starter";
-        return getPlanNameFromProductId(subscription.value.productId);
+    const currentTier = computed<"free" | "atelier">(() => {
+        if (!hasAccess.value) return "free";
+        return getTierFromProductId((subscription.value as { productId?: string } | null)?.productId);
     });
+
+    /**
+     * True when user is on the Atelier plan
+     */
+    const isAtelier = computed<boolean>(() => currentTier.value === "atelier");
 
     /**
      * Refresh subscription data from Creem
@@ -56,44 +60,13 @@ export function useSubscription() {
     }
 
     /**
-     * Create checkout session for subscription
-     * @param planSlug - e.g. 'starter-monthly', 'premium-yearly', 'agency-monthly'
+     * Unlock a single event via checkout.
+     * Calls POST /api/events/[id]/unlock → { url } then redirects to the checkout URL.
      */
-    async function createCheckoutSession(planSlug: string) {
-        if (import.meta.server) {
-            throw new Error("createCheckoutSession is not available on server");
-        }
-
-        // Map slug to productId
-        const pub = runtimeConfig.public;
-        const slugToProductId: Record<string, string> = {
-            atelier: pub.creemProductIdAtelier as string,
-        };
-
-        const productId = slugToProductId[planSlug];
-        if (!productId) {
-            throw new Error(`Unknown plan slug: ${planSlug}`);
-        }
-
-        try {
-            const { data, error } = await creem.createCheckout({
-                productId,
-                successUrl: `${window.location.origin}/dashboard/subscription?success=true&plan=${planSlug}`,
-            });
-
-            if (error) {
-                throw new Error(error.message || "Failed to create checkout session");
-            }
-
-            if (data && 'url' in data && data.url) {
-                window.location.href = data.url;
-            }
-
-            return data;
-        } catch (error) {
-            console.error("createCheckoutSession error:", error);
-            throw error;
-        }
+    async function unlockEvent(eventId: string): Promise<void> {
+        if (import.meta.server) throw new Error("unlockEvent is not available on server");
+        const { url } = await $fetch<{ url: string }>(`/api/events/${eventId}/unlock`, { method: "POST" });
+        window.location.href = url;
     }
 
     /**
@@ -127,11 +100,12 @@ export function useSubscription() {
         subscription,
         hasActiveSubscription,
         hasAccess,
-        currentPlan,
+        currentTier,
+        isAtelier,
         isUpdating,
 
         // Methods
-        createCheckoutSession,
+        unlockEvent,
         openCustomerPortal,
         refreshSubscription,
     };

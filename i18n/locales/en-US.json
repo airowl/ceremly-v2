@@ -3067,6 +3067,7 @@
       "typeBaptism": "Baptism",
       "typeBirthday": "Birthday",
       "planFree": "Free Plan",
+      "planAtelier": "Atelier",
       "planPaid": "{plan} Plan"
     },
     "dashboard": {

@@ -3067,6 +3067,7 @@
       "typeBaptism": "Battesimo",
       "typeBirthday": "Compleanno",
       "planFree": "Piano Free",
+      "planAtelier": "Atelier",
       "planPaid": "Piano {plan}"
     },
     "dashboard": {
