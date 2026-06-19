@@ -13,7 +13,7 @@
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type { RemindersInput } from "~~/shared/schemas/ceremly";
-import { CEREMLY_FREE_LIMITS } from "~~/shared/constants/pricing";
+import { getEventLimits } from "./eventAccess.service";
 import {
     bulkUpsertReminders,
     findDueReminders,
@@ -25,13 +25,6 @@ import { findEventByIdScoped } from "../repositories/eventRepository";
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { dispatch } from "../queue";
-
-/**
- * Limite reminder per evento. Nell'MVP coincide per tutti i piani con il
- * valore Free (la UI ha 3 slot R1/R2/R3, remindersSchema accetta max 3):
- * nessun branching di piano necessario.
- */
-const MAX_REMINDERS = CEREMLY_FREE_LIMITS.maxReminders;
 
 /** Concorrenza massima dei dispatch QStash per reminder (#6: evita timeout su liste grandi). */
 const REMINDER_DISPATCH_CONCURRENCY = 10;
@@ -52,16 +45,16 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
 async function requireOwnedEvent(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
-): Promise<string> {
+): Promise<{ organizationId: string; eventRow: NonNullable<Awaited<ReturnType<typeof findEventByIdScoped>>> }> {
     const organizationId = getOrgId(event);
     const row = await findEventByIdScoped(organizationId, eventId);
-    assertOwnership(row, organizationId);
-    return organizationId;
+    const eventRow = assertOwnership(row, organizationId);
+    return { organizationId, eventRow };
 }
 
-/** Lista reminder dell'evento, max 3 (SPEC §6 GET /api/events/:id/reminders). */
+/** Lista reminder dell'evento (SPEC §6 GET /api/events/:id/reminders). */
 export async function listReminders(event: H3Event<EventHandlerRequest>, eventId: string) {
-    const organizationId = await requireOwnedEvent(event, eventId);
+    const { organizationId } = await requireOwnedEvent(event, eventId);
     const reminders = await findRemindersByEvent(organizationId, eventId);
     return { reminders };
 }
@@ -78,10 +71,11 @@ export async function saveReminders(
     eventId: string,
     data: RemindersInput,
 ) {
-    const organizationId = await requireOwnedEvent(event, eventId);
+    const { organizationId, eventRow } = await requireOwnedEvent(event, eventId);
+    const { maxReminders } = await getEventLimits(eventRow);
 
-    // Validazione max 3 TOTALI dopo l'operazione: i reminder già inviati
-    // restano sempre (anche se omessi dalla lista), quindi contano nel totale.
+    // Validazione totale DOPO l'operazione: i reminder già inviati restano
+    // sempre (anche se omessi dalla lista), quindi contano nel totale.
     const existing = await findRemindersByEvent(organizationId, eventId);
     const existingById = new Map(existing.map((r) => [r.id, r]));
     const sentKept = existing.filter((r) => r.sentAt !== null).length;
@@ -97,10 +91,11 @@ export async function saveReminders(
         // nello scope → skip silenzioso, non incide sul totale.
         if (current && current.sentAt === null) updatedUnsent++;
     }
-    if (sentKept + updatedUnsent + inserts > MAX_REMINDERS) {
+    // -1 (atelier) = nessun limite reminder.
+    if (maxReminders !== -1 && sentKept + updatedUnsent + inserts > maxReminders) {
         throw createError({
             statusCode: 422,
-            statusMessage: `Puoi configurare al massimo ${MAX_REMINDERS} reminder per evento.`,
+            statusMessage: `Puoi configurare al massimo ${maxReminders} reminder per evento.`,
         });
     }
 
