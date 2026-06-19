@@ -24,7 +24,7 @@ describe("emailWebhook.service", () => {
     it("hard bounce → upsert suppression + insert event", async () => {
         await handleResendEvent({ type: "email.bounced", created_at: "2026-01-01T00:00:00Z",
             data: { email_id: "m1", from: "noreply@airowlgasga.dev", to: ["a@x.com"], bounce: { subType: "General" } } });
-        expect(upsertSuppression).toHaveBeenCalledWith(expect.objectContaining({ email: "a@x.com", reason: "hard_bounce" }));
+        expect(upsertSuppression).toHaveBeenCalledWith(expect.objectContaining({ email: "a@x.com", reason: "hard_bounce", bounceSubtype: "General" }));
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
 
@@ -32,6 +32,15 @@ describe("emailWebhook.service", () => {
         await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",
             data: { email_id: "m1", from: "inviti@events.airowlgasga.dev", to: ["g@x.com"] } });
         expect(recordGuestOpen).toHaveBeenCalledWith("g1", expect.any(Date));
+        expect(insertEmailEvent).toHaveBeenCalledOnce();
+    });
+
+    it("opened senza guestId → NO recordGuestOpen, solo insertEmailEvent", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        findSeedContext.mockResolvedValueOnce({ organizationId: "o1", guestId: null, eventId: null, emailType: "verification" } as any);
+        await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",
+            data: { email_id: "m2", from: "noreply@airowlgasga.dev", to: ["u@x.com"] } });
+        expect(recordGuestOpen).not.toHaveBeenCalled();
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
 });

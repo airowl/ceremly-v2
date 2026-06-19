@@ -58,6 +58,7 @@ export function isOwnDomain(from: string): boolean {
 export async function handleResendEvent(event: ResendWebhookEvent): Promise<void> {
     const { type, data } = event;
     const recipient = data.to?.[0] ?? "";
+    if (!recipient) return; // niente recipient → niente da sopprimere/attribuire (eventi sottoscritti hanno sempre `to`)
     const occurredAt = new Date(event.created_at);
     const ctx = await findSeedContext(data.email_id);
 
