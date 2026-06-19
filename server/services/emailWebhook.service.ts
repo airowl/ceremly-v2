@@ -42,7 +42,7 @@ export function verifyResendEvent(
 function domainOf(from: string): string {
     // "Name <addr@domain>" oppure "addr@domain"
     const m = from.match(/<([^>]+)>/);
-    const addr = (m ? m[1] : from).trim();
+    const addr = (m?.[1] ?? from).trim();
     return addr.split("@")[1]?.toLowerCase() ?? "";
 }
 
