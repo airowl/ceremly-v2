@@ -7,7 +7,8 @@ export default defineEventHandler((event) => {
         path.startsWith("/api/admin") ||
         path.startsWith("/api/auth/") ||
         path.startsWith("/api/jobs") ||
-        path.startsWith("/api/cron")
+        path.startsWith("/api/cron") ||
+        path.startsWith("/api/webhooks")
     ) {
         return;
     }

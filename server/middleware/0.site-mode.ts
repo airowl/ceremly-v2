@@ -49,6 +49,8 @@ export default defineEventHandler(async (event) => {
     // una finestra limitata: un 503 in waitinglist/maintenance può perdere eventi
     // di pagamento (pagante mostrato come non-pagante, o accesso non revocato).
     if (path.startsWith("/api/auth/creem/webhook")) return;
+    // Webhook Resend: mai gate (eventi delivery/bounce, Resend ritenta a finestra limitata).
+    if (path.startsWith("/api/webhooks/resend")) return;
 
     // Risorse interne di Nuxt / payload prerenderizzati: mai gate
     // (evita anche un round-trip Redis inutile sugli asset).
