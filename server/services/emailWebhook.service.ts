@@ -88,8 +88,12 @@ export async function handleResendEvent(event: ResendWebhookEvent): Promise<void
             await insertEmailEvent({ ...baseEvent, type: type.replace("email.", "") });
             break;
         case "email.opened":
-            if (ctx?.guestId) await recordGuestOpen(ctx.guestId, occurredAt);
+            // Ordine intenzionale: il record durevole viene scritto PRIMA del counter non-idempotente.
+            // In caso di retry (insertEmailEvent lancia → 500 → Resend riprova), il counter non viene
+            // incrementato una seconda volta perché il ramo non raggiunge recordGuestOpen.
+            // Il counter è un valore derivato best-effort; l'append è la sorgente di verità.
             await insertEmailEvent({ ...baseEvent, type: "opened" });
+            if (ctx?.guestId) await recordGuestOpen(ctx.guestId, occurredAt);
             break;
         case "email.clicked":
             await insertEmailEvent({ ...baseEvent, type: "clicked", clickedUrl: data.click?.link });
