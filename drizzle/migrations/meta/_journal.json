@@ -50,6 +50,13 @@
       "when": 1781713281901,
       "tag": "0006_stiff_kinsey_walden",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781885673974,
+      "tag": "0007_add_event_tier_fields",
+      "breakpoints": true
     }
   ]
 }
