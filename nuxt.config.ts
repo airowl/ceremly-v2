@@ -171,6 +171,15 @@ export default defineNuxtConfig({
             },
         },
 
+        // Disable security for Resend webhook - ha la sua verifica firma (Svix)
+        "/api/webhooks/resend": {
+            security: {
+                corsHandler: false,
+                xssValidator: false,
+                rateLimiter: false,
+            },
+        },
+
         // QStash job consumers — own HMAC signature verification.
         // xssValidator MUST be off: it mutates the POST body and would
         // invalidate the QStash signature (computed over the raw body).
