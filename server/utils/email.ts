@@ -15,6 +15,8 @@ import {
 import { logAudit } from "./audit";
 import { getResendInstance } from "./drivers";
 import { runtimeConfig } from "./runtimeConfig";
+import { isEmailSuppressed } from "../repositories/emailSuppression.repository";
+import { insertEmailSeed } from "../repositories/emailEvent.repository";
 
 // Email types supported by the system
 export type EmailType =
@@ -25,11 +27,19 @@ export type EmailType =
     | "invitation"
     | "custom";
 
+export interface EmailContext {
+    organizationId?: string;
+    guestId?: string;
+    eventId?: string;
+}
+
 // Base options for all emails
 export interface BaseEmailOptions {
     to: string;
     language?: SupportedLanguage;
     userId?: string;
+    /** Contesto per correlare i webhook (open/click) all'ospite/evento. */
+    context?: EmailContext;
 }
 
 // Template-specific options
@@ -93,6 +103,17 @@ export interface EmailResult {
  */
 export function getDefaultSender(): string {
     return `${runtimeConfig.public.appName} <${runtimeConfig.public.appNotifyEmail}>`;
+}
+
+/** From per evento-correlate (sottodominio tracciato, open+click ON). */
+function getEventsSender(): string {
+    return `${runtimeConfig.public.appName} <${runtimeConfig.public.appEventsNotifyEmail}>`;
+}
+
+/** Sceglie il from: sottodominio tracciato se il send è event-related. */
+export function getSender(options: EmailOptions): string {
+    if (options.context?.eventId) return getEventsSender();
+    return getDefaultSender();
 }
 
 /**
@@ -202,7 +223,20 @@ async function logEmailEvent(
 export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
         const { subject, html, text } = await buildEmailContent(options);
-        const from = getDefaultSender();
+
+        // Enforcement suppression list (hard bounce / complaint): non inviare.
+        if (await isEmailSuppressed(options.to)) {
+            await logAudit(null, 'email.failed', {
+                userId: options.userId,
+                targetType: 'email',
+                targetId: options.to,
+                status: 'failure',
+                details: { error: 'suppressed', emailType: options.type },
+            });
+            return { success: false, error: 'suppressed' };
+        }
+
+        const from = getSender(options);
 
         const response = await getResendInstance().emails.send({
             from,
@@ -231,6 +265,19 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
         console.log(
             `[Email] Successfully sent ${options.type} email to ${options.to}`
         );
+
+        // Correlazione webhook → entità: riga seed solo se c'è contesto.
+        if (options.context && response.data?.id) {
+            await insertEmailSeed({
+                messageId: response.data.id,
+                recipient: options.to,
+                emailType: options.type,
+                organizationId: options.context.organizationId,
+                guestId: options.context.guestId,
+                eventId: options.context.eventId,
+            });
+        }
+
         return {
             success: true,
             messageId: response.data?.id,

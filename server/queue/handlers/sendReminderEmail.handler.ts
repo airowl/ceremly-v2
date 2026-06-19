@@ -59,7 +59,7 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text })
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
   if (!result.success) {
     throw new Error(`[job:send-reminder-email] invio fallito per guest ${guest.id}: ${result.error}`)
   }
