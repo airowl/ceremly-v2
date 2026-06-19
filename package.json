@@ -6,8 +6,6 @@
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=4096' nuxt build",
     "dev": "nuxt dev",
-    "qstash:dev": "npx -y -p @upstash/qstash-cli qstash dev",
-    "dev:local": "node --env-file=.env.local node_modules/nuxt/bin/nuxt.mjs dev --host 127.0.0.1",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",

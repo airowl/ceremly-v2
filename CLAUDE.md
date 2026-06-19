@@ -31,7 +31,7 @@ pnpm auth:schema            # Regenerate Better Auth schema (re-add custom user 
 The backend runs on **Vercel as serverless functions** — no persistent process. Consequences (mandatory):
 - No polling workers, no `while(true)`, no long-lived Redis connections.
 - Background/async work is enqueued to an **HTTP queue (Upstash QStash)**. The "worker" is an HTTP route under `server/api/jobs/...` that the queue invokes — an endpoint, not a process.
-- Scheduled tasks are **Vercel Cron** declared in `vercel.json`, hitting a `server/api/cron/...` route. Cron does no heavy work: it enqueues or processes small batches.
+- Scheduled tasks are **Vercel Cron** declared in `nuxt.config.ts` (`vercel.config.crons`, Vercel Build Output API — **not** a root `vercel.json`), hitting a `server/api/cron/...` route. Cron does no heavy work: it enqueues or processes small batches.
 - DB connections use the **Neon HTTP/serverless driver** (`@neondatabase/serverless`), not the classic TCP driver.
 
 ### Tech Stack
@@ -63,6 +63,7 @@ The backend runs on **Vercel as serverless functions** — no persistent process
 - `content/blogs/` — Blog posts (Markdown)
 - `docs/base/` — Build guide (stack, conventions, phase-by-phase reference for clones)
 - `docs/saas-prd/` — Ceremly PRD + implementation spec (`SPEC-Ceremly-MVP.md`)
+- `docs/security/` — Per-secret reference docs (`NUXT_ADMIN_API_KEY.md`, `NUXT_CRON_SECRET.md`)
 - `drizzle/migrations/` — Generated migration files
 
 ### Server Middleware Stack (numbered for order)
@@ -136,7 +137,8 @@ All business logic lives in `server/services/`. Routes are thin controllers (max
 - Fake server headers (`X-Powered-By: PHP/5.2.17`, `Server: Apache/2.2.15`) to misdirect bots
 - Bot traps: `/wp-admin`, `/wp-login.php`, `/.env` redirect to homepage
 - Strict CSP, HSTS (2-year), request size limits (1MB body, 5MB uploads)
-- Admin endpoints require `NUXT_ADMIN_API_KEY` header
+- Admin endpoints (`/api/admin/*`) require the `X-Admin-API-Key` header (`NUXT_ADMIN_API_KEY`), enforced in `1.auth.ts` + per-handler; constant-time SHA-256 compare in `server/utils/requireAdminApiKey.ts`. See `docs/security/NUXT_ADMIN_API_KEY.md`.
+- Cron endpoints (`/api/cron/*`) use 3-way auth: `x-vercel-cron` header (platform), `Authorization: Bearer ${CRON_SECRET}` (`NUXT_CRON_SECRET`, optional), or `X-Admin-API-Key` for manual triggers. See `docs/security/NUXT_CRON_SECRET.md`.
 - Audit logging on all auth events (IP, User-Agent, success/failure)
 - Magic bytes file validation (binary header check, not just MIME)
 
