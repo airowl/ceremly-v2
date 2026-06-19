@@ -161,12 +161,48 @@ export function calculateYearlySavings(
     return Math.round(savings);
 }
 
+// ============================================================================
+// Modello pricing reale Ceremly (Fase 1) — Free / Celebrazione / Atelier.
+// Affiancato al modello boilerplate starter/premium/agency (B2B legacy ancora
+// cablato nei gate org/team — rimozione FUORI SCOPE).
+// ============================================================================
+
 /**
- * Ceremly: limiti del piano Free (org senza subscription Creem attiva).
- * Enforcement nel service layer; org con qualsiasi piano attivo = nessun limite.
+ * I tre tier di Ceremly.
+ * - 'free'/'celebration' sono stati PER-EVENTO (campo events.tier).
+ * - 'atelier' NON è un valore di events.tier: è una proprietà dell'org/owner
+ *   (subscription ricorrente attiva), risolta a runtime.
  */
-export const CEREMLY_FREE_LIMITS = {
-    maxGuestsPerEvent: 30,
-    maxActiveEvents: 1,
-    maxReminders: 3,
-} as const;
+export type CeremlyTier = 'free' | 'celebration' | 'atelier';
+
+/**
+ * Limiti per tier. `-1` = illimitato.
+ *
+ * SCOPE MISTO: `maxGuestsPerEvent`/`maxReminders` sono PER-EVENTO (dipendono dal
+ * tier dell'evento). `maxActiveEvents` è PER-ORG e ha senso solo per i tier che
+ * descrivono un'organizzazione: Free (1) e Atelier (∞). 'celebration' NON è un
+ * tier org — è lo stato di un singolo evento — quindi il suo `maxActiveEvents`
+ * (-1) è un PLACEHOLDER non usato dall'enforcement: il conteggio eventi guarda
+ * se l'ORG è Free o Atelier (vedi countActiveEventsByOrg + isOrgAtelier).
+ */
+export const CEREMLY_TIER_LIMITS: Record<
+    CeremlyTier,
+    { maxGuestsPerEvent: number; maxActiveEvents: number; maxReminders: number; unlimited: boolean }
+> = {
+    free: { maxGuestsPerEvent: 30, maxActiveEvents: 1, maxReminders: 3, unlimited: false },
+    celebration: { maxGuestsPerEvent: 250, maxActiveEvents: -1, maxReminders: 3, unlimited: false },
+    atelier: { maxGuestsPerEvent: -1, maxActiveEvents: -1, maxReminders: -1, unlimited: true },
+};
+
+/** Prezzo Celebrazione (one-time, centesimi EUR). */
+export const CELEBRATION_PRICE_CENTS = 3900;
+/** Prezzo Atelier (recurring mensile, centesimi EUR). */
+export const ATELIER_PRICE_CENTS = 2400;
+
+/**
+ * Alias retro-compat: i service esistenti (guest/event/reminder) leggono
+ * CEREMLY_FREE_LIMITS.{maxGuestsPerEvent|maxActiveEvents|maxReminders}. La Fase 2
+ * li sposta su getEventLimits() tier-aware; l'alias li tiene compilanti nel
+ * frattempo.
+ */
+export const CEREMLY_FREE_LIMITS = CEREMLY_TIER_LIMITS.free;
