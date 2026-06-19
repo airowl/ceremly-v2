@@ -12,6 +12,7 @@ import { ContactNotificationEmail } from './ContactNotificationEmail';
 import { OrgInviteEmail } from './OrgInviteEmail';
 import { GuestInviteEmail } from './GuestInviteEmail';
 import { GuestReminderEmail } from './GuestReminderEmail';
+import { EventCleanupWarning } from './EventCleanupWarning';
 import { runtimeConfig } from '../utils/runtimeConfig';
 
 export type SupportedLanguage = 'it' | 'en';
@@ -65,6 +66,7 @@ export { ContactNotificationEmail } from './ContactNotificationEmail';
 export { OrgInviteEmail } from './OrgInviteEmail';
 export { GuestInviteEmail } from './GuestInviteEmail';
 export { GuestReminderEmail } from './GuestReminderEmail';
+export { EventCleanupWarning } from './EventCleanupWarning';
 
 /**
  * Render verification email (HTML + text)
@@ -247,6 +249,24 @@ export async function renderGuestReminderEmail(options: {
     return renderBoth(element);
 }
 
+/** Render avviso cleanup evento (SPEC §9.2) — HTML + text, i18n IT/EN. */
+export async function renderEventCleanupWarningEmail(options: {
+    language?: SupportedLanguage;
+    eventTitle: string;
+    dashboardUrl: string;
+    daysLeft: number;
+}): Promise<RenderedEmail> {
+    const element = React.createElement(EventCleanupWarning, {
+        language: options.language || 'it',
+        eventTitle: options.eventTitle,
+        dashboardUrl: options.dashboardUrl,
+        daysLeft: options.daysLeft,
+        appName: appName(),
+        appHost: appHost(),
+    });
+    return renderBoth(element);
+}
+
 // Email subject lines by language (brand injected via appName)
 export const emailSubjects = {
     verification: {
@@ -278,4 +298,8 @@ export const emailSubjects = {
     // definito un oggetto in event.distribution / nel reminder.
     guestInvite: (eventTitle: string) => `Sei invitato: ${eventTitle}`,
     guestReminder: (eventTitle: string) => `Promemoria — ${eventTitle}`,
+    eventCleanupWarning: (eventTitle: string) => ({
+        it: `Stiamo per archiviare "${eventTitle}"`,
+        en: `We're about to archive "${eventTitle}"`,
+    }),
 };
