@@ -239,6 +239,19 @@ export async function unlockEvent(
 }
 
 /**
+ * Re-locka l'evento collegato a un order Creem rimborsato/contestato → 'free'.
+ * Match per `creem_order_id` (univoco lato Creem). Senza, un evento rimborsato
+ * resterebbe sbloccato gratis (SPEC §6.4). No-op se nessun match.
+ */
+export async function relockEventByOrder(creemOrderId: string): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.events)
+        .set({ tier: "free", unlockedAt: null, creemOrderId: null })
+        .where(eq(schema.events.creemOrderId, creemOrderId));
+}
+
+/**
  * Ospiti "da contattare": hanno aperto il link prima di `openedBefore`
  * (> 7 giorni fa) ma non hanno mai risposto. Max `limit`, i più vecchi prima.
  */
