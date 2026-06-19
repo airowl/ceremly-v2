@@ -4,6 +4,7 @@
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerCheckbox from "~/components/ceremly/CerCheckbox.vue";
 import StatusPill from "~/components/ceremly/StatusPill.vue";
+import CerCelebrationPaywall from "~/components/ceremly/CerCelebrationPaywall.vue";
 import { getVisibleQuestions } from "~~/shared/utils/rsvpLogic";
 import { parseCsv, mapGuestRows, type CsvError, type CsvGuestRow } from "~~/shared/utils/csv";
 import type {
@@ -402,7 +403,8 @@ async function submitAdd() {
     } catch (e) {
         const err = errOf(e);
         if (err.statusCode === 402) {
-            addError.value = `${err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit")} ${t("ceremly.event.guests.addErrorPlanLimitUpgrade")}`;
+            addOpen.value = false;
+            openPaywall(err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit"));
         } else {
             addError.value = err.data?.statusMessage || t("ceremly.event.guests.addErrorGeneric");
         }
@@ -460,10 +462,25 @@ async function submitImport() {
         importStep.value = "done";
         await refreshGuests();
     } catch (e) {
-        importSubmitError.value = errOf(e).data?.statusMessage || t("ceremly.event.guests.importError");
+        const err = errOf(e);
+        if (err.statusCode === 402) {
+            importOpen.value = false;
+            openPaywall(err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit"));
+        } else {
+            importSubmitError.value = err.data?.statusMessage || t("ceremly.event.guests.importError");
+        }
     } finally {
         importSaving.value = false;
     }
+}
+
+// ─── Paywall Celebrazione (402) ───────────────────────────────────────
+const paywallOpen = ref(false);
+const paywallReason = ref("");
+
+function openPaywall(reason: string) {
+    paywallReason.value = reason;
+    paywallOpen.value = true;
 }
 
 // ─── Modale "Cambia gruppo" ──────────────────────────────────────────
@@ -917,6 +934,13 @@ async function submitGroup() {
                 </template>
             </div>
         </div>
+
+        <!-- ─── Paywall Celebrazione (limite Free) ─────────────────── -->
+        <CerCelebrationPaywall
+            v-model:open="paywallOpen"
+            :event-id="eventId"
+            :reason="paywallReason || undefined"
+        />
 
         <!-- ─── Modale "Cambia gruppo" ──────────────────────────────── -->
         <div v-if="groupOpen" class="cer-overlay" @click.self="groupOpen = false">
