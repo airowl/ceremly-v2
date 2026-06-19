@@ -14,18 +14,9 @@ export function useSubscription() {
      */
     function getPlanNameFromProductId(productId: string): string {
         const pub = runtimeConfig.public;
-        if (
-            productId === pub.creemProductIdStarterMonth ||
-            productId === pub.creemProductIdStarterYear
-        ) return "starter";
-        if (
-            productId === pub.creemProductIdPremiumMonth ||
-            productId === pub.creemProductIdPremiumYear
-        ) return "premium";
-        if (
-            productId === pub.creemProductIdAgencyMonth ||
-            productId === pub.creemProductIdAgencyYear
-        ) return "agency";
+        // Atelier è l'unico prodotto a subscription ricorrente; mappato al tier
+        // B2B legacy "agency" per coerenza con il resto della UI piano corrente.
+        if (productId === pub.creemProductIdAtelier) return "agency";
         return "starter";
     }
 
@@ -76,12 +67,7 @@ export function useSubscription() {
         // Map slug to productId
         const pub = runtimeConfig.public;
         const slugToProductId: Record<string, string> = {
-            "starter-monthly": pub.creemProductIdStarterMonth as string,
-            "starter-yearly": pub.creemProductIdStarterYear as string,
-            "premium-monthly": pub.creemProductIdPremiumMonth as string,
-            "premium-yearly": pub.creemProductIdPremiumYear as string,
-            "agency-monthly": pub.creemProductIdAgencyMonth as string,
-            "agency-yearly": pub.creemProductIdAgencyYear as string,
+            atelier: pub.creemProductIdAtelier as string,
         };
 
         const productId = slugToProductId[planSlug];
