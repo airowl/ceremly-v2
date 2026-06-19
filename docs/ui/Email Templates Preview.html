@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ceremly · Email templates — anteprima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bone:#fefae0; --card:#ffffff; --border:#e9e4ce; --accent:#d4a373;
+    --ink:#3F3622; --wine:#5E4426; --muted:#a89e7e;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    --mono:'Space Mono','Courier New',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:#f3eecf;}
+  body{font-family:var(--sans);color:var(--ink);}
+
+  /* top bar */
+  .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:14px 28px;background:rgba(254,250,224,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);}
+  .bar .brand{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--wine);}
+  .bar .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .bar .spacer{flex:1;}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:#fff;}
+  .seg button{appearance:none;border:0;background:transparent;cursor:pointer;font-family:var(--mono);
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 16px;}
+  .seg button.on{background:var(--accent);color:var(--ink);}
+
+  /* gallery */
+  .wrap{max-width:1240px;margin:0 auto;padding:34px 24px 80px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:30px;align-items:start;}
+  .cell{display:flex;flex-direction:column;gap:12px;}
+  .cap{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:0 4px;}
+  .cap .file{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:700;}
+  .cap .desc{font-size:12px;color:var(--muted);}
+  .client{background:var(--bone);border:1px solid var(--border);border-radius:14px;padding:22px 18px;
+    box-shadow:0 1px 0 rgba(94,68,38,.04),0 18px 40px -28px rgba(94,68,38,.5);}
+  .subjline{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    margin:0 4px 12px;display:flex;gap:8px;}
+  .subjline b{color:var(--ink);font-weight:700;text-transform:none;letter-spacing:0;font-family:var(--sans);}
+
+  /* the email itself */
+  .email{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--border);
+    border-radius:18px;padding:40px 34px;}
+  .eyebrow{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);margin:0 0 16px;}
+  .title{font-family:var(--serif);font-size:28px;line-height:1.2;font-weight:600;color:var(--wine);margin:0 0 20px;}
+  .text{font-size:15px;line-height:1.7;color:var(--ink);margin:0 0 16px;}
+  .btn{display:inline-block;background:var(--accent);color:var(--ink);font-family:var(--mono);font-size:13px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:14px 30px;border-radius:999px;margin:12px 0 8px;}
+  .box{background:var(--bone);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:4px 0 22px;}
+  .box .lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 6px;}
+  .box .valSans{font-size:16px;font-weight:600;color:var(--ink);margin:0;word-break:break-all;}
+  .box .valWine{font-size:17px;font-weight:600;color:var(--wine);margin:0;word-break:break-all;}
+  .box .valSerif{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--wine);margin:0;}
+  .note{font-size:13px;line-height:1.6;color:var(--muted);margin:20px 0 0;}
+  .fbl{font-size:13px;line-height:1.6;color:var(--muted);margin:24px 0 6px;}
+  .fbk{font-family:var(--mono);font-size:12px;color:var(--accent);word-break:break-all;}
+  .hr{border:0;border-top:1px solid var(--border);margin:32px 0 18px;}
+  .foot{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);margin:0 0 8px;}
+  .footlinks{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);}
+  .footlinks a{color:var(--muted);text-decoration:underline;}
+  /* notification rows */
+  .nrow{border-top:1px solid var(--border);padding:14px 0 0;margin:0 0 14px;}
+  .nrow .lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 4px;}
+  .nrow .val{font-size:15px;font-weight:500;color:var(--ink);margin:0;word-break:break-word;}
+  .nrow .val a{color:var(--accent);text-decoration:none;}
+  .msgbox{background:var(--bone);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:6px 0 0;}
+  .msgbox .lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 8px;}
+  .msgbox .val{font-size:15px;line-height:1.7;color:var(--ink);margin:0;}
+  .only-it{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+    border:1px solid var(--accent);border-radius:999px;padding:2px 8px;}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <span class="brand">Ceremly</span>
+    <span class="tag">Email templates · Soft Meadow</span>
+    <span class="spacer"></span>
+    <div class="seg" id="lang">
+      <button data-l="it" class="on">Italiano</button>
+      <button data-l="en">English</button>
+    </div>
+  </div>
+  <div class="wrap" id="gallery"></div>
+
+<script>
+const APP = 'Ceremly';
+const LEGAL = '<span class="footlinks"><a href="#">{p}</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="#">{t}</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="#">{d}</a></span>';
+
+function footer(tagline, p, t, d){
+  return `<hr class="hr"/><p class="foot">${APP} — ${tagline}</p>`+
+    LEGAL.replace('{p}',p).replace('{t}',t).replace('{d}',d);
+}
+function fallback(label, url){
+  return `<p class="fbl">${label}</p><div class="fbk">${url}</div>`;
+}
+
+const T = {
+  it:{ priv:'Privacy', tos:'Termini', dpa:'DPA', tagline:'Inviti digitali e RSVP intelligenti', fb:'Se il pulsante non funziona, copia e incolla questo link nel browser:' },
+  en:{ priv:'Privacy', tos:'Terms', dpa:'DPA', tagline:'Digital invitations & smart RSVP', fb:"If the button doesn't work, copy and paste this link into your browser:" },
+};
+
+const URL_V = 'https://app.ceremly.com/verify?token=8f2a…c901';
+const URL_R = 'https://app.ceremly.com/reset?token=4d7e…b3a0';
+const URL_C = 'https://app.ceremly.com/email/confirm?token=11ab…ff20';
+const URL_O = 'https://app.ceremly.com/invite/giulia-team?token=77cd…0e12';
+
+function templates(lang){
+  const c = T[lang];
+  const f = footer(c.tagline, c.priv, c.tos, c.dpa);
+  const L = lang==='it';
+  return [
+    { file:'VerificationEmail.ts', desc:L?'Verifica email alla registrazione':'Email verification on sign-up',
+      subj:L?'Confermiamo che sei tu':"Let's confirm it's you",
+      html:`
+        <p class="eyebrow">${L?'Benvenuto':'Welcome'}</p>
+        <p class="title">${L?'Confermiamo che sei tu':"Let's confirm it's you"}</p>
+        <p class="text">${L?'Ciao Marco,':'Hi Marco,'}</p>
+        <p class="text">${L?`che bello averti qui. Manca solo un passaggio per attivare il tuo account su ${APP}: conferma che questo indirizzo email è davvero tuo.`:`lovely to have you here. There's just one step left to activate your ${APP} account: confirm that this email address is really yours.`}</p>
+        <p class="text">${L?'Bastano pochi secondi e poi sei pronto a creare il tuo primo invito.':'It only takes a few seconds, and then you are ready to create your first invitation.'}</p>
+        <a class="btn" href="#">${L?'Conferma la mia email':'Confirm my email'}</a>
+        <p class="note">${L?'Il link è valido per 24 ore. Se non hai creato tu un account, puoi ignorare tranquillamente questa email.':"The link is valid for 24 hours. If you didn't create an account, you can safely ignore this email."}</p>
+        ${fallback(c.fb, URL_V)}${f}` },
+
+    { file:'ResetPasswordEmail.ts', desc:L?'Reset della password':'Password reset',
+      subj:L?'Reimposta la password':'Reset your password',
+      html:`
+        <p class="eyebrow">${L?'Sicurezza':'Security'}</p>
+        <p class="title">${L?'Reimposta la password':'Reset your password'}</p>
+        <p class="text">${L?'Ciao Marco,':'Hi Marco,'}</p>
+        <p class="text">${L?`hai chiesto di reimpostare la password del tuo account ${APP}. Clicca qui sotto per sceglierne una nuova.`:`you asked to reset the password for your ${APP} account. Click below to choose a new one.`}</p>
+        <a class="btn" href="#">${L?'Scegli una nuova password':'Choose a new password'}</a>
+        <div class="box" style="margin:22px 0 0">
+          <p class="lbl">${L?'Nota di sicurezza':'Security note'}</p>
+          <p class="val" style="font-size:13px;line-height:1.6;color:var(--ink);margin:0;">${L?'Per la tua sicurezza, questo link scade tra 60 minuti. Se non hai richiesto tu il reset, ignora questa email: la tua password resta invariata e il tuo account è al sicuro.':"For your security, this link expires in 60 minutes. If you didn't request a reset, just ignore this email: your password stays the same and your account is safe."}</p>
+        </div>
+        ${fallback(c.fb, URL_R)}${f}` },
+
+    { file:'ChangeEmailEmail.ts', desc:L?'Conferma cambio email (indirizzo attuale)':'Email change confirmation (current address)',
+      subj:L?'Confermi il nuovo indirizzo?':'Confirm your new address?',
+      html:`
+        <p class="eyebrow">${L?'Cambio email':'Email change'}</p>
+        <p class="title">${L?'Confermi il nuovo indirizzo?':'Confirm your new address?'}</p>
+        <p class="text">${L?'Ciao Marco,':'Hi Marco,'}</p>
+        <p class="text">${L?`hai chiesto di cambiare l'email associata al tuo account ${APP}. Il nuovo indirizzo sarà:`:`you asked to change the email linked to your ${APP} account. The new address will be:`}</p>
+        <div class="box"><p class="lbl">${L?'Nuovo indirizzo':'New address'}</p><p class="valWine">marco.nuova@gmail.com</p></div>
+        <p class="text">${L?'Conferma qui sotto per procedere. Subito dopo invieremo un’email di verifica al nuovo indirizzo, così ci assicuriamo che sia raggiungibile.':"Confirm below to go ahead. Right after, we'll send a verification email to the new address to make sure it's reachable."}</p>
+        <a class="btn" href="#">${L?'Conferma il cambio':'Confirm the change'}</a>
+        <p class="note">${L?'Se non hai richiesto tu questa modifica, ignora pure questa email: nulla cambierà e il tuo indirizzo attuale resta attivo.':"If you didn't request this change, just ignore this email: nothing will change and your current address stays active."}</p>
+        ${fallback(c.fb, URL_C)}${f}` },
+
+    { file:'WaitingListEmail.ts', desc:L?'Conferma iscrizione lista d’attesa':'Waiting-list confirmation',
+      subj:L?'Ci sei. Ti avvisiamo noi.':"You're in. We'll be in touch.",
+      html:`
+        <p class="eyebrow">${L?'Sei in lista':"You're on the list"}</p>
+        <p class="title">${L?'Ci sei. Ti avvisiamo noi.':"You're in. We'll be in touch."}</p>
+        <p class="text">${L?`grazie per esserti iscritto alla lista d'attesa di ${APP}. È un bel segnale, e ci fa piacere.`:`thanks for joining the ${APP} waiting list. It means a lot, and we're glad you're here.`}</p>
+        <p class="text">${L?'Stiamo lavorando per aprire le porte al più presto. Appena saremo pronti, sarai tra i primi a saperlo — niente code, niente sorprese.':"We're working hard to open the doors soon. The moment we're ready, you'll be among the first to know — no queues, no surprises."}</p>
+        <a class="btn" href="#">${L?`Scopri ${APP}`:`Discover ${APP}`}</a>
+        <p class="note">${L?'Nel frattempo, dai un’occhiata a cosa stiamo costruendo. E se conosci qualcuno che organizza un evento, sai dove mandarlo.':"In the meantime, take a look at what we're building. And if you know someone planning an event, you know where to send them."}</p>
+        ${f}` },
+
+    { file:'OrgInviteEmail.ts', desc:L?'Invito a un team / organizzazione':'Team / organization invite',
+      subj:L?'Ti hanno invitato nel team':"You're invited to the team",
+      html:`
+        <p class="eyebrow">${L?'Un invito':'An invitation'}</p>
+        <p class="title">${L?'Ti hanno invitato nel team':"You're invited to the team"}</p>
+        <p class="text">${L?`Giulia Ferrari ti ha invitato a collaborare nello spazio di Studio Fiori & Co. su ${APP}.`:`Giulia Ferrari has invited you to collaborate in the Studio Fiori & Co. workspace on ${APP}.`}</p>
+        <div class="box"><p class="lbl">${L?'Organizzazione':'Organization'}</p><p class="valSerif">Studio Fiori &amp; Co.</p></div>
+        <p class="text">${L?'Accetta l’invito per accedere agli eventi del team, gestire gli inviti e seguire le risposte insieme — tutto da un unico posto.':'Accept the invitation to access the team’s events, manage invites and track responses together — all in one place.'}</p>
+        <a class="btn" href="#">${L?'Accetta l’invito':'Accept the invitation'}</a>
+        <p class="note">${L?'Questo invito scade tra 7 giorni.':'This invitation expires in 7 days.'}</p>
+        <p class="note">${L?'Se non ti aspettavi questo invito, puoi ignorare l’email senza problemi.':"If you weren't expecting this invitation, you can safely ignore this email."}</p>
+        ${fallback(c.fb, URL_O)}${f}` },
+
+    { file:'ContactConfirmationEmail.ts', desc:L?'Conferma ricezione messaggio (utente)':'Message-received confirmation (user)',
+      subj:L?'Ci pensiamo noi':"We're on it",
+      html:`
+        <p class="eyebrow">${L?'Messaggio ricevuto':'Message received'}</p>
+        <p class="title">${L?'Ci pensiamo noi':"We're on it"}</p>
+        <p class="text">${L?'Ciao Marco,':'Hi Marco,'}</p>
+        <p class="text">${L?'abbiamo ricevuto il tuo messaggio e lo stiamo leggendo. Ti rispondiamo a breve — di solito entro un giorno lavorativo.':"we've received your message and we're reading it now. We'll get back to you shortly — usually within one business day."}</p>
+        <div class="box"><p class="lbl">${L?'Oggetto':'Subject'}</p><p class="valSans" style="word-break:normal">${L?'Domanda sul piano per wedding planner':'Question about the wedding-planner plan'}</p></div>
+        <p class="text">${L?'Non serve che tu faccia altro: ti scriviamo noi appena possiamo.':"There's nothing else you need to do: we'll write to you as soon as we can."}</p>
+        <a class="btn" href="#">${L?`Torna su ${APP}`:`Back to ${APP}`}</a>
+        <hr class="hr"/><p class="foot">${APP} — ${c.tagline}</p>` },
+
+    { file:'ContactNotificationEmail.ts', desc:L?'Notifica admin · nuovo messaggio':'Admin notification · new message', onlyIt:true,
+      subj:'Nuovo messaggio dal form contatti',
+      html:`
+        <p class="eyebrow">${APP} · notifica interna</p>
+        <p class="title" style="font-size:26px">Nuovo messaggio dal form contatti</p>
+        <div class="nrow"><p class="lbl">Da</p><p class="val">Marco Rossi</p></div>
+        <div class="nrow"><p class="lbl">Email</p><p class="val"><a href="#">marco.rossi@gmail.com</a></p></div>
+        <div class="nrow"><p class="lbl">Oggetto</p><p class="val">Domanda sul piano per wedding planner</p></div>
+        <div class="nrow"><p class="lbl">Ricevuto il</p><p class="val">18 giugno 2026, 14:32</p></div>
+        <div class="msgbox"><p class="lbl">Messaggio</p><p class="val">Buongiorno,<br/>gestisco un’agenzia di wedding planning e seguo circa 30 matrimoni l’anno.<br/><br/>Vorrei capire se esiste un piano che permetta di gestire più eventi e clienti dallo stesso account. Grazie!</p></div>
+        <a class="btn" href="#">Rispondi al mittente</a>
+        <hr class="hr"/><p class="foot">${APP} — Notifica automatica · non rispondere a questo indirizzo</p>` },
+  ];
+}
+
+function render(lang){
+  document.documentElement.lang = lang;
+  const g = document.getElementById('gallery');
+  g.innerHTML = templates(lang).map(t=>`
+    <div class="cell">
+      <div class="cap">
+        <span class="file">${t.file}</span>
+        <span class="desc">${t.desc}</span>
+        ${t.onlyIt?'<span class="only-it">solo IT</span>':''}
+      </div>
+      <div class="client">
+        <div class="subjline">${lang==='it'?'Oggetto':'Subject'} · <b>${t.subj}</b></div>
+        <div class="email">${t.html}</div>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('lang').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#lang button').forEach(x=>x.classList.toggle('on', x===b));
+  render(b.dataset.l);
+});
+render('it');
+</script>
+</body>
+</html>
