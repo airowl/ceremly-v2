@@ -1384,6 +1384,23 @@
       "cancelError": "Impossibile annullare l'abbonamento",
       "cancelProcessError": "Errore durante l'annullamento",
       "subscriptionUpdated": "Abbonamento aggiornato"
+    },
+    "tier": {
+      "free": "Free",
+      "freeDesc": "Crea e gestisci il tuo primo evento Celebrazione gratuitamente.",
+      "freeBadge": "Free",
+      "atelier": "Atelier",
+      "atelierDesc": "Accesso illimitato a tutti gli eventi Celebrazione."
+    },
+    "manageAtelier": "Gestisci abbonamento",
+    "discoverAtelier": "Scopri Atelier",
+    "unlockedEvents": {
+      "title": "I tuoi eventi Celebrazione",
+      "subtitle": "Questi eventi sono stati sbloccati con il tuo piano.",
+      "loading": "Caricamento...",
+      "empty": "Nessun evento Celebrazione ancora. Crea il tuo primo evento per iniziare.",
+      "unlockedOn": "Sbloccato il",
+      "badge": "Celebrazione"
     }
   },
   "dataExport": {

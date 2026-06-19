@@ -1384,6 +1384,23 @@
       "cancelError": "Unable to cancel subscription",
       "cancelProcessError": "Error during cancellation",
       "subscriptionUpdated": "Subscription updated"
+    },
+    "tier": {
+      "free": "Free",
+      "freeDesc": "Create and manage your first Celebration event for free.",
+      "freeBadge": "Free",
+      "atelier": "Atelier",
+      "atelierDesc": "Unlimited access to all Celebration events."
+    },
+    "manageAtelier": "Manage subscription",
+    "discoverAtelier": "Discover Atelier",
+    "unlockedEvents": {
+      "title": "Your Celebration events",
+      "subtitle": "These events have been unlocked with your plan.",
+      "loading": "Loading...",
+      "empty": "No Celebration events yet. Create your first event to get started.",
+      "unlockedOn": "Unlocked on",
+      "badge": "Celebration"
     }
   },
   "dataExport": {

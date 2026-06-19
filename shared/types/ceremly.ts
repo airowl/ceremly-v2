@@ -196,6 +196,10 @@ export interface CeremlyEvent {
   locationName: string | null
   locationAddress: string | null
   status: EventStatus
+  /** Piano richiesto per questo evento: 'free' = incluso, 'celebration' = sblocco Atelier. */
+  tier: 'free' | 'celebration'
+  /** Timestamp ISO (null se ancora bloccato). */
+  unlockedAt: string | null
   blocks: InviteBlock[]
   rsvpConfig: RsvpQuestion[]
   rsvpDeadline: string | null
