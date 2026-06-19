@@ -133,7 +133,12 @@ export async function deleteEventScoped(organizationId: string, id: string) {
     return rows[0];
 }
 
-/** Conta gli eventi "attivi" dell'org (status != 'closed') per il limite Free. */
+/**
+ * Conta gli eventi "attivi" dell'org per il limite Free: status != 'closed'
+ * AND tier = 'free'. Gli eventi sbloccati (tier='celebration') NON consumano lo
+ * slot Free (design §2.2): dopo aver pagato un evento, l'utente Free può crearne
+ * un altro di prova.
+ */
 export async function countActiveEventsByOrg(organizationId: string): Promise<number> {
     const db = getDB();
     const rows = await db
@@ -143,6 +148,7 @@ export async function countActiveEventsByOrg(organizationId: string): Promise<nu
             and(
                 eq(schema.events.organizationId, organizationId),
                 ne(schema.events.status, "closed"),
+                eq(schema.events.tier, "free"),
             ),
         );
     return rows[0]?.count ?? 0;
