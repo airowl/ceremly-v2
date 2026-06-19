@@ -99,7 +99,12 @@ NUXT_RESEND_API_KEY=...
 
 # Admin
 NUXT_ADMIN_API_KEY=...
+
+# Background jobs / Cron (optional Bearer auth for /api/cron/*)
+NUXT_CRON_SECRET=...
 ```
+
+> Security secrets are documented per-file in [docs/security/](docs/security/) — see [`NUXT_ADMIN_API_KEY`](docs/security/NUXT_ADMIN_API_KEY.md) and [`NUXT_CRON_SECRET`](docs/security/NUXT_CRON_SECRET.md).
 
 ## Development
 
@@ -144,7 +149,8 @@ pnpm auth:schema            # Regenerate Better Auth schema
 │   └── utils/              # Shared utilities
 ├── i18n/locales/           # Translation files (it-IT, en-US)
 ├── content/blogs/          # Blog posts (Markdown)
-├── docs/guide/             # Build guide (stack, conventions, phases)
+├── docs/base/              # Build guide (stack, conventions, phases)
+├── docs/security/          # Per-secret reference (admin API key, cron secret)
 └── drizzle/migrations/     # Generated migration files
 ```
 
