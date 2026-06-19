@@ -15,6 +15,7 @@ definePageMeta({
 const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
+const { isAtelier } = useSubscription();
 const { listGuests, updateGuest } = useEventGuests();
 const eventId = computed(() => String(route.params.id ?? ""));
 
@@ -155,7 +156,9 @@ function reminderStatusLine(r: LocalReminder): string {
 }
 
 // ─── Reminder: add / remove / defaults ───────────────────────────────
-const MAX_REMINDERS = 3;
+// -1 = illimitato (Atelier). Free/Celebrazione restano a 3 (anche celebration:
+// i reminder non sono sbloccabili one-time, solo Atelier li rende illimitati).
+const maxReminders = computed(() => (isAtelier.value ? Infinity : 3));
 
 function reminderDefaults(): Omit<LocalReminder, "id">[] {
     const title = eventData.value?.title ?? t("ceremly.event.reminders.defaultEventFallback");
@@ -188,7 +191,7 @@ function reminderDefaults(): Omit<LocalReminder, "id">[] {
 }
 
 function addReminder() {
-    if (reminders.value.length >= MAX_REMINDERS) return;
+    if (reminders.value.length >= maxReminders.value) return;
     const used = new Set(reminders.value.map(r => Number(r.daysBefore)));
     const defaults = reminderDefaults();
     const next = defaults.find(d => !used.has(d.daysBefore)) ?? defaults[reminders.value.length] ?? defaults[0]!;
@@ -504,7 +507,7 @@ function openDistribution() {
                     </div>
 
                     <button
-                        v-if="reminders.length > 0 && reminders.length < MAX_REMINDERS"
+                        v-if="reminders.length > 0 && reminders.length < maxReminders"
                         class="cer-btn ghost small"
                         style="align-self: flex-start;"
                         type="button"
@@ -512,8 +515,8 @@ function openDistribution() {
                     >
                         <CerIcon name="plus" :s="12" /> {{ $t('ceremly.event.reminders.btnAddReminder') }}
                     </button>
-                    <div v-else-if="reminders.length >= MAX_REMINDERS" class="small muted" style="align-self: flex-start;">
-                        {{ $t('ceremly.event.reminders.maxRemindersReached') }}
+                    <div v-else-if="reminders.length >= maxReminders" class="small muted" style="align-self: flex-start;">
+                        {{ $t('ceremly.event.reminders.limitAtelier') }}
                     </div>
                 </div>
 

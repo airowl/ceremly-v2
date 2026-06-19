@@ -3633,6 +3633,7 @@
         "btnAddOne": "Add a reminder",
         "btnAddReminder": "Add reminder",
         "maxRemindersReached": "Maximum 3 reminders per event — Ceremly's anti-spam policy",
+        "limitAtelier": "Your current plan includes up to 3 reminders. Switch to Atelier for unlimited reminders.",
         "daysBefore": "days before",
         "sentNotEditable": "Reminder already sent: cannot be edited",
         "toggleEnabled": "Enabled",
