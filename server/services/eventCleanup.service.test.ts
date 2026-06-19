@@ -11,6 +11,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { processStaleEventsWarn, processStaleEventsDelete } from "./eventCleanup.service";
+
 // vi.hoisted: le variabili mock devono essere inizializzate PRIMA che vi.mock
 // elabori le factory (che vengono hoistate in cima al file da Vitest).
 const mocks = vi.hoisted(() => ({
@@ -51,8 +53,6 @@ vi.mock("~~/server/utils/email", () => mocks.email);
 vi.mock("~~/server/emailTemplates", () => mocks.tpl);
 vi.mock("~~/server/utils/audit", () => mocks.audit);
 vi.mock("~~/server/utils/runtimeConfig", () => mocks.rc);
-
-import { processStaleEventsWarn, processStaleEventsDelete } from "./eventCleanup.service";
 
 beforeEach(() => {
     vi.clearAllMocks();

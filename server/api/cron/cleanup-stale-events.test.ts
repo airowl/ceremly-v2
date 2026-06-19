@@ -9,6 +9,9 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Import dopo i mock
+import handler from "./cleanup-stale-events.get";
+
 // --- vi.hoisted: inizializzato PRIMA che vi.mock hoisti le factory ---
 const mocks = vi.hoisted(() => {
     // defineEventHandler deve esistere su globalThis PRIMA dell'import del modulo.
@@ -30,9 +33,6 @@ vi.mock("~~/server/services/eventCleanup.service", () => ({
 vi.mock("~~/server/utils/requireAdminApiKey", () => ({
     requireAdminApiKey: mocks.requireAdminApiKey,
 }));
-
-// Import dopo i mock
-import handler from "./cleanup-stale-events.get";
 
 // Salva i valori originali dei globali che mutiamo in beforeEach
 const originalGetHeader = (globalThis as Record<string, unknown>).getHeader;
