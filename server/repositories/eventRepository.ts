@@ -211,6 +211,33 @@ export async function findResponsesForStats(organizationId: string, eventId: str
         );
 }
 
+// ---------------------------------------------------------------------------
+// Sblocco / re-lock one-time (Celebrazione) — SPEC §6.3/§6.4
+// ---------------------------------------------------------------------------
+
+/**
+ * Sblocca un evento Free → 'celebration' (pagamento one-time Creem completato).
+ * Idempotente by-construction: il predicato `tier='free'` evita doppie scritture.
+ * Org-scoped: l'org dev'essere quella dell'evento (dal metadata del checkout).
+ */
+export async function unlockEvent(
+    eventId: string,
+    organizationId: string,
+    creemOrderId: string,
+): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.events)
+        .set({ tier: "celebration", unlockedAt: new Date(), creemOrderId })
+        .where(
+            and(
+                eq(schema.events.id, eventId),
+                eq(schema.events.organizationId, organizationId),
+                eq(schema.events.tier, "free"),
+            ),
+        );
+}
+
 /**
  * Ospiti "da contattare": hanno aperto il link prima di `openedBefore`
  * (> 7 giorni fa) ma non hanno mai risposto. Max `limit`, i più vecchi prima.
