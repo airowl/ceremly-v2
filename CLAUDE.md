@@ -175,7 +175,7 @@ Before writing or modifying backend code, read `docs/base/STACK-AND-CONVENTIONS.
 
 ## Conventions
 
-- **Environment files**: `.env` (dev), `.env.production` (prod) — see `.env.example`
+- **Environment files**: `.env` (dev), `.env.prod` (prod) — see `.env.example`
 - **API pattern**: `server/api/[resource]/[action].[method].ts`
 - **i18n**: Use `const { t } = useI18n()` and `useLocalePath()` for routes
 - **Blog translations**: Linked via `translationSlug` field in content frontmatter

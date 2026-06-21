@@ -10,7 +10,7 @@
 
 1. **I background job non si eseguono in dev.** `dispatch()` pubblica sul cloud QStash, che fa callback a `NUXT_PUBLIC_BASE_URL=http://localhost:3000` → il cloud non può raggiungere `localhost` → i job sono pubblicati ma mai consegnati. Il path firma/retry non è mai testato in dev.
 2. **R2 in dev**: `NUXT_CF_R2_PUBLIC_URL` è un placeholder (`cdn.yourdomain.com`).
-3. **Isolamento risorse cloud**: i deploy Preview e prod **hanno bucket R2 separati** (risorse dedicate per ambiente).
+3. **Isolamento risorse cloud**: in passato gli ambienti non-prod e prod condividevano lo stesso bucket R2 → i file si mescolavano (problema storico; obiettivo: un bucket per ambiente, bucket R2 di dev ancora da configurare).
 
 ## Decisioni di architettura
 

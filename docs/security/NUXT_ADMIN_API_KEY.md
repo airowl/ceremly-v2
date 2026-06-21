@@ -71,7 +71,7 @@ Un confronto stringa `a === b` esce al primo carattere diverso: misurando i temp
 ## 3. Dove vive nel codice (catena completa)
 
 ```
-.env / .env.production
+.env / .env.prod
    │  NUXT_ADMIN_API_KEY=...
    ▼
 server/plugins/0.validate-env.ts        ← validata al BOOT (fatale in prod se mancante)
@@ -166,7 +166,7 @@ openssl rand -base64 32
 
 Incolla il risultato in:
 - `.env` → ambiente di sviluppo
-- `.env.production` → produzione
+- `.env.prod` → produzione
 - Variabili d'ambiente del progetto su Vercel (Settings → Environment Variables)
 
 `.env.example:56`
@@ -178,7 +178,7 @@ NUXT_ADMIN_API_KEY=your-secure-api-key-here      # Required for /api/admin/* end
 
 ## 7. Sicurezza e buone pratiche
 
-- **Non committarla mai.** Sta in `.env` / `.env.production`, entrambi gitignored. In repo c'è solo il placeholder in `.env.example`.
+- **Non committarla mai.** Sta in `.env` / `.env.prod`, entrambi gitignored. In repo c'è solo il placeholder in `.env.example`.
 - **Una chiave per ambiente.** Valore diverso tra dev e prod: se trapela quella di dev, la prod resta al sicuro.
 - **Trasmettila solo su HTTPS.** È una credenziale bearer-like: in chiaro su HTTP sarebbe intercettabile.
 - **Ruotala se sospetti una fuga.** Cambia il valore della env e rideploya; le vecchie richieste con la chiave precedente iniziano a ricevere `401`.

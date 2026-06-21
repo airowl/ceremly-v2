@@ -108,7 +108,7 @@ describe("createCelebrationCheckout", () => {
         expect(createCreemClient).toHaveBeenCalledOnce();
         expect(createCreemClient).toHaveBeenCalledWith({
             apiKey: "test_api_key",
-            testMode: true, // development !== production
+            testMode: true, // !isProdDeployment (scenario Preview: appEnv="production")
         });
 
         // rawCreateCheckout chiamato con l'argomento corretto (xApiKey + createCheckoutRequest)
