@@ -4,6 +4,7 @@
 // Destra: destinatari, esclusioni per ospite (remindersDisabled), card "Niente spam".
 // Salvataggio: PUT /api/events/:id/reminders (bulk) + PUT rsvpDeadline se cambiata.
 import type { CeremlyEvent, EventReminderData, GuestWithStatus } from "~~/shared/types/ceremly";
+import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerToggle from "~/components/ceremly/CerToggle.vue";
 
@@ -156,9 +157,9 @@ function reminderStatusLine(r: LocalReminder): string {
 }
 
 // ─── Reminder: add / remove / defaults ───────────────────────────────
-// -1 = illimitato (Atelier). Free/Celebrazione restano a 3 (anche celebration:
+// -1 = illimitato (Atelier). Free/Celebrazione restano a maxReminders (anche celebration:
 // i reminder non sono sbloccabili one-time, solo Atelier li rende illimitati).
-const maxReminders = computed(() => (isAtelier.value ? Infinity : 3));
+const maxReminders = computed(() => (isAtelier.value ? Infinity : CEREMLY_TIER_LIMITS.free.maxReminders));
 
 function reminderDefaults(): Omit<LocalReminder, "id">[] {
     const title = eventData.value?.title ?? t("ceremly.event.reminders.defaultEventFallback");

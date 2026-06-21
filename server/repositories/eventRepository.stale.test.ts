@@ -44,6 +44,8 @@ const EVT_NULL_DATE_DRAFT = "test-stale-null-date-draft";
 const EVT_NULL_DATE_CLOSED = "test-stale-null-date-closed";
 // Evento: futuro puro (nessuna rsvpDeadline), updatedAt vecchio → NON concluso → NON restituito
 const EVT_FUTURE_NO_DEADLINE = "test-stale-future-no-deadline";
+// Evento: eventDate IS NULL + status=closed, inattivo 35d, cleanupWarnedAt=NULL → DA warnare
+const EVT_NULL_DATE_STALE_NO_WARN = "test-stale-null-date-stale-no-warn";
 
 const ALL_EVT_IDS = [
     EVT_FUTURE_RSVP_CLOSED,
@@ -52,6 +54,7 @@ const ALL_EVT_IDS = [
     EVT_NULL_DATE_DRAFT,
     EVT_NULL_DATE_CLOSED,
     EVT_FUTURE_NO_DEADLINE,
+    EVT_NULL_DATE_STALE_NO_WARN,
 ];
 
 const BASE_VALUES = {
@@ -127,6 +130,15 @@ beforeAll(async () => {
             updatedAt: past(35),
             cleanupWarnedAt: null,
         },
+        {
+            ...BASE_VALUES,
+            id: EVT_NULL_DATE_STALE_NO_WARN,
+            slug: slugFor(EVT_NULL_DATE_STALE_NO_WARN),
+            status: "closed",
+            eventDate: null, // data ignota ma chiuso esplicitamente
+            updatedAt: past(35), // inattivo 35gg (> 30gg threshold)
+            cleanupWarnedAt: null, // mai avvisato → deve apparire in warn
+        },
     ]);
 });
 
@@ -160,16 +172,13 @@ describe("findStaleEventsToWarn", () => {
         expect(ids).not.toContain(EVT_NULL_DATE_DRAFT);
     });
 
-    it("(e) restituisce evento closed con eventDate IS NULL inattivo (edge case)", async () => {
-        // EVT_NULL_DATE_CLOSED ha cleanupWarnedAt impostato → NON in warn (già avvisato).
-        // Per testare l'edge case "null date + closed" in warn, verifichiamo che
-        // EVT_NULL_DATE_DRAFT (draft) non appaia mentre EVT_NULL_DATE_CLOSED non appare
-        // perché ha già warnedAt. Il predicato è testato correttamente da (d).
-        // Verifica separata: creare un fixture closed+nullDate+noWarn richiederebbe un
-        // evento aggiuntivo; è coperto implicitamente dai test (b) e (c).
-        // Test positivo: EVT_NULL_DATE_CLOSED non è in warn (già avvisato).
+    it("(e) restituisce evento closed con eventDate IS NULL inattivo e non ancora avvisato (nullDateStale warn path)", async () => {
+        // EVT_NULL_DATE_STALE_NO_WARN: status=closed, eventDate=NULL, updatedAt ~35gg fa,
+        // cleanupWarnedAt=NULL → DEVE apparire in warn (percorso nullDateStale positivo).
+        // EVT_NULL_DATE_CLOSED (cleanupWarnedAt impostato) NON deve apparire (già avvisato).
         const results = await findStaleEventsToWarn(now);
         const ids = results.map((r) => r.id);
+        expect(ids).toContain(EVT_NULL_DATE_STALE_NO_WARN);
         expect(ids).not.toContain(EVT_NULL_DATE_CLOSED);
     });
 
