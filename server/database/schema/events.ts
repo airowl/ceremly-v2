@@ -38,10 +38,13 @@ export const events = pgTable(
         // ('free' | 'celebration'); 'atelier' NON è un valore di tier (è una
         // proprietà dell'org/owner risolta a runtime). creemOrderId ricollega un
         // refund.created all'evento da re-lockare; cleanupWarnedAt traccia l'email
-        // di avviso del cron di cleanup.
+        // di avviso del cron di cleanup. creemCheckoutId è persistito alla creazione
+        // del checkout (Fase 7, fix critical): permette la reconciliation via
+        // retrieveCheckout(checkoutId) quando il webhook fire-and-forget perde lo sblocco.
         tier: text("tier").notNull().default("free"),
         unlockedAt: timestamp("unlocked_at"),
         creemOrderId: text("creem_order_id"),
+        creemCheckoutId: text("creem_checkout_id"),
         cleanupWarnedAt: timestamp("cleanup_warned_at"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")

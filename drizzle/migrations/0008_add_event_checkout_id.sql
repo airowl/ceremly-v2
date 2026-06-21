@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "creem_checkout_id" text;
