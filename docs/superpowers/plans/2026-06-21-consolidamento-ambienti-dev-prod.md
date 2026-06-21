@@ -95,6 +95,8 @@ git commit -m "fix(db): tooling cerca .env.prod non .env.production"
 
 Razionale del test: oggi i mock usano `appEnv: "development"`. Li cambiamo a `appEnv: "production"` (= NODE_ENV su Vercel) **+** `isProdDeployment: false` per simulare l'ambiente **Preview** — esattamente il caso del buco. Con il codice attuale (`testMode: appEnv !== "production"`) `testMode` risulta `false` e l'asserzione `testMode: true` fallisce; dopo il fix (`testMode: !isProdDeployment`) risulta `true`.
 
+> **Limite del test (importante):** questi test mockano interamente `runtimeConfig`, quindi provano solo che i 3 consumatori leggono correttamente `isProdDeployment`. **Non** provano che `process.env.VERCEL_ENV` si risolva al valore giusto a runtime su Vercel (la detection dell'ambiente è proprio ciò che il mock sostituisce). Quella risoluzione va confermata su un deploy reale — vedi sezione infra punto **F**, da fare prima della key Creem live.
+
 - [ ] **Step 1: Aggiorna il mock in `checkout.service.test.ts` per simulare Preview**
 
 In `server/services/checkout.service.test.ts`, sostituisci il blocco `public` del mock (righe 30-33):
@@ -302,14 +304,24 @@ Sostituisci `(prod=main, dev/staging=dev)` con `(prod=main, dev=dev)`.
 - Riga 106: intestazione colonna `| ... | Prod | Dev/Staging |` → `| ... | Prod | Dev |`.
 - Riga 115: `prod ceremly.com, dev/staging airowlgasga.dev` → `prod ceremly.com, dev airowlgasga.dev`.
 
-- [ ] **Step 5: `docs/base/LOCAL-DEV-SERVICES.md` (righe 5, 26, 37, 49, 55)**
+- [ ] **Step 5: `docs/base/LOCAL-DEV-SERVICES.md` (righe 5, 26, 37, 48-50, 52, 55)**
 
-Riscrivi i riferimenti a un ambiente "staging" separato verso il modello a 2 ambienti:
 - Riga 5: `staging e prod sono tutto cloud` → `i deploy Preview e prod sono tutto cloud`.
 - Riga 26: colonna `test/staging (Vercel)` → `dev (Vercel Preview)`.
-- Riga 37: `Modello a 2 account: uno non-prod (dev + test/staging), uno prod` → `Modello a 2 account: uno non-prod (dev locale + Preview), uno prod`.
-- Riga 49: `staging e prod condividono lo stesso bucket R2` → `i Preview e la prod condividono ... ` (mantieni il senso; se la frase descrive un problema già risolto, adatta al fatto che non esiste più staging).
-- Riga 55: `- staging: bucket + public URL test` → rimuovi o riconduci all'ambiente dev/Preview.
+- Riga 37: `Modello a **2 account**: uno *non-prod* (dev + test/staging), uno *prod* separato.` → `Modello a **2 account**: uno *non-prod* (dev locale + Preview), uno *prod* separato.`
+- Righe 48-50, sostituisci:
+```
+Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. **Eccezione:
+staging e prod condividono lo stesso bucket R2** → i file si mescolano. Inoltre in dev
+il public URL R2 è un placeholder.
+```
+con:
+```
+Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. In dev
+il public URL R2 è un placeholder.
+```
+- Riga 52: `1. Crea un bucket R2 **dev** e uno **test** (oltre a quello prod esistente).` → `1. Crea un bucket R2 **dev** (oltre a quello prod esistente).`
+- Riga 55: elimina interamente la riga `   - staging: bucket + public URL **test**, distinti da prod.`
 
 - [ ] **Step 6: `docs/superpowers/specs/2026-06-18-local-dev-services-design.md` (righe 11, 17, 22, 96, 101, 108)**
 
@@ -344,6 +356,7 @@ Queste **non** sono task di codice: sono azioni su Vercel/Cloudflare/Neon. L'ord
 - [ ] **C.** Rimuovere l'ambiente Vercel `Preview (staging)` (39 var branch-scoped al git branch `staging`) + l'eventuale branch git `staging`.
 - [ ] **D.** Allineare le env Vercel **Preview** ai valori dev: `NUXT_ENV=dev`, `NUXT_PUBLIC_BASE_URL=https://dev.ceremly.com`, DB branch dev, R2/Redis dev, Creem **test** key. Verificare che `VERCEL_ENV` NON sia impostato a mano (deve restare quello auto di Vercel).
 - [ ] **E.** (debito collaterale, correlato) Riconciliare le env Creem stale su Production + Preview: rimuovere i 6 `NUXT_CREEM_PRODUCT_ID_STARTER/PREMIUM/AGENCY_{MONTH,YEAR}`, aggiungere `CELEBRATION`/`ATELIER`; sostituire i placeholder con valori reali **prima** del go-live. **Vincolo:** la key Creem **live** su Production solo dopo che il Task 2 è in `main`.
+- [ ] **F.** **Verifica runtime del flag billing (bloccante prima della key Creem live).** I test verdi del Task 2 NON coprono la risoluzione di `VERCEL_ENV` a runtime (la mockano). Quindi: (1) su Vercel, `Project Settings → Environment Variables → "Automatically expose System Environment Variables"` deve essere **ON** (altrimenti `VERCEL_ENV` non raggiunge il runtime e `isProdDeployment` sarebbe sempre `false`); (2) con un campo di debug temporaneo o un `console.log`, conferma **positivamente** che `runtimeConfig.public.isProdDeployment === true` su un deploy **Production** e `=== false` su un deploy **Preview**; (3) rimuovi il debug dopo la conferma.
 
 ---
 
