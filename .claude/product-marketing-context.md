@@ -1,6 +1,6 @@
 # Product Marketing Context
 
-*Last updated: 2026-06-16 — V1 auto-draft (da PRD-Ceremly.md + copy sito pubblico). Da rivedere e correggere.*
+*Last updated: 2026-06-21 — verificato contro sito pubblico live + codice (i18n `it-IT.json`, `shared/constants/pricing.ts`, pagine `app/pages/`). Allineato al posizionamento Ceremly attuale.*
 
 ## Product Overview
 **One-liner:** Inviti digitali e RSVP intelligenti per gli eventi che contano.
@@ -12,9 +12,11 @@
 **Product type:** SaaS B2C-first (organizzatore privato), con un tier B2B per event/wedding planner.
 
 **Business model:** Freemium con **pagamento una tantum per evento** (no percentuali sugli ospiti, no costo per RSVP) + un abbonamento mensile per chi organizza per lavoro.
-- **Free · €0** — fino a 30 ospiti, 1 evento attivo, 3 modelli, RSVP via link, dashboard base.
-- **Celebrazione · €39 una tantum/evento** *(più scelto)* — fino a 250 ospiti, tutti i modelli + brand colors, WhatsApp & email personalizzati, menu/allergie/plus-one, promemoria automatici, export per catering.
+- **Free · €0** — fino a 30 ospiti, 1 evento attivo, 3 modelli, RSVP via link, dashboard base. Nessuna carta richiesta.
+- **Celebrazione · €39 una tantum/evento** *(più scelto)* — 1 evento per acquisto, fino a 250 ospiti, tutti i modelli + brand colors, WhatsApp & email personalizzati, menu/allergie/plus-one, promemoria automatici, export per catering.
 - **Atelier · €24/mese (per planner)** — eventi e ospiti illimitati, workspace col proprio logo, domini personalizzati, API & integrazioni catering, account team, supporto prioritario.
+
+**Dettagli commerciali (verificati su /pricing):** evento consultabile 12 mesi dopo la data (lista + risposte + export inclusi); rimborso completo entro 30 giorni se gli inviti non sono ancora stati inviati; fattura elettronica per ogni acquisto (addebito SDI ricorrente per Atelier); l'upgrade Free→Celebrazione conserva tutto il lavoro già fatto (invito, lista, risposte).
 
 ## Target Audience
 **Target companies:** Prevalentemente consumatori privati (B2C). Il segmento B2B è il singolo professionista: wedding/event planner che gestisce eventi per clienti.
@@ -35,7 +37,7 @@
 |---------|-------------|-----------|------------------|
 | **Giulia, 31** — sposa, Marketing Manager, Milano (primary) | Sentirsi organizzata e in controllo, godersi il processo, estetica curata | 120 invitati, save-the-date su WhatsApp senza tracking, Excel aggiornato a mano, gruppi diversi (cerimonia vs solo ricevimento) | Un solo strumento: crea, manda, raccoglie, vede tutto in dashboard. Se in 5 minuti non lo capisce, lo abbandona → semplicità radicale. |
 | **Marco, 55** — padre, Commercialista, Napoli (secondary) | Fare onore al figlio, semplicità estrema, niente sorprese al ristorante | Poco tecnologico, 50-60 invitati via WhatsApp individuali, deve dare i numeri al ristorante con 2 settimane d'anticipo | "Mando un link, le persone rispondono, io vedo chi viene." Zero curva di apprendimento. |
-| **Wedding/event planner** (B2B, tier Atelier) | Gestire più eventi, brand proprio davanti al cliente | Strumenti consumer non scalano su più eventi e non sono white-label | Eventi illimitati, workspace col proprio logo, domini custom. |
+| **Wedding/event planner** (B2B, tier Atelier) | Gestire più eventi, brand proprio davanti al cliente | Strumenti consumer non scalano su più eventi e non sono white-label | Eventi illimitati, workspace col proprio logo, domini custom. Landing `/planner`: "Dodici eventi in parallelo. Un solo pannello." |
 
 ## Problems & Pain Points
 **Core problem:** Organizzare un evento privato in Italia significa oggi gestire inviti e conferme con un mix caotico: WhatsApp individuali (nessun tracking), Google Forms generici (nessuna logica condizionale), Excel manuale, e rincorse telefoniche. Oltre i 30-40 ospiti diventa insostenibile.
@@ -91,6 +93,7 @@
 - "Il ristorante mi chiede i numeri e io non li ho."
 
 **How they describe us / value (copy verificata dal sito):**
+- "Gli inviti che contano davvero." (headline hero homepage)
 - "Smetti di rincorrere conferme su WhatsApp."
 - "Una dashboard che ti dice chi viene davvero."
 
@@ -115,15 +118,21 @@
 **Personality:** Premuroso · Pragmatico · Italiano (culturalmente, non solo linguisticamente) · Curato · Onesto.
 
 ## Proof Points
+**Trust signals reali oggi sul sito (usabili in copy):**
+- Hero homepage: "Nessuna carta richiesta · 30 ospiti gratis · Ospiti senza account".
+- Pricing: "Fatturazione elettronica · Server in UE · GDPR · Cancella quando vuoi".
+- Footer: "Server in UE · GDPR compliant · pagamenti sicuri via Creem".
+- Esperienza ospite (claim reale, time-based): "RSVP in meno di 60 secondi, senza account, nessuna app".
+
 **Metrics (target da PRD — nessun dato reale citabile ancora):**
-- Esperienza ospite: RSVP completabile in < 60 secondi, senza account.
 - Target attivazione: 60% degli iscritti crea un invito e invia almeno 1 link entro 30 giorni.
 - Target engagement: >70% link aperti / inviati; >60% RSVP completati / link aperti.
-- ⚠️ NON usare numeri inventati. Il badge "142 eventi gestiti" e il testimonial "Verona · 168 ospiti" presenti nel sito sono FITTIZI → da rimuovere dal sito o sostituire con dati reali prima del lancio.
+- ⚠️ NON usare numeri inventati come social proof. I vecchi badge fittizi ("142 eventi gestiti", testimonial "Verona · 168 ospiti") sono GIÀ STATI RIMOSSI dal sito (bonifica honesty 2026-06-17) — non reintrodurli.
+- ⚠️ Il mockup dashboard nell'hero mostra "+12 oggi · 89% inviti aperti": è UI decorativa di esempio, NON una metrica reale → non citarla come dato.
 
 **Customers:** Beta privata (amici e conoscenti che organizzano eventi). Nessun logo pubblico ancora.
 
-**Testimonials:** Nessun testimonial reale ancora. ⚠️ La citazione "Verona · 168 ospiti" oggi sul sito è FITTIZIA → non riutilizzare, sostituire con feedback reale dei beta tester.
+**Testimonials:** Nessun testimonial reale ancora. La vecchia citazione fittizia è stata rimossa dal sito. Quando arriveranno feedback reali dei beta tester, inserirli qui.
 
 **Value themes:**
 | Theme | Proof |
@@ -136,9 +145,13 @@
 ## Goals
 **Business goal:** Diventare il riferimento in Italia per gli inviti digitali multi-evento. Target 12 mesi: ~€3.000 MRR-equivalente (acquisti one-time annualizzati); conversione free→paid 8% entro 6 mesi.
 
-**Conversion action:** Registrazione → creazione del primo invito → invio del primo link (attivazione). CTA primaria pubblica: "Crea il tuo primo invito — gratis".
+**Conversion action:** Registrazione → creazione del primo invito → invio del primo link (attivazione). CTA primaria pubblica: "Crea il tuo primo invito — gratis". CTA secondaria: "Invito d'esempio". Badge stato attuale nel hero: "v0.1 · aperto agli organizzatori italiani".
 
 **Current metrics:** Fase beta (MVP Phase 1). North Star: numero di RSVP completati con successo al mese.
+
+## Stato pagine pubbliche (2026-06-21)
+Live: home (`/`), `/come-funziona`, `/funzionalita`, `/esempi`, `/modelli`, `/matrimonio`, `/battesimi`, `/compleanni`, `/planner` (B2B), `/prezzi`, `/rsvp-guide`, blog.
+⚠️ **Da sistemare:** `/about` (Chi siamo) è linkata nel footer ma la pagina NON esiste ancora → link rotto, da creare o rimuovere prima del lancio.
 
 ---
 

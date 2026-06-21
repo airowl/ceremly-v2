@@ -84,11 +84,11 @@ The backend runs on **Vercel as serverless functions** — no persistent process
 - Security headers exempt the Creem webhook and the Nuxt Icon proxy
 
 ### Payment Architecture (Creem)
-- Plans: `starter`, `premium`, `agency`
+- Plans: `free`, `celebration` (one-time per evento), `atelier` (recurring mensile, per planner)
 - Single provider, no branching logic
 - `persistSubscriptions: true` auto-manages the `creem_subscription` table
 - Webhook auto-registered at `/api/auth/creem/webhook` by the Better Auth plugin
-- Product IDs via env: `NUXT_CREEM_PRODUCT_ID_{STARTER|PREMIUM|AGENCY}_{MONTH|YEAR}`
+- Product IDs via env: `NUXT_CREEM_PRODUCT_ID_{CELEBRATION|ATELIER}`
 - Plan limits centralized in `shared/constants/pricing.ts` (`-1` = unlimited), enforced per organization
 - Customer portal via `creem.createPortal()` for upgrade/downgrade
 
