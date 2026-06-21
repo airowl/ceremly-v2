@@ -13,7 +13,6 @@ import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
 import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
-import { canAddTeamMember, canCreateOrganization, resolveOrgOwnerId } from "../services/planLimit.service";
 import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.service";
 import { setupCreem } from "./creem";
 import { runtimeConfig } from "./runtimeConfig";
@@ -376,30 +375,6 @@ export const createBetterAuth = () =>
                     }
                 },
                 organizationHooks: {
-                    beforeCreateOrganization: async (data) => {
-                        // Gate plan-limit org-creation. È il SOLO punto efficace: il frontend
-                        // crea via client.organization.create() (endpoint plugin), non via la
-                        // route POST /api/organizations → il gate nel service non basta.
-                        // Mirror di beforeCreateInvitation. canCreateOrganization conta le org
-                        // OWNED (role=owner): un utente nuovo/self-heal ha <limite → mai bloccato.
-                        const check = await canCreateOrganization(data.user.id);
-                        if (!check.allowed) {
-                            throw new APIError("FORBIDDEN", {
-                                message: `Organization limit reached (${check.current}/${check.limit})`,
-                            });
-                        }
-                    },
-                    beforeCreateInvitation: async (data) => {
-                        const ownerId = await resolveOrgOwnerId(data.invitation.organizationId);
-                        if (ownerId) {
-                            const check = await canAddTeamMember(ownerId, data.invitation.organizationId);
-                            if (!check.allowed) {
-                                throw new APIError("FORBIDDEN", {
-                                    message: `Team member limit reached (${check.current}/${check.limit})`,
-                                });
-                            }
-                        }
-                    },
                     afterCreateInvitation: async (data) => {
                         await logAudit(null, "team.member_invited", {
                             userId: data.inviter.id,

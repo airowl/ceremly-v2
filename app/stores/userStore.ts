@@ -1,36 +1,7 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import type { PlanLimits } from "~~/shared/constants/pricing";
-
-// ─── Limits Response Types ──────────────────────────────────────────
-export interface ResourceLimit {
-    current: number;
-    limit: number;
-    allowed: boolean;
-}
-
-export interface StorageLimit {
-    currentMB: number;
-    limitMB: number;
-    allowed: boolean;
-}
-
-export interface LimitsResponse {
-    plan: string;
-    limits: PlanLimits;
-    usage: {
-        organizations: ResourceLimit;
-        pages: ResourceLimit | null;
-        team: ResourceLimit | null;
-        storage: StorageLimit | null;
-    };
-}
+import { computed } from "vue";
 
 export const useUserStore = defineStore("user", () => {
-    // ─── State ───────────────────────────────────────────────────────
-    const limitsData = ref<LimitsResponse | null>(null);
-    const _lastEventId = ref<string | undefined>(undefined);
-
     // ─── Computed from useAuth() ─────────────────────────────────────
     const getUser = computed(() => {
         if (import.meta.server) return null;
@@ -111,16 +82,12 @@ export const useUserStore = defineStore("user", () => {
     }
 
     function forceLogout() {
-        limitsData.value = null;
-        _lastEventId.value = undefined;
+        // Stato locale già derivato da useAuth(): nulla da resettare qui.
     }
 
     async function logout() {
         if (import.meta.server) throw new Error('Logout not available on server');
         const { signOut } = useAuth();
-
-        limitsData.value = null;
-        _lastEventId.value = undefined;
 
         await signOut({ redirectTo: '/login' });
     }
@@ -132,103 +99,11 @@ export const useUserStore = defineStore("user", () => {
         return subscription.value;
     }
 
-    // ─── Plan Limits (Single Consolidated Call) ──────────────────────
-
-    /**
-     * Fetch all limits in one call. Caches the result.
-     * - Without eventId → plan info + events count
-     * - With eventId → plan info + events count + event-scoped (pages, team, storage)
-     */
-    async function fetchLimits(eventId?: string): Promise<LimitsResponse | null> {
-        if (import.meta.server) return null;
-
-        try {
-            const data = await $fetch<LimitsResponse>('/api/limits', {
-                query: eventId ? { eventId } : undefined,
-            });
-
-            limitsData.value = data;
-            _lastEventId.value = eventId;
-            return data;
-        } catch (error) {
-            console.warn('fetchLimits error:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Re-fetch limits with the last used eventId
-     */
-    async function refreshLimits(): Promise<LimitsResponse | null> {
-        return fetchLimits(_lastEventId.value);
-    }
-
-    /**
-     * Invalidate cached limits
-     */
-    function invalidateLimits() {
-        limitsData.value = null;
-        _lastEventId.value = undefined;
-    }
-
-    /**
-     * Check if user can create a new organization.
-     * Uses cached data if available, otherwise fetches.
-     */
-    async function checkOrgCreationLimit(): Promise<ResourceLimit> {
-        if (import.meta.server) return { allowed: false, current: 0, limit: 0 };
-
-        if (!limitsData.value) {
-            await fetchLimits();
-        }
-
-        // Defensive read: 1c renames `usage.events` → `usage.organizations` server-side.
-        const usage = limitsData.value?.usage as Record<string, ResourceLimit> | undefined;
-        return usage?.organizations ?? usage?.events ?? { allowed: false, current: 0, limit: 0 };
-    }
-
-    // ─── Permission Helpers ──────────────────────────────────────────
-
-    function isReadOnlyPlan(): boolean {
-        const sub = subscription.value;
-        if (!sub) return true;
-        const plan = sub.plan;
-        return !plan;
-    }
-
-    /**
-     * Validate if user can downgrade to a new plan
-     */
-    async function validatePlanDowngrade(newPlan: string): Promise<{
-        allowed: boolean;
-        reason?: string;
-        violations?: Array<{ resource: string; current: number; limit: number; message: string }>
-    }> {
-        if (import.meta.server) return { allowed: false, reason: 'Not available on server' };
-
-        try {
-            const data = await $fetch<{
-                allowed: boolean;
-                reason?: string;
-                violations?: Array<{ resource: string; current: number; limit: number; message: string }>
-            }>(`/api/limits/validate-downgrade`, {
-                method: 'POST',
-                body: { newPlan }
-            });
-            return data;
-        } catch (error) {
-            console.warn('validatePlanDowngrade error:', error);
-            return { allowed: false, reason: 'Validation error' };
-        }
-    }
-
     return {
         // State (computed from useAuth)
         user,
         isAuthenticated,
         subscription,
-        // Limits state
-        limitsData,
         // Getters
         getUser,
         getIsAuthenticated,
@@ -241,13 +116,5 @@ export const useUserStore = defineStore("user", () => {
         logout,
         forceLogout,
         fetchSubscription,
-        // Limits actions
-        fetchLimits,
-        refreshLimits,
-        invalidateLimits,
-        checkOrgCreationLimit,
-        validatePlanDowngrade,
-        // Permission helpers
-        isReadOnlyPlan,
     };
 });

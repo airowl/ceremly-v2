@@ -7,9 +7,7 @@
  *   3. altrimenti                                        -> free (30).
  *
  * isOrgAtelier deriva il tier dalla SUBSCRIPTION dell'owner via
- * getPlanFromProductId (discriminante Ceremly), NON da getUserPlanInfo().plan
- * (che resta B2B: Atelier->'agency'). Mirror di isOrgFreePlan. Così il sistema
- * gate org/team legacy resta intatto.
+ * getPlanFromProductId (discriminante Ceremly). Mirror di isOrgFreePlan.
  */
 import type { CeremlyTier } from "~~/shared/constants/pricing";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";

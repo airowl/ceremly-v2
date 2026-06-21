@@ -3,8 +3,7 @@
  *
  * Le MUTAZIONI org delegano al plugin Better Auth (auth.api.*): il plugin possiede
  * la creazione della member-row owner, lo slug, l'org attiva e l'authz role-based
- * sull'org identificata dal path-id. Le LETTURE usano i repository.
- * Gate plan-limit (canCreateOrganization) PRIMA della creazione. Audit su ogni scrittura.
+ * sull'org identificata dal path-id. Le LETTURE usano i repository. Audit su ogni scrittura.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type {
@@ -15,7 +14,6 @@ import { useServerAuth } from "../utils/auth";
 import { findOrganizationsForUser } from "../repositories/organizationRepository";
 import { findMembers } from "../repositories/memberRepository";
 import { findPendingInvitations } from "../repositories/invitationRepository";
-import { canCreateOrganization } from "./planLimit.service";
 import { generateUniqueOrgSlug } from "./org.service";
 import { logAudit } from "../utils/audit";
 
@@ -25,20 +23,12 @@ export async function listOrganizations(userId: string) {
     return { organizations };
 }
 
-/** Crea un'org (gate plan-limit + plugin) + audit. */
+/** Crea un'org (plugin Better Auth) + audit. */
 export async function createOrganization(
     event: H3Event<EventHandlerRequest>,
     userId: string,
     data: CreateOrganizationInput,
 ) {
-    const limit = await canCreateOrganization(userId);
-    if (!limit.allowed) {
-        throw createError({
-            statusCode: 403,
-            statusMessage: `Limite organizzazioni raggiunto (${limit.current}/${limit.limit})`,
-        });
-    }
-
     const auth = useServerAuth();
     const created = await auth.api.createOrganization({
         body: {

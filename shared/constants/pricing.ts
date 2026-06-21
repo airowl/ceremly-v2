@@ -1,176 +1,22 @@
 /**
- * Static pricing plans data
- * Used by both frontend and backend.
+ * Modello pricing Ceremly — Free / Celebrazione / Atelier.
+ * Usato sia dal frontend (usePricing) sia dal backend (eventAccess.service).
  *
- * Note: PRICING_PLANS.creemProductIds leggono env vars legacy (NUXT_CREEM_PRODUCT_ID_*_{MONTH,YEAR})
- * non più presenti in .env.example — i valori sono stringa vuota per design.
- * Il checkout B2B via product-id è dormiente; PRICING_PLANS è mantenuto per il gate org/team attivo.
- * Il modello pricing reale Ceremly (Free/Celebrazione/Atelier) usa CEREMLY_TIER_LIMITS (sotto).
+ * - Free / Celebration sono stati PER-EVENTO (campo events.tier).
+ * - Atelier è una proprietà dell'org/owner (subscription ricorrente attiva),
+ *   risolta a runtime da isOrgAtelier via getPlanFromProductId.
  */
 
-export interface PlanLimits {
-    /** Maximum number of organizations (-1 = unlimited) */
-    max_organizations: number;
-    /** Maximum storage in MB (-1 = unlimited) */
-    storage_mb: number;
-    /** Maximum team members (-1 = unlimited) */
-    team_members: number;
-}
-
-export interface PlanPricing {
-    /** Monthly price in cents (EUR) */
-    monthly: number;
-    /** Yearly price in cents (EUR) */
-    yearly: number;
-}
-
-export interface PlanFeature {
-    /** Feature key for i18n */
-    key: string;
-    /** Fallback text if i18n not available */
-    text: string;
-}
-
-export interface PricingPlan {
-    id: string;
-    name: string;
-    description: string;
-    limits: PlanLimits;
-    pricing: PlanPricing;
-    features: PlanFeature[];
-    order: number;
-    /** Creem product IDs — populated from env server-side, empty on client */
-    creemProductIds: {
-        monthly: string;
-        yearly: string;
-    };
-}
-
-export const PRICING_PLANS: Record<string, PricingPlan> = {
-    starter: {
-        id: "starter",
-        name: "Starter",
-        description: "Per progetti personali e piccoli team",
-        limits: {
-            max_organizations: 2,
-            storage_mb: 500,
-            team_members: 1,
-        },
-        pricing: {
-            monthly: 900,
-            yearly: 9000,
-        },
-        features: [
-            { key: "plan.starter.organizations", text: "2 organizzazioni" },
-            { key: "plan.starter.team", text: "1 membro del team" },
-            { key: "plan.starter.emails", text: "200 email al mese" },
-            { key: "plan.starter.storage", text: "500 MB di storage" },
-            { key: "plan.starter.support", text: "Supporto email" },
-        ],
-        order: 1,
-        // Legacy B2B env vars — non più presenti in .env.example e non provisionate.
-        // I valori sono volutamente stringa vuota; il checkout B2B via product-id è dormiente.
-        // PRICING_PLANS è mantenuto perché il gate org/team (canCreateOrganization,
-        // canAddTeamMember, /api/limits/*) è ancora attivo — rimozione fuori scope.
-        creemProductIds: {
-            monthly: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH || "",
-            yearly: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_YEAR || "",
-        },
-    },
-    premium: {
-        id: "premium",
-        name: "Premium",
-        description: "Per team in crescita e startup",
-        limits: {
-            max_organizations: 5,
-            storage_mb: 2000,
-            team_members: 5,
-        },
-        pricing: {
-            monthly: 3900,
-            yearly: 39000,
-        },
-        features: [
-            { key: "plan.premium.organizations", text: "5 organizzazioni" },
-            { key: "plan.premium.team", text: "5 membri del team" },
-            { key: "plan.premium.emails", text: "2000 email al mese" },
-            { key: "plan.premium.storage", text: "2 GB di storage" },
-            { key: "plan.premium.support", text: "Supporto prioritario" },
-        ],
-        order: 2,
-        creemProductIds: {
-            monthly: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_MONTH || "",
-            yearly: process.env.NUXT_CREEM_PRODUCT_ID_PREMIUM_YEAR || "",
-        },
-    },
-    agency: {
-        id: "agency",
-        name: "Agency",
-        description: "Per agenzie e aziende con più organizzazioni",
-        limits: {
-            max_organizations: -1,
-            storage_mb: 10000,
-            team_members: -1,
-        },
-        pricing: {
-            monthly: 4900,
-            yearly: 49000,
-        },
-        features: [
-            { key: "plan.agency.organizations", text: "Organizzazioni illimitate" },
-            { key: "plan.agency.team", text: "Membri del team illimitati" },
-            { key: "plan.agency.emails", text: "Email illimitate" },
-            { key: "plan.agency.storage", text: "10 GB di storage" },
-            { key: "plan.agency.support", text: "Supporto 24/7" },
-            { key: "plan.agency.api", text: "Accesso API" },
-        ],
-        order: 3,
-        creemProductIds: {
-            monthly: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_MONTH || "",
-            yearly: process.env.NUXT_CREEM_PRODUCT_ID_AGENCY_YEAR || "",
-        },
-    },
-};
-
-/** Plans sorted by order, as array */
-export const PRICING_PLANS_LIST: PricingPlan[] = Object.values(PRICING_PLANS)
-    .sort((a, b) => a.order - b.order);
-
-/**
- * Get limits for a specific plan.
- * Falls back to starter if plan not found.
- */
-export function getPlanLimits(planName: string): PlanLimits {
-    return PRICING_PLANS[planName]?.limits ?? PRICING_PLANS.starter!.limits;
-}
-
-/** Check if a limit value means unlimited */
+/** Check if a limit value means unlimited (sentinella -1, model-agnostic). */
 export function isUnlimited(value: number): boolean {
     return value === -1;
 }
 
-/** Check if usage exceeds limit (respects unlimited) */
+/** Check if usage exceeds limit (respects unlimited). */
 export function exceedsLimit(usage: number, limit: number): boolean {
     if (isUnlimited(limit)) return false;
     return usage >= limit;
 }
-
-/** Calculate yearly savings percentage */
-export function calculateYearlySavings(
-    monthlyPrice: number,
-    yearlyPrice: number,
-): number {
-    if (monthlyPrice === 0) return 0;
-    const yearlyEquivalent = monthlyPrice * 12;
-    const savings = ((yearlyEquivalent - yearlyPrice) / yearlyEquivalent) * 100;
-    return Math.round(savings);
-}
-
-// ============================================================================
-// Modello pricing reale Ceremly (Fase 1) — Free / Celebrazione / Atelier.
-// Affiancato al modello boilerplate starter/premium/agency (B2B legacy ancora
-// cablato nei gate org/team — rimozione FUORI SCOPE).
-// ============================================================================
 
 /**
  * I tre tier di Ceremly.
@@ -203,4 +49,3 @@ export const CEREMLY_TIER_LIMITS: Record<
 export const CELEBRATION_PRICE_CENTS = 3900;
 /** Prezzo Atelier (recurring mensile, centesimi EUR). */
 export const ATELIER_PRICE_CENTS = 2400;
-
