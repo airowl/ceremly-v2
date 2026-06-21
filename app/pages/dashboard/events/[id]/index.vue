@@ -26,6 +26,7 @@ definePageMeta({
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const eventId = computed(() => String(route.params.id));
 
 // ─── Breadcrumbs + contesto evento sidebar (shape del layout ceremly) ──
@@ -516,7 +517,27 @@ function goToGuests(to: string) {
 }
 
 // ─── Lifecycle ─────────────────────────────────────────────────────────
+
+/**
+ * Se l'utente torna dal checkout Creem con ?unlocked=true, riconcilia l'unlock
+ * una volta sola (il webhook è fire-and-forget e potrebbe aver perso il lavoro).
+ * Resiliente: un errore di rete non blocca il caricamento della pagina.
+ */
+async function maybeReconcileUnlock() {
+    if (route.query.unlocked !== "true") return;
+    // Rimuovi il parametro subito (evita ri-esecuzione su refresh manuale)
+    void router.replace({ query: { ...route.query, unlocked: undefined } });
+    try {
+        await $fetch(`/api/events/${eventId.value}/reconcile-unlock`, { method: "POST" });
+        // Ricarica l'evento per riflettere il nuovo tier (es. 'celebration')
+        await loadEvent();
+    } catch {
+        // Silenzioso: la pagina si carica normalmente, il tier sarà aggiornato al prossimo load
+    }
+}
+
 onMounted(() => {
+    void maybeReconcileUnlock();
     void refreshStats();
     void loadEvent();
     void loadGuests();
