@@ -212,6 +212,54 @@ export async function findResponsesForStats(organizationId: string, eventId: str
 }
 
 // ---------------------------------------------------------------------------
+// Checkout id persistence (SPEC §6.2 / fix 7.2) — per reconciliation
+// ---------------------------------------------------------------------------
+
+/**
+ * Persiste il checkoutId Creem sull'evento al momento della creazione del checkout.
+ * Idempotente: la UPDATE senza WHERE tier limita l'effetto a eventi esistenti dell'org.
+ * Il checkoutId è poi usato da reconcileEventUnlock per la recovery via retrieveCheckout.
+ */
+export async function setEventCheckoutId(
+    eventId: string,
+    organizationId: string,
+    checkoutId: string,
+): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.events)
+        .set({ creemCheckoutId: checkoutId })
+        .where(
+            and(
+                eq(schema.events.id, eventId),
+                eq(schema.events.organizationId, organizationId),
+            ),
+        );
+}
+
+/**
+ * Legge tier e creemCheckoutId per la reconciliation.
+ * Undefined se l'evento non appartiene all'org (org-scoped, no leak).
+ */
+export async function getEventCheckoutInfo(
+    eventId: string,
+    organizationId: string,
+): Promise<{ tier: string; creemCheckoutId: string | null } | undefined> {
+    const db = getDB();
+    const rows = await db
+        .select({ tier: schema.events.tier, creemCheckoutId: schema.events.creemCheckoutId })
+        .from(schema.events)
+        .where(
+            and(
+                eq(schema.events.id, eventId),
+                eq(schema.events.organizationId, organizationId),
+            ),
+        )
+        .limit(1);
+    return rows[0];
+}
+
+// ---------------------------------------------------------------------------
 // Sblocco / re-lock one-time (Celebrazione) — SPEC §6.3/§6.4
 // ---------------------------------------------------------------------------
 

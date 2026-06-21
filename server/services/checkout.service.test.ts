@@ -1,13 +1,26 @@
+/**
+ * TDD — checkout.service.ts (fix 7.2)
+ *
+ * Mock strategy:
+ * - @creem_io/better-auth/server → createCreemClient mocked to return
+ *   { createCheckout: rawCreateCheckout } — the raw Creem instance.
+ * - server/repositories/eventRepository → findEventByIdScoped + setEventCheckoutId mocked
+ * - server/utils/permissions → assertOwnership mocked
+ * - server/services/eventAccess.service → isOrgAtelier mocked
+ * - server/utils/runtimeConfig → runtimeConfig mocked
+ */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---- Mock handles (declared before vi.mock hoisting) ----
-const createCheckout = vi.fn();
+const rawCreateCheckout = vi.fn();
+const createCreemClient = vi.fn();
 const findEventByIdScoped = vi.fn();
+const setEventCheckoutId = vi.fn();
 const assertOwnership = vi.fn();
 const isOrgAtelier = vi.fn();
 
 vi.mock("@creem_io/better-auth/server", () => ({
-    createCheckout: (...a: unknown[]) => createCheckout(...a),
+    createCreemClient: (...a: unknown[]) => createCreemClient(...a),
 }));
 
 vi.mock("~~/server/utils/runtimeConfig", () => ({
@@ -23,6 +36,7 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
 
 vi.mock("~~/server/repositories/eventRepository", () => ({
     findEventByIdScoped: (...a: unknown[]) => findEventByIdScoped(...a),
+    setEventCheckoutId: (...a: unknown[]) => setEventCheckoutId(...a),
 }));
 
 vi.mock("~~/server/utils/permissions", () => ({
@@ -38,6 +52,8 @@ const ORG_ID = "org_abc";
 const EVENT_ID = "evt_xyz";
 const BASE_URL = "https://example.com";
 const PRODUCT_ID = "prod_celebration_test";
+const CHECKOUT_ID = "chk_001";
+const CHECKOUT_URL = "https://checkout.creem.io/checkout/sess_123";
 
 const fakeH3Event = {
     context: {
@@ -52,51 +68,62 @@ const fakeEventRow = {
     tier: "free",
 };
 
+const fakeCheckoutEntity = {
+    id: CHECKOUT_ID,
+    checkoutUrl: CHECKOUT_URL,
+    mode: "test",
+    object: "checkout",
+    status: "pending",
+    product: PRODUCT_ID,
+};
+
 describe("createCelebrationCheckout", () => {
     beforeEach(() => {
         vi.resetModules();
-        [createCheckout, findEventByIdScoped, assertOwnership, isOrgAtelier].forEach(
+        [rawCreateCheckout, createCreemClient, findEventByIdScoped, setEventCheckoutId, assertOwnership, isOrgAtelier].forEach(
             (m) => m.mockReset(),
         );
         // Default happy-path setup
         findEventByIdScoped.mockResolvedValue(fakeEventRow);
         assertOwnership.mockReturnValue(fakeEventRow);
         isOrgAtelier.mockResolvedValue(false);
-        createCheckout.mockResolvedValue({
-            url: "https://checkout.creem.io/checkout/sess_123",
-            redirect: true,
-        });
+        setEventCheckoutId.mockResolvedValue(undefined);
+        rawCreateCheckout.mockResolvedValue(fakeCheckoutEntity);
+        createCreemClient.mockReturnValue({ createCheckout: rawCreateCheckout });
     });
 
-    it("chiama createCheckout con productId, metadata e successUrl corretti e propaga url", async () => {
+    it("chiama createCheckout sul client raw con args corretti e propaga url", async () => {
         const { createCelebrationCheckout } = await import(
             "~~/server/services/checkout.service"
         );
 
         const result = await createCelebrationCheckout(fakeH3Event, EVENT_ID);
 
-        // L'url restituito deve essere quello del mock
-        expect(result).toEqual({ url: "https://checkout.creem.io/checkout/sess_123" });
+        // L'url restituito deve essere checkout.checkoutUrl
+        expect(result).toEqual({ url: CHECKOUT_URL });
 
-        // createCheckout chiamato esattamente una volta
-        expect(createCheckout).toHaveBeenCalledOnce();
-
-        // Primo arg: config con testMode (appEnv !== 'production' → true)
-        const [config, input] = createCheckout.mock.calls[0] as [
-            Record<string, unknown>,
-            Record<string, unknown>,
-        ];
-        expect(config).toMatchObject({
+        // createCreemClient chiamato con apiKey + testMode
+        expect(createCreemClient).toHaveBeenCalledOnce();
+        expect(createCreemClient).toHaveBeenCalledWith({
             apiKey: "test_api_key",
             testMode: true, // development !== production
         });
 
-        // Secondo arg: input con productId, metadata e successUrl
-        expect(input).toMatchObject({
-            productId: PRODUCT_ID,
-            metadata: { eventId: EVENT_ID, organizationId: ORG_ID },
-            successUrl: `${BASE_URL}/dashboard/events/${EVENT_ID}?unlocked=true`,
+        // rawCreateCheckout chiamato con l'argomento corretto (xApiKey + createCheckoutRequest)
+        expect(rawCreateCheckout).toHaveBeenCalledOnce();
+        const [rawArg] = rawCreateCheckout.mock.calls[0] as [Record<string, unknown>];
+        expect(rawArg).toMatchObject({
+            xApiKey: "test_api_key",
+            createCheckoutRequest: {
+                productId: PRODUCT_ID,
+                metadata: { eventId: EVENT_ID, organizationId: ORG_ID },
+                successUrl: `${BASE_URL}/dashboard/events/${EVENT_ID}?unlocked=true`,
+            },
         });
+
+        // setEventCheckoutId chiamato con checkoutId dall'entity
+        expect(setEventCheckoutId).toHaveBeenCalledOnce();
+        expect(setEventCheckoutId).toHaveBeenCalledWith(EVENT_ID, ORG_ID, CHECKOUT_ID);
     });
 
     it("409 se l'evento è già tier celebration", async () => {
@@ -110,7 +137,8 @@ describe("createCelebrationCheckout", () => {
         await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toMatchObject({
             statusCode: 409,
         });
-        expect(createCheckout).not.toHaveBeenCalled();
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
     it("409 se org è Atelier (ha già eventi illimitati)", async () => {
@@ -123,7 +151,8 @@ describe("createCelebrationCheckout", () => {
         await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toMatchObject({
             statusCode: 409,
         });
-        expect(createCheckout).not.toHaveBeenCalled();
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
     it("401 se non c'è organizzazione attiva nel context", async () => {
@@ -136,6 +165,19 @@ describe("createCelebrationCheckout", () => {
         await expect(createCelebrationCheckout(noOrgEvent, EVENT_ID)).rejects.toMatchObject({
             statusCode: 401,
         });
-        expect(createCheckout).not.toHaveBeenCalled();
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawCreateCheckout).not.toHaveBeenCalled();
+    });
+
+    it("setEventCheckoutId failure non blocca il checkout (fire-and-forget)", async () => {
+        setEventCheckoutId.mockRejectedValue(new Error("DB error"));
+
+        const { createCelebrationCheckout } = await import(
+            "~~/server/services/checkout.service"
+        );
+
+        // Deve restituire url anche se setEventCheckoutId fallisce
+        const result = await createCelebrationCheckout(fakeH3Event, EVENT_ID);
+        expect(result).toEqual({ url: CHECKOUT_URL });
     });
 });

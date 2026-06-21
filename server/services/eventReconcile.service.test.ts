@@ -1,36 +1,35 @@
 /**
- * TDD — eventReconcile.service.ts
+ * TDD — eventReconcile.service.ts (fix 7.2)
  *
- * Mock strategy (mirrors checkout.service.test.ts):
- * - @creem_io/better-auth/server → searchTransactions mocked
- * - server/repositories/eventRepository → unlockEvent mocked
+ * Replaces the old searchTransactions-based tests.
+ * Strategy: per-event reconciliation via retrieveCheckout on the raw Creem client.
+ *
+ * Mock strategy:
+ * - @creem_io/better-auth/server → createCreemClient mocked to return
+ *   { retrieveCheckout: rawRetrieveCheckout }
+ * - server/repositories/eventRepository → getEventCheckoutInfo + unlockEvent mocked
  * - server/utils/runtimeConfig → runtimeConfig mocked
- *
- * NOTE (CRITICAL): The real creem SDK response has `items` (not `transactions`),
- * and `TransactionEntity` has NO `metadata` field (it is stripped by the Zod
- * schema parser before returning). The implementation works against the declared
- * `@creem_io/better-auth` wrapper contract (`transactions`, `TransactionData.metadata`)
- * with an `items` fallback, and these tests use mock data.
- * See fix-7.1-report.md for full details.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---- Mock handles (declared before vi.mock hoisting) ----
-const searchTransactions = vi.fn();
+const rawRetrieveCheckout = vi.fn();
+const createCreemClient = vi.fn();
+const getEventCheckoutInfo = vi.fn();
 const unlockEvent = vi.fn();
 
 vi.mock("@creem_io/better-auth/server", () => ({
-    searchTransactions: (...a: unknown[]) => searchTransactions(...a),
+    createCreemClient: (...a: unknown[]) => createCreemClient(...a),
 }));
 
 vi.mock("~~/server/repositories/eventRepository", () => ({
+    getEventCheckoutInfo: (...a: unknown[]) => getEventCheckoutInfo(...a),
     unlockEvent: (...a: unknown[]) => unlockEvent(...a),
 }));
 
 vi.mock("~~/server/utils/runtimeConfig", () => ({
     runtimeConfig: {
         creemApiKey: "test_api_key",
-        creemProductIdCelebration: "prod_celebration_test",
         public: {
             appEnv: "development",
         },
@@ -41,277 +40,188 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
 const EVENT_ID = "evt_abc";
 const ORG_ID = "org_xyz";
 const ORDER_ID = "ord_111";
-const PRODUCT_ID = "prod_celebration_test";
+const CHECKOUT_ID = "chk_001";
 
-/** Build a paid one-time transaction with metadata (declared shape) */
-function makePaidTx(overrides: Record<string, unknown> = {}) {
+/** Build a paid one-time CheckoutEntity */
+function makePaidCheckout(overrides: Record<string, unknown> = {}) {
     return {
-        id: "tx_001",
-        type: "payment",
-        status: "paid",
-        amount: 1500,
-        currency: "EUR",
-        customer: { id: "cust_1", email: "a@b.com" },
-        order_id: ORDER_ID,
-        created_at: Date.now(),
+        id: CHECKOUT_ID,
+        mode: "test",
+        object: "checkout",
+        status: "completed",
+        product: "prod_cel",
         metadata: { eventId: EVENT_ID, organizationId: ORG_ID },
+        checkoutUrl: "https://checkout.creem.io/chk_001",
+        order: {
+            id: ORDER_ID,
+            type: "onetime",
+            status: "paid",
+            mode: "test",
+            object: "order",
+            product: "prod_cel",
+            amount: 1500,
+            currency: "EUR",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
         ...overrides,
     };
 }
 
-/** Return a SearchTransactionsResponse (declared wrapper shape) */
-function mockSearchResult(txs: unknown[]) {
-    return { transactions: txs, total: txs.length, page: 1 };
-}
-
-describe("reconcileOneTimeUnlocks", () => {
+describe("reconcileEventUnlock", () => {
     beforeEach(() => {
         vi.resetModules();
-        [searchTransactions, unlockEvent].forEach((m) => m.mockReset());
+        [rawRetrieveCheckout, createCreemClient, getEventCheckoutInfo, unlockEvent].forEach((m) =>
+            m.mockReset(),
+        );
         unlockEvent.mockResolvedValue(undefined);
+        createCreemClient.mockReturnValue({ retrieveCheckout: rawRetrieveCheckout });
     });
 
-    it("happy path: paid one-time tx with metadata → unlockEvent called with correct args", async () => {
-        searchTransactions.mockResolvedValue(mockSearchResult([makePaidTx()]));
+    it("happy path: paid onetime + metadata.eventId match → unlockEvent called, reconciled: true", async () => {
+        getEventCheckoutInfo.mockResolvedValue({
+            tier: "free",
+            creemCheckoutId: CHECKOUT_ID,
+        });
+        rawRetrieveCheckout.mockResolvedValue(makePaidCheckout());
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
-        expect(searchTransactions).toHaveBeenCalledOnce();
-        const [config, filters] = searchTransactions.mock.calls[0] as [
-            Record<string, unknown>,
-            Record<string, unknown>,
-        ];
-        expect(config).toMatchObject({ apiKey: "test_api_key", testMode: true });
-        expect(filters).toMatchObject({ productId: PRODUCT_ID });
-
+        expect(createCreemClient).toHaveBeenCalledOnce();
+        expect(createCreemClient).toHaveBeenCalledWith({
+            apiKey: "test_api_key",
+            testMode: true,
+        });
+        expect(rawRetrieveCheckout).toHaveBeenCalledOnce();
+        expect(rawRetrieveCheckout).toHaveBeenCalledWith({
+            checkoutId: CHECKOUT_ID,
+            xApiKey: "test_api_key",
+        });
         expect(unlockEvent).toHaveBeenCalledOnce();
         expect(unlockEvent).toHaveBeenCalledWith(EVENT_ID, ORG_ID, ORDER_ID);
-
-        expect(result).toMatchObject({ checked: 1, reconciled: 1 });
+        expect(result).toEqual({ reconciled: true });
     });
 
-    it("recurring transaction (type='invoice') is NOT unlocked", async () => {
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([makePaidTx({ type: "invoice" })]),
+    it("order.status = 'pending' → NO unlock, reconciled: false", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(
+            makePaidCheckout({ order: { id: ORDER_ID, type: "onetime", status: "pending", mode: "test", object: "order", product: "p", amount: 0, currency: "EUR", createdAt: new Date(), updatedAt: new Date() } }),
         );
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
         expect(unlockEvent).not.toHaveBeenCalled();
-        expect(result).toMatchObject({ checked: 0, reconciled: 0 });
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("pending/refunded status is NOT unlocked", async () => {
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([
-                makePaidTx({ status: "pending" }),
-                makePaidTx({ status: "refunded" }),
-                makePaidTx({ status: "failed" }),
-            ]),
+    it("order.type = 'recurring' → NO unlock, reconciled: false", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(
+            makePaidCheckout({ order: { id: ORDER_ID, type: "recurring", status: "paid", mode: "test", object: "order", product: "p", amount: 0, currency: "EUR", createdAt: new Date(), updatedAt: new Date() } }),
         );
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
         expect(unlockEvent).not.toHaveBeenCalled();
-        expect(result).toMatchObject({ checked: 0, reconciled: 0 });
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("tx missing metadata.eventId is NOT unlocked", async () => {
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([makePaidTx({ metadata: { organizationId: ORG_ID } })]),
+    it("metadata.eventId mismatch → NO unlock, reconciled: false", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(
+            makePaidCheckout({ metadata: { eventId: "evt_DIFFERENT", organizationId: ORG_ID } }),
         );
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
         expect(unlockEvent).not.toHaveBeenCalled();
-        expect(result).toMatchObject({ checked: 0, reconciled: 0 });
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("tx missing metadata.organizationId is NOT unlocked", async () => {
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([makePaidTx({ metadata: { eventId: EVENT_ID } })]),
-        );
-
-        const { reconcileOneTimeUnlocks } = await import(
-            "~~/server/services/eventReconcile.service"
-        );
-        const result = await reconcileOneTimeUnlocks();
-
-        expect(unlockEvent).not.toHaveBeenCalled();
-        expect(result).toMatchObject({ checked: 0, reconciled: 0 });
-    });
-
-    it("tx with no order_id is NOT unlocked", async () => {
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([makePaidTx({ order_id: undefined })]),
-        );
-
-        const { reconcileOneTimeUnlocks } = await import(
-            "~~/server/services/eventReconcile.service"
-        );
-        const result = await reconcileOneTimeUnlocks();
-
-        expect(unlockEvent).not.toHaveBeenCalled();
-        expect(result).toMatchObject({ checked: 0, reconciled: 0 });
-    });
-
-    it("opts.eventId filters to only that event", async () => {
-        const otherTx = makePaidTx({
-            id: "tx_002",
-            order_id: "ord_222",
-            metadata: { eventId: "evt_OTHER", organizationId: ORG_ID },
+    it("tier already 'celebration' → NO API call, reconciled: false (early return)", async () => {
+        getEventCheckoutInfo.mockResolvedValue({
+            tier: "celebration",
+            creemCheckoutId: CHECKOUT_ID,
         });
-        searchTransactions.mockResolvedValue(
-            mockSearchResult([makePaidTx(), otherTx]),
-        );
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks({ eventId: EVENT_ID });
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
-        expect(unlockEvent).toHaveBeenCalledOnce();
-        expect(unlockEvent).toHaveBeenCalledWith(EVENT_ID, ORG_ID, ORDER_ID);
-        expect(result).toMatchObject({ checked: 1, reconciled: 1 });
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawRetrieveCheckout).not.toHaveBeenCalled();
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("celebration product id missing/placeholder → returns {0,0}, searchTransactions NOT called", async () => {
-        // Use the main module import (hoisted mocks still active) but patch runtimeConfig
-        // by temporarily overriding creemProductIdCelebration to undefined.
-        // We re-import after module reset so the guard path is exercised.
-        vi.resetModules();
-        // Re-register all mocks after reset
-        vi.doMock("@creem_io/better-auth/server", () => ({
-            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
-        }));
-        vi.doMock("~~/server/repositories/eventRepository", () => ({
-            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
-        }));
-        vi.doMock("~~/server/utils/runtimeConfig", () => ({
-            runtimeConfig: {
-                creemApiKey: "test_api_key",
-                creemProductIdCelebration: undefined, // missing → no-op
-                public: { appEnv: "development" },
-            },
-        }));
+    it("creemCheckoutId is null → NO API call, reconciled: false (early return)", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: null });
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
-        expect(searchTransactions).not.toHaveBeenCalled();
-        expect(result).toEqual({ checked: 0, reconciled: 0 });
-
-        // Restore module registry for subsequent tests
-        vi.resetModules();
-        vi.doMock("@creem_io/better-auth/server", () => ({
-            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
-        }));
-        vi.doMock("~~/server/repositories/eventRepository", () => ({
-            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
-        }));
-        vi.doMock("~~/server/utils/runtimeConfig", () => ({
-            runtimeConfig: {
-                creemApiKey: "test_api_key",
-                creemProductIdCelebration: "prod_celebration_test",
-                public: { appEnv: "development" },
-            },
-        }));
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawRetrieveCheckout).not.toHaveBeenCalled();
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it(".env.example placeholder sentinel 'prod_celebration_id' → returns {0,0}, searchTransactions NOT called", async () => {
-        vi.resetModules();
-        vi.doMock("@creem_io/better-auth/server", () => ({
-            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
-        }));
-        vi.doMock("~~/server/repositories/eventRepository", () => ({
-            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
-        }));
-        vi.doMock("~~/server/utils/runtimeConfig", () => ({
-            runtimeConfig: {
-                creemApiKey: "test_api_key",
-                creemProductIdCelebration: "prod_celebration_id", // .env.example sentinel
-                public: { appEnv: "development" },
-            },
-        }));
+    it("event not found (getEventCheckoutInfo returns undefined) → NO API call, reconciled: false", async () => {
+        getEventCheckoutInfo.mockResolvedValue(undefined);
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
-        expect(searchTransactions).not.toHaveBeenCalled();
-        expect(result).toEqual({ checked: 0, reconciled: 0 });
-
-        // Restore for subsequent tests
-        vi.resetModules();
-        vi.doMock("@creem_io/better-auth/server", () => ({
-            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
-        }));
-        vi.doMock("~~/server/repositories/eventRepository", () => ({
-            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
-        }));
-        vi.doMock("~~/server/utils/runtimeConfig", () => ({
-            runtimeConfig: {
-                creemApiKey: "test_api_key",
-                creemProductIdCelebration: "prod_celebration_test",
-                public: { appEnv: "development" },
-            },
-        }));
+        expect(createCreemClient).not.toHaveBeenCalled();
+        expect(rawRetrieveCheckout).not.toHaveBeenCalled();
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("one failing unlock does not abort others", async () => {
-        const tx1 = makePaidTx({ id: "tx_001", order_id: "ord_001" });
-        const tx2 = makePaidTx({
-            id: "tx_002",
-            order_id: "ord_002",
-            metadata: { eventId: "evt_TWO", organizationId: ORG_ID },
-        });
-        searchTransactions.mockResolvedValue(mockSearchResult([tx1, tx2]));
+    it("Creem API throws → catches error, returns reconciled: false (never re-throws)", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockRejectedValue(new Error("Network error"));
 
-        // First call throws, second succeeds
-        unlockEvent
-            .mockRejectedValueOnce(new Error("DB error"))
-            .mockResolvedValueOnce(undefined);
-
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        // Must not throw even though one unlock fails
-        const result = await reconcileOneTimeUnlocks();
 
-        expect(unlockEvent).toHaveBeenCalledTimes(2);
-        // Both transactions were "kept": checked=2.
-        // reconciled=1: only the successful unlock increments reconciled.
-        expect(result.checked).toBe(2);
-        expect(result.reconciled).toBe(1);
+        // Must not throw
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
+
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
     });
 
-    it("runtime fallback: response with `items` array works (real SDK shape)", async () => {
-        // The real creem SDK returns { items: [...], pagination: {...} }, not { transactions: [...] }
-        // The implementation must handle both shapes.
-        const tx = makePaidTx();
-        searchTransactions.mockResolvedValue({ items: [tx] });
+    it("checkout with no order object → reconciled: false", async () => {
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(
+            makePaidCheckout({ order: undefined }),
+        );
 
-        const { reconcileOneTimeUnlocks } = await import(
+        const { reconcileEventUnlock } = await import(
             "~~/server/services/eventReconcile.service"
         );
-        const result = await reconcileOneTimeUnlocks();
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
-        expect(unlockEvent).toHaveBeenCalledOnce();
-        expect(result).toMatchObject({ checked: 1, reconciled: 1 });
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
     });
 });

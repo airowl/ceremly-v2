@@ -1,150 +1,74 @@
 /**
- * Reconciliation service for one-time Celebrazione payments (SPEC §6.2 / fix 7.1).
+ * Reconciliation service for one-time Celebrazione payments (SPEC §6.2 / fix 7.2).
  *
  * The webhook `onCheckoutCompleted` is fire-and-forget (always returns 200) and
  * swallows errors. If `unlockEvent` fails, Creem never retries — a paid event
  * stays `tier='free'` forever. This service is the recovery path.
  *
- * CRITICAL CAVEAT (confirmed 2026-06-21):
- *   The real creem SDK `searchTransactions` response goes through
- *   `TransactionListEntity$inboundSchema` (a strict Zod `z.object` — strips unknown keys).
- *   `TransactionEntity` has NO `metadata` field in the schema. Even if the Creem API sends
- *   metadata on transactions, it is stripped at the SDK boundary and never reaches this code.
- *   The `@creem_io/better-auth` wrapper declares `TransactionData.metadata` but this is a
- *   type fiction — the real runtime shape carries `items` (not `transactions`) and no `metadata`.
+ * Strategy (fix 7.2 — replaces the dead searchTransactions approach):
+ *   At checkout creation the `checkoutId` is persisted on the event row (via
+ *   `setEventCheckoutId` in checkout.service.ts). Recovery reads that id and
+ *   calls `retrieveCheckout(checkoutId)` on the RAW Creem client.
+ *   `CheckoutEntity` DOES return `metadata` + `order.type` / `order.status`,
+ *   unlike `searchTransactions` which strips metadata at the Zod SDK boundary.
  *
- *   Consequence: this service as written will reconcile 0 events in production until either:
- *   (a) Creem adds metadata to the transaction schema, OR
- *   (b) the reconciliation is rewritten to look up each transaction's order object and read
- *       the order's metadata (where eventId/organizationId ARE stored via the checkout).
- *
- *   The code is correct against the declared `@creem_io/better-auth` contract and is fully
- *   testable via mocks. See fix-7.1-report.md for the full analysis.
+ * This function is designed to be safe to call at any time:
+ *   - If the event doesn't exist / doesn't belong to the org → no-op.
+ *   - If tier is already 'celebration' → no API call (idempotent).
+ *   - If checkoutId was never persisted → no-op.
+ *   - If the Creem API throws → console.error + return false (never throws out).
  */
-
-import { searchTransactions } from "@creem_io/better-auth/server";
+import { createCreemClient } from "@creem_io/better-auth/server";
 import { runtimeConfig } from "../utils/runtimeConfig";
-import { unlockEvent } from "../repositories/eventRepository";
+import { getEventCheckoutInfo, unlockEvent } from "../repositories/eventRepository";
 
-export interface ReconcileResult {
-    checked: number;
-    reconciled: number;
-}
+export async function reconcileEventUnlock(
+    eventId: string,
+    organizationId: string,
+): Promise<{ reconciled: boolean }> {
+    // Step 1: read the event's tier + stored checkoutId.
+    const info = await getEventCheckoutInfo(eventId, organizationId);
 
-export interface ReconcileOptions {
-    /** If given, only reconcile transactions whose metadata.eventId matches this. */
-    eventId?: string;
-    /** Maximum number of pages to fetch (default: 3). */
-    maxPages?: number;
-}
+    // No row → event not found or not in this org.
+    if (!info) return { reconciled: false };
 
-/**
- * Reconciles one-time Celebrazione payments that the webhook may have silently lost.
- *
- * For each paid `payment` transaction filtered from the Creem API:
- *  - Verifies it has metadata.eventId + metadata.organizationId + order_id.
- *  - Calls `unlockEvent` (idempotent — no-op if already celebration).
- *  - Isolates per-row errors so one bad row doesn't abort the whole batch.
- *
- * Returns `{ checked, reconciled }`:
- *  - `checked`: number of kept transactions (after type/status/metadata filters).
- *  - `reconciled`: number of kept transactions for which `unlockEvent` was attempted.
- *    (Equal to `checked` in the absence of per-row exceptions.)
- */
-export async function reconcileOneTimeUnlocks(
-    opts: ReconcileOptions = {},
-): Promise<ReconcileResult> {
-    const productId = runtimeConfig.creemProductIdCelebration;
+    // Already unlocked → nothing to do (idempotent).
+    if (info.tier === "celebration") return { reconciled: false };
 
-    // Guard: no product configured, or still the .env.example placeholder → nothing to reconcile.
-    // The placeholder sentinel "prod_celebration_id" (from .env.example) is rejected so a dev
-    // env without a real product id doesn't fire test-mode API calls against a bogus id.
-    if (!productId || productId === "prod_celebration_id") {
-        return { checked: 0, reconciled: 0 };
-    }
+    // No checkoutId persisted → can't reconcile without the authoritative id.
+    if (!info.creemCheckoutId) return { reconciled: false };
 
-    const config = {
-        apiKey: runtimeConfig.creemApiKey!,
-        testMode: runtimeConfig.public.appEnv !== "production",
-    };
-
-    const maxPages = opts.maxPages ?? 3;
-    const pageSize = 50;
-
-    let checked = 0;
-    let reconciled = 0;
-
-    for (let page = 1; page <= maxPages; page++) {
-        const response = await searchTransactions(config, {
-            productId,
-            pageNumber: page,
-            pageSize,
+    try {
+        const apiKey = runtimeConfig.creemApiKey!;
+        const creem = createCreemClient({
+            apiKey,
+            testMode: runtimeConfig.public.appEnv !== "production",
         });
 
-        // Handle both declared wrapper shape (`transactions`) and real SDK shape (`items`).
-        // At runtime the creem SDK returns TransactionListEntity with `items`; the
-        // @creem_io/better-auth wrapper declares `transactions` but just passes through the raw response.
-        const rawRes = response as Record<string, unknown>;
-        const txList = Array.isArray(rawRes.transactions)
-            ? (rawRes.transactions as unknown[])
-            : Array.isArray(rawRes.items)
-              ? (rawRes.items as unknown[])
-              : [];
+        const checkout = await creem.retrieveCheckout({
+            checkoutId: info.creemCheckoutId,
+            xApiKey: apiKey,
+        });
 
-        // Break early on empty page (no more data).
-        if (txList.length === 0) break;
+        const order = checkout.order;
 
-        for (const tx of txList) {
-            const t = tx as Record<string, unknown>;
-
-            // Filter: type must be 'payment' (one-time; 'invoice' = recurring subscription).
-            if (t.type !== "payment") continue;
-
-            // Filter: status must be 'paid'.
-            if (t.status !== "paid") continue;
-
-            // Filter: need order_id (the creem order identifier).
-            const orderId =
-                typeof t.order_id === "string" && t.order_id
-                    ? t.order_id
-                    : typeof t.order === "string" && t.order
-                      ? t.order
-                      : undefined;
-            if (!orderId) continue;
-
-            // Filter: need metadata.eventId + metadata.organizationId.
-            const meta =
-                t.metadata !== null && typeof t.metadata === "object"
-                    ? (t.metadata as Record<string, unknown>)
-                    : undefined;
-            if (!meta) continue;
-
-            const eventId = typeof meta.eventId === "string" ? meta.eventId : undefined;
-            const organizationId =
-                typeof meta.organizationId === "string" ? meta.organizationId : undefined;
-
-            if (!eventId || !organizationId) continue;
-
-            // Filter: if caller requested a specific event, skip others.
-            if (opts.eventId && eventId !== opts.eventId) continue;
-
-            // This transaction is eligible.
-            checked++;
-
-            try {
-                await unlockEvent(eventId, organizationId, orderId);
-                reconciled++;
-            } catch (err) {
-                console.error(
-                    `[reconcile] unlock failed for eventId=${eventId} orderId=${orderId}`,
-                    err,
-                );
-            }
+        // Only unlock on paid one-time orders with matching metadata.eventId.
+        if (
+            order?.type === "onetime" &&
+            order.status === "paid" &&
+            checkout.metadata?.eventId === eventId &&
+            order.id
+        ) {
+            await unlockEvent(eventId, organizationId, order.id);
+            return { reconciled: true };
         }
 
-        // If we got fewer items than pageSize, there are no more pages.
-        if (txList.length < pageSize) break;
+        return { reconciled: false };
+    } catch (err) {
+        console.error(
+            `[reconcile] retrieveCheckout failed for eventId=${eventId} checkoutId=${info.creemCheckoutId}`,
+            err,
+        );
+        return { reconciled: false };
     }
-
-    return { checked, reconciled };
 }
