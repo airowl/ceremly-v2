@@ -82,7 +82,8 @@ dev/staging → `airowlgasga.dev`; prod → `ceremly.com`.
 2. **`.env.example`**: `NUXT_ENV` → commento `dev | prod` (rimuovi `staging`); correggi l'header (oggi cita `.env.local`/`.env.production` → allinea a `.env`/`.env.prod`).
 3. **Fix bug naming** (§2.3): nelle 10 occorrenze, `.env.production` → `.env.prod`. Verifica che `pnpm db:migrate:prod` poi carichi il file giusto.
 4. **Fix billing Creem `testMode`** (§5).
-5. **Pulizia docs**: aggiorna i riferimenti a "staging" al modello a 2 ambienti in `docs/base/LOCAL-DEV-SERVICES.md`, `docs/base/EMAIL-ARCHITECTURE.md`, `docs/superpowers/specs/2026-06-18-local-dev-services-design.md`, `docs/security/NUXT_ADMIN_API_KEY.md`. (I plan storici in `docs/superpowers/plans/` sono archivio: non riscriverli.)
+5. **Pulizia docs**: aggiorna i riferimenti a "staging" al modello a 2 ambienti in `docs/base/LOCAL-DEV-SERVICES.md` (5 occorrenze), `docs/base/EMAIL-ARCHITECTURE.md` (2), `docs/superpowers/specs/2026-06-18-local-dev-services-design.md` (6), `docs/security/NUXT_ADMIN_API_KEY.md:182`, e `docs/superpowers/specs/2026-06-19-resend-webhooks-design.md:133` ("dev/staging=dev"). (I plan storici in `docs/superpowers/plans/` sono archivio: non riscriverli.)
+6. **Residui "staging" in codice/config** (verifica 2026-06-21): allinea anche `vitest.config.ts:12` (commento "branch Neon dev (condiviso dev/staging)") e `.env.example:105` (commento QStash "prod/staging"). Bassa priorità, solo commenti: `drizzle/migrations/manual/drop_user_custom_limits.sql:16` ("dev/staging/prod", migrazione già applicata) e i commenti in `.env` (gitignored: `:10`, `:37`) — opzionali.
 
 ---
 
@@ -101,7 +102,7 @@ dev/staging → `airowlgasga.dev`; prod → `ceremly.com`.
   - `server/utils/creem.ts:93` → `testMode: !runtimeConfig.public.isProdDeployment`
   - `server/services/checkout.service.ts:52`
   - `server/services/eventReconcile.service.ts:45`
-- Aggiornare i 2 test che oggi pilotano `testMode` via `appEnv`: `server/services/checkout.service.test.ts:32`, `server/services/eventReconcile.service.test.ts:34`.
+- Aggiornare i 2 test che oggi pilotano `testMode` via `appEnv`: `server/services/checkout.service.test.ts:32`, `server/services/eventReconcile.service.test.ts:34`. **Nota implementativa** (verifica 2026-06-21): i due mock di `runtimeConfig.public` sono **parziali** — `checkout` espone `{baseURL, appEnv}`, `eventReconcile` solo `{appEnv}`. Entrambi vanno estesi con il nuovo campo `isProdDeployment`, altrimenti il flag risulta `undefined` nel mock e `testMode` non sarebbe più pilotato dal test.
 
 ### Cosa NON toccare
 `server/utils/auth.ts:354` abilita l'openAPI con `appEnv === "development"` (= **solo locale**). È un asse diverso (local-only vs non-production-deployment): **non** instradarlo sul nuovo flag, altrimenti gli API docs verrebbero esposti sul `dev.ceremly.com` pubblico. `appEnv` resta com'è per questo uso.
@@ -130,6 +131,8 @@ Da non risolvere in questo lavoro, ma registrato perché emerso durante l'analis
 - **Placeholder security-critical su prod**: `NUXT_ADMIN_API_KEY`, `NUXT_CRON_SECRET`, chiavi Creem ancora placeholder su `.env.prod`/Vercel Production. Da sostituire prima del go-live.
 - **Email**: mapping domini invariato.
 - **Isolamento R2 dev/Preview**: continuano a condividere il bucket `ceremly-dev` (accettato).
+- **`CLAUDE.md` stale** (emerso 2026-06-21): cita ancora `planLimit.service.ts`, `user_custom_limits`, `/api/limits/*` e i piani `starter/premium/agency` — obsoleti dopo `d70a9f4`/`ba6a73d`. Da aggiornare separatamente.
+- **`package.json` chiavi duplicate**: `test` (righe 12 e 29) e `test:watch` (13 e 30) compaiono due volte nell'oggetto `scripts` (l'ultima vince). Residuo di merge, innocuo.
 
 ---
 
