@@ -9,6 +9,9 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Import dopo i mock
+import handler from "./unlock.post";
+
 // --- vi.hoisted: inizializzato PRIMA che vi.mock hoisti le factory ---
 const mocks = vi.hoisted(() => {
     (globalThis as Record<string, unknown>).defineEventHandler = (fn: unknown) => fn;
@@ -27,9 +30,6 @@ vi.mock("~~/server/utils/permissions", () => ({
 vi.mock("~~/server/services/checkout.service", () => ({
     createCelebrationCheckout: mocks.createCelebrationCheckout,
 }));
-
-// Import dopo i mock
-import handler from "./unlock.post";
 
 describe("events/[id]/unlock.post", () => {
     const EVENT_ID = "evt-123";

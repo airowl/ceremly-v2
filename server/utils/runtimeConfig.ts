@@ -13,9 +13,6 @@ declare module "@nuxt/schema" {
 let runtimeConfigInstance: NitroRuntimeConfig;
 
 export const generateRuntimeConfig = () => {
-    const nuxtEnv = process.env.NUXT_ENV?.replace(/['"]/g, "");
-    const devEnv = nuxtEnv === "dev";
-
     return {
         preset: process.env.NUXT_NITRO_PRESET,
         betterAuthSecret: process.env.NUXT_BETTER_AUTH_SECRET,

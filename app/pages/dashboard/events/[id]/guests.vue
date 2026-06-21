@@ -538,19 +538,19 @@ async function submitGroup() {
             </div>
             <div class="row" style="gap: 8px;">
                 <button
-                    v-for="t in filterTabs"
-                    :key="t.k"
+                    v-for="ft in filterTabs"
+                    :key="ft.k"
                     type="button"
                     class="cer-btn ghost small"
                     :style="{
-                        background: filter === t.k ? 'var(--bone-100)' : 'transparent',
-                        borderColor: filter === t.k ? 'var(--bone-300)' : 'var(--bone-200)',
+                        background: filter === ft.k ? 'var(--bone-100)' : 'transparent',
+                        borderColor: filter === ft.k ? 'var(--bone-300)' : 'var(--bone-200)',
                         padding: '6px 12px',
                     }"
-                    @click="filter = t.k"
+                    @click="filter = ft.k"
                 >
-                    <span v-if="t.dot" class="cer-dot" :style="{ background: t.dot }" />
-                    {{ t.l }} <span class="mono muted" style="margin-left: 4px; font-size: 11px;">{{ t.n }}</span>
+                    <span v-if="ft.dot" class="cer-dot" :style="{ background: ft.dot }" />
+                    {{ ft.l }} <span class="mono muted" style="margin-left: 4px; font-size: 11px;">{{ ft.n }}</span>
                 </button>
             </div>
         </div>

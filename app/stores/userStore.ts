@@ -122,7 +122,7 @@ export const useUserStore = defineStore("user", () => {
         limitsData.value = null;
         _lastEventId.value = undefined;
 
-        await signOut({ redirectTo: '/login' as any });
+        await signOut({ redirectTo: '/login' });
     }
 
     async function fetchSubscription() {

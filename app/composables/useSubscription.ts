@@ -2,11 +2,11 @@
  * Composable for managing subscriptions via Creem + Better Auth
  */
 export function useSubscription() {
-    const { creem, fetchSession } = useAuth();
+    const { creem } = useAuth();
     const runtimeConfig = useRuntimeConfig();
 
     const isUpdating = ref(false);
-    const subscription = useState<any | null>("creem:subscription", () => null);
+    const subscription = useState<{ productId?: string } | null>("creem:subscription", () => null);
     const hasAccess = useState<boolean>("creem:hasAccess", () => false);
 
     /**
