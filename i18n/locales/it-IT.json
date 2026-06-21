@@ -2731,6 +2731,7 @@
         "trust3": "Ospiti senza account"
       },
       "heroVisual": {
+        "previewBadge": "Esempio",
         "inviteDate": "12 · settembre · 2026",
         "inviteMarried": "si sposano",
         "inviteDetails": "ore 16 — cerimonia all'aperto",

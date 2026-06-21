@@ -253,6 +253,7 @@ const feats: Feat[] = [
             <div class="l-hero-visual" aria-hidden="true">
                 <!-- invito card — blocco viola -->
                 <div style="position: absolute; left: 30px; top: 0; width: 360px; height: 510px; background: var(--purple); border-radius: 18px; border: 2px solid var(--ink); box-shadow: 10px 10px 0 var(--ink); color: var(--ink); padding: 40px 32px; transform: rotate(-3deg); display: flex; flex-direction: column; justify-content: space-between;">
+                    <span class="mono" style="position: absolute; top: 14px; left: 20px; background: var(--bone-50); color: var(--ink); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1.5px solid var(--ink);">{{ $t('ceremly.home.heroVisual.previewBadge') }}</span>
                     <div>
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wine-deep);">
                             {{ $t('ceremly.home.heroVisual.inviteDate') }}

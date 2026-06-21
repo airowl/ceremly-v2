@@ -2731,6 +2731,7 @@
         "trust3": "Guests without accounts"
       },
       "heroVisual": {
+        "previewBadge": "Sample",
         "inviteDate": "12 · September · 2026",
         "inviteMarried": "are getting married",
         "inviteDetails": "4pm — outdoor ceremony",
