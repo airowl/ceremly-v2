@@ -13,6 +13,6 @@
 --   2. tenerla qui (path `manual/`, senza prefisso numerico) evita la collisione
 --      con un futuro `pnpm db:generate`, che riemetterebbe un `0009_*` nel root.
 --
--- Applicare a mano su ogni ambiente (dev/staging/prod) via psql o Neon SQL editor:
+-- Applicare a mano su ogni ambiente (dev/prod) via psql o Neon SQL editor:
 
 DROP TABLE IF EXISTS "user_custom_limits" CASCADE;
