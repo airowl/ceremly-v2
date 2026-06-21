@@ -232,6 +232,47 @@ describe("reconcileOneTimeUnlocks", () => {
         }));
     });
 
+    it(".env.example placeholder sentinel 'prod_celebration_id' → returns {0,0}, searchTransactions NOT called", async () => {
+        vi.resetModules();
+        vi.doMock("@creem_io/better-auth/server", () => ({
+            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
+        }));
+        vi.doMock("~~/server/repositories/eventRepository", () => ({
+            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
+        }));
+        vi.doMock("~~/server/utils/runtimeConfig", () => ({
+            runtimeConfig: {
+                creemApiKey: "test_api_key",
+                creemProductIdCelebration: "prod_celebration_id", // .env.example sentinel
+                public: { appEnv: "development" },
+            },
+        }));
+
+        const { reconcileOneTimeUnlocks } = await import(
+            "~~/server/services/eventReconcile.service"
+        );
+        const result = await reconcileOneTimeUnlocks();
+
+        expect(searchTransactions).not.toHaveBeenCalled();
+        expect(result).toEqual({ checked: 0, reconciled: 0 });
+
+        // Restore for subsequent tests
+        vi.resetModules();
+        vi.doMock("@creem_io/better-auth/server", () => ({
+            searchTransactions: (...a: unknown[]) => searchTransactions(...a),
+        }));
+        vi.doMock("~~/server/repositories/eventRepository", () => ({
+            unlockEvent: (...a: unknown[]) => unlockEvent(...a),
+        }));
+        vi.doMock("~~/server/utils/runtimeConfig", () => ({
+            runtimeConfig: {
+                creemApiKey: "test_api_key",
+                creemProductIdCelebration: "prod_celebration_test",
+                public: { appEnv: "development" },
+            },
+        }));
+    });
+
     it("one failing unlock does not abort others", async () => {
         const tx1 = makePaidTx({ id: "tx_001", order_id: "ord_001" });
         const tx2 = makePaidTx({
@@ -253,9 +294,10 @@ describe("reconcileOneTimeUnlocks", () => {
         const result = await reconcileOneTimeUnlocks();
 
         expect(unlockEvent).toHaveBeenCalledTimes(2);
-        // Both transactions were "kept" so checked=2, reconciled=2
-        // (the count includes those attempted, not just succeeded — consistent with spec)
+        // Both transactions were "kept": checked=2.
+        // reconciled=1: only the successful unlock increments reconciled.
         expect(result.checked).toBe(2);
+        expect(result.reconciled).toBe(1);
     });
 
     it("runtime fallback: response with `items` array works (real SDK shape)", async () => {

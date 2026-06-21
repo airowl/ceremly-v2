@@ -56,8 +56,10 @@ export async function reconcileOneTimeUnlocks(
 ): Promise<ReconcileResult> {
     const productId = runtimeConfig.creemProductIdCelebration;
 
-    // Guard: no product configured → nothing to reconcile (placeholder or missing env).
-    if (!productId) {
+    // Guard: no product configured, or still the .env.example placeholder → nothing to reconcile.
+    // The placeholder sentinel "prod_celebration_id" (from .env.example) is rejected so a dev
+    // env without a real product id doesn't fire test-mode API calls against a bogus id.
+    if (!productId || productId === "prod_celebration_id") {
         return { checked: 0, reconciled: 0 };
     }
 
