@@ -45,8 +45,8 @@ Dentro ciascun account, **ogni ambiente ha risorse dedicate** — sono gratis:
 
 ### Da sistemare (azioni su Cloudflare)
 
-Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. In dev
-il public URL R2 è un placeholder.
+Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. **Resta da
+sistemare il bucket R2 di dev**: il public URL è ancora un placeholder.
 
 1. Crea un bucket R2 **dev** (oltre a quello prod esistente).
 2. Aggiorna le env:
