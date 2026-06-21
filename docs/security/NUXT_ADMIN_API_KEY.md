@@ -179,7 +179,7 @@ NUXT_ADMIN_API_KEY=your-secure-api-key-here      # Required for /api/admin/* end
 ## 7. Sicurezza e buone pratiche
 
 - **Non committarla mai.** Sta in `.env` / `.env.production`, entrambi gitignored. In repo c'è solo il placeholder in `.env.example`.
-- **Una chiave per ambiente.** Valore diverso tra dev, staging e prod: se trapela quella di dev, la prod resta al sicuro.
+- **Una chiave per ambiente.** Valore diverso tra dev e prod: se trapela quella di dev, la prod resta al sicuro.
 - **Trasmettila solo su HTTPS.** È una credenziale bearer-like: in chiaro su HTTP sarebbe intercettabile.
 - **Ruotala se sospetti una fuga.** Cambia il valore della env e rideploya; le vecchie richieste con la chiave precedente iniziano a ricevere `401`.
 - **Potere assoluto.** Chi ha questa chiave bypassa lo scoping per organizzazione e vede/modifica tutti i tenant. Trattala come una password di root.

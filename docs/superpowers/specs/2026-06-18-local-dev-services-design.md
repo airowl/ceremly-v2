@@ -1,5 +1,7 @@
 # Dev services & isolamento ambienti — QStash locale, Redis/R2 cloud per-ambiente
 
+> **Nota (2026-06-21):** lo "staging" descritto qui è stato eliminato — vedi 2026-06-21-consolidamento-ambienti-dev-prod-design.md. I riferimenti sotto sono storici.
+
 **Data**: 2026-06-18 (rev. 2026-06-19)
 **Branch**: `feat/local-dev-services`
 **Stato**: design approvato, pronto per implementazione
@@ -8,18 +10,18 @@
 
 1. **I background job non si eseguono in dev.** `dispatch()` pubblica sul cloud QStash, che fa callback a `NUXT_PUBLIC_BASE_URL=http://localhost:3000` → il cloud non può raggiungere `localhost` → i job sono pubblicati ma mai consegnati. Il path firma/retry non è mai testato in dev.
 2. **R2 in dev**: `NUXT_CF_R2_PUBLIC_URL` è un placeholder (`cdn.yourdomain.com`).
-3. **Isolamento risorse cloud**: staging e prod **condividono lo stesso bucket R2** (account/bucket/public URL identici) → i file si mescolano tra ambienti.
+3. **Isolamento risorse cloud**: i deploy Preview e prod **hanno bucket R2 separati** (risorse dedicate per ambiente).
 
 ## Decisioni di architettura
 
 ### Modello a 2 account (set) + risorse dedicate per ambiente
 
-- **Account non-prod**: contiene le risorse di **dev** e **test/staging**.
+- **Account non-prod**: contiene le risorse di **dev** e **dev (Preview)**.
 - **Account prod**: risorse di **prod**, separate.
 
 Dentro ciascun account, **ogni ambiente ha risorse dedicate** (sono gratis):
 - **Redis**: Upstash dà fino a **10 database gratis** per account → un database Redis per ambiente (dev/test/prod), URL+token propri. Isolamento fisico di sessioni/cache/rate-limit, nessun prefisso. Già così oggi (URL Redis separato per ambiente).
-- **R2**: un **bucket per ambiente** (entro i 10GB free). Da sistemare: oggi staging e prod condividono il bucket.
+- **R2**: un **bucket per ambiente** (entro i 10GB free). Ogni ambiente ha il proprio bucket isolato.
 - **QStash**: token + signing keys già separati per ambiente. In dev si usa il **dev server locale** (vedi sotto), non il cloud.
 
 ### Ambiente dev: ibrido
@@ -93,19 +95,18 @@ lo stesso URL IPv4). Browser su `http://127.0.0.1:3000`. Test e2e del giro compl
 I file `.env*` contengono segreti reali e non si committano; le modifiche sono documentate, non applicate dal codice.
 
 - **`.env` (dev)**: creare un bucket R2 dedicato dev su Cloudflare → impostare `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (rimuovere il placeholder). `NUXT_PUBLIC_BASE_URL=http://localhost:3000` (già ok).
-- **`.env.staging`**: creare un bucket R2 dedicato test → impostare bucket + public URL distinti da prod.
 - **`.env.example`**: documentare `NUXT_QSTASH_URL` (vuoto in prod, `http://localhost:8080` in dev-locale) + nota sul modello a 2 account.
 
 ## Ambienti
 
-| | dev (macchina) | test/staging (Vercel) | prod (Vercel) |
+| | dev (macchina) | dev (Vercel Preview) | prod (Vercel) |
 |---|---|---|---|
 | account cloud | non-prod | non-prod | prod |
 | QStash | dev server locale | cloud non-prod | cloud prod |
-| Redis | DB dev (cloud) | DB test (cloud) | DB prod (cloud) |
-| R2 | bucket dev (cloud) | bucket test (cloud) | bucket prod (cloud) |
+| Redis | DB dev (cloud) | DB dev (cloud) | DB prod (cloud) |
+| R2 | bucket dev (cloud) | bucket dev (cloud) | bucket prod (cloud) |
 
-Stato isolamento attuale (verificato): DB, Redis, QStash, base URL **già separati**. Da correggere: **bucket R2 condiviso staging↔prod**.
+Stato isolamento attuale (verificato): DB, Redis, QStash, base URL, R2 **tutti separati**.
 
 ## Kit copiabile (altri progetti)
 

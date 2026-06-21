@@ -1,8 +1,8 @@
 # Servizi esterni & isolamento ambienti (QStash / Redis / R2)
 
-Come si comportano e come si isolano i servizi esterni nei 3 ambienti. In sintesi:
+Come si comportano e come si isolano i servizi esterni nei 2 ambienti. In sintesi:
 **Redis e R2 girano sul cloud anche in dev**; i background job **non si eseguono in
-dev** (vedi sotto); staging e prod sono tutto cloud.
+dev** (vedi sotto); i deploy Preview e prod sono tutto cloud.
 
 ## Background job in dev
 
@@ -23,18 +23,18 @@ anche in dev. Si tengono sul cloud, con risorse dedicate per ambiente (gratis).
 
 ## Matrice ambienti
 
-| | dev (macchina) | test/staging (Vercel) | prod (Vercel) |
+| | dev (macchina) | dev (Vercel Preview) | prod (Vercel) |
 |---|---|---|---|
 | account cloud | non-prod | non-prod | prod |
 | QStash | cloud non-prod (job non consegnati a localhost) | cloud non-prod | cloud prod |
-| Redis | database dev (cloud) | database test (cloud) | database prod (cloud) |
-| R2 | bucket dev (cloud) | bucket test (cloud) | bucket prod (cloud) |
+| Redis | database dev (cloud) | database dev (cloud) | database prod (cloud) |
+| R2 | bucket dev (cloud) | bucket dev (cloud) | bucket prod (cloud) |
 
 I job non girano in dev: Vercel/QStash cloud non raggiungono `localhost`.
 
 ## Isolamento delle risorse cloud
 
-Modello a **2 account**: uno *non-prod* (dev + test/staging), uno *prod* separato.
+Modello a **2 account**: uno *non-prod* (dev locale + Preview), uno *prod* separato.
 Dentro ciascun account, **ogni ambiente ha risorse dedicate** — sono gratis:
 
 - **Redis**: Upstash dà fino a **10 database gratis** per account. Usa un database per
@@ -45,13 +45,11 @@ Dentro ciascun account, **ogni ambiente ha risorse dedicate** — sono gratis:
 
 ### Da sistemare (azioni su Cloudflare)
 
-Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. **Eccezione:
-staging e prod condividono lo stesso bucket R2** → i file si mescolano. Inoltre in dev
+Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. In dev
 il public URL R2 è un placeholder.
 
-1. Crea un bucket R2 **dev** e uno **test** (oltre a quello prod esistente).
+1. Crea un bucket R2 **dev** (oltre a quello prod esistente).
 2. Aggiorna le env:
    - dev: `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (no più `cdn.yourdomain.com`).
-   - staging: bucket + public URL **test**, distinti da prod.
 3. Stesso account R2 basta per separare i *dati*. Per separare anche la *quota*
    servirebbe un account distinto (opzionale, fuori scope).

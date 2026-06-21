@@ -103,7 +103,7 @@ Better Auth hooks / Services / Cron
 
 ## 5. Configurazione & infrastruttura
 
-| Env var | Significato | Prod | Dev/Staging |
+| Env var | Significato | Prod | Dev |
 |---------|-------------|------|-------------|
 | `NUXT_RESEND_API_KEY` | Chiave Resend (1 sola, tutti gli env) | (Sensitive) | stessa chiave |
 | `NUXT_PUBLIC_APP_NOTIFY_EMAIL` | From transazionale | `noreply@ceremly.com` | `noreply@airowlgasga.dev` |
@@ -112,7 +112,7 @@ Better Auth hooks / Services / Cron
 | `NUXT_PUBLIC_PRIVACY_EMAIL` | Contatto privacy (pagine legali) | `privacy@ceremly.com` | — |
 | `NUXT_PUBLIC_LEGAL_EMAIL` | Contatto legale/DPA (pagine legali) | `legal@ceremly.com` | — |
 
-- **1 account Resend Pro**, multi-dominio. **Domini**: prod `ceremly.com`, dev/staging `airowlgasga.dev` (entrambi verificati).
+- **1 account Resend Pro**, multi-dominio. **Domini**: prod `ceremly.com`, dev `airowlgasga.dev` (entrambi verificati).
 - **Ricezione NON via Resend** (send-only) → **Cloudflare Email Routing** (catch-all) → Gmail.
 
 ---

@@ -130,7 +130,7 @@ WEBHOOK  POST /api/webhooks/resend
 ## 8. Idempotenza & isolamento ambienti
 
 - **Idempotenza**: dedup su `svix-id` in Upstash Redis, TTL 24h (riusa l'helper esistente del consumer QStash).
-- **Env isolation**: il webhook è account-wide. Ogni ambiente registra il proprio endpoint; l'handler processa solo eventi il cui dominio del `from` appartiene a `{dominioPrincipale, sottodominioEventi}` dell'ambiente corrente. I DB sono già branch Neon separati (prod=main, dev/staging=dev) → nessuna contaminazione incrociata.
+- **Env isolation**: il webhook è account-wide. Ogni ambiente registra il proprio endpoint; l'handler processa solo eventi il cui dominio del `from` appartiene a `{dominioPrincipale, sottodominioEventi}` dell'ambiente corrente. I DB sono già branch Neon separati (prod=main, dev=dev) → nessuna contaminazione incrociata.
 - Dev locale (localhost) non ha endpoint pubblico → nessun webhook, salvo uso del CLI `resend webhooks listen --forward-to`.
 
 ## 9. Config, secret, registrazione

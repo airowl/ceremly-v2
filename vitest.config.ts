@@ -9,7 +9,7 @@ export default defineConfig({
         environment: "node",
         include: ["server/**/*.test.ts", "shared/**/*.test.ts", "test/**/*.test.ts"],
         setupFiles: ["./test/setup.ts"],
-        // I test DB-backed toccano il branch Neon dev (condiviso dev/staging):
+        // I test DB-backed toccano il branch Neon dev (condiviso con i deploy Preview):
         // niente parallelismo aggressivo per evitare contese sulle righe-fixture.
         fileParallelism: false,
         testTimeout: 20000,
