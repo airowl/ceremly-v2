@@ -2,9 +2,10 @@
  * Static pricing plans data
  * Used by both frontend and backend.
  *
- * Note: creemProductIds are populated from process.env (server-side).
- * On the client they are empty strings — the client uses runtimeConfig.public
- * via useSubscription for checkout.
+ * Note: PRICING_PLANS.creemProductIds leggono env vars legacy (NUXT_CREEM_PRODUCT_ID_*_{MONTH,YEAR})
+ * non più presenti in .env.example — i valori sono stringa vuota per design.
+ * Il checkout B2B via product-id è dormiente; PRICING_PLANS è mantenuto per il gate org/team attivo.
+ * Il modello pricing reale Ceremly (Free/Celebrazione/Atelier) usa CEREMLY_TIER_LIMITS (sotto).
  */
 
 export interface PlanLimits {
@@ -67,6 +68,10 @@ export const PRICING_PLANS: Record<string, PricingPlan> = {
             { key: "plan.starter.support", text: "Supporto email" },
         ],
         order: 1,
+        // Legacy B2B env vars — non più presenti in .env.example e non provisionate.
+        // I valori sono volutamente stringa vuota; il checkout B2B via product-id è dormiente.
+        // PRICING_PLANS è mantenuto perché il gate org/team (canCreateOrganization,
+        // canAddTeamMember, /api/limits/*) è ancora attivo — rimozione fuori scope.
         creemProductIds: {
             monthly: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_MONTH || "",
             yearly: process.env.NUXT_CREEM_PRODUCT_ID_STARTER_YEAR || "",
@@ -199,10 +204,3 @@ export const CELEBRATION_PRICE_CENTS = 3900;
 /** Prezzo Atelier (recurring mensile, centesimi EUR). */
 export const ATELIER_PRICE_CENTS = 2400;
 
-/**
- * Alias retro-compat: i service esistenti (guest/event/reminder) leggono
- * CEREMLY_FREE_LIMITS.{maxGuestsPerEvent|maxActiveEvents|maxReminders}. La Fase 2
- * li sposta su getEventLimits() tier-aware; l'alias li tiene compilanti nel
- * frattempo.
- */
-export const CEREMLY_FREE_LIMITS = CEREMLY_TIER_LIMITS.free;

@@ -155,10 +155,12 @@ export async function createGuest(
     if (limits.maxGuestsPerEvent !== -1) {
         const current = await countActiveGuests(organizationId, eventId);
         if (current >= limits.maxGuestsPerEvent) {
-            throw createError({
-                statusCode: 402,
-                statusMessage: `Questo evento include fino a ${limits.maxGuestsPerEvent} ospiti. Sblocca con Celebrazione per aggiungerne altri.`,
-            });
+            // Messaggio tier-aware: per Celebrazione (già sbloccato, cap 250) il
+            // messaggio "passa a Celebrazione" non ha senso — evento già celebration.
+            const statusMessage = limits.maxGuestsPerEvent === 250
+                ? "Hai raggiunto il limite di 250 ospiti per questo evento."
+                : `Questo evento include fino a ${limits.maxGuestsPerEvent} ospiti. Sblocca con Celebrazione per aggiungerne altri.`;
+            throw createError({ statusCode: 402, statusMessage });
         }
     }
 

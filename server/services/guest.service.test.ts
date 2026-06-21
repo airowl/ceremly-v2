@@ -56,6 +56,27 @@ describe("createGuest enforcement", () => {
         expect(res.guest.id).toBe("g_new");
     });
 
+    it("ospite #251 su evento celebration -> 402 con messaggio cap 250 (non 'passa a Celebrazione')", async () => {
+        getEventLimits.mockResolvedValue({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
+        countActiveGuests.mockResolvedValue(250);
+        const { createGuest } = await import("~~/server/services/guest.service");
+        await expectStatus(createGuest(fakeEvent, "e1", input), 402).then(() => {
+            expect(createGuestRow).not.toHaveBeenCalled();
+        });
+    });
+
+    it("402 celebration cap: messaggio contiene '250' e NON 'Sblocca con Celebrazione'", async () => {
+        getEventLimits.mockResolvedValue({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
+        countActiveGuests.mockResolvedValue(250);
+        const { createGuest } = await import("~~/server/services/guest.service");
+        let caughtMsg = "";
+        await createGuest(fakeEvent, "e1", input).catch((e: { statusMessage?: string }) => {
+            caughtMsg = e.statusMessage ?? "";
+        });
+        expect(caughtMsg).toContain("250");
+        expect(caughtMsg).not.toContain("Sblocca con Celebrazione");
+    });
+
     it("org atelier (-1) -> nessun limite ospiti", async () => {
         getEventLimits.mockResolvedValue({ tier: "atelier", maxGuestsPerEvent: -1, maxReminders: -1 });
         countActiveGuests.mockResolvedValue(99999);

@@ -63,7 +63,7 @@ export async function createCelebrationCheckout(
     });
 
     if (!checkout.checkoutUrl) {
-        throw createError({ statusCode: 500, statusMessage: "Checkout URL non disponibile dalla risposta Creem" });
+        throw createError({ statusCode: 502, statusMessage: "Creem checkout senza URL" });
     }
 
     // Persisti il checkoutId per la recovery via reconcileEventUnlock.

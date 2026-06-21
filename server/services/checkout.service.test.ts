@@ -169,6 +169,20 @@ describe("createCelebrationCheckout", () => {
         expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
+    it("502 se createCheckout restituisce entità senza checkoutUrl", async () => {
+        rawCreateCheckout.mockResolvedValue({ ...fakeCheckoutEntity, checkoutUrl: undefined });
+
+        const { createCelebrationCheckout } = await import(
+            "~~/server/services/checkout.service"
+        );
+
+        await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toMatchObject({
+            statusCode: 502,
+        });
+        // La guard (riga 65) cortocircuita PRIMA di setEventCheckoutId.
+        expect(setEventCheckoutId).not.toHaveBeenCalled();
+    });
+
     it("setEventCheckoutId failure PROPAGA: createCelebrationCheckout rigetta (nessun url restituito)", async () => {
         setEventCheckoutId.mockRejectedValue(new Error("DB error"));
 
