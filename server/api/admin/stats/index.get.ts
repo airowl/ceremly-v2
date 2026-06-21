@@ -3,7 +3,7 @@ import * as schema from "~~/server/database/schema";
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { getDB } from "~~/server/utils/db";
 import { getPlanFromProductId } from "~~/server/utils/creem";
-import { PRICING_PLANS } from "~~/shared/constants/pricing";
+import { ATELIER_PRICE_CENTS } from "~~/shared/constants/pricing";
 
 export interface AdminStats {
     users: {
@@ -64,23 +64,17 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
         .from(schema.creem_subscription)
         .where(sql`${schema.creem_subscription.status} IN ('active', 'trialing')`);
 
+    // Breakdown per tier Ceremly: solo Atelier è ricorrente (Celebration è
+    // one-time per-evento e non genera subscription).
     const byPlan: Record<string, number> = {};
     for (const sub of activeSubsList) {
         const plan = getPlanFromProductId(sub.productId) ?? "unknown";
         byPlan[plan] = (byPlan[plan] || 0) + 1;
     }
 
-    // Calculate MRR from pricing plans
-    let mrr = 0;
-    for (const sub of activeSubsList) {
-        for (const [, plan] of Object.entries(PRICING_PLANS)) {
-            if (sub.productId === plan.creemProductIds.monthly) {
-                mrr += plan.pricing.monthly / 100;
-            } else if (sub.productId === plan.creemProductIds.yearly) {
-                mrr += (plan.pricing.yearly / 100) / 12;
-            }
-        }
-    }
+    // MRR = subscription Atelier attive × prezzo mensile Atelier.
+    const atelierCount = byPlan.atelier ?? 0;
+    const mrr = atelierCount * (ATELIER_PRICE_CENTS / 100);
 
     return {
         users: {

@@ -144,8 +144,8 @@ export const creem_subscription = pgTable("creem_subscription", {
   periodEnd: timestamp("period_end"),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
 }, (table) => [
-  // getUserPlanInfo e i gate Better Auth (beforeCreateOrganization/Invitation)
-  // filtrano referenceId+status ad ogni check di piano; senza indice è seq scan.
+  // getUserPlanInfo / isOrgFreePlan / isOrgAtelier filtrano referenceId+status
+  // ad ogni check di piano evento (Free/Atelier); senza indice è seq scan.
   // NB: dopo `pnpm auth:schema` va ri-aggiunto a mano (come i custom user field).
   index("creem_subscription_referenceId_status_idx").on(table.referenceId, table.status),
 ]);

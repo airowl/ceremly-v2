@@ -2,7 +2,6 @@ export * from "./common";
 export * from "./auth";
 export * from "./file";
 export * from "./contact";
-export * from "./subscription";
 export * from "./admin";
 export * from "./waiting-list";
 export * from "./organization";

@@ -147,10 +147,6 @@ const ROUTES: Route[] = [
     { method: "get", path: "/api/file/{id}/url", tag: "File", summary: "URL firmato di download", auth: "session" },
     { method: "delete", path: "/api/file/{id}", tag: "File", summary: "Elimina file", auth: "session" },
 
-    // Limits
-    { method: "get", path: "/api/limits", tag: "Limits", summary: "Limiti di piano per l'organizzazione", auth: "session", query: "optionalEventIdQuerySchema" },
-    { method: "post", path: "/api/limits/validate-downgrade", tag: "Limits", summary: "Valida un downgrade di piano", auth: "session", body: "validateDowngradeSchema" },
-
     // User
     { method: "get", path: "/api/user/profile", tag: "User", summary: "Profilo utente", auth: "session" },
     { method: "patch", path: "/api/user/profile", tag: "User", summary: "Aggiorna profilo", auth: "session", body: "updateProfileSchema" },
@@ -178,8 +174,6 @@ const ROUTES: Route[] = [
     { method: "get", path: "/api/admin/users/{id}", tag: "Admin", summary: "Dettaglio utente", auth: "admin" },
     { method: "patch", path: "/api/admin/users/{id}", tag: "Admin", summary: "Aggiorna utente", auth: "admin", body: "adminUpdateUserSchema" },
     { method: "get", path: "/api/admin/users/{id}/audit-logs", tag: "Admin", summary: "Audit log di un utente", auth: "admin" },
-    { method: "get", path: "/api/admin/users/{id}/limits", tag: "Admin", summary: "Limiti custom di un utente", auth: "admin" },
-    { method: "patch", path: "/api/admin/users/{id}/limits", tag: "Admin", summary: "Aggiorna limiti custom utente", auth: "admin", body: "adminUpdateLimitsSchema" },
     { method: "get", path: "/api/admin/stats", tag: "Admin", summary: "Statistiche piattaforma", auth: "admin" },
 ];
 

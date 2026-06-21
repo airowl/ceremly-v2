@@ -24,23 +24,10 @@ const orgName = computed(() => {
     return orgStore.currentOrganization?.name || 'Organization'
 })
 
-// Plan info
-const planName = computed(() => {
-    const plan = userStore.subscription?.plan || 'free'
-    return plan.charAt(0).toUpperCase() + plan.slice(1)
-})
-
-const planColor = computed(() => {
-    const plan = userStore.subscription?.plan || 'free'
-    switch (plan) {
-        case 'pro':
-            return 'primary'
-        case 'basic':
-            return 'success'
-        default:
-            return 'neutral'
-    }
-})
+// Plan info (modello Ceremly: Free / Atelier — Celebration è per-evento, non un piano utente)
+const { currentTier, isAtelier } = useSubscription()
+const planName = computed(() => currentTier.value === 'atelier' ? 'Atelier' : 'Free')
+const planColor = computed(() => isAtelier.value ? 'primary' : 'neutral')
 
 // Formatted date
 const formattedDate = computed(() => {

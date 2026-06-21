@@ -8,14 +8,6 @@ export const adminUpdateUserSchema = z.object({
 });
 export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;
 
-export const adminUpdateLimitsSchema = z.object({
-    max_organizations: z.number().int().min(-1).nullable().optional(),
-    storage_mb: z.number().int().min(-1).nullable().optional(),
-    team_members: z.number().int().min(-1).nullable().optional(),
-note: z.string().max(500).nullable().optional(),
-});
-export type AdminUpdateLimitsInput = z.infer<typeof adminUpdateLimitsSchema>;
-
 export const adminUpdateSubscriptionSchema = z.object({
     plan: z.string().optional(),
     status: z.enum(["active", "canceled", "incomplete", "incomplete_expired", "past_due", "trialing", "unpaid", "paused"]).optional(),

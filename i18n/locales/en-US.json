@@ -128,24 +128,6 @@
         "perMonth": "/month",
         "perYear": "/year",
         "savings": "Save {amount} per year"
-      },
-      "tiers": {
-        "starter": {
-          "title": "Starter",
-          "description": "Ideal for personal projects and small teams.",
-          "cta": "Get started"
-        },
-        "premium": {
-          "title": "Premium",
-          "description": "Perfect for growing teams and startups.",
-          "cta": "Get started",
-          "badge": "Recommended"
-        },
-        "agency": {
-          "title": "Agency",
-          "description": "For agencies and companies with multiple organizations.",
-          "cta": "Get started"
-        }
       }
     },
     "finalCta": {
@@ -551,23 +533,6 @@
         },
         "success": "Success",
         "successDescription": "New customer {name} added"
-      }
-    },
-    "planUsage": {
-      "used": "Used",
-      "limitReached": "Limit reached -",
-      "upgrade": "upgrade",
-      "remaining": "{count} remaining",
-      "plan": {
-        "title": "Active Plan",
-        "description": "Current subscription",
-        "readOnly": "Read only -",
-        "fullAccess": "Full access"
-      },
-      "actions": {
-        "title": "Actions",
-        "description": "Quick operations",
-        "manageSubscription": "Manage Subscription"
       }
     },
     "organizationsList": {
@@ -1496,11 +1461,6 @@
       "successDescription": "{name} has been created.",
       "error": "Error",
       "failedToCreate": "Failed to create",
-      "limitReached": "Limit reached",
-      "limitReachedDescription": "You have reached your plan limit.",
-      "limitWarning": "You are about to reach your plan limit.",
-      "orgsUsed": "{current} of {limit} organizations used",
-      "upgradeLink": "Upgrade your plan",
       "validation": {
         "tooShort": "Too short",
         "slugFormat": "Only lowercase letters, numbers and hyphens"
