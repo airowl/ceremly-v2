@@ -224,4 +224,37 @@ describe("reconcileEventUnlock", () => {
         expect(unlockEvent).not.toHaveBeenCalled();
         expect(result).toEqual({ reconciled: false });
     });
+
+    it("org defense-in-depth: metadata.organizationId mismatch → NO unlock, reconciled: false", async () => {
+        // La funzione è chiamata con ORG_ID ma il checkout ha metadata di un'org diversa.
+        // Un checkoutId corrotto/straniero non deve poter sbloccare l'evento.
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(
+            makePaidCheckout({ metadata: { eventId: EVENT_ID, organizationId: "org_FOREIGN" } }),
+        );
+
+        const { reconcileEventUnlock } = await import(
+            "~~/server/services/eventReconcile.service"
+        );
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
+
+        expect(unlockEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({ reconciled: false });
+    });
+
+    it("unlockEvent throws → outer catch gestisce, returns reconciled: false (non rethrow)", async () => {
+        // Se unlockEvent fallisce (es. DB error), la funzione non deve propagare l'eccezione.
+        getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
+        rawRetrieveCheckout.mockResolvedValue(makePaidCheckout());
+        unlockEvent.mockRejectedValue(new Error("DB write error"));
+
+        const { reconcileEventUnlock } = await import(
+            "~~/server/services/eventReconcile.service"
+        );
+
+        // Deve restituire false, non rethrowando
+        const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
+
+        expect(result).toEqual({ reconciled: false });
+    });
 });

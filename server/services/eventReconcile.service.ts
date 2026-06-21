@@ -52,11 +52,14 @@ export async function reconcileEventUnlock(
 
         const order = checkout.order;
 
-        // Only unlock on paid one-time orders with matching metadata.eventId.
+        // Only unlock on paid one-time orders with matching metadata.eventId AND organizationId.
+        // The org check prevents a corrupted/foreign checkoutId from driving an unlock
+        // when metadata.organizationId doesn't match the scoped org.
         if (
             order?.type === "onetime" &&
             order.status === "paid" &&
             checkout.metadata?.eventId === eventId &&
+            checkout.metadata?.organizationId === organizationId &&
             order.id
         ) {
             await unlockEvent(eventId, organizationId, order.id);

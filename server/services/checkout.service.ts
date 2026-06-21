@@ -67,10 +67,11 @@ export async function createCelebrationCheckout(
     }
 
     // Persisti il checkoutId per la recovery via reconcileEventUnlock.
-    // Fire-and-forget idempotente: un eventuale errore qui non blocca il checkout.
-    await setEventCheckoutId(eventId, organizationId, checkout.id).catch((err) => {
-        console.error(`[checkout] setEventCheckoutId failed for eventId=${eventId}`, err);
-    });
+    // NON swallowato: se la persistenza fallisce il checkout viene rigettato (500) e
+    // l'utente riprova. Un checkout Creem non tracciato che viene poi pagato è
+    // irrecuperabile; un checkout creato ma mai pagato (perché il flow si interrompe
+    // qui) è invece innocuo — Creem non addebita mai un checkout non completato.
+    await setEventCheckoutId(eventId, organizationId, checkout.id);
 
     return { url: checkout.checkoutUrl };
 }

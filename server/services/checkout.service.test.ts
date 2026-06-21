@@ -169,15 +169,17 @@ describe("createCelebrationCheckout", () => {
         expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
-    it("setEventCheckoutId failure non blocca il checkout (fire-and-forget)", async () => {
+    it("setEventCheckoutId failure PROPAGA: createCelebrationCheckout rigetta (nessun url restituito)", async () => {
         setEventCheckoutId.mockRejectedValue(new Error("DB error"));
 
         const { createCelebrationCheckout } = await import(
             "~~/server/services/checkout.service"
         );
 
-        // Deve restituire url anche se setEventCheckoutId fallisce
-        const result = await createCelebrationCheckout(fakeH3Event, EVENT_ID);
-        expect(result).toEqual({ url: CHECKOUT_URL });
+        // Il checkout Creem viene creato (rawCreateCheckout chiamato) ma il persist fallisce
+        // → la funzione rigetta e l'utente NON riceve l'url (sicuro: checkout non pagato = innocuo).
+        await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toThrow("DB error");
+        // Conferma che il checkout Creem è stato comunque creato (persist avviene DOPO la chiamata Creem)
+        expect(rawCreateCheckout).toHaveBeenCalledOnce();
     });
 });
