@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX "events_creem_order_id_idx" ON "events" USING btree ("creem_order_id");

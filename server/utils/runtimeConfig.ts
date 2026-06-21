@@ -23,6 +23,7 @@ export const generateRuntimeConfig = () => {
         creemProductIdAtelier: process.env.NUXT_CREEM_PRODUCT_ID_ATELIER,
         // Resend
         resendApiKey: process.env.NUXT_RESEND_API_KEY,
+        resendWebhookSecret: process.env.NUXT_RESEND_WEBHOOK_SECRET,
         // Contact
         contactAdminEmail: process.env.NUXT_CONTACT_ADMIN_EMAIL,
         // Github
@@ -78,6 +79,8 @@ export const generateRuntimeConfig = () => {
             twitterHandle: process.env.NUXT_PUBLIC_TWITTER_HANDLE,
             appEnv: process.env.NODE_ENV,
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
+            // Sottodominio tracciato (open+click) per inviti/reminder eventi.
+            appEventsNotifyEmail: process.env.NUXT_PUBLIC_APP_EVENTS_NOTIFY_EMAIL,
             appContactEmail: process.env.NUXT_PUBLIC_APP_CONTACT_EMAIL,
             // Email legali (pagine privacy/tos/dpa/cookie). Env-driven: prod @ceremly.com, dev/test @airowlgasga.dev.
             privacyEmail: process.env.NUXT_PUBLIC_PRIVACY_EMAIL || "privacy@ceremly.com",

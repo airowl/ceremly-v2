@@ -6,7 +6,15 @@ import { config } from "dotenv";
 //    così getDB() raggiunge il branch Neon dev senza --env-file.
 config();
 
-// 2) createError è un auto-import Nitro (h3 non lo espone come named export in
+// 2) Default di fallback per i test che non hanno questi valori in .env
+//    (||= riempie solo le chiavi mancanti, non sovrascrive .env).
+process.env.NUXT_PUBLIC_APP_NAME ||= "Ceremly";
+process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL ||= "noreply@airowlgasga.dev";
+process.env.NUXT_PUBLIC_APP_EVENTS_NOTIFY_EMAIL ||= "inviti@events.airowlgasga.dev";
+process.env.NUXT_RESEND_API_KEY ||= "re_test";
+process.env.NUXT_RESEND_WEBHOOK_SECRET ||= "whsec_test";
+
+// 3) createError è un auto-import Nitro (h3 non lo espone come named export in
 //    questa versione → niente import). I service sotto test
 //    (createGuest/createEvent/saveReminders) lo chiamano per i 402/422.
 //    Polyfill compatibile con createError di h3: errore con statusCode/statusMessage.

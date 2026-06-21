@@ -13,6 +13,7 @@ export default defineConfig({
         // niente parallelismo aggressivo per evitare contese sulle righe-fixture.
         fileParallelism: false,
         testTimeout: 20000,
+        passWithNoTests: true,
     },
     resolve: {
         alias: {
