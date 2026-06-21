@@ -78,6 +78,10 @@ export const generateRuntimeConfig = () => {
             appName: process.env.NUXT_PUBLIC_APP_NAME,
             twitterHandle: process.env.NUXT_PUBLIC_TWITTER_HANDLE,
             appEnv: process.env.NODE_ENV,
+            // true SOLO sul deploy Production di Vercel. VERCEL_ENV è auto-iniettato
+            // (production|preview); NODE_ENV invece è "production" anche in Preview,
+            // quindi non distingue gli ambienti. Pilota il testMode di Creem.
+            isProdDeployment: process.env.VERCEL_ENV === "production",
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
             // Sottodominio tracciato (open+click) per inviti/reminder eventi.
             appEventsNotifyEmail: process.env.NUXT_PUBLIC_APP_EVENTS_NOTIFY_EMAIL,

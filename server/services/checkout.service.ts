@@ -49,7 +49,7 @@ export async function createCelebrationCheckout(
 
     const creem = createCreemClient({
         apiKey,
-        testMode: runtimeConfig.public.appEnv !== "production",
+        testMode: !runtimeConfig.public.isProdDeployment,
     });
 
     const checkout = await creem.createCheckout({

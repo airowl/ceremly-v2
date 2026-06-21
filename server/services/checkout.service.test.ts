@@ -29,7 +29,9 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
         creemProductIdCelebration: "prod_celebration_test",
         public: {
             baseURL: "https://example.com",
-            appEnv: "development",
+            // Scenario Vercel Preview: NODE_ENV=production ma deployment non-prod.
+            appEnv: "production",
+            isProdDeployment: false,
         },
     },
 }));

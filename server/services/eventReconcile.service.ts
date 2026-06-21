@@ -42,7 +42,7 @@ export async function reconcileEventUnlock(
         const apiKey = runtimeConfig.creemApiKey!;
         const creem = createCreemClient({
             apiKey,
-            testMode: runtimeConfig.public.appEnv !== "production",
+            testMode: !runtimeConfig.public.isProdDeployment,
         });
 
         const checkout = await creem.retrieveCheckout({

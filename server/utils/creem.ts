@@ -90,7 +90,7 @@ export const setupCreem = () =>
     creem({
         apiKey: runtimeConfig.creemApiKey!,
         webhookSecret: runtimeConfig.creemWebhookSecret,
-        testMode: runtimeConfig.public.appEnv !== "production",
+        testMode: !runtimeConfig.public.isProdDeployment,
         defaultSuccessUrl: "/dashboard/subscription?success=true",
         persistSubscriptions: true,
 

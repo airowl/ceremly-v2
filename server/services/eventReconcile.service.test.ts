@@ -31,7 +31,9 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
     runtimeConfig: {
         creemApiKey: "test_api_key",
         public: {
-            appEnv: "development",
+            // Scenario Vercel Preview: NODE_ENV=production ma deployment non-prod.
+            appEnv: "production",
+            isProdDeployment: false,
         },
     },
 }));
