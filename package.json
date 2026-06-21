@@ -90,7 +90,8 @@
     ],
     "overrides": {
       "nitropack": "2.11.12",
-      "drizzle-orm": "^0.45.0"
+      "drizzle-orm": "^0.45.0",
+      "chokidar": "^3.6.0"
     }
   },
   "resolutions": {
