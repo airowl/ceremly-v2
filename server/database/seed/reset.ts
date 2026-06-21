@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
 import { execSync } from "node:child_process";
 
-const envFile = process.env.NUXT_ENV === "prod" ? ".env.production" : ".env";
+const envFile = process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env";
 config({ path: envFile });
 
 // Prefer direct (unpooled) connection for DDL operations

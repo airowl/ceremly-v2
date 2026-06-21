@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
 // Load environment-specific config
-const envFile = process.env.NUXT_ENV === "prod" ? ".env.production" : ".env";
+const envFile = process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env";
 config({ path: envFile });
 
 // Use direct connection for migrations (required for DDL), fallback to pooled

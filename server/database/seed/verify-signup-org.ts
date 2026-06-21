@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { findOrganizationsForUser } from "../../repositories/organizationRepository";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
  * Gate FASE 1b (CRITICO): il signup ha prodotto org personale + member owner.

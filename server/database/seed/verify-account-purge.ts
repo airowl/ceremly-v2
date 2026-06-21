@@ -6,7 +6,7 @@ import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { purgeDueDeletedAccounts } from "../../services/gdpr.service";
 import { ACCOUNT_DELETION_REASON_PREFIX, findUsersScheduledForDeletion } from "../../repositories/gdprRepository";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
  * Gate FIX #20/#19: il hard-delete GDPR cancella davvero l'utente + la sua org

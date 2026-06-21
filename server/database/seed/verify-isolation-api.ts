@@ -9,7 +9,7 @@ import {
     updateProject,
     deleteProject,
 } from "../../services/project.service";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 // Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
 // tsx standalone non è globale. Il service (via assertOwnership/getOrgId) lo usa senza

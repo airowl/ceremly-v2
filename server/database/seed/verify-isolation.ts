@@ -5,7 +5,7 @@ import { findOrganizationsForUser } from "../../repositories/organizationReposit
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { eq } from "drizzle-orm";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
  * Gate di sicurezza FASE 1a: l'isolamento tenant.

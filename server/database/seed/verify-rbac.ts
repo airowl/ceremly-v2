@@ -9,7 +9,7 @@ import {
     roleIsOwner,
     assertOwnership,
 } from "../../utils/permissions";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 // Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
 // tsx standalone non è globale. permissions.ts (assertOwnership/guard) lo usa senza

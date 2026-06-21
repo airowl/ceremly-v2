@@ -2,7 +2,7 @@ import { config } from "dotenv";
 
 import { isEndpointRateLimited } from "../../utils/spamProtection";
 import { cacheClient } from "../../utils/drivers";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
  * Gate FIX #7/#9: il rate limiter degli endpoint pubblici è durevole

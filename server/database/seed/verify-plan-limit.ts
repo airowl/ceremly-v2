@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { getDB } from "../../utils/db";
 import * as schema from "../schema";
 import { isOrgFreePlan, resolveOrgOwnerId } from "../../services/planLimit.service";
-config({ path: process.env.NUXT_ENV === "prod" ? ".env.production" : ".env" });
+config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
  * Gate FIX #1: il piano è risolto dall'OWNER dell'org, non dal richiedente.
