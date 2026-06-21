@@ -94,7 +94,14 @@ export async function createEventRow(organizationId: string, values: CreateEvent
     return rows[0];
 }
 
-/** Update scoped: aggiorna solo se l'evento appartiene all'org. */
+/** Update scoped: aggiorna solo se l'evento appartiene all'org.
+ *
+ * FIX 7.4 — Activity reset: ogni update dell'organizzatore azzerà cleanupWarnedAt
+ * a NULL. Così, se l'evento diventa stale di nuovo dopo l'attività, il cron di
+ * cleanup lo warn-erà con un nuovo avviso di 7 giorni invece di eliminarlo senza
+ * preavviso (regressione: cleanupWarnedAt non veniva mai resettato dopo il primo warn).
+ * Il no-op guard (patch vuoto) è preservato: nessuna scrittura senza modifiche reali.
+ */
 export async function updateEventScoped(
     organizationId: string,
     id: string,
@@ -107,7 +114,7 @@ export async function updateEventScoped(
     }
     const rows = await db
         .update(schema.events)
-        .set(patch)
+        .set({ ...patch, cleanupWarnedAt: null })
         .where(
             and(
                 eq(schema.events.id, id),
@@ -116,6 +123,28 @@ export async function updateEventScoped(
         )
         .returning();
     return rows[0];
+}
+
+/**
+ * Azzera cleanupWarnedAt → NULL quando un ospite invia/aggiorna il proprio RSVP.
+ * Org-scoped (guard: organizationId + eventId). Il reset garantisce che l'evento,
+ * se dovesse tornare stale, riceva un NUOVO avviso di 7gg anziché venire
+ * eliminato immediatamente (FIX 7.4 — RSVP activity path).
+ */
+export async function clearEventCleanupWarned(
+    organizationId: string,
+    eventId: string,
+): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.events)
+        .set({ cleanupWarnedAt: null })
+        .where(
+            and(
+                eq(schema.events.id, eventId),
+                eq(schema.events.organizationId, organizationId),
+            ),
+        );
 }
 
 /** Hard delete scoped (cascade su guests/responses/activities/reminders). */

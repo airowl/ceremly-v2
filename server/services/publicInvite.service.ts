@@ -25,6 +25,7 @@ import {
     trackOpen,
     upsertResponse,
 } from "../repositories/publicRsvpRepository";
+import { clearEventCleanupWarned } from "../repositories/eventRepository";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./event.service";
 
 /** 404 generico §8.2: stessa risposta per ogni causa (no enumeration). */
@@ -179,12 +180,18 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
         throw createError({ statusCode: 500, statusMessage: "Salvataggio della risposta fallito" });
     }
 
-    await insertActivity(
-        guest.organizationId,
-        guest.eventId,
-        guest.id,
-        saved.wasInsert ? "rsvp_submitted" : "rsvp_updated",
-    );
+    // FIX 7.4 — RSVP activity reset: azzera cleanupWarnedAt so the event gets a
+    // fresh 7-day warning window if it goes stale again, instead of being deleted
+    // immediately (the old cleanupWarnedAt was never reset after the first warn).
+    await Promise.all([
+        insertActivity(
+            guest.organizationId,
+            guest.eventId,
+            guest.id,
+            saved.wasInsert ? "rsvp_submitted" : "rsvp_updated",
+        ),
+        clearEventCleanupWarned(guest.organizationId, guest.eventId),
+    ]);
 
     // Shape pubblica §6.2 (stessa del GET) — campo per campo.
     return {
