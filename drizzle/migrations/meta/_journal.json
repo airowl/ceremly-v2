@@ -64,6 +64,13 @@
       "when": 1782035353472,
       "tag": "0008_add_event_checkout_id",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782039354071,
+      "tag": "0009_event_creem_order_id_unique_idx",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 import type { EventDistribution, InviteBlock, RsvpQuestion } from "~~/shared/types/ceremly";
 import { organization } from "./auth";
@@ -54,6 +54,10 @@ export const events = pgTable(
     },
     (table) => [
         index("events_organization_id_idx").on(table.organizationId),
+        // Fix 7.5 (final review): relockEventByOrder(creemOrderId) faceva full table
+        // scan; indice unico — un order Creem sblocca esattamente un evento, quindi
+        // l'unicità è anche un vincolo di correttezza (Postgres ammette NULL multipli).
+        uniqueIndex("events_creem_order_id_idx").on(table.creemOrderId),
     ],
 );
 
