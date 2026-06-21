@@ -2719,13 +2719,13 @@
         "menuClose": "Chiudi menu"
       },
       "hero": {
-        "badge": "v0.1 · aperto agli organizzatori italiani",
+        "badge": "Aperto agli organizzatori italiani",
         "titlePart1": "Gli inviti",
         "titlePart2": "che contano",
         "titleMark": "davvero",
         "subtitle": "Smetti di rincorrere conferme su WhatsApp. Un link, un invito digitale, una dashboard che ti dice chi viene davvero — per matrimoni, lauree, battesimi e compleanni.",
         "ctaPrimary": "Crea il tuo primo invito — gratis",
-        "ctaExample": "Invito d'esempio",
+        "ctaExample": "Vedi un invito d'esempio",
         "trust1": "Nessuna carta richiesta",
         "trust2": "30 ospiti gratis",
         "trust3": "Ospiti senza account"
@@ -2889,7 +2889,7 @@
         "titlePart1": "Il tuo prossimo evento",
         "titleMark": "merita una lista vera",
         "subtitle": "Crea il tuo primo invito in cinque minuti. Trenta ospiti gratis, per sempre.",
-        "ctaPrimary": "Inizia gratis",
+        "ctaPrimary": "Crea il tuo primo invito — gratis",
         "ctaTeam": "Parla con il team"
       },
       "footer": {

@@ -1,6 +1,10 @@
 {
-  "name": "nuxt-saas-starter",
-  "description": "Multi-tenant SaaS boilerplate with Nuxt 4, Better Auth, Creem",
+  "name": "ceremly",
+  "version": "0.1.0",
+  "description": "Smart digital invitations and RSVP management for the events that matter — guest management for weddings, graduations, christenings and birthdays.",
+  "homepage": "https://ceremly.com",
+  "author": "Ceremly",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,9 +29,7 @@
     "verify:plan-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-plan-limit.ts",
     "verify:rate-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-rate-limit.ts",
     "verify:account-purge": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-account-purge.ts",
-    "openapi:generate": "npx tsx scripts/generate-openapi.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "openapi:generate": "npx tsx scripts/generate-openapi.ts"
   },
   "dependencies": {
     "@creem_io/better-auth": "^0.0.13",

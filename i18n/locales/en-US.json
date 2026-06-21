@@ -2719,13 +2719,13 @@
         "menuClose": "Close menu"
       },
       "hero": {
-        "badge": "v0.1 · open to Italian organizers",
+        "badge": "Open to Italian organizers",
         "titlePart1": "The invitations",
         "titlePart2": "that matter",
         "titleMark": "truly",
         "subtitle": "Stop chasing confirmations on WhatsApp. One link, a digital invitation, a dashboard that tells you who's really coming — for weddings, graduations, baptisms, and birthdays.",
         "ctaPrimary": "Create your first invitation — free",
-        "ctaExample": "Sample invitation",
+        "ctaExample": "See a sample invitation",
         "trust1": "No card required",
         "trust2": "30 guests free",
         "trust3": "Guests without accounts"
@@ -2889,7 +2889,7 @@
         "titlePart1": "Your next event",
         "titleMark": "deserves a real guest list",
         "subtitle": "Create your first invitation in five minutes. Thirty guests free, forever.",
-        "ctaPrimary": "Start for free",
+        "ctaPrimary": "Create your first invitation — free",
         "ctaTeam": "Talk to the team"
       },
       "footer": {

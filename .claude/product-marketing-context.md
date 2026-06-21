@@ -150,8 +150,7 @@
 **Current metrics:** Fase beta (MVP Phase 1). North Star: numero di RSVP completati con successo al mese.
 
 ## Stato pagine pubbliche (2026-06-21)
-Live: home (`/`), `/come-funziona`, `/funzionalita`, `/esempi`, `/modelli`, `/matrimonio`, `/battesimi`, `/compleanni`, `/planner` (B2B), `/prezzi`, `/rsvp-guide`, blog.
-⚠️ **Da sistemare:** `/about` (Chi siamo) è linkata nel footer ma la pagina NON esiste ancora → link rotto, da creare o rimuovere prima del lancio.
+Live: home (`/`), `/about` (Chi siamo — i18n `ceremly.site.chiSiamo`), `/come-funziona`, `/funzionalita`, `/esempi`, `/modelli`, `/matrimonio`, `/battesimi`, `/compleanni`, `/planner` (B2B), `/prezzi`, `/rsvp-guide`, blog. Footer link a `/about` corretto (pagina esistente).
 
 ---
 
