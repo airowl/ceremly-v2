@@ -30,7 +30,7 @@ import { dispatch } from "../queue";
 const DISPATCH_CONCURRENCY = 10;
 
 /** Token fittizio per il link/pixel dell'email di test (il 404 pubblico è cortese). */
-const TEST_TOKEN = "anteprima";
+const TEST_TOKEN = "preview";
 
 /** Nome ospite d'esempio per l'email di test (SPEC §6 send-test). */
 const TEST_GUEST_NAME = "Anna";
