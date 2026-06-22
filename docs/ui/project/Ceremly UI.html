@@ -41,6 +41,7 @@
   <script type="text/babel" src="screens/invite-mobile.jsx"></script>
   <script type="text/babel" src="screens/rsvp-mobile.jsx"></script>
   <script type="text/babel" src="screens/loading-states.jsx"></script>
+  <script type="text/babel" src="screens/modals.jsx"></script>
 
   <script type="text/babel" data-presets="env,react">
   // App composition — design canvas with three sections
@@ -140,6 +141,15 @@
           <DCArtboard id="load-overlay" label="P3 · Overlay con avanzamento"      width={1180} height={760}><OverlayProgressDemo /></DCArtboard>
           <DCArtboard id="load-toast"   label="P4 · Toast ottimistico"            width={1180} height={640}><ToastDemo /></DCArtboard>
           <DCArtboard id="load-topbar"  label="P5 · Barra globale"                width={1180} height={600}><TopbarProgressDemo /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="modals" title="Modali" subtitle="Dialog standard · conferma, form, esito, condivisione, upgrade">
+          <DCArtboard id="m-destructive" label="M1 · Conferma distruttiva" width={900} height={620}><ModalDestructive /></DCArtboard>
+          <DCArtboard id="m-form"        label="M2 · Form · aggiungi ospite" width={900} height={640}><ModalForm /></DCArtboard>
+          <DCArtboard id="m-success"     label="M3 · Esito positivo"       width={840} height={560}><ModalSuccess /></DCArtboard>
+          <DCArtboard id="m-share"       label="M4 · Condividi invito"     width={900} height={640}><ModalShare /></DCArtboard>
+          <DCArtboard id="m-upgrade"     label="M5 · Limite piano / upgrade" width={900} height={600}><ModalUpgrade /></DCArtboard>
+          <DCArtboard id="m-unsaved"     label="M6 · Modifiche non salvate" width={840} height={520}><ModalUnsaved /></DCArtboard>
         </DCSection>
       </DesignCanvas>
     );
