@@ -711,7 +711,8 @@ async function saveAndLeave() {
                                 :disabled="galleryD.images.length >= 5 || uploadingGallery"
                                 @click="galleryInput?.click()"
                             >
-                                <CeremlyCerIcon name="upload" :s="12" />
+                                <span v-if="uploadingGallery" class="cer-spinner" style="width: 12px; height: 12px;" />
+                                <CeremlyCerIcon v-else name="upload" :s="12" />
                                 {{ uploadingGallery ? $t('ceremly.event.editor.fields.gallery.uploading') : $t('ceremly.event.editor.fields.gallery.upload') }}
                             </button>
                         </div>
@@ -769,6 +770,7 @@ async function saveAndLeave() {
                         :disabled="pending || !eventData || saveBtn.busy"
                         @click="save()"
                     >
+                        <span v-if="saveBtn.isLoading" class="cer-spinner" style="width: 14px; height: 14px;" />
                         {{ saveBtn.isLoading ? $t('ceremly.event.editor.topbar.saving') : saveBtn.isSuccess ? $t('common.saved') : $t('common.save') }}
                         <span v-if="isDirty && !saveBtn.busy" class="cer-dot" style="background: var(--orange);" />
                     </button>
@@ -778,7 +780,12 @@ async function saveAndLeave() {
                         :disabled="pending || !eventData || saveBtn.busy"
                         @click="saveAndContinue"
                     >
-                        {{ $t('ceremly.event.editor.topbar.saveAndContinue') }} <CeremlyCerIcon name="chevR" :s="12" />
+                        <template v-if="saveBtn.isLoading">
+                            <span class="cer-spinner" style="width: 14px; height: 14px;" /> {{ $t('ceremly.event.editor.topbar.saving') }}
+                        </template>
+                        <template v-else>
+                            {{ $t('ceremly.event.editor.topbar.saveAndContinue') }} <CeremlyCerIcon name="chevR" :s="12" />
+                        </template>
                     </button>
                 </div>
             </Teleport>
@@ -842,6 +849,7 @@ async function saveAndLeave() {
                         {{ $t('ceremly.event.editor.unsavedModal.leave') }}
                     </button>
                     <button class="cer-btn small" type="button" :disabled="saveBtn.busy" @click="saveAndLeave">
+                        <span v-if="saveBtn.isLoading" class="cer-spinner" style="width: 14px; height: 14px;" />
                         {{ saveBtn.isLoading ? $t('ceremly.event.editor.unsavedModal.saving') : $t('ceremly.event.editor.unsavedModal.saveAndLeave') }}
                     </button>
                 </div>
