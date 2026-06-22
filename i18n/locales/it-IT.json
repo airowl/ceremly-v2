@@ -3341,7 +3341,14 @@
             "errorDesc": "Riprova tra qualche istante."
           }
         },
-        "unsavedChangesConfirm": "Hai modifiche non salvate. Vuoi davvero uscire dall'editor?"
+        "unsavedChangesConfirm": "Hai modifiche non salvate. Vuoi davvero uscire dall'editor?",
+        "unsavedModal": {
+          "title": "Modifiche non salvate",
+          "body": "Hai modifiche non salvate all'invito. Vuoi salvarle prima di uscire?",
+          "saveAndLeave": "Salva ed esci",
+          "saving": "Salvataggio…",
+          "leave": "Esci senza salvare"
+        }
       },
       "guests": {
         "crumbEvents": "Eventi",

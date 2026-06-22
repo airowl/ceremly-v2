@@ -18,6 +18,7 @@ definePageMeta({
 const { t } = useI18n()
 
 const { isActiveMode } = useSiteMode()
+const { loggedIn, signOut } = useAuth()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
@@ -57,6 +58,11 @@ useScrollReveal()
 // Smooth scroll alle ancore (la nav è sticky: scroll-margin-top in CSS)
 function scrollToId(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+// Logout dalla nav: utente loggato resta sulla home (da guest)
+async function logout() {
+    await signOut({ redirectTo: '/' })
 }
 
 // ── Waiting list (solo waitinglist mode) ──
@@ -174,7 +180,11 @@ const feats: Feat[] = [
                     >{{ a.label }}</a>
                 </nav>
                 <div class="row" style="gap: 10px;">
-                    <template v-if="isActiveMode">
+                    <template v-if="loggedIn">
+                        <button type="button" class="cer-btn ghost small" @click="logout">{{ $t('common.logout') }}</button>
+                        <NuxtLink to="/dashboard" class="cer-btn small">{{ $t('common.dashboard') }}</NuxtLink>
+                    </template>
+                    <template v-else-if="isActiveMode">
                         <NuxtLink to="/login" class="cer-btn ghost small">{{ $t('common.signIn') }}</NuxtLink>
                         <NuxtLink to="/signup" class="cer-btn small">{{ $t('common.signUp') }}</NuxtLink>
                     </template>
@@ -198,9 +208,6 @@ const feats: Feat[] = [
                     <NuxtLink to="/signup" class="cer-btn" style="padding: 15px 24px; font-size: 14px;">
                         <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.hero.ctaPrimary') }}
                     </NuxtLink>
-                    <a href="#examples" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('examples')">
-                        <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
-                    </a>
                 </div>
                 <!-- Waiting list mode: form di iscrizione al posto del CTA /signup -->
                 <div v-else id="waiting-list" class="l-target" style="margin-top: 32px;">
@@ -236,11 +243,6 @@ const feats: Feat[] = [
                         <span style="font-size: 14px; color: var(--ink-700);">{{ $t('ceremly.home.waitingList.successMessage') }}</span>
                     </div>
                     <div v-if="wlError" role="alert" style="margin-top: 8px; font-size: 13px; color: var(--decline);">{{ wlError }}</div>
-                    <div class="row" style="margin-top: 14px;">
-                        <a href="#examples" class="cer-btn ghost" style="padding: 15px 24px; font-size: 14px;" @click.prevent="scrollToId('examples')">
-                            <CerIcon name="eye" :s="14" /> {{ $t('ceremly.home.hero.ctaExample') }}
-                        </a>
-                    </div>
                 </div>
                 <div class="row" style="margin-top: 26px; gap: 18px; font-size: 13px; color: var(--ink-500); flex-wrap: wrap;">
                     <span class="row" style="gap: 6px;"><CerIcon name="check" :s="14" /> {{ $t('ceremly.home.hero.trust1') }}</span>

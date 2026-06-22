@@ -36,6 +36,10 @@ const device = ref<"desktop" | "mobile">("desktop");
 const saveBtn = useButtonSuccess();
 const previewOpen = ref(false);
 const confirmDeleteId = ref<string | null>(null);
+/** Path di destinazione in attesa di conferma uscita (modal modifiche non salvate). */
+const pendingLeavePath = ref<string | null>(null);
+/** Bypassa la guard quando l'utente ha già confermato l'uscita dal modal. */
+const bypassLeaveGuard = ref(false);
 const uploadingGallery = ref(false);
 const galleryInput = ref<HTMLInputElement | null>(null);
 
@@ -334,11 +338,36 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
 onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
-onBeforeRouteLeave(() => {
-    if (isDirty.value && !window.confirm(t("ceremly.event.editor.unsavedChangesConfirm"))) {
+
+// Navigazione interna SPA: blocca e mostra il modal custom invece di window.confirm.
+// Il `beforeunload` (chiusura tab/refresh) resta il dialog nativo: i browser non
+// permettono UI custom in quell'evento.
+onBeforeRouteLeave((to) => {
+    if (bypassLeaveGuard.value) return true;
+    if (isDirty.value) {
+        pendingLeavePath.value = to.fullPath;
         return false;
     }
+    return true;
 });
+
+function cancelLeave() {
+    pendingLeavePath.value = null;
+}
+async function discardAndLeave() {
+    const path = pendingLeavePath.value;
+    pendingLeavePath.value = null;
+    bypassLeaveGuard.value = true;
+    if (path) await navigateTo(path);
+}
+async function saveAndLeave() {
+    const ok = await save();
+    if (!ok) return; // save() mostra già il toast d'errore; il modal resta aperto.
+    const path = pendingLeavePath.value;
+    pendingLeavePath.value = null;
+    bypassLeaveGuard.value = true;
+    if (path) await navigateTo(path);
+}
 </script>
 
 <template>
@@ -793,6 +822,27 @@ onBeforeRouteLeave(() => {
                         @click="confirmDelete"
                     >
                         <CeremlyCerIcon name="trash" :s="12" /> {{ $t('ceremly.event.editor.deleteModal.confirm') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conferma uscita con modifiche non salvate (navigazione interna) -->
+        <div v-if="pendingLeavePath" class="cer-overlay" @click.self="cancelLeave">
+            <div class="cer-card col" style="width: 400px; max-width: calc(100vw - 32px); padding: 22px; gap: 10px;">
+                <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.editor.unsavedModal.title') }}</div>
+                <p class="small muted" style="margin: 0;">
+                    {{ $t('ceremly.event.editor.unsavedModal.body') }}
+                </p>
+                <div class="row" style="justify-content: flex-end; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                    <button class="cer-btn ghost small" type="button" @click="cancelLeave">
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button class="cer-btn ghost small" type="button" :disabled="saveBtn.busy" @click="discardAndLeave">
+                        {{ $t('ceremly.event.editor.unsavedModal.leave') }}
+                    </button>
+                    <button class="cer-btn small" type="button" :disabled="saveBtn.busy" @click="saveAndLeave">
+                        {{ saveBtn.isLoading ? $t('ceremly.event.editor.unsavedModal.saving') : $t('ceremly.event.editor.unsavedModal.saveAndLeave') }}
                     </button>
                 </div>
             </div>

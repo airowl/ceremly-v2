@@ -3341,7 +3341,14 @@
             "errorDesc": "Please try again in a moment."
           }
         },
-        "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to leave the editor?"
+        "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to leave the editor?",
+        "unsavedModal": {
+          "title": "Unsaved changes",
+          "body": "You have unsaved changes to your invite. Do you want to save them before leaving?",
+          "saveAndLeave": "Save and leave",
+          "saving": "Saving…",
+          "leave": "Leave without saving"
+        }
       },
       "guests": {
         "crumbEvents": "Events",

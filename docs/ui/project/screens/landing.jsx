@@ -25,6 +25,15 @@ function Mark({ children, c = 'var(--orange)' }) {
 
 /* ─────────────────────────────────────────────  NAV  */
 function LandingNav() {
+  // Sessione simulata per la demo — persistita in localStorage.
+  const [loggedIn, setLoggedIn] = React.useState(() => {
+    try { return localStorage.getItem('ceremly_session') === '1'; } catch (e) { return false; }
+  });
+  const setSession = (v) => {
+    setLoggedIn(v);
+    try { v ? localStorage.setItem('ceremly_session', '1') : localStorage.removeItem('ceremly_session'); } catch (e) {}
+  };
+
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -43,10 +52,17 @@ function LandingNav() {
         <span style={{ cursor: 'pointer' }}>Prezzi</span>
         <span style={{ cursor: 'pointer' }}>Esempi</span>
       </div>
-      <div className="row" style={{ gap: 10 }}>
-        <button className="cer-btn ghost small">Accedi</button>
-        <button className="cer-btn small">Registrati</button>
-      </div>
+      {loggedIn ? (
+        <div className="row" style={{ gap: 10 }}>
+          <button className="cer-btn ghost small" onClick={() => setSession(false)}>Esci</button>
+          <button className="cer-btn small">Dashboard</button>
+        </div>
+      ) : (
+        <div className="row" style={{ gap: 10 }}>
+          <button className="cer-btn ghost small" onClick={() => setSession(true)}>Accedi</button>
+          <button className="cer-btn small">Registrati</button>
+        </div>
+      )}
     </div>
   );
 }
