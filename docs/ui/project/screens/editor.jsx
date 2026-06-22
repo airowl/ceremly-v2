@@ -1,7 +1,28 @@
 // Invitation editor — left blocks library, center live preview, right inspector.
+// Curated invitation color palettes — light papers, harmonious warm/cool accents.
+const INV_PALETTES = [
+  { k: 'toscana',    label: 'Toscana',     paper: '#FFFDF6', accent: '#d4a373', deep: '#5E4426', soft: '#faedcd', onAccent: '#3F3622' },
+  { k: 'bordeaux',   label: 'Bordeaux',    paper: '#FBF6F4', accent: '#8C3B4A', deep: '#4A2230', soft: '#F0DDDD', onAccent: '#FBF6F4' },
+  { k: 'salvia',     label: 'Salvia',      paper: '#F7F8F1', accent: '#7E8C5A', deep: '#3F4A2C', soft: '#E3E8D2', onAccent: '#F7F8F1' },
+  { k: 'polvere',    label: 'Blu polvere', paper: '#F5F7F9', accent: '#6E8AA6', deep: '#324558', soft: '#DCE5ED', onAccent: '#F5F7F9' },
+  { k: 'terracotta', label: 'Terracotta',  paper: '#FBF4F0', accent: '#C2683F', deep: '#6E3318', soft: '#F2DDD0', onAccent: '#FBF4F0' },
+  { k: 'notte',      label: 'Notte',       paper: '#F3F2F0', accent: '#3F3622', deep: '#1E1A12', soft: '#E5E1D8', onAccent: '#F3F2F0' },
+];
+
+// Curated invitation font choices — the display face used across the invite paper.
+const INV_FONTS = [
+  { k: 'bricolage', label: 'Bricolage',  family: "'Bricolage Grotesque', system-ui, sans-serif", note: 'Grottesco moderno' },
+  { k: 'playfair',  label: 'Playfair',   family: "'Playfair Display', Georgia, serif",          note: 'Serif elegante' },
+  { k: 'cormorant', label: 'Cormorant',  family: "'Cormorant Garamond', Georgia, serif",        note: 'Serif raffinato' },
+  { k: 'garamond',  label: 'EB Garamond', family: "'EB Garamond', Georgia, serif",              note: 'Serif classico' },
+  { k: 'baskerville', label: 'Baskerville', family: "'Libre Baskerville', Georgia, serif",       note: 'Serif tradizionale' },
+];
+
 function EditorScreen() {
   const [activeBlock, setActiveBlock] = React.useState('header');
   const [device, setDevice] = React.useState('desktop'); // desktop | mobile
+  const [theme, setTheme] = React.useState(INV_PALETTES[0]);
+  const [font, setFont] = React.useState(INV_FONTS[0]);
 
   const blockLib = [
     { k: 'header',    label: 'Intestazione',     icon: I.Ring },
@@ -62,6 +83,23 @@ function EditorScreen() {
           <button className="cer-btn ghost small" style={{ justifyContent: 'center' }}>
             <I.Plus s={12} /> Blocco personalizzato
           </button>
+
+          <div className="divider" />
+          <div className="mono" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>
+            Aspetto
+          </div>
+          <div
+            onClick={() => setActiveBlock('theme')}
+            className="row"
+            style={{
+              padding: '10px 12px', borderRadius: 8, gap: 10, cursor: 'pointer',
+              background: activeBlock === 'theme' ? 'var(--bone-100)' : 'transparent',
+              border: '1px solid ' + (activeBlock === 'theme' ? 'var(--bone-200)' : 'transparent'),
+            }}>
+            <I.Sparkle s={14} />
+            <span style={{ fontSize: 13, flex: 1 }}>Tema &amp; colori</span>
+            <span style={{ width: 14, height: 14, borderRadius: '50%', background: theme.accent, border: '1.5px solid var(--ink)' }} />
+          </div>
         </div>
 
         {/* Preview */}
@@ -70,7 +108,7 @@ function EditorScreen() {
           <div className="row" style={{ padding: '10px 16px', justifyContent: 'space-between', borderBottom: '1px solid var(--bone-200)', background: 'var(--bone-50)' }}>
             <div className="row" style={{ gap: 8 }}>
               <span className="mono" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>
-                Anteprima · template Toscana
+                Anteprima · tema {theme.label}
               </span>
             </div>
             <div className="row" style={{ gap: 4, background: 'var(--bone-100)', borderRadius: 999, padding: 3 }}>
@@ -97,19 +135,19 @@ function EditorScreen() {
               width: device === 'mobile' ? 360 : 540,
               transition: 'width 200ms',
             }}>
-              <InvitePreview activeBlock={activeBlock} setActiveBlock={setActiveBlock} />
+              <InvitePreview activeBlock={activeBlock} setActiveBlock={setActiveBlock} theme={theme} font={font} />
             </div>
           </div>
         </div>
 
         {/* Inspector */}
-        <Inspector activeBlock={activeBlock} />
+        <Inspector activeBlock={activeBlock} theme={theme} setTheme={setTheme} font={font} setFont={setFont} />
       </div>
     </AppShell>
   );
 }
 
-function InvitePreview({ activeBlock, setActiveBlock }) {
+function InvitePreview({ activeBlock, setActiveBlock, theme, font }) {
   const wrap = (k, label, children) => (
     <div onClick={() => setActiveBlock(k)} style={{
       position: 'relative',
@@ -138,7 +176,14 @@ function InvitePreview({ activeBlock, setActiveBlock }) {
       borderRadius: 16,
       padding: '48px 36px',
       boxShadow: '0 1px 0 var(--bone-200), 0 24px 60px -30px rgba(26,22,18,0.25)',
-      fontFamily: 'var(--font-display)',
+      fontFamily: font.family,
+      transition: 'background 200ms',
+      // Theme override — redefines tokens locally so every block recolors live.
+      '--font-display': font.family,
+      '--bone-50': theme.paper,
+      '--bone-100': theme.soft,
+      '--wine': theme.accent,
+      '--wine-deep': theme.deep,
     }}>
       {wrap('header', 'Intestazione', (
         <div style={{ textAlign: 'center' }}>
@@ -240,7 +285,7 @@ function InvitePreview({ activeBlock, setActiveBlock }) {
           <button style={{
             marginTop: 14,
             padding: '12px 28px',
-            background: 'var(--wine)', color: 'var(--ink)',
+            background: 'var(--wine)', color: theme.onAccent,
             border: 'none', borderRadius: 999,
             fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500,
             cursor: 'pointer',
@@ -254,7 +299,104 @@ function InvitePreview({ activeBlock, setActiveBlock }) {
   );
 }
 
-function Inspector({ activeBlock }) {
+function Inspector({ activeBlock, theme, setTheme, font, setFont }) {
+  // Appearance panel — pick the palette that recolors the whole invitation.
+  if (activeBlock === 'theme') {
+    return (
+      <div className="col cer-card" style={{ padding: 16, gap: 16 }}>
+        <div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>Aspetto</div>
+          <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>Tema &amp; colori</div>
+        </div>
+
+        <div className="col" style={{ gap: 8 }}>
+          <label className="mono" style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>
+            Palette
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {INV_PALETTES.map((p) => {
+              const sel = p.k === theme.k;
+              return (
+                <div key={p.k}
+                  onClick={() => setTheme(p)}
+                  className="col"
+                  style={{
+                    gap: 8, padding: 10, borderRadius: 10, cursor: 'pointer',
+                    background: sel ? 'var(--bone-100)' : 'var(--bone-50)',
+                    border: '1.5px solid ' + (sel ? 'var(--ink)' : 'var(--line)'),
+                  }}>
+                  <div className="row" style={{ gap: 4 }}>
+                    <span style={{ flex: 1, height: 22, borderRadius: 5, background: p.paper, border: '1px solid var(--line)' }} />
+                    <span style={{ flex: 1, height: 22, borderRadius: 5, background: p.accent }} />
+                    <span style={{ flex: 1, height: 22, borderRadius: 5, background: p.deep }} />
+                  </div>
+                  <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: sel ? 600 : 400 }}>{p.label}</span>
+                    {sel && <I.Check s={13} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        <div className="col" style={{ gap: 8 }}>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>
+            Colore accento
+          </div>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {INV_PALETTES.map((p) => (
+              <span key={p.k}
+                onClick={() => setTheme(p)}
+                title={p.label}
+                style={{
+                  width: 26, height: 26, borderRadius: '50%', cursor: 'pointer',
+                  background: p.accent,
+                  border: '2px solid ' + (p.k === theme.k ? 'var(--ink)' : 'transparent'),
+                  boxShadow: '0 0 0 1px var(--line)',
+                }} />
+            ))}
+          </div>
+          <div className="small muted">
+            La palette ricolora intestazione, programma, RSVP e dettagli dell'invito.
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        <div className="col" style={{ gap: 8 }}>
+          <label className="mono" style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>
+            Carattere
+          </label>
+          <div className="col" style={{ gap: 6 }}>
+            {INV_FONTS.map((ft) => {
+              const sel = ft.k === font.k;
+              return (
+                <div key={ft.k}
+                  onClick={() => setFont(ft)}
+                  className="row"
+                  style={{
+                    gap: 10, padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                    alignItems: 'center', justifyContent: 'space-between',
+                    background: sel ? 'var(--bone-100)' : 'var(--bone-50)',
+                    border: '1.5px solid ' + (sel ? 'var(--ink)' : 'var(--line)'),
+                  }}>
+                  <div className="col" style={{ gap: 1 }}>
+                    <span style={{ fontFamily: ft.family, fontSize: 18, lineHeight: 1.1 }}>Giulia &amp; Tommaso</span>
+                    <span className="mono" style={{ fontSize: 9, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ink-400)' }}>{ft.label} · {ft.note}</span>
+                  </div>
+                  {sel && <I.Check s={13} />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const fields = {
     header: [
       { l: 'Sopra-titolo',    v: 'Save the date' },
