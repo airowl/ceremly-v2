@@ -1,59 +1,92 @@
-# Task 4: LOCAL-DEV-SERVICES Consistency Fix
+# Task 4 Report: Tipi condivisi (CeremlyEvent.theme + payload pubblico)
 
-## Changes Made
+## Summary
 
-### File: `docs/base/LOCAL-DEV-SERVICES.md`
+**Stato:** DONE
 
-**Section**: "### Da sistemare (azioni su Cloudflare)" (lines 46–55)
+**Commit:** `ab58eaf` — `feat(invite): CeremlyEvent.theme + payload pubblico`
 
-#### Before:
-```markdown
-Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. **Eccezione:
-staging e prod condividono lo stesso bucket R2** → i file si mescolano. Inoltre in dev
-il public URL R2 è un placeholder.
+**File modificato:** `shared/types/ceremly.ts` (solo questo)
 
-1. Crea un bucket R2 **dev** e uno **test** (oltre a quello prod esistente).
-2. Aggiorna le env:
-   - dev: `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (no più `cdn.yourdomain.com`).
-   - staging: bucket + public URL **test**, distinti da prod.
+---
+
+## Modifiche Applicate
+
+### 1. Import tipo InviteTheme
+
+Aggiunto dopo il commento di intestazione:
+```typescript
+import type { InviteTheme } from '../constants/inviteTheme'
 ```
 
-#### After:
-```markdown
-Verificato: DB, Redis, QStash e base URL sono già separati per ambiente. **Resta da
-sistemare il bucket R2 di dev**: il public URL è ancora un placeholder.
+✅ Import corretto con `import type` (nessun runtime).
 
-1. Crea un bucket R2 **dev** (oltre a quello prod esistente).
-2. Aggiorna le env:
-   - dev: `NUXT_CF_R2_BUCKET_NAME` + `NUXT_CF_R2_PUBLIC_URL` reali (no più `cdn.yourdomain.com`).
+### 2. CeremlyEvent: palette → theme
+
+**Da:**
+```typescript
+/** Key palette colori (shared/constants/inviteTheme). null ⇒ token globali (look toscana). */
+palette: string | null
+/** Key carattere display (shared/constants/inviteTheme). null ⇒ --font-display globale. */
+inviteFont: string | null
 ```
 
-**Rationale**: 
-- Intro now correctly frames the reality: all services (DB, Redis, QStash, base URL) are already separated, and the only remaining item is the dev R2 bucket.
-- Action 1 now focuses only on creating the dev bucket (staging has been removed from the architecture).
-- No "staging" references reintroduced in the "Da sistemare" section.
-- Broader references to staging in the environment matrix (lines 5, 26, 37) remain intact as they describe the full architecture context.
-
-## Verification
-
-**grep staging result:**
-```
-$ grep -ni staging docs/base/LOCAL-DEV-SERVICES.md
-5:dev** (vedi sotto); staging e prod sono tutto cloud.
-26:| | dev (macchina) | test/staging (Vercel) | prod (Vercel) |
-37:Modello a **2 account**: uno *non-prod* (dev + test/staging), uno *prod* separato.
-```
-✓ No "staging" in the "Da sistemare" section (architectural references only).
-
-**Section consistency check:**
-✓ Intro sentence frames dev R2 bucket as the single remaining item.
-✓ Action 1 matches: create dev bucket only.
-✓ No contradiction between intro and actions.
-
-## Commit
-
-```
-d3eeaa7 fix(docs): clarify LOCAL-DEV-SERVICES "Da sistemare" section for dev R2 bucket
+**A:**
+```typescript
+/** Tema colori custom; null ⇒ token globali (look toscana). */
+theme: InviteTheme | null
+/** Nome famiglia del catalogo font; null ⇒ --font-display globale. */
+inviteFont: string | null
 ```
 
-1 file changed, 3 insertions(+), 5 deletions(-)
+✅ Campo `palette` rimosso, sostituito con `theme: InviteTheme | null`
+✅ Campo `inviteFont` mantenuto (commento aggiornato)
+
+### 3. PublicInvitePayload: Pick aggiornato
+
+**Da:** `| 'templateKey' | 'palette' | 'inviteFont' |`  
+**A:** `| 'templateKey' | 'theme' | 'inviteFont' |`
+
+✅ Pick correttamente aggiornato
+
+---
+
+## Typecheck
+
+```bash
+pnpm typecheck 2>&1 | grep "types/ceremly.ts"
+```
+
+**Output:** (vuoto)
+
+✅ **ZERO errori nel file types/ceremly.ts stesso**
+
+### Errori attesi in consumer (Task 5–9)
+
+Verificati correttamente:
+- `app/pages/dashboard/events/[id]/editor.vue:136` — Property 'palette' does not exist
+- `app/pages/e/[slug]/[token].vue:594` — Property 'palette' does not exist (nel Pick)
+- `server/services/event.service.ts:301` — Property 'palette' does not exist
+- `server/services/publicInvite.service.ts:83,129` — Object literal 'palette' not known
+
+✅ **Errori attesi confermati** — saranno risolti nei task successivi.
+
+---
+
+## Self-Review
+
+| Punto | Stato |
+|-------|-------|
+| `palette: string \| null` rimosso da `CeremlyEvent` | ✅ Confermato |
+| `theme: InviteTheme \| null` aggiunto | ✅ Confermato |
+| `inviteFont: string \| null` mantenuto + commento aggiornato | ✅ Confermato |
+| `PublicInvitePayload` Pick aggiornato da `'palette'` a `'theme'` | ✅ Confermato |
+| Import type corretto (nessun runtime) | ✅ Confermato |
+| Il file types ha 0 errori propri | ✅ Confermato |
+| Commit creato con messaggio corretto | ✅ Confermato (SHA: ab58eaf) |
+
+---
+
+## Concerns
+
+Nessuno. Task completo e verificato.

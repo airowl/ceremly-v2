@@ -15,7 +15,7 @@
 - `theme=null` / `inviteFont=null` DEVE rendere il look globale `.cer` identico a oggi (zero regressione).
 - Colori hex nel formato `#rrggbb` (6 cifre). Font ammessi solo se `isCatalogFont(family)` (whitelist).
 - Date in memoria/commit assolute. Commit automatici OK su branch `dev`; push manuale (mai automatico).
-- Migrazioni: file Drizzle + `_journal.json` + snapshot coerenti. Su dev il watermark `__drizzle_migrations` è a 0009 → `db:migrate` applica 0010 pulito.
+- Migrazioni: file Drizzle + `_journal.json` + snapshot coerenti. DB allineato (dev+prod a 0009, registro `__drizzle_migrations` a 10 righe — debito journal risolto 2026-06-23) → `db:migrate`/`db:migrate:prod` applicano 0010 normalmente.
 
 ---
 
@@ -1068,5 +1068,5 @@ git commit -m "chore(invite): rifiniture tema custom dopo verifica"
 
 ## Note operative (post-piano)
 
-- **PROD**: la 0010 (come la 0009) va applicata al branch main, che ha il debito journal. Procedura fuori scope del piano (operativa): allineare watermark + `db:migrate:prod`, oppure SQL diretto additivo (`ALTER TABLE events ADD COLUMN theme jsonb;` + UPDATE conversione + `DROP COLUMN palette;`). Vedi [[ceremly-drizzle-journal-disallineato]].
+- **PROD**: debito journal RISOLTO il 2026-06-23 — dev e prod sono entrambi a 0009 (registro a 10 righe, schema completo). `pnpm db:migrate:prod` applica la 0010 direttamente (niente più watermark/SQL manuale). Vedi [[ceremly-drizzle-journal-disallineato]].
 - **Push** sempre manuale.
