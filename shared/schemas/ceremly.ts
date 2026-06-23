@@ -4,14 +4,20 @@
  * (parseBody/parseQueryParams nelle route).
  */
 import { z } from "zod";
-import { INVITE_FONT_KEYS, PALETTE_KEYS } from "../constants/inviteTheme";
+import { isCatalogFont } from "../constants/inviteTheme";
 import { nonEmptyString } from "./common";
 
 export const eventTypeEnum = z.enum(["matrimonio", "laurea", "compleanno", "battesimo"]);
 export const eventStatusEnum = z.enum(["draft", "active", "closed"]);
 export const attendingEnum = z.enum(["yes", "no", "maybe"]);
-export const paletteKeyEnum = z.enum(PALETTE_KEYS);
-export const inviteFontEnum = z.enum(INVITE_FONT_KEYS);
+
+export const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Colore non valido (atteso #rrggbb)");
+export const themeSchema = z.object({
+    paper: hexColorSchema,
+    accent: hexColorSchema,
+    deep: hexColorSchema,
+    onAccent: hexColorSchema,
+});
 
 /** Email opzionale: accetta anche stringa vuota (form/CSV), il service la normalizza a null. */
 const optionalEmail = z.union([z.string().email(), z.literal("")]).optional();
@@ -177,8 +183,8 @@ export const updateEventSchema = z.object({
     locationName: z.string().max(200).nullish(),
     locationAddress: z.string().max(300).nullish(),
     status: eventStatusEnum.optional(),
-    palette: paletteKeyEnum.nullish(),
-    inviteFont: inviteFontEnum.nullish(),
+    theme: themeSchema.nullish(),
+    inviteFont: z.string().max(80).refine(isCatalogFont, "Font non in catalogo").nullish(),
     blocks: z.array(blockSchema).max(50).optional(),
     rsvpConfig: z.array(rsvpQuestionSchema).max(30).optional(),
     rsvpDeadline: z.coerce.date().nullish(),
