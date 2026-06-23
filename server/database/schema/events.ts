@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 import type { EventDistribution, InviteBlock, RsvpQuestion } from "~~/shared/types/ceremly";
+import type { InviteTheme } from "~~/shared/constants/inviteTheme";
 import { organization } from "./auth";
 
 /**
@@ -22,7 +23,7 @@ export const events = pgTable(
         // Tema invito: key risolte in shared/constants/inviteTheme. NULL ⇒ token
         // globali del design system .cer (look "toscana" + font "bricolage"),
         // così gli eventi pre-esistenti restano invariati (nessuna regressione).
-        palette: text("palette"),
+        theme: jsonb("theme").$type<InviteTheme>(),
         inviteFont: text("invite_font"),
         title: text("title").notNull(),
         slug: text("slug").notNull().unique(),

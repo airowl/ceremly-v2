@@ -72,5 +72,12 @@
       "tag": "0009_event_invite_theme",
       "breakpoints": true
     }
+    ,{
+      "idx": 10,
+      "version": "7",
+      "when": 1782200000000,
+      "tag": "0010_event_invite_theme_custom",
+      "breakpoints": true
+    }
   ]
 }
