@@ -20,9 +20,9 @@ export const events = pgTable(
             .references(() => organization.id, { onDelete: "cascade" }),
         type: text("type").notNull(), // matrimonio | laurea | compleanno | battesimo
         templateKey: text("template_key").notNull(),
-        // Tema invito: key risolte in shared/constants/inviteTheme. NULL ⇒ token
-        // globali del design system .cer (look "toscana" + font "bricolage"),
-        // così gli eventi pre-esistenti restano invariati (nessuna regressione).
+        // Tema invito custom: 4 colori hex (InviteTheme). NULL ⇒ token globali
+        // del design system .cer (look "toscana"), così gli eventi pre-esistenti
+        // restano invariati. inviteFont = nome famiglia del catalogo (o NULL).
         theme: jsonb("theme").$type<InviteTheme>(),
         inviteFont: text("invite_font"),
         title: text("title").notNull(),

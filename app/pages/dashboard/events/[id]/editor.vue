@@ -39,6 +39,7 @@ const activeBlockId = ref<string | null>(null);
 const theme = ref<InviteTheme | null>(null);
 const fontFamily = ref<string | null>(null);
 const fontSearch = ref("");
+const hoverFont = ref<string | null>(null);
 // L'inspector mostra il pannello "Tema & colori" invece del blocco selezionato.
 const appearance = ref(false);
 const device = ref<"desktop" | "mobile">("desktop");
@@ -658,8 +659,10 @@ async function saveAndLeave() {
                                     border: '1px solid ' + (fontFamily === ft.family ? 'var(--ink)' : 'transparent'),
                                 }"
                                 @click="fontFamily = ft.family"
+                                @mouseenter="hoverFont = ft.family"
+                                @mouseleave="hoverFont = null"
                             >
-                                <span :class="`inv-font-${fontSlug(ft.family)}`" style="font-size: 16px;">{{ fontSampleNames }}</span>
+                                <span :class="(fontFamily === ft.family || hoverFont === ft.family) ? `inv-font-${fontSlug(ft.family)}` : ''" style="font-size: 16px;">{{ fontSampleNames }}</span>
                                 <span class="mono" style="font-size: 9px; color: var(--ink-500);">{{ ft.family }}</span>
                             </div>
                         </div>
