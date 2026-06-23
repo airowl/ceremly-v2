@@ -21,6 +21,7 @@ import type {
 import { getDefaultDistribution, getTemplate } from "~~/shared/constants/templates";
 import { RSVP_PRESETS } from "~~/shared/constants/rsvpPresets";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
+import type { InviteTheme } from "~~/shared/constants/inviteTheme";
 import {
     countActiveEventsByOrg,
     createEventRow,
@@ -284,7 +285,7 @@ export async function updateEvent(
         locationName: string | null;
         locationAddress: string | null;
         status: string;
-        palette: string | null;
+        theme: InviteTheme | null;
         inviteFont: string | null;
         blocks: InviteBlock[];
         rsvpConfig: RsvpQuestion[];
@@ -298,7 +299,7 @@ export async function updateEvent(
     if (data.locationName !== undefined) patch.locationName = data.locationName;
     if (data.locationAddress !== undefined) patch.locationAddress = data.locationAddress;
     if (data.status !== undefined) patch.status = data.status;
-    if (data.palette !== undefined) patch.palette = data.palette;
+    if (data.theme !== undefined) patch.theme = data.theme;
     if (data.inviteFont !== undefined) patch.inviteFont = data.inviteFont;
     if (data.blocks !== undefined) patch.blocks = data.blocks;
     if (data.rsvpConfig !== undefined) patch.rsvpConfig = data.rsvpConfig;
