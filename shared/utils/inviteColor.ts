@@ -1,6 +1,9 @@
 /** Utility colore per il tema invito: contrasto WCAG + derivazione tinta chiara. Funzioni pure. */
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        throw new Error(`hexToRgb: atteso colore #rrggbb, ricevuto "${hex}"`);
+    }
     const h = hex.replace("#", "");
     return {
         r: parseInt(h.slice(0, 2), 16),
