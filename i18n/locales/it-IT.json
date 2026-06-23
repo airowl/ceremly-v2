@@ -2677,6 +2677,8 @@
       "errorTitle": "Invito non disponibile",
       "errorHint": "Controlla il link ricevuto o contatta chi ti ha invitato.",
       "footerTagline": "creato con cura",
+      "previewBadge": "Anteprima",
+      "previewSubmitDisabled": "Questa è un'anteprima: l'invio della risposta è disabilitato.",
       "bannerAnswered": "Hai risposto:",
       "person": "persona",
       "people": "persone",
@@ -3226,6 +3228,14 @@
         "sidebar": {
           "blocksHeading": "Blocchi",
           "addCustomBlock": "Blocco personalizzato"
+        },
+        "appearance": {
+          "heading": "Aspetto",
+          "themeColors": "Tema & colori",
+          "palette": "Palette",
+          "paletteHint": "La palette ricolora intestazione, programma, RSVP e dettagli dell'invito.",
+          "font": "Carattere",
+          "fontSample": "Giulia & Tommaso"
         },
         "preview": {
           "heading": "Anteprima · template {template}",

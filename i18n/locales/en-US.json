@@ -2677,6 +2677,8 @@
       "errorTitle": "Invitation not found",
       "errorHint": "Check the link you received or contact the person who invited you.",
       "footerTagline": "made with care",
+      "previewBadge": "Preview",
+      "previewSubmitDisabled": "This is a preview: submitting a response is disabled.",
       "bannerAnswered": "Your response:",
       "person": "person",
       "people": "people",
@@ -3226,6 +3228,14 @@
         "sidebar": {
           "blocksHeading": "Blocks",
           "addCustomBlock": "Custom block"
+        },
+        "appearance": {
+          "heading": "Appearance",
+          "themeColors": "Theme & colors",
+          "palette": "Palette",
+          "paletteHint": "The palette recolors the header, schedule, RSVP and invitation details.",
+          "font": "Typeface",
+          "fontSample": "Giulia & Tommaso"
         },
         "preview": {
           "heading": "Preview · template {template}",

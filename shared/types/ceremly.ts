@@ -189,6 +189,10 @@ export interface CeremlyEvent {
   organizationId: string
   type: EventTypeKey
   templateKey: string
+  /** Key palette colori (shared/constants/inviteTheme). null ⇒ token globali (look toscana). */
+  palette: string | null
+  /** Key carattere display (shared/constants/inviteTheme). null ⇒ --font-display globale. */
+  inviteFont: string | null
   title: string
   slug: string
   eventDate: string | null
@@ -324,7 +328,7 @@ export interface EventReminderData {
 export interface PublicInvitePayload {
   event: Pick<
     CeremlyEvent,
-    | 'title' | 'type' | 'templateKey' | 'eventDate' | 'eventTime'
+    | 'title' | 'type' | 'templateKey' | 'palette' | 'inviteFont' | 'eventDate' | 'eventTime'
     | 'blocks' | 'rsvpConfig' | 'rsvpDeadline' | 'rsvpClosedMessage' | 'slug'
   >
   guest: { firstName: string, lastName: string }
@@ -333,4 +337,6 @@ export interface PublicInvitePayload {
     'attending' | 'companionsCount' | 'answers' | 'declineMessage' | 'updatedAt'
   > | null
   deadlinePassed: boolean
+  /** true SOLO per l'anteprima firmata (`/api/public/preview`): RSVP in sola lettura. */
+  preview?: boolean
 }

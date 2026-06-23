@@ -4,11 +4,14 @@
  * (parseBody/parseQueryParams nelle route).
  */
 import { z } from "zod";
+import { INVITE_FONT_KEYS, PALETTE_KEYS } from "../constants/inviteTheme";
 import { nonEmptyString } from "./common";
 
 export const eventTypeEnum = z.enum(["matrimonio", "laurea", "compleanno", "battesimo"]);
 export const eventStatusEnum = z.enum(["draft", "active", "closed"]);
 export const attendingEnum = z.enum(["yes", "no", "maybe"]);
+export const paletteKeyEnum = z.enum(PALETTE_KEYS);
+export const inviteFontEnum = z.enum(INVITE_FONT_KEYS);
 
 /** Email opzionale: accetta anche stringa vuota (form/CSV), il service la normalizza a null. */
 const optionalEmail = z.union([z.string().email(), z.literal("")]).optional();
@@ -174,6 +177,8 @@ export const updateEventSchema = z.object({
     locationName: z.string().max(200).nullish(),
     locationAddress: z.string().max(300).nullish(),
     status: eventStatusEnum.optional(),
+    palette: paletteKeyEnum.nullish(),
+    inviteFont: inviteFontEnum.nullish(),
     blocks: z.array(blockSchema).max(50).optional(),
     rsvpConfig: z.array(rsvpQuestionSchema).max(30).optional(),
     rsvpDeadline: z.coerce.date().nullish(),
@@ -249,6 +254,13 @@ export const publicRsvpSchema = z.object({
     declineMessage: z.string().max(1000).nullish(),
 });
 export type PublicRsvpInput = z.infer<typeof publicRsvpSchema>;
+
+/** Query di GET /api/public/preview: slug + firma HMAC (anteprima dell'invito). */
+export const previewQuerySchema = z.object({
+    slug: z.string().min(1).max(200),
+    sig: z.string().min(1).max(200),
+});
+export type PreviewQueryInput = z.infer<typeof previewQuerySchema>;
 
 // ---------------------------------------------------------------------------
 // Reminder

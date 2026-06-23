@@ -25,6 +25,7 @@ import { logAudit } from "../utils/audit";
 import { sendEmail } from "../utils/email";
 import { emailSubjects, renderGuestInviteEmail } from "../emailTemplates";
 import { dispatch } from "../queue";
+import { signPreviewToken } from "../utils/previewToken";
 
 /** Concorrenza massima dei dispatch QStash per invio (#6: evita timeout su liste grandi). */
 const DISPATCH_CONCURRENCY = 10;
@@ -65,6 +66,17 @@ export function buildGuestInviteLink(slug: string, token: string): string {
 /** Pixel tracking apertura email: `{baseURL}/api/public/pixel/{token}.gif`. */
 export function buildGuestPixelUrl(token: string): string {
     return `${getPublicBaseUrl()}/api/public/pixel/${token}.gif`;
+}
+
+/**
+ * Link di anteprima firmato per l'email di test: `{baseURL}/e/{slug}/preview?sig=...`.
+ * La firma HMAC autorizza la modalità anteprima sulla pagina pubblica (invito
+ * renderizzato, ospite-esempio, RSVP sola lettura) senza esporre dati ospite né
+ * permettere enumeration: `/e/{slug}/preview` digitato a mano (senza sig) resta 404.
+ */
+export function buildPreviewLink(slug: string): string {
+    const sig = signPreviewToken(slug);
+    return `${getPublicBaseUrl()}/e/${slug}/${TEST_TOKEN}?sig=${encodeURIComponent(sig)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +226,7 @@ export async function sendTest(
         throw createError({ statusCode: 401, statusMessage: "Email dell'utente non disponibile" });
     }
 
-    const link = buildGuestInviteLink(eventRow.slug, TEST_TOKEN);
+    const link = buildPreviewLink(eventRow.slug);
     const values = { nome: TEST_GUEST_NAME, link };
     const distribution = eventRow.distribution;
     const subject = applyInvitePlaceholders(

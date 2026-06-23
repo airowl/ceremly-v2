@@ -72,6 +72,15 @@
 .cer .serif { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
 .cer .mono { font-family: var(--font-mono); }
 
+/* Caratteri invito (inviteTheme · INV_FONTS). Le font-family esplicite fanno
+   rilevare e scaricare i webfont a @nuxt/fonts; la classe viene applicata sul
+   root del renderer (InviteRenderer) per impostare il display dell'invito. */
+.inv-font-bricolage { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+.inv-font-playfair { font-family: 'Playfair Display', Georgia, serif; }
+.inv-font-cormorant { font-family: 'Cormorant Garamond', Georgia, serif; }
+.inv-font-garamond { font-family: 'EB Garamond', Georgia, serif; }
+.inv-font-baskerville { font-family: 'Libre Baskerville', Georgia, serif; }
+
 /* Generic primitives */
 .cer-card {
   background: var(--bone-50);

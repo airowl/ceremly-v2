@@ -25,8 +25,12 @@ import {
     trackOpen,
     upsertResponse,
 } from "../repositories/publicRsvpRepository";
-import { clearEventCleanupWarned } from "../repositories/eventRepository";
+import { clearEventCleanupWarned, findEventBySlug } from "../repositories/eventRepository";
+import { verifyPreviewToken } from "../utils/previewToken";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./event.service";
+
+/** Nome ospite d'esempio per l'anteprima firmata (allineato all'email di test). */
+const PREVIEW_GUEST_NAME = "Anna";
 
 /** 404 generico §8.2: stessa risposta per ogni causa (no enumeration). */
 function inviteNotFound() {
@@ -76,6 +80,8 @@ export async function getPublicInvite(token: string): Promise<PublicInvitePayloa
             title: eventRow.title,
             type: eventRow.type as EventTypeKey,
             templateKey: eventRow.templateKey,
+            palette: eventRow.palette,
+            inviteFont: eventRow.inviteFont,
             eventDate: eventRow.eventDate?.toISOString() ?? null,
             eventTime: eventRow.eventTime,
             blocks: eventRow.blocks,
@@ -98,6 +104,42 @@ export async function getPublicInvite(token: string): Promise<PublicInvitePayloa
                 }
             : null,
         deadlinePassed,
+    };
+}
+
+/**
+ * GET /api/public/preview?slug=&sig= — anteprima firmata dell'invito (link
+ * dell'email di test). `sig` deve essere un HMAC valido per lo slug, altrimenti
+ * 404 generico (stessa risposta di un invito inesistente: niente enumeration).
+ * Renderizza l'invito con ospite-esempio e SENZA side-effect di tracking; il
+ * flag `preview: true` mette il form RSVP in sola lettura lato client.
+ * A differenza degli ospiti, l'evento in bozza è visibile (è il senso dell'anteprima).
+ */
+export async function getInvitePreview(slug: string, sig: string): Promise<PublicInvitePayload> {
+    if (!verifyPreviewToken(slug, sig)) throw inviteNotFound();
+
+    const eventRow = await findEventBySlug(slug);
+    if (!eventRow) throw inviteNotFound();
+
+    return {
+        event: {
+            title: eventRow.title,
+            type: eventRow.type as EventTypeKey,
+            templateKey: eventRow.templateKey,
+            palette: eventRow.palette,
+            inviteFont: eventRow.inviteFont,
+            eventDate: eventRow.eventDate?.toISOString() ?? null,
+            eventTime: eventRow.eventTime,
+            blocks: eventRow.blocks,
+            rsvpConfig: eventRow.rsvpConfig,
+            rsvpDeadline: eventRow.rsvpDeadline?.toISOString() ?? null,
+            rsvpClosedMessage: eventRow.rsvpClosedMessage ?? DEFAULT_RSVP_CLOSED_MESSAGE,
+            slug: eventRow.slug,
+        },
+        guest: { firstName: PREVIEW_GUEST_NAME, lastName: "" },
+        response: null,
+        deadlinePassed: false,
+        preview: true,
     };
 }
 

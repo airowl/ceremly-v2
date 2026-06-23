@@ -84,6 +84,21 @@ export async function findEventByIdScoped(organizationId: string, id: string) {
     return rows[0];
 }
 
+/**
+ * Fetch pubblico per slug (NO org scope): usato SOLO dall'anteprima firmata
+ * (`/api/public/preview`, autorizzata da HMAC). Le route ospite restano
+ * token-only. undefined se lo slug non esiste.
+ */
+export async function findEventBySlug(slug: string) {
+    const db = getDB();
+    const rows = await db
+        .select()
+        .from(schema.events)
+        .where(eq(schema.events.slug, slug))
+        .limit(1);
+    return rows[0];
+}
+
 /** Crea un evento nell'org indicata. Lancia 23505 su collisione slug (retry nel service). */
 export async function createEventRow(organizationId: string, values: CreateEventValues) {
     const db = getDB();

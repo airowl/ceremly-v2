@@ -8,6 +8,7 @@ import type {
     InviteBlock,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
+import { INVITE_FONTS, INVITE_PALETTES, getPalette } from "~~/shared/constants/inviteTheme";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -32,6 +33,11 @@ const pending = ref(true);
 const loadError = ref<string | null>(null);
 
 const activeBlockId = ref<string | null>(null);
+// Tema invito (palette + carattere), a livello evento. null ⇒ look globale (.cer).
+const paletteKey = ref<string | null>(null);
+const fontKey = ref<string | null>(null);
+// L'inspector mostra il pannello "Tema & colori" invece del blocco selezionato.
+const appearance = ref(false);
 const device = ref<"desktop" | "mobile">("desktop");
 const saveBtn = useButtonSuccess();
 const previewOpen = ref(false);
@@ -46,7 +52,7 @@ const galleryInput = ref<HTMLInputElement | null>(null);
 // ─── Dirty tracking ──────────────────────────────────────────────────
 const savedSnapshot = ref("");
 function snapshot(): string {
-    return JSON.stringify({ blocks: blocks.value, rsvpDeadline: rsvpDeadline.value });
+    return JSON.stringify({ blocks: blocks.value, rsvpDeadline: rsvpDeadline.value, palette: paletteKey.value, inviteFont: fontKey.value });
 }
 const isDirty = computed(() => savedSnapshot.value !== "" && snapshot() !== savedSnapshot.value);
 
@@ -127,6 +133,8 @@ async function loadEvent() {
         eventData.value = ev;
         blocks.value = normalizeBlocks(structuredClone(ev.blocks ?? []));
         rsvpDeadline.value = ev.rsvpDeadline ? String(ev.rsvpDeadline).slice(0, 10) : "";
+        paletteKey.value = ev.palette;
+        fontKey.value = ev.inviteFont;
         activeBlockId.value = blocks.value[0]?.id ?? null;
         crumbs.value = [t("ceremly.event.editor.breadcrumb.events"), t(`ceremly.eventType.${ev.type}.label`), t("ceremly.event.editor.breadcrumb.invite")];
         eventCtx.value = { id: ev.id, title: ev.title, type: ev.type };
@@ -180,6 +188,7 @@ function insertBeforeRsvp(blk: InviteBlock) {
     activeBlockId.value = blk.id;
 }
 function onLibClick(type: BlockType) {
+    appearance.value = false;
     const existing = blocks.value.find((b) => b.type === type);
     if (existing) {
         activeBlockId.value = existing.id;
@@ -188,10 +197,36 @@ function onLibClick(type: BlockType) {
     insertBeforeRsvp(makeBlock(type));
 }
 function addCustomBlock() {
+    appearance.value = false;
     const blk = makeBlock("logistics");
     if (blk.type === "logistics") blk.data.title = "Blocco personalizzato";
     insertBeforeRsvp(blk);
 }
+
+// ─── Aspetto: tema (palette + carattere) ─────────────────────────────
+function openAppearance() {
+    appearance.value = true;
+    activeBlockId.value = null; // niente outline nel preview mentre si edita il tema
+}
+function selectBlock(id: string) {
+    appearance.value = false;
+    activeBlockId.value = id;
+}
+/** Pallino nella libreria: accento della palette scelta o, se null, del template. */
+const currentAccent = computed(() => {
+    const p = getPalette(paletteKey.value);
+    if (p) return p.accent;
+    return getTemplate(eventData.value?.templateKey ?? "")?.accent ?? "#d4a373";
+});
+/** Anteprima carattere: i nomi reali della coppia se presenti, altrimenti sample. */
+const fontSampleNames = computed(() => {
+    const header = blocks.value.find((b) => b.type === "header");
+    if (header?.type === "header") {
+        const names = header.data.names.filter(Boolean).join(" & ");
+        if (names) return names;
+    }
+    return t("ceremly.event.editor.appearance.fontSample");
+});
 
 // ─── Riordino (header fisso primo, rsvp fisso ultimo) ────────────────
 const canMoveUp = computed(() => isRemovable.value && activeIndex.value > 1);
@@ -306,6 +341,8 @@ async function save(): Promise<boolean> {
                 body: {
                     blocks: blocks.value,
                     rsvpDeadline: rsvpDeadline.value || null,
+                    palette: paletteKey.value,
+                    inviteFont: fontKey.value,
                 },
             });
             eventData.value = res.event;
@@ -428,6 +465,27 @@ async function saveAndLeave() {
                 <button class="cer-btn ghost small" style="justify-content: center;" type="button" @click="addCustomBlock">
                     <CeremlyCerIcon name="plus" :s="12" /> {{ $t('ceremly.event.editor.sidebar.addCustomBlock') }}
                 </button>
+
+                <div class="divider" />
+                <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
+                    {{ $t('ceremly.event.editor.appearance.heading') }}
+                </div>
+                <div
+                    class="row"
+                    :style="{
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        background: appearance ? 'var(--bone-100)' : 'transparent',
+                        border: '1px solid ' + (appearance ? 'var(--bone-200)' : 'transparent'),
+                    }"
+                    @click="openAppearance"
+                >
+                    <CeremlyCerIcon name="sparkle" :s="14" />
+                    <span style="font-size: 13px; flex: 1;">{{ $t('ceremly.event.editor.appearance.themeColors') }}</span>
+                    <span :style="{ width: '14px', height: '14px', borderRadius: '50%', background: currentAccent, border: '1.5px solid var(--ink)' }" />
+                </div>
             </div>
 
             <!-- Preview -->
@@ -469,11 +527,13 @@ async function saveAndLeave() {
                         <CeremlyInviteRenderer
                             :blocks="blocks"
                             :template="eventData.templateKey"
+                            :palette="paletteKey"
+                            :font="fontKey"
                             :event-date="eventData.eventDate"
                             :rsvp-deadline="rsvpDeadline || null"
                             interactive
                             :active-block-id="activeBlockId"
-                            @select="activeBlockId = $event"
+                            @select="selectBlock"
                         />
                     </div>
                 </div>
@@ -481,6 +541,78 @@ async function saveAndLeave() {
 
             <!-- Inspector -->
             <div class="col cer-card scroll" style="padding: 16px; gap: 14px; min-height: 0; overflow-y: auto;">
+                <!-- Pannello Aspetto: palette colori + carattere (port editor.jsx 'theme') -->
+                <template v-if="appearance">
+                    <div>
+                        <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
+                            {{ $t('ceremly.event.editor.appearance.heading') }}
+                        </div>
+                        <div class="serif" style="font-size: 22px; margin-top: 2px;">{{ $t('ceremly.event.editor.appearance.themeColors') }}</div>
+                    </div>
+
+                    <div class="col" style="gap: 8px;">
+                        <label class="ins-label">{{ $t('ceremly.event.editor.appearance.palette') }}</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div
+                                v-for="p in INVITE_PALETTES"
+                                :key="p.key"
+                                class="col"
+                                :style="{
+                                    gap: '8px',
+                                    padding: '10px',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    background: paletteKey === p.key ? 'var(--bone-100)' : 'var(--bone-50)',
+                                    border: '1.5px solid ' + (paletteKey === p.key ? 'var(--ink)' : 'var(--line)'),
+                                }"
+                                @click="paletteKey = p.key"
+                            >
+                                <div class="row" style="gap: 4px;">
+                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.paper, border: '1px solid var(--line)' }" />
+                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.accent }" />
+                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.deep }" />
+                                </div>
+                                <div class="row" style="justify-content: space-between; align-items: center;">
+                                    <span :style="{ fontSize: '12px', fontWeight: paletteKey === p.key ? 600 : 400 }">{{ p.label }}</span>
+                                    <CeremlyCerIcon v-if="paletteKey === p.key" name="check" :s="13" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="small muted">{{ $t('ceremly.event.editor.appearance.paletteHint') }}</div>
+                    </div>
+
+                    <div class="divider" />
+
+                    <div class="col" style="gap: 8px;">
+                        <label class="ins-label">{{ $t('ceremly.event.editor.appearance.font') }}</label>
+                        <div class="col" style="gap: 6px;">
+                            <div
+                                v-for="ft in INVITE_FONTS"
+                                :key="ft.key"
+                                class="row"
+                                :style="{
+                                    gap: '10px',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    background: fontKey === ft.key ? 'var(--bone-100)' : 'var(--bone-50)',
+                                    border: '1.5px solid ' + (fontKey === ft.key ? 'var(--ink)' : 'var(--line)'),
+                                }"
+                                @click="fontKey = ft.key"
+                            >
+                                <div class="col" style="gap: 1px;">
+                                    <span :class="ft.cssClass" style="font-size: 18px; line-height: 1.1;">{{ fontSampleNames }}</span>
+                                    <span class="mono" style="font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-500);">{{ ft.label }} · {{ ft.note }}</span>
+                                </div>
+                                <CeremlyCerIcon v-if="fontKey === ft.key" name="check" :s="13" />
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template v-else>
                 <div class="row" style="justify-content: space-between; align-items: flex-start;">
                     <div>
                         <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
@@ -748,6 +880,7 @@ async function saveAndLeave() {
                         {{ $t('ceremly.event.editor.visibility.hint') }}
                     </div>
                 </div>
+                </template>
             </div>
         </div>
 
@@ -806,6 +939,8 @@ async function saveAndLeave() {
                     <CeremlyInviteRenderer
                         :blocks="blocks"
                         :template="eventData.templateKey"
+                        :palette="paletteKey"
+                        :font="fontKey"
                         :event-date="eventData.eventDate"
                         :rsvp-deadline="rsvpDeadline || null"
                     />

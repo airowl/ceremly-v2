@@ -18,6 +18,7 @@ import type {
     RsvpBlockData,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
+import { getInviteFont, getPalette } from "~~/shared/constants/inviteTheme";
 import CerIcon from "./CerIcon.vue";
 import CountdownRing from "./CountdownRing.vue";
 
@@ -28,6 +29,10 @@ const props = withDefaults(
         blocks: InviteBlock[];
         /** Oggetto { accent, accentSoft } oppure key risolta con getTemplate. */
         template: { accent: string; accentSoft: string } | string;
+        /** Key palette (inviteTheme). null/assente ⇒ accento dal template. */
+        palette?: string | null;
+        /** Key carattere (inviteTheme). null/assente ⇒ --font-display globale. */
+        font?: string | null;
         eventDate?: string | Date | null;
         rsvpDeadline?: string | Date | null;
         guestName?: string | null;
@@ -38,6 +43,8 @@ const props = withDefaults(
         closedMessage?: string | null;
     }>(),
     {
+        palette: null,
+        font: null,
         eventDate: null,
         rsvpDeadline: null,
         guestName: null,
@@ -73,17 +80,46 @@ const tpl = computed(() => {
     return props.template;
 });
 
-// Card bianca radius 16, padding 48px 36px, shadow soft (come InvitePreview).
-const rootStyle = computed<CSSProperties>(() => ({
-    "--tpl-accent": tpl.value.accent,
-    "--tpl-accent-soft": tpl.value.accentSoft,
-    background: "var(--bone-50)",
-    borderRadius: "16px",
-    padding: "48px 36px",
-    boxShadow: "0 1px 0 var(--bone-200), 0 24px 60px -30px rgba(26,22,18,0.25)",
-    fontFamily: "var(--font-display)",
-    color: "var(--ink)",
-}));
+// Tema invito a livello evento: una palette scelta dall'utente vince sul
+// template; il carattere override --font-display. null ⇒ token globali .cer.
+const palette = computed(() => getPalette(props.palette));
+const inviteFont = computed(() => getInviteFont(props.font));
+
+// Accento effettivo (palette se presente, altrimenti accento del template).
+const accent = computed(() => palette.value?.accent ?? tpl.value.accent);
+const accentSoft = computed(() => palette.value?.soft ?? tpl.value.accentSoft);
+
+// Classe webfont sul root: applica il carattere e fa rilevare la famiglia a
+// @nuxt/fonts (vedi .inv-font-* in ceremly.css).
+const rootClass = computed(() => inviteFont.value?.cssClass ?? "");
+
+// Card radius 16, padding 48px 36px, shadow soft (come InvitePreview). Gli
+// override dei token sono CONDIZIONALI: senza palette/font il root resta
+// identico a prima (zero regressione sugli inviti esistenti).
+const rootStyle = computed<CSSProperties>(() => {
+    const p = palette.value;
+    const f = inviteFont.value;
+    return {
+        "--tpl-accent": accent.value,
+        "--tpl-accent-soft": accentSoft.value,
+        ...(p
+            ? {
+                "--bone-50": p.paper,
+                "--bone-100": p.soft,
+                "--wine": p.accent,
+                "--wine-deep": p.deep,
+                "--rsvp-on-accent": p.onAccent,
+            }
+            : {}),
+        ...(f ? { "--font-display": f.family } : {}),
+        background: "var(--bone-50)",
+        borderRadius: "16px",
+        padding: "48px 36px",
+        boxShadow: "0 1px 0 var(--bone-200), 0 24px 60px -30px rgba(26,22,18,0.25)",
+        fontFamily: "var(--font-display)",
+        color: "var(--ink)",
+    };
+});
 
 // Titoli di sezione mono spaziati (il mockup spazia a mano le lettere: qui CSS letter-spacing).
 const monoTitle: CSSProperties = {
@@ -177,7 +213,7 @@ const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"))
 </script>
 
 <template>
-    <div class="cer" :style="rootStyle">
+    <div :class="['cer', rootClass]" :style="rootStyle">
         <!-- Saluto personalizzato (come 'CARA ANNA' di invite-mobile.jsx, qui 'Ciao' neutro) -->
         <div v-if="guestName" :style="{ textAlign: 'center', paddingBottom: '12px' }">
             <div
@@ -459,7 +495,7 @@ const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"))
                             marginTop: '14px',
                             padding: '12px 28px',
                             background: 'var(--tpl-accent)',
-                            color: 'var(--ink)',
+                            color: 'var(--rsvp-on-accent, var(--ink))',
                             border: 'none',
                             borderRadius: '999px',
                             fontFamily: 'var(--font-sans)',

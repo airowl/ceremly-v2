@@ -30,6 +30,14 @@ definePageMeta({
 const route = useRoute();
 const token = computed(() => String(route.params.token ?? ""));
 
+// Modalità anteprima firmata: token "preview" + ?sig HMAC (link "Invia un test a
+// me"). Renderizza l'invito con ospite-esempio e RSVP in sola lettura. Senza sig
+// valido la fetch fallisce → schermata d'errore cortese (nessuna enumeration).
+const PREVIEW_TOKEN = "preview";
+const slug = computed(() => String(route.params.slug ?? ""));
+const sig = computed(() => String(route.query.sig ?? ""));
+const isPreview = computed(() => token.value === PREVIEW_TOKEN);
+
 // Brand env-driven (niente stringhe hardcoded): appName per il PRODID ICS,
 // host pubblico (es. "ceremly.app") da baseURL per footer e UID ICS.
 const runtimeConfig = useRuntimeConfig();
@@ -42,8 +50,10 @@ const brandHost = computed(() => {
     return appName.value.toLowerCase();
 });
 
-const { isSubmitting, fetchInvite, submitRsvp } = usePublicInvite();
-const { data, error, status } = await fetchInvite(token.value);
+const { isSubmitting, fetchInvite, fetchPreview, submitRsvp } = usePublicInvite();
+const { data, error, status } = isPreview.value
+    ? await fetchPreview(slug.value, sig.value)
+    : await fetchInvite(token.value);
 
 // ---------------------------------------------------------------------------
 // SEO (noindex: pagina personale, mai indicizzata)
@@ -231,6 +241,11 @@ function closeForm() {
 
 async function onSubmit(payload: PublicRsvpPayload) {
     formErrors.value = [];
+    // Anteprima: il form è solo dimostrativo, nessuna risposta viene salvata.
+    if (isPreview.value) {
+        formErrors.value = [t("ceremly.guest.previewSubmitDisabled")];
+        return;
+    }
     const result = await submitRsvp(token.value, payload);
     if (result.ok) {
         response.value = result.response;
@@ -445,6 +460,11 @@ const agendaBtnStyle: CSSProperties = {
         <!-- Switcher lingua (IT/EN) — fisso, sempre raggiungibile dagli ospiti -->
         <CerLangSwitch :style="{ position: 'fixed', top: '16px', right: '16px', zIndex: 50 }" />
 
+        <!-- Badge anteprima firmata (solo modalità preview, invito renderizzato) -->
+        <div v-if="isPreview && data && !error" class="preview-badge">
+            <CerIcon name="eye" :s="13" /> {{ $t("ceremly.guest.previewBadge") }}
+        </div>
+
         <!-- ERRORE (404 o altro): schermata cortese standalone -->
         <div
             v-if="error"
@@ -571,6 +591,8 @@ const agendaBtnStyle: CSSProperties = {
                         <InviteRenderer
                             :blocks="ev!.blocks"
                             :template="tpl"
+                            :palette="ev!.palette"
+                            :font="ev!.inviteFont"
                             :event-date="ev!.eventDate"
                             :rsvp-deadline="ev!.rsvpDeadline"
                             :guest-name="guest!.firstName"
@@ -790,6 +812,27 @@ const agendaBtnStyle: CSSProperties = {
 </template>
 
 <style scoped>
+/* Badge "Anteprima" fisso in alto a sinistra (modalità preview firmata) */
+.preview-badge {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--ink);
+    color: var(--bone-50);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    box-shadow: 0 8px 24px -16px rgba(63, 54, 34, 0.6);
+}
+
 /* Mobile-first: shell max 480 centrata; su desktop sfondo bone-100 + ombra */
 .guest-page {
     min-height: 100dvh;

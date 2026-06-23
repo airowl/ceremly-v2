@@ -43,6 +43,17 @@ export function usePublicInvite() {
         );
     }
 
+    /**
+     * Fetch SSR dell'anteprima firmata (token "preview"): slug + sig dalla query.
+     * Stessa shape di fetchInvite, con `preview: true` nel payload.
+     */
+    function fetchPreview(slug: string, sig: string) {
+        return useFetch<PublicInvitePayload>(
+            "/api/public/preview",
+            { query: { slug, sig }, key: `public-preview-${slug}` },
+        );
+    }
+
     async function submitRsvp(
         token: string,
         payload: PublicRsvpPayload,
@@ -91,5 +102,5 @@ export function usePublicInvite() {
         }
     }
 
-    return { isSubmitting, fetchInvite, submitRsvp };
+    return { isSubmitting, fetchInvite, fetchPreview, submitRsvp };
 }

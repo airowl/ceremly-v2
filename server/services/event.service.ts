@@ -284,6 +284,8 @@ export async function updateEvent(
         locationName: string | null;
         locationAddress: string | null;
         status: string;
+        palette: string | null;
+        inviteFont: string | null;
         blocks: InviteBlock[];
         rsvpConfig: RsvpQuestion[];
         rsvpDeadline: Date | null;
@@ -296,6 +298,8 @@ export async function updateEvent(
     if (data.locationName !== undefined) patch.locationName = data.locationName;
     if (data.locationAddress !== undefined) patch.locationAddress = data.locationAddress;
     if (data.status !== undefined) patch.status = data.status;
+    if (data.palette !== undefined) patch.palette = data.palette;
+    if (data.inviteFont !== undefined) patch.inviteFont = data.inviteFont;
     if (data.blocks !== undefined) patch.blocks = data.blocks;
     if (data.rsvpConfig !== undefined) patch.rsvpConfig = data.rsvpConfig;
     if (data.rsvpDeadline !== undefined) patch.rsvpDeadline = data.rsvpDeadline;
