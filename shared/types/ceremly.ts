@@ -6,6 +6,8 @@
  * payload sono serializzati via $fetch/useFetch.
  */
 
+import type { InviteTheme } from '../constants/inviteTheme'
+
 // ---------------------------------------------------------------------------
 // Evento
 // ---------------------------------------------------------------------------
@@ -189,9 +191,9 @@ export interface CeremlyEvent {
   organizationId: string
   type: EventTypeKey
   templateKey: string
-  /** Key palette colori (shared/constants/inviteTheme). null ⇒ token globali (look toscana). */
-  palette: string | null
-  /** Key carattere display (shared/constants/inviteTheme). null ⇒ --font-display globale. */
+  /** Tema colori custom; null ⇒ token globali (look toscana). */
+  theme: InviteTheme | null
+  /** Nome famiglia del catalogo font; null ⇒ --font-display globale. */
   inviteFont: string | null
   title: string
   slug: string
@@ -328,7 +330,7 @@ export interface EventReminderData {
 export interface PublicInvitePayload {
   event: Pick<
     CeremlyEvent,
-    | 'title' | 'type' | 'templateKey' | 'palette' | 'inviteFont' | 'eventDate' | 'eventTime'
+    | 'title' | 'type' | 'templateKey' | 'theme' | 'inviteFont' | 'eventDate' | 'eventTime'
     | 'blocks' | 'rsvpConfig' | 'rsvpDeadline' | 'rsvpClosedMessage' | 'slug'
   >
   guest: { firstName: string, lastName: string }
