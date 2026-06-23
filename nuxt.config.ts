@@ -5,14 +5,14 @@ import { generateRuntimeConfig } from "./server/utils/runtimeConfig";
 export default defineNuxtConfig({
     app: {
         head: {
-            // Plausible/DataFast analytics: registrato solo se il dominio è configurato via env.
-            script: process.env.NUXT_PUBLIC_PLAUSIBLE_DOMAIN
+            // DataFast analytics: registrato solo se il website id è configurato via env.
+            script: process.env.NUXT_PUBLIC_DATAFAST_WEBSITE_ID
                 ? [
                     {
                         src: 'https://datafa.st/js/script.js',
                         defer: true,
-                        'data-website-id': process.env.NUXT_PUBLIC_PLAUSIBLE_WEBSITE_ID || '',
-                        'data-domain': process.env.NUXT_PUBLIC_PLAUSIBLE_DOMAIN,
+                        'data-website-id': process.env.NUXT_PUBLIC_DATAFAST_WEBSITE_ID,
+                        'data-domain': process.env.NUXT_PUBLIC_DATAFAST_DOMAIN || '',
                     },
                 ]
                 : [],
