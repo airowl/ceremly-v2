@@ -591,7 +591,7 @@ const agendaBtnStyle: CSSProperties = {
                         <InviteRenderer
                             :blocks="ev!.blocks"
                             :template="tpl"
-                            :palette="ev!.palette"
+                            :theme="ev!.theme"
                             :font="ev!.inviteFont"
                             :event-date="ev!.eventDate"
                             :rsvp-deadline="ev!.rsvpDeadline"
