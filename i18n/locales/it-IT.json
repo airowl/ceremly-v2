@@ -3232,10 +3232,19 @@
         "appearance": {
           "heading": "Aspetto",
           "themeColors": "Tema & colori",
-          "palette": "Palette",
-          "paletteHint": "La palette ricolora intestazione, programma, RSVP e dettagli dell'invito.",
+          "presets": "Punto di partenza",
+          "colors": "Colori",
+          "colorPaper": "Sfondo",
+          "colorAccent": "Accento",
+          "colorDeep": "Titoli",
+          "colorOnAccent": "Testo bottone",
           "font": "Carattere",
-          "fontSample": "Giulia & Tommaso"
+          "fontSample": "Giulia & Tommaso",
+          "fontSearch": "Cerca un font…",
+          "reset": "Ripristina look predefinito",
+          "warnButton": "Etichetta bottone poco leggibile sull'accento",
+          "warnBody": "Testo poco leggibile sullo sfondo",
+          "warnTitle": "Titoli poco leggibili sullo sfondo"
         },
         "preview": {
           "heading": "Anteprima · template {template}",

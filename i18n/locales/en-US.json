@@ -3232,10 +3232,19 @@
         "appearance": {
           "heading": "Appearance",
           "themeColors": "Theme & colors",
-          "palette": "Palette",
-          "paletteHint": "The palette recolors the header, schedule, RSVP and invitation details.",
+          "presets": "Starting point",
+          "colors": "Colors",
+          "colorPaper": "Background",
+          "colorAccent": "Accent",
+          "colorDeep": "Titles",
+          "colorOnAccent": "Button text",
           "font": "Typeface",
-          "fontSample": "Giulia & Tommaso"
+          "fontSample": "Giulia & Tommaso",
+          "fontSearch": "Search a font…",
+          "reset": "Reset to default look",
+          "warnButton": "Button label hard to read on the accent",
+          "warnBody": "Text hard to read on the background",
+          "warnTitle": "Titles hard to read on the background"
         },
         "preview": {
           "heading": "Preview · template {template}",

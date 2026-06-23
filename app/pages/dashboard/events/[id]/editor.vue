@@ -8,7 +8,9 @@ import type {
     InviteBlock,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
-import { INVITE_FONTS, INVITE_PALETTES, getPalette } from "~~/shared/constants/inviteTheme";
+import type { InviteTheme } from "~~/shared/constants/inviteTheme";
+import { DEFAULT_THEME, INVITE_FONT_CATALOG, INVITE_PALETTES, fontSlug } from "~~/shared/constants/inviteTheme";
+import { isReadable } from "~~/shared/utils/inviteColor";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -34,8 +36,9 @@ const loadError = ref<string | null>(null);
 
 const activeBlockId = ref<string | null>(null);
 // Tema invito (palette + carattere), a livello evento. null ⇒ look globale (.cer).
-const paletteKey = ref<string | null>(null);
-const fontKey = ref<string | null>(null);
+const theme = ref<InviteTheme | null>(null);
+const fontFamily = ref<string | null>(null);
+const fontSearch = ref("");
 // L'inspector mostra il pannello "Tema & colori" invece del blocco selezionato.
 const appearance = ref(false);
 const device = ref<"desktop" | "mobile">("desktop");
@@ -52,7 +55,7 @@ const galleryInput = ref<HTMLInputElement | null>(null);
 // ─── Dirty tracking ──────────────────────────────────────────────────
 const savedSnapshot = ref("");
 function snapshot(): string {
-    return JSON.stringify({ blocks: blocks.value, rsvpDeadline: rsvpDeadline.value, palette: paletteKey.value, inviteFont: fontKey.value });
+    return JSON.stringify({ blocks: blocks.value, rsvpDeadline: rsvpDeadline.value, theme: theme.value, inviteFont: fontFamily.value });
 }
 const isDirty = computed(() => savedSnapshot.value !== "" && snapshot() !== savedSnapshot.value);
 
@@ -133,8 +136,8 @@ async function loadEvent() {
         eventData.value = ev;
         blocks.value = normalizeBlocks(structuredClone(ev.blocks ?? []));
         rsvpDeadline.value = ev.rsvpDeadline ? String(ev.rsvpDeadline).slice(0, 10) : "";
-        paletteKey.value = ev.palette;
-        fontKey.value = ev.inviteFont;
+        theme.value = ev.theme ? { ...ev.theme } : null;
+        fontFamily.value = ev.inviteFont;
         activeBlockId.value = blocks.value[0]?.id ?? null;
         crumbs.value = [t("ceremly.event.editor.breadcrumb.events"), t(`ceremly.eventType.${ev.type}.label`), t("ceremly.event.editor.breadcrumb.invite")];
         eventCtx.value = { id: ev.id, title: ev.title, type: ev.type };
@@ -203,7 +206,7 @@ function addCustomBlock() {
     insertBeforeRsvp(blk);
 }
 
-// ─── Aspetto: tema (palette + carattere) ─────────────────────────────
+// ─── Aspetto: tema (colori + carattere) ──────────────────────────────
 function openAppearance() {
     appearance.value = true;
     activeBlockId.value = null; // niente outline nel preview mentre si edita il tema
@@ -212,12 +215,8 @@ function selectBlock(id: string) {
     appearance.value = false;
     activeBlockId.value = id;
 }
-/** Pallino nella libreria: accento della palette scelta o, se null, del template. */
-const currentAccent = computed(() => {
-    const p = getPalette(paletteKey.value);
-    if (p) return p.accent;
-    return getTemplate(eventData.value?.templateKey ?? "")?.accent ?? "#d4a373";
-});
+/** Pallino nella libreria: accento del tema scelto o, se null, del template. */
+const currentAccent = computed(() => theme.value?.accent ?? getTemplate(eventData.value?.templateKey ?? "")?.accent ?? "#d4a373");
 /** Anteprima carattere: i nomi reali della coppia se presenti, altrimenti sample. */
 const fontSampleNames = computed(() => {
     const header = blocks.value.find((b) => b.type === "header");
@@ -226,6 +225,53 @@ const fontSampleNames = computed(() => {
         if (names) return names;
     }
     return t("ceremly.event.editor.appearance.fontSample");
+});
+
+/** I 4 ruoli colore mostrati come picker. */
+const COLOR_ROLES = [
+    { key: "paper", label: () => t("ceremly.event.editor.appearance.colorPaper") },
+    { key: "accent", label: () => t("ceremly.event.editor.appearance.colorAccent") },
+    { key: "deep", label: () => t("ceremly.event.editor.appearance.colorDeep") },
+    { key: "onAccent", label: () => t("ceremly.event.editor.appearance.colorOnAccent") },
+] as const;
+
+/** Lettura/scrittura di un singolo colore: inizializza da DEFAULT_THEME se null. */
+function colorValue(role: keyof InviteTheme): string {
+    return theme.value?.[role] ?? DEFAULT_THEME[role];
+}
+function setColor(role: keyof InviteTheme, value: string) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(value)) return;
+    const base = theme.value ?? { ...DEFAULT_THEME };
+    theme.value = { ...base, [role]: value };
+}
+
+/** Applica un preset (riempie i 4 picker). */
+function applyPreset(p: InviteTheme) {
+    theme.value = { paper: p.paper, accent: p.accent, deep: p.deep, onAccent: p.onAccent };
+}
+
+/** Reset al look globale. */
+function resetTheme() {
+    theme.value = null;
+    fontFamily.value = null;
+}
+
+/** Catalogo filtrato dalla ricerca. */
+const filteredFonts = computed(() => {
+    const q = fontSearch.value.trim().toLowerCase();
+    if (!q) return INVITE_FONT_CATALOG;
+    return INVITE_FONT_CATALOG.filter((f) => f.family.toLowerCase().includes(q));
+});
+
+/** Avvisi di contrasto (non bloccanti) sulle 3 coppie critiche. */
+const contrastWarnings = computed<string[]>(() => {
+    const t0 = theme.value;
+    if (!t0) return [];
+    const w: string[] = [];
+    if (!isReadable(t0.onAccent, t0.accent)) w.push(t("ceremly.event.editor.appearance.warnButton"));
+    if (!isReadable("#57492F", t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
+    if (!isReadable(t0.deep, t0.paper, true)) w.push(t("ceremly.event.editor.appearance.warnTitle"));
+    return w;
 });
 
 // ─── Riordino (header fisso primo, rsvp fisso ultimo) ────────────────
@@ -341,8 +387,8 @@ async function save(): Promise<boolean> {
                 body: {
                     blocks: blocks.value,
                     rsvpDeadline: rsvpDeadline.value || null,
-                    palette: paletteKey.value,
-                    inviteFont: fontKey.value,
+                    theme: theme.value,
+                    inviteFont: fontFamily.value,
                 },
             });
             eventData.value = res.event;
@@ -527,8 +573,8 @@ async function saveAndLeave() {
                         <CeremlyInviteRenderer
                             :blocks="blocks"
                             :template="eventData.templateKey"
-                            :palette="paletteKey"
-                            :font="fontKey"
+                            :theme="theme"
+                            :font="fontFamily"
                             :event-date="eventData.eventDate"
                             :rsvp-deadline="rsvpDeadline || null"
                             interactive
@@ -541,7 +587,7 @@ async function saveAndLeave() {
 
             <!-- Inspector -->
             <div class="col cer-card scroll" style="padding: 16px; gap: 14px; min-height: 0; overflow-y: auto;">
-                <!-- Pannello Aspetto: palette colori + carattere (port editor.jsx 'theme') -->
+                <!-- Pannello Aspetto: color picker + ricerca font + preset + contrasto -->
                 <template v-if="appearance">
                     <div>
                         <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
@@ -550,66 +596,79 @@ async function saveAndLeave() {
                         <div class="serif" style="font-size: 22px; margin-top: 2px;">{{ $t('ceremly.event.editor.appearance.themeColors') }}</div>
                     </div>
 
-                    <div class="col" style="gap: 8px;">
-                        <label class="ins-label">{{ $t('ceremly.event.editor.appearance.palette') }}</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div
+                    <!-- Preset scorciatoie -->
+                    <div class="col" style="gap: 6px;">
+                        <label class="ins-label">{{ $t('ceremly.event.editor.appearance.presets') }}</label>
+                        <div class="row" style="gap: 6px; flex-wrap: wrap;">
+                            <button
                                 v-for="p in INVITE_PALETTES"
                                 :key="p.key"
-                                class="col"
-                                :style="{
-                                    gap: '8px',
-                                    padding: '10px',
-                                    borderRadius: '10px',
-                                    cursor: 'pointer',
-                                    background: paletteKey === p.key ? 'var(--bone-100)' : 'var(--bone-50)',
-                                    border: '1.5px solid ' + (paletteKey === p.key ? 'var(--ink)' : 'var(--line)'),
-                                }"
-                                @click="paletteKey = p.key"
+                                type="button"
+                                class="cer-btn ghost small"
+                                style="padding: 4px 8px; gap: 6px;"
+                                @click="applyPreset(p)"
                             >
-                                <div class="row" style="gap: 4px;">
-                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.paper, border: '1px solid var(--line)' }" />
-                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.accent }" />
-                                    <span :style="{ flex: 1, height: '22px', borderRadius: '5px', background: p.deep }" />
-                                </div>
-                                <div class="row" style="justify-content: space-between; align-items: center;">
-                                    <span :style="{ fontSize: '12px', fontWeight: paletteKey === p.key ? 600 : 400 }">{{ p.label }}</span>
-                                    <CeremlyCerIcon v-if="paletteKey === p.key" name="check" :s="13" />
-                                </div>
+                                <span :style="{ width: '12px', height: '12px', borderRadius: '50%', background: p.accent, border: '1px solid var(--line)' }" />
+                                {{ p.label }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Color picker (4 ruoli) -->
+                    <div class="col" style="gap: 8px;">
+                        <label class="ins-label">{{ $t('ceremly.event.editor.appearance.colors') }}</label>
+                        <div v-for="role in COLOR_ROLES" :key="role.key" class="row" style="gap: 8px; align-items: center;">
+                            <input
+                                type="color"
+                                :value="colorValue(role.key)"
+                                style="width: 34px; height: 28px; border: 1px solid var(--line); border-radius: 6px; padding: 0; background: none; cursor: pointer;"
+                                @input="setColor(role.key, ($event.target as HTMLInputElement).value)"
+                            >
+                            <input
+                                class="cer-input"
+                                :value="colorValue(role.key)"
+                                style="flex: 1; font-family: var(--font-mono); text-transform: uppercase;"
+                                maxlength="7"
+                                @change="setColor(role.key, ($event.target as HTMLInputElement).value)"
+                            >
+                            <span style="font-size: 12px; flex: 1;">{{ role.label() }}</span>
+                        </div>
+                        <div v-if="contrastWarnings.length" class="col" style="gap: 2px;">
+                            <div v-for="(w, i) in contrastWarnings" :key="i" class="small" style="color: var(--decline);">
+                                ⚠ {{ w }}
                             </div>
                         </div>
-                        <div class="small muted">{{ $t('ceremly.event.editor.appearance.paletteHint') }}</div>
                     </div>
 
                     <div class="divider" />
 
+                    <!-- Font con ricerca -->
                     <div class="col" style="gap: 8px;">
                         <label class="ins-label">{{ $t('ceremly.event.editor.appearance.font') }}</label>
-                        <div class="col" style="gap: 6px;">
+                        <input v-model="fontSearch" class="cer-input" :placeholder="$t('ceremly.event.editor.appearance.fontSearch')">
+                        <div class="col" style="gap: 4px; max-height: 260px; overflow-y: auto;">
                             <div
-                                v-for="ft in INVITE_FONTS"
-                                :key="ft.key"
+                                v-for="ft in filteredFonts"
+                                :key="ft.family"
                                 class="row"
                                 :style="{
-                                    gap: '10px',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    background: fontKey === ft.key ? 'var(--bone-100)' : 'var(--bone-50)',
-                                    border: '1.5px solid ' + (fontKey === ft.key ? 'var(--ink)' : 'var(--line)'),
+                                    gap: '10px', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer',
+                                    alignItems: 'center', justifyContent: 'space-between',
+                                    background: fontFamily === ft.family ? 'var(--bone-100)' : 'transparent',
+                                    border: '1px solid ' + (fontFamily === ft.family ? 'var(--ink)' : 'transparent'),
                                 }"
-                                @click="fontKey = ft.key"
+                                @click="fontFamily = ft.family"
                             >
-                                <div class="col" style="gap: 1px;">
-                                    <span :class="ft.cssClass" style="font-size: 18px; line-height: 1.1;">{{ fontSampleNames }}</span>
-                                    <span class="mono" style="font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-500);">{{ ft.label }} · {{ ft.note }}</span>
-                                </div>
-                                <CeremlyCerIcon v-if="fontKey === ft.key" name="check" :s="13" />
+                                <span :class="`inv-font-${fontSlug(ft.family)}`" style="font-size: 16px;">{{ fontSampleNames }}</span>
+                                <span class="mono" style="font-size: 9px; color: var(--ink-500);">{{ ft.family }}</span>
                             </div>
                         </div>
                     </div>
+
+                    <div class="divider" />
+                    <button type="button" class="cer-btn ghost small" style="justify-content: center;" @click="resetTheme">
+                        {{ $t('ceremly.event.editor.appearance.reset') }}
+                    </button>
                 </template>
 
                 <template v-else>
@@ -939,8 +998,8 @@ async function saveAndLeave() {
                     <CeremlyInviteRenderer
                         :blocks="blocks"
                         :template="eventData.templateKey"
-                        :palette="paletteKey"
-                        :font="fontKey"
+                        :theme="theme"
+                        :font="fontFamily"
                         :event-date="eventData.eventDate"
                         :rsvp-deadline="rsvpDeadline || null"
                     />
