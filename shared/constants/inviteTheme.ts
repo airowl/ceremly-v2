@@ -69,7 +69,7 @@ export const INVITE_FONT_CATALOG: readonly CatalogFont[] = [
     { family: "Marcellus", category: "serif" },
     { family: "Gilda Display", category: "serif" },
     { family: "Italiana", category: "serif" },
-    { family: "Tenor Sans", category: "serif" },
+    { family: "Tenor Sans", category: "sans" },
     { family: "Sorts Mill Goudy", category: "serif" },
     { family: "Petrona", category: "serif" },
     // Sans
@@ -95,7 +95,6 @@ export const INVITE_FONT_CATALOG: readonly CatalogFont[] = [
     { family: "Cinzel", category: "display" },
     { family: "Cinzel Decorative", category: "display" },
     { family: "Fraunces", category: "display" },
-    { family: "Cormorant Upright", category: "display" },
     { family: "Yeseva One", category: "display" },
     { family: "Abril Fatface", category: "display" },
     { family: "Della Respira", category: "display" },

@@ -48,7 +48,7 @@ export default defineNuxtConfig({
         enabled: true,
     },
 
-    css: ["~/assets/css/main.css", "~/assets/css/ceremly.css"],
+    css: ["~/assets/css/main.css", "~/assets/css/ceremly.css", "~/assets/css/invite-fonts.css"],
 
     routeRules: {
         "/**": {
@@ -471,6 +471,10 @@ export default defineNuxtConfig({
             // Scan source files and bundle ONLY icons actually used
             scan: true,
         },
+    },
+
+    fonts: {
+        defaults: { weights: [400, 600, 700] },
     },
 
     ui: {

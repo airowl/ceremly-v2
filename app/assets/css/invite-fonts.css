@@ -1,0 +1,64 @@
+/* Catalogo font invito (inviteTheme.INVITE_FONT_CATALOG) self-hostato da @nuxt/fonts.
+   Le font-family esplicite fanno scaricare i webfont; le classi sono applicate
+   sul root di InviteRenderer. GENERATO — rigenerare se cambia il catalogo. */
+.inv-font-playfair-display { font-family: 'Playfair Display', Georgia, serif; }
+.inv-font-cormorant-garamond { font-family: 'Cormorant Garamond', Georgia, serif; }
+.inv-font-eb-garamond { font-family: 'EB Garamond', Georgia, serif; }
+.inv-font-libre-baskerville { font-family: 'Libre Baskerville', Georgia, serif; }
+.inv-font-lora { font-family: 'Lora', Georgia, serif; }
+.inv-font-cormorant { font-family: 'Cormorant', Georgia, serif; }
+.inv-font-crimson-text { font-family: 'Crimson Text', Georgia, serif; }
+.inv-font-crimson-pro { font-family: 'Crimson Pro', Georgia, serif; }
+.inv-font-spectral { font-family: 'Spectral', Georgia, serif; }
+.inv-font-source-serif-4 { font-family: 'Source Serif 4', Georgia, serif; }
+.inv-font-pt-serif { font-family: 'PT Serif', Georgia, serif; }
+.inv-font-bitter { font-family: 'Bitter', Georgia, serif; }
+.inv-font-frank-ruhl-libre { font-family: 'Frank Ruhl Libre', Georgia, serif; }
+.inv-font-noto-serif { font-family: 'Noto Serif', Georgia, serif; }
+.inv-font-vollkorn { font-family: 'Vollkorn', Georgia, serif; }
+.inv-font-cardo { font-family: 'Cardo', Georgia, serif; }
+.inv-font-domine { font-family: 'Domine', Georgia, serif; }
+.inv-font-bodoni-moda { font-family: 'Bodoni Moda', Georgia, serif; }
+.inv-font-dm-serif-display { font-family: 'DM Serif Display', Georgia, serif; }
+.inv-font-dm-serif-text { font-family: 'DM Serif Text', Georgia, serif; }
+.inv-font-marcellus { font-family: 'Marcellus', Georgia, serif; }
+.inv-font-gilda-display { font-family: 'Gilda Display', Georgia, serif; }
+.inv-font-italiana { font-family: 'Italiana', Georgia, serif; }
+.inv-font-tenor-sans { font-family: 'Tenor Sans', system-ui, sans-serif; }
+.inv-font-sorts-mill-goudy { font-family: 'Sorts Mill Goudy', Georgia, serif; }
+.inv-font-petrona { font-family: 'Petrona', Georgia, serif; }
+.inv-font-manrope { font-family: 'Manrope', system-ui, sans-serif; }
+.inv-font-montserrat { font-family: 'Montserrat', system-ui, sans-serif; }
+.inv-font-be-vietnam-pro { font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.inv-font-inter { font-family: 'Inter', system-ui, sans-serif; }
+.inv-font-work-sans { font-family: 'Work Sans', system-ui, sans-serif; }
+.inv-font-nunito-sans { font-family: 'Nunito Sans', system-ui, sans-serif; }
+.inv-font-raleway { font-family: 'Raleway', system-ui, sans-serif; }
+.inv-font-poppins { font-family: 'Poppins', system-ui, sans-serif; }
+.inv-font-jost { font-family: 'Jost', system-ui, sans-serif; }
+.inv-font-outfit { font-family: 'Outfit', system-ui, sans-serif; }
+.inv-font-mulish { font-family: 'Mulish', system-ui, sans-serif; }
+.inv-font-karla { font-family: 'Karla', system-ui, sans-serif; }
+.inv-font-rubik { font-family: 'Rubik', system-ui, sans-serif; }
+.inv-font-dm-sans { font-family: 'DM Sans', system-ui, sans-serif; }
+.inv-font-hanken-grotesk { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+.inv-font-bricolage-grotesque { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+.inv-font-archivo { font-family: 'Archivo', system-ui, sans-serif; }
+.inv-font-sora { font-family: 'Sora', system-ui, sans-serif; }
+.inv-font-cinzel { font-family: 'Cinzel', Georgia, serif; }
+.inv-font-cinzel-decorative { font-family: 'Cinzel Decorative', Georgia, serif; }
+.inv-font-fraunces { font-family: 'Fraunces', Georgia, serif; }
+.inv-font-yeseva-one { font-family: 'Yeseva One', Georgia, serif; }
+.inv-font-abril-fatface { font-family: 'Abril Fatface', Georgia, serif; }
+.inv-font-della-respira { font-family: 'Della Respira', Georgia, serif; }
+.inv-font-forum { font-family: 'Forum', Georgia, serif; }
+.inv-font-great-vibes { font-family: 'Great Vibes', cursive; }
+.inv-font-dancing-script { font-family: 'Dancing Script', cursive; }
+.inv-font-parisienne { font-family: 'Parisienne', cursive; }
+.inv-font-pinyon-script { font-family: 'Pinyon Script', cursive; }
+.inv-font-tangerine { font-family: 'Tangerine', cursive; }
+.inv-font-sacramento { font-family: 'Sacramento', cursive; }
+.inv-font-allura { font-family: 'Allura', cursive; }
+.inv-font-alex-brush { font-family: 'Alex Brush', cursive; }
+.inv-font-petit-formal-script { font-family: 'Petit Formal Script', cursive; }
+.inv-font-marck-script { font-family: 'Marck Script', cursive; }
