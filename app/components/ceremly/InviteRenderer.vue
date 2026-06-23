@@ -18,7 +18,9 @@ import type {
     RsvpBlockData,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
-import { getInviteFont, getPalette } from "~~/shared/constants/inviteTheme";
+import type { InviteTheme } from "~~/shared/constants/inviteTheme";
+import { fontSlug, getCatalogFont } from "~~/shared/constants/inviteTheme";
+import { deriveSoft } from "~~/shared/utils/inviteColor";
 import CerIcon from "./CerIcon.vue";
 import CountdownRing from "./CountdownRing.vue";
 
@@ -29,9 +31,9 @@ const props = withDefaults(
         blocks: InviteBlock[];
         /** Oggetto { accent, accentSoft } oppure key risolta con getTemplate. */
         template: { accent: string; accentSoft: string } | string;
-        /** Key palette (inviteTheme). null/assente ⇒ accento dal template. */
-        palette?: string | null;
-        /** Key carattere (inviteTheme). null/assente ⇒ --font-display globale. */
+        /** Tema colori custom. null/assente ⇒ accento dal template. */
+        theme?: InviteTheme | null;
+        /** Nome famiglia del catalogo font. null/assente ⇒ --font-display globale. */
         font?: string | null;
         eventDate?: string | Date | null;
         rsvpDeadline?: string | Date | null;
@@ -43,7 +45,7 @@ const props = withDefaults(
         closedMessage?: string | null;
     }>(),
     {
-        palette: null,
+        theme: null,
         font: null,
         eventDate: null,
         rsvpDeadline: null,
@@ -82,36 +84,36 @@ const tpl = computed(() => {
 
 // Tema invito a livello evento: una palette scelta dall'utente vince sul
 // template; il carattere override --font-display. null ⇒ token globali .cer.
-const palette = computed(() => getPalette(props.palette));
-const inviteFont = computed(() => getInviteFont(props.font));
+const theme = computed(() => props.theme ?? null);
+const catalogFont = computed(() => getCatalogFont(props.font));
 
-// Accento effettivo (palette se presente, altrimenti accento del template).
-const accent = computed(() => palette.value?.accent ?? tpl.value.accent);
-const accentSoft = computed(() => palette.value?.soft ?? tpl.value.accentSoft);
+// Accento effettivo (theme se presente, altrimenti accento del template).
+const accent = computed(() => theme.value?.accent ?? tpl.value.accent);
+const accentSoft = computed(() => (theme.value ? deriveSoft(theme.value.accent) : tpl.value.accentSoft));
 
 // Classe webfont sul root: applica il carattere e fa rilevare la famiglia a
 // @nuxt/fonts (vedi .inv-font-* in ceremly.css).
-const rootClass = computed(() => inviteFont.value?.cssClass ?? "");
+const rootClass = computed(() => (catalogFont.value ? `inv-font-${fontSlug(catalogFont.value.family)}` : ""));
 
 // Card radius 16, padding 48px 36px, shadow soft (come InvitePreview). Gli
 // override dei token sono CONDIZIONALI: senza palette/font il root resta
 // identico a prima (zero regressione sugli inviti esistenti).
 const rootStyle = computed<CSSProperties>(() => {
-    const p = palette.value;
-    const f = inviteFont.value;
+    const t = theme.value;
+    const f = catalogFont.value;
     return {
         "--tpl-accent": accent.value,
         "--tpl-accent-soft": accentSoft.value,
-        ...(p
+        ...(t
             ? {
-                "--bone-50": p.paper,
-                "--bone-100": p.soft,
-                "--wine": p.accent,
-                "--wine-deep": p.deep,
-                "--rsvp-on-accent": p.onAccent,
+                "--bone-50": t.paper,
+                "--bone-100": deriveSoft(t.accent),
+                "--wine": t.accent,
+                "--wine-deep": t.deep,
+                "--rsvp-on-accent": t.onAccent,
             }
             : {}),
-        ...(f ? { "--font-display": f.family } : {}),
+        ...(f ? { "--font-display": `'${f.family}', serif` } : {}),
         background: "var(--bone-50)",
         borderRadius: "16px",
         padding: "48px 36px",
