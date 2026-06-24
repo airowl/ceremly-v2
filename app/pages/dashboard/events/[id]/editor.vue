@@ -10,7 +10,7 @@ import type {
 import { getTemplate } from "~~/shared/constants/templates";
 import type { InviteTheme } from "~~/shared/constants/inviteTheme";
 import { DEFAULT_THEME, INVITE_FONT_CATALOG, INVITE_PALETTES, fontSlug } from "~~/shared/constants/inviteTheme";
-import { isReadable } from "~~/shared/utils/inviteColor";
+import { deriveInk, isReadable } from "~~/shared/utils/inviteColor";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -236,14 +236,36 @@ const COLOR_ROLES = [
     { key: "onAccent", label: () => t("ceremly.event.editor.appearance.colorOnAccent") },
 ] as const;
 
-/** Lettura/scrittura di un singolo colore: inizializza da DEFAULT_THEME se null. */
+/**
+ * Look effettivo dell'invito senza tema custom: i token globali `.cer` ma con
+ * l'accento del TEMPLATE corrente (è ciò che l'utente vede a schermo). È la base
+ * dei picker e della prima modifica, così toccare un colore non fa scattare gli
+ * altri 3 ai default toscana (≠ look del template).
+ */
+const effectiveTheme = computed<InviteTheme>(() => ({
+    ...DEFAULT_THEME,
+    accent: getTemplate(eventData.value?.templateKey ?? "")?.accent ?? DEFAULT_THEME.accent,
+}));
+
+/** Lettura/scrittura di un singolo colore: inizializza dal look effettivo se null. */
 function colorValue(role: keyof InviteTheme): string {
-    return theme.value?.[role] ?? DEFAULT_THEME[role];
+    return theme.value?.[role] ?? effectiveTheme.value[role];
 }
 function setColor(role: keyof InviteTheme, value: string) {
     if (!/^#[0-9a-fA-F]{6}$/.test(value)) return;
-    const base = theme.value ?? { ...DEFAULT_THEME };
+    const base = theme.value ?? effectiveTheme.value;
     theme.value = { ...base, [role]: value };
+}
+/**
+ * Blur del campo hex testuale: applica solo un `#rrggbb` valido; se l'input è
+ * invalido ripristina il valore corrente (l'input one-way non si re-sincronizza
+ * da solo, altrimenti resterebbe mostrato un valore mai applicato).
+ */
+function onHexBlur(role: keyof InviteTheme, e: Event) {
+    const el = e.target as HTMLInputElement;
+    const v = el.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) setColor(role, v);
+    else el.value = colorValue(role);
 }
 
 /** Applica un preset (riempie i 4 picker). */
@@ -270,7 +292,9 @@ const contrastWarnings = computed<string[]>(() => {
     if (!t0) return [];
     const w: string[] = [];
     if (!isReadable(t0.onAccent, t0.accent)) w.push(t("ceremly.event.editor.appearance.warnButton"));
-    if (!isReadable("#57492F", t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
+    // Corpo testo: l'inchiostro è derivato dal paper (deriveInk), quindi l'avviso
+    // scatta solo quando nemmeno il ramo migliore raggiunge l'AA (paper mid-tone).
+    if (!isReadable(deriveInk(t0.paper).ink, t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
     if (!isReadable(t0.deep, t0.paper, true)) w.push(t("ceremly.event.editor.appearance.warnTitle"));
     return w;
 });
@@ -630,7 +654,7 @@ async function saveAndLeave() {
                                 :value="colorValue(role.key)"
                                 style="flex: 1; font-family: var(--font-mono); text-transform: uppercase;"
                                 maxlength="7"
-                                @change="setColor(role.key, ($event.target as HTMLInputElement).value)"
+                                @change="onHexBlur(role.key, $event)"
                             >
                             <span style="font-size: 12px; flex: 1;">{{ role.label() }}</span>
                         </div>

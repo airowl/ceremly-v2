@@ -14,6 +14,7 @@ import type {
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
 import { getVisibleQuestions } from "~~/shared/utils/rsvpLogic";
+import { deriveSoft } from "~~/shared/utils/inviteColor";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerLangSwitch from "~/components/ceremly/CerLangSwitch.vue";
 import InviteRenderer from "~/components/ceremly/InviteRenderer.vue";
@@ -86,8 +87,14 @@ const guest = computed(() => data.value?.guest ?? null);
 const firstName = computed(() => guest.value?.firstName?.trim() || t("ceremly.guest.defaultGuestName"));
 
 const tpl = computed(() => {
-    const t = ev.value ? getTemplate(ev.value.templateKey) : undefined;
-    return { accent: t?.accent ?? "#d4a373", accentSoft: t?.accentSoft ?? "#faedcd" };
+    const base = ev.value ? getTemplate(ev.value.templateKey) : undefined;
+    // Con tema custom l'alone gradient della pagina segue l'accento scelto
+    // (deriveSoft), altrimenti resta l'accentSoft del template.
+    const customTheme = ev.value?.theme ?? null;
+    return {
+        accent: customTheme?.accent ?? base?.accent ?? "#d4a373",
+        accentSoft: customTheme ? deriveSoft(customTheme.accent) : (base?.accentSoft ?? "#faedcd"),
+    };
 });
 
 /** Nomi host dal block header ("Giulia & Tommaso"), fallback titolo evento. */

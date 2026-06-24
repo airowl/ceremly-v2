@@ -54,6 +54,30 @@ function isDeadlinePassed(rsvpDeadline: Date | null, now: Date): boolean {
     return rsvpDeadline !== null && now > rsvpDeadline;
 }
 
+/** Riga evento per il payload pubblico (sia token-ospite sia anteprima firmata). */
+type InviteEventRow = NonNullable<Awaited<ReturnType<typeof findEventBySlug>>>;
+
+/**
+ * Mapping §6.2 del campo `event` — campo per campo, MAI spread della riga DB.
+ * Builder unico così invito ospite e anteprima non divergono al variare dei campi.
+ */
+function buildInviteEventPayload(eventRow: InviteEventRow): PublicInvitePayload["event"] {
+    return {
+        title: eventRow.title,
+        type: eventRow.type as EventTypeKey,
+        templateKey: eventRow.templateKey,
+        theme: eventRow.theme,
+        inviteFont: eventRow.inviteFont,
+        eventDate: eventRow.eventDate?.toISOString() ?? null,
+        eventTime: eventRow.eventTime,
+        blocks: eventRow.blocks,
+        rsvpConfig: eventRow.rsvpConfig,
+        rsvpDeadline: eventRow.rsvpDeadline?.toISOString() ?? null,
+        rsvpClosedMessage: eventRow.rsvpClosedMessage ?? DEFAULT_RSVP_CLOSED_MESSAGE,
+        slug: eventRow.slug,
+    };
+}
+
 /**
  * GET /api/public/invite/:token (SPEC §6.2).
  * Side-effect di tracking: openCount+1, firstOpenedAt al primo accesso,
@@ -76,20 +100,7 @@ export async function getPublicInvite(token: string): Promise<PublicInvitePayloa
 
     // Payload §6.2 campo per campo — MAI spread della riga DB.
     return {
-        event: {
-            title: eventRow.title,
-            type: eventRow.type as EventTypeKey,
-            templateKey: eventRow.templateKey,
-            theme: eventRow.theme,
-            inviteFont: eventRow.inviteFont,
-            eventDate: eventRow.eventDate?.toISOString() ?? null,
-            eventTime: eventRow.eventTime,
-            blocks: eventRow.blocks,
-            rsvpConfig: eventRow.rsvpConfig,
-            rsvpDeadline: eventRow.rsvpDeadline?.toISOString() ?? null,
-            rsvpClosedMessage: eventRow.rsvpClosedMessage ?? DEFAULT_RSVP_CLOSED_MESSAGE,
-            slug: eventRow.slug,
-        },
+        event: buildInviteEventPayload(eventRow),
         guest: {
             firstName: guest.firstName,
             lastName: guest.lastName,
@@ -121,24 +132,16 @@ export async function getInvitePreview(slug: string, sig: string): Promise<Publi
     const eventRow = await findEventBySlug(slug);
     if (!eventRow) throw inviteNotFound();
 
+    // Stesso calcolo del path ospite: l'anteprima riflette lo stato reale
+    // (chiuso/deadline passata), così il planner vede ciò che vedono gli ospiti.
+    const deadlinePassed = eventRow.status === "closed"
+        || isDeadlinePassed(eventRow.rsvpDeadline, new Date());
+
     return {
-        event: {
-            title: eventRow.title,
-            type: eventRow.type as EventTypeKey,
-            templateKey: eventRow.templateKey,
-            theme: eventRow.theme,
-            inviteFont: eventRow.inviteFont,
-            eventDate: eventRow.eventDate?.toISOString() ?? null,
-            eventTime: eventRow.eventTime,
-            blocks: eventRow.blocks,
-            rsvpConfig: eventRow.rsvpConfig,
-            rsvpDeadline: eventRow.rsvpDeadline?.toISOString() ?? null,
-            rsvpClosedMessage: eventRow.rsvpClosedMessage ?? DEFAULT_RSVP_CLOSED_MESSAGE,
-            slug: eventRow.slug,
-        },
+        event: buildInviteEventPayload(eventRow),
         guest: { firstName: PREVIEW_GUEST_NAME, lastName: "" },
         response: null,
-        deadlinePassed: false,
+        deadlinePassed,
         preview: true,
     };
 }

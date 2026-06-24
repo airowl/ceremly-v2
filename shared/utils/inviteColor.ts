@@ -42,3 +42,26 @@ export function deriveSoft(accent: string): string {
     const toHex = (c: number) => mix(c).toString(16).padStart(2, "0");
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
+
+/** Toni di testo del corpo (`--ink`/`--ink-700`/`--ink-500`). */
+export interface InkTones {
+    ink: string;
+    ink700: string;
+    ink500: string;
+}
+
+/** Ramo marroni scuri (`.cer` di default): leggibili su carta chiara. */
+const INK_DARK: InkTones = { ink: "#3F3622", ink700: "#57492F", ink500: "#786949" };
+/** Ramo creme calde: leggibili su carta scura. */
+const INK_LIGHT: InkTones = { ink: "#F4EEE4", ink700: "#E0D6C6", ink500: "#C6B9A2" };
+
+/**
+ * Toni di testo leggibili sul `paper` scelto: l'utente sceglie lo sfondo ma non
+ * l'inchiostro, quindi su carta scura serve testo chiaro (altrimenti marrone su
+ * scuro = invisibile). Sceglie il ramo col contrasto migliore contro il paper.
+ */
+export function deriveInk(paper: string): InkTones {
+    return contrastRatio(INK_DARK.ink, paper) >= contrastRatio(INK_LIGHT.ink, paper)
+        ? INK_DARK
+        : INK_LIGHT;
+}

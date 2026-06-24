@@ -18,9 +18,14 @@ export interface InviteTheme {
     onAccent: string;
 }
 
-/** Default impliciti = token globali `.cer` (look "toscana"). */
+/**
+ * Default impliciti = token globali `.cer` (paper #FFFFFF = `--bone-50`,
+ * accent/deep/onAccent = `--wine`/`--wine-deep`/`--rsvp-on-accent`).
+ * Distinto dalla scorciatoia "Toscana" (paper #FFFDF6): qui paper è il bianco
+ * puro effettivamente renderizzato quando l'evento non ha tema custom.
+ */
 export const DEFAULT_THEME: InviteTheme = {
-    paper: "#FFFDF6",
+    paper: "#FFFFFF",
     accent: "#d4a373",
     deep: "#5E4426",
     onAccent: "#3F3622",

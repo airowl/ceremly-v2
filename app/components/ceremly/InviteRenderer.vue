@@ -18,9 +18,17 @@ import type {
     RsvpBlockData,
 } from "~~/shared/types/ceremly";
 import { getTemplate } from "~~/shared/constants/templates";
-import type { InviteTheme } from "~~/shared/constants/inviteTheme";
+import type { FontCategory, InviteTheme } from "~~/shared/constants/inviteTheme";
 import { fontSlug, getCatalogFont } from "~~/shared/constants/inviteTheme";
-import { deriveSoft } from "~~/shared/utils/inviteColor";
+import { deriveInk, deriveSoft } from "~~/shared/utils/inviteColor";
+
+/** Fallback generico per categoria: un sans/handwriting non deve cadere su serif durante il FOUT. */
+const GENERIC_FALLBACK: Record<FontCategory, string> = {
+    serif: "serif",
+    sans: "sans-serif",
+    display: "serif",
+    handwriting: "cursive",
+};
 import CerIcon from "./CerIcon.vue";
 import CountdownRing from "./CountdownRing.vue";
 
@@ -101,19 +109,25 @@ const rootClass = computed(() => (catalogFont.value ? `inv-font-${fontSlug(catal
 const rootStyle = computed<CSSProperties>(() => {
     const t = theme.value;
     const f = catalogFont.value;
+    // Toni di testo derivati dal paper: l'utente sceglie lo sfondo ma non
+    // l'inchiostro, quindi su paper scuro il corpo testo passa a creme chiare.
+    const ink = t ? deriveInk(t.paper) : null;
     return {
         "--tpl-accent": accent.value,
         "--tpl-accent-soft": accentSoft.value,
-        ...(t
+        ...(t && ink
             ? {
                 "--bone-50": t.paper,
                 "--bone-100": deriveSoft(t.accent),
                 "--wine": t.accent,
                 "--wine-deep": t.deep,
                 "--rsvp-on-accent": t.onAccent,
+                "--ink": ink.ink,
+                "--ink-700": ink.ink700,
+                "--ink-500": ink.ink500,
             }
             : {}),
-        ...(f ? { "--font-display": `'${f.family}', serif` } : {}),
+        ...(f ? { "--font-display": `'${f.family}', ${GENERIC_FALLBACK[f.category]}` } : {}),
         background: "var(--bone-50)",
         borderRadius: "16px",
         padding: "48px 36px",
@@ -529,3 +543,10 @@ const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"))
         </template>
     </div>
 </template>
+
+<style>
+/* Catalogo font invito (classi .inv-font-* + @font-face self-hostati da @nuxt/fonts).
+   Importato qui — non in nuxt.config css[] — così carica solo nelle route che
+   montano il renderer (anteprima ospite ed editor), non su ogni pagina del sito. */
+@import "../../assets/css/invite-fonts.css";
+</style>

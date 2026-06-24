@@ -48,7 +48,9 @@ export default defineNuxtConfig({
         enabled: true,
     },
 
-    css: ["~/assets/css/main.css", "~/assets/css/ceremly.css", "~/assets/css/invite-fonts.css"],
+    // invite-fonts.css NON è globale: importato in InviteRenderer.vue così il
+    // catalogo (~61 famiglie × @font-face) carica solo sulle route invito/editor.
+    css: ["~/assets/css/main.css", "~/assets/css/ceremly.css"],
 
     routeRules: {
         "/**": {
