@@ -292,9 +292,11 @@ const contrastWarnings = computed<string[]>(() => {
     if (!t0) return [];
     const w: string[] = [];
     if (!isReadable(t0.onAccent, t0.accent)) w.push(t("ceremly.event.editor.appearance.warnButton"));
-    // Corpo testo: l'inchiostro è derivato dal paper (deriveInk), quindi l'avviso
-    // scatta solo quando nemmeno il ramo migliore raggiunge l'AA (paper mid-tone).
-    if (!isReadable(deriveInk(t0.paper).ink, t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
+    // Corpo testo: l'inchiostro è derivato dal paper (deriveInk). Campiona il tono
+    // più CHIARO effettivamente renderizzato (ink500, usato per testi secondari):
+    // è quello a contrasto peggiore, così l'avviso non resta muto mentre i testi
+    // secondari scendono sotto l'AA su paper mid-tone.
+    if (!isReadable(deriveInk(t0.paper).ink500, t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
     if (!isReadable(t0.deep, t0.paper, true)) w.push(t("ceremly.event.editor.appearance.warnTitle"));
     return w;
 });

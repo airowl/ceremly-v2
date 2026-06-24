@@ -65,3 +65,15 @@ export function deriveInk(paper: string): InkTones {
         ? INK_DARK
         : INK_LIGHT;
 }
+
+/**
+ * Linea/bordo tenue sul paper (per `--bone-200`: divisori, placeholder mappa,
+ * bordi): mescola il paper col proprio inchiostro al 14% → resta una linea
+ * appena visibile sia su carta chiara sia su carta scura, niente verde pallido.
+ */
+export function deriveLine(paper: string): string {
+    const p = hexToRgb(paper);
+    const k = hexToRgb(deriveInk(paper).ink);
+    const ch = (a: number, b: number) => Math.round(a + (b - a) * 0.14).toString(16).padStart(2, "0");
+    return `#${ch(p.r, k.r)}${ch(p.g, k.g)}${ch(p.b, k.b)}`;
+}

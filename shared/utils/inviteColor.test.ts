@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { contrastRatio, isReadable, deriveSoft, hexToRgb, relativeLuminance } from "./inviteColor";
+import { contrastRatio, isReadable, deriveSoft, deriveInk, deriveLine, hexToRgb, relativeLuminance } from "./inviteColor";
 
 describe("inviteColor", () => {
     it("contrastRatio nero/bianco = 21", () => {
@@ -22,5 +22,17 @@ describe("inviteColor", () => {
         // più chiaro dell'accento: luminanza vicina al bianco
         expect(hexToRgb(soft).r).toBeGreaterThan(hexToRgb("#8C3B4A").r);
         expect(relativeLuminance(soft)).toBeGreaterThan(relativeLuminance("#8C3B4A"));
+    });
+    it("deriveInk: testo chiaro su carta scura, scuro su carta chiara", () => {
+        expect(isReadable(deriveInk("#1E1A12").ink, "#1E1A12")).toBe(true); // paper scuro → ink chiaro leggibile
+        expect(isReadable(deriveInk("#FFFFFF").ink, "#FFFFFF")).toBe(true); // paper chiaro → ink scuro leggibile
+        expect(relativeLuminance(deriveInk("#1E1A12").ink)).toBeGreaterThan(relativeLuminance(deriveInk("#FFFFFF").ink));
+    });
+    it("deriveLine: hex valido, linea tenue (resta vicina al paper)", () => {
+        const line = deriveLine("#FFFFFF");
+        expect(line).toMatch(/^#[0-9a-f]{6}$/);
+        // 14% verso l'inchiostro: appena più scura del paper bianco, ma non nera
+        expect(hexToRgb(line).r).toBeLessThan(255);
+        expect(hexToRgb(line).r).toBeGreaterThan(200);
     });
 });

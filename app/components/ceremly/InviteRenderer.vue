@@ -20,7 +20,9 @@ import type {
 import { getTemplate } from "~~/shared/constants/templates";
 import type { FontCategory, InviteTheme } from "~~/shared/constants/inviteTheme";
 import { fontSlug, getCatalogFont } from "~~/shared/constants/inviteTheme";
-import { deriveInk, deriveSoft } from "~~/shared/utils/inviteColor";
+import { deriveInk, deriveLine, deriveSoft } from "~~/shared/utils/inviteColor";
+import CerIcon from "./CerIcon.vue";
+import CountdownRing from "./CountdownRing.vue";
 
 /** Fallback generico per categoria: un sans/handwriting non deve cadere su serif durante il FOUT. */
 const GENERIC_FALLBACK: Record<FontCategory, string> = {
@@ -29,8 +31,6 @@ const GENERIC_FALLBACK: Record<FontCategory, string> = {
     display: "serif",
     handwriting: "cursive",
 };
-import CerIcon from "./CerIcon.vue";
-import CountdownRing from "./CountdownRing.vue";
 
 const { t } = useI18n();
 
@@ -119,6 +119,9 @@ const rootStyle = computed<CSSProperties>(() => {
             ? {
                 "--bone-50": t.paper,
                 "--bone-100": deriveSoft(t.accent),
+                // Linea/bordo tenue derivata dal paper: divisori, placeholder mappa
+                // e bordi seguono il tema (su carta scura non restano verde pallido).
+                "--bone-200": deriveLine(t.paper),
                 "--wine": t.accent,
                 "--wine-deep": t.deep,
                 "--rsvp-on-accent": t.onAccent,
