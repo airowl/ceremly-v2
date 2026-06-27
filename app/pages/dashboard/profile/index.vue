@@ -3,6 +3,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent, FormError } from '@nuxt/ui'
 
 const { t, locale, setLocale } = useI18n()
+const localePath = useLocalePath()
 const toast = useToast()
 const profileStore = useProfileStore()
 
@@ -283,6 +284,45 @@ async function onPasswordSubmit(event: FormSubmitEvent<PasswordSchema>) {
         isPasswordSubmitting.value = false
     }
 }
+
+// --- Delete account (GDPR Art. 17) ---
+const isDeleteModalOpen = ref(false)
+const isDeleting = ref(false)
+
+async function onDeleteAccount() {
+    isDeleting.value = true
+    profileStore.clearError()
+
+    try {
+        const success = await profileStore.deleteAccount()
+        if (success) {
+            isDeleteModalOpen.value = false
+            toast.add({
+                title: t('common.success'),
+                description: t('profile.deleteAccountSuccess'),
+                icon: 'i-lucide-check',
+                color: 'success',
+            })
+            await navigateTo(localePath('/'))
+        } else {
+            toast.add({
+                title: t('common.error'),
+                description: profileStore.getError || t('profile.deleteAccountError'),
+                icon: 'i-lucide-alert-circle',
+                color: 'error',
+            })
+        }
+    } catch {
+        toast.add({
+            title: t('common.error'),
+            description: t('profile.deleteAccountError'),
+            icon: 'i-lucide-alert-circle',
+            color: 'error',
+        })
+    } finally {
+        isDeleting.value = false
+    }
+}
 </script>
 
 <template>
@@ -345,7 +385,8 @@ v-model="profile.fullName" autocomplete="off" class="w-full"
                             :disabled="profileStore.isLoading" />
                     </UFormField>
 
-                    <UFormField name="email" :label="t('profile.email')" required
+                    <UFormField
+name="email" :label="t('profile.email')" required
                         :help="profileStore.isOAuthUser ? t('profile.oauthEmailInfo') : undefined">
                         <UInput
 v-model="profile.email" type="email" autocomplete="off" class="w-full"
@@ -431,8 +472,48 @@ v-model="password.confirm" type="password" placeholder="••••••••
                 </div>
             </template>
         </UPageCard>
+
+        <!-- Section: Data Export (GDPR Art. 20) -->
+        <ProfileDataExportSection />
+
+        <!-- Section: Danger Zone (GDPR Art. 17) -->
+        <UPageCard :title="t('profile.dangerZone')" variant="subtle">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h4 class="font-semibold text-default-900">{{ t('profile.deleteAccount') }}</h4>
+                    <p class="text-sm text-default-500">{{ t('profile.deleteAccountDescription') }}</p>
+                </div>
+                <UButton
+                    :label="t('profile.deleteAccount')" color="error" variant="soft"
+                    icon="i-lucide-trash-2" class="shrink-0" @click="isDeleteModalOpen = true" />
+            </div>
+        </UPageCard>
     </div>
             </div>
         </template>
+
+        <UModal v-model:open="isDeleteModalOpen">
+            <template #content>
+                <div class="p-6 space-y-5">
+                    <div class="flex items-start gap-3">
+                        <div class="flex items-center justify-center size-10 rounded-full bg-error/10 shrink-0">
+                            <UIcon name="i-lucide-alert-triangle" class="size-5 text-error" />
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-default-900">{{ t('profile.deleteAccountConfirmTitle') }}</h3>
+                            <p class="text-sm text-default-500 mt-1">{{ t('profile.deleteAccountWarning') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <UButton
+                            :label="t('common.cancel')" color="neutral" variant="ghost"
+                            :disabled="isDeleting" @click="isDeleteModalOpen = false" />
+                        <UButton
+                            :label="t('profile.deleteAccountConfirm')" color="error"
+                            :loading="isDeleting" :disabled="isDeleting" @click="onDeleteAccount" />
+                    </div>
+                </div>
+            </template>
+        </UModal>
     </UDashboardPanel>
 </template>

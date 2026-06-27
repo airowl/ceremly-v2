@@ -209,7 +209,8 @@ export const useProfileStore = defineStore('profile', () => {
         try {
             const { signOut } = useAuth();
 
-            // Call API to delete account
+            // Call API to delete account (critical step). On success the server
+            // bans the user and REVOKES the session immediately (deleteSessions).
             await $fetch('/api/user/account', {
                 method: 'DELETE',
             });
@@ -217,8 +218,14 @@ export const useProfileStore = defineStore('profile', () => {
             // Clear local state
             profile.value = null;
 
-            // Sign out after account deletion
-            await signOut();
+            // Sign out is best-effort cleanup: the server already revoked the
+            // session above, so signOut may reject on an invalid session. The
+            // account is already deleted — never surface that as a failure.
+            try {
+                await signOut();
+            } catch {
+                // session already invalidated server-side — safe to ignore
+            }
 
             return true;
         } catch (err) {
