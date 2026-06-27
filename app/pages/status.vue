@@ -4,7 +4,7 @@ import CerSiteH2 from '~/components/ceremly/CerSiteH2.vue'
 
 definePageMeta({ layout: 'public-site', auth: false })
 
-const { t, tm, rt } = useI18n()
+const { t, tm, rt, locale } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
@@ -15,7 +15,8 @@ useSeoMeta({
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,
-    ogImage: `${baseUrl}/ogImage-it.png`,
+    ogImage: () => `${baseUrl}/og/status-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
+    twitterImage: () => `${baseUrl}/og/status-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
 

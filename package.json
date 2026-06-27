@@ -29,7 +29,8 @@
     "verify:plan-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-plan-limit.ts",
     "verify:rate-limit": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-rate-limit.ts",
     "verify:account-purge": "npx tsx --tsconfig .nuxt/tsconfig.server.json server/database/seed/verify-account-purge.ts",
-    "openapi:generate": "npx tsx scripts/generate-openapi.ts"
+    "openapi:generate": "npx tsx scripts/generate-openapi.ts",
+    "og:generate": "node scripts/generate-og.mjs"
   },
   "dependencies": {
     "@creem_io/better-auth": "^0.0.13",
@@ -79,6 +80,7 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.38.0",
+    "playwright": "^1.61.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tsx": "^4.21.0",

@@ -10,7 +10,7 @@ import CerFaqGrid from '~/components/ceremly/CerFaqGrid.vue'
 
 definePageMeta({ layout: 'public-site', auth: false })
 
-const { t, tm, rt } = useI18n()
+const { t, tm, rt, locale } = useI18n()
 const localePath = useLocalePath()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
@@ -22,7 +22,8 @@ useSeoMeta({
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,
-    ogImage: `${baseUrl}/ogImage-it.png`,
+    ogImage: () => `${baseUrl}/og/pricing-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
+    twitterImage: () => `${baseUrl}/og/pricing-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
 

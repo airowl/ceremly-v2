@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const baseUrl = ((useRuntimeConfig().public.baseURL as string) || '').replace(/\/$/, '')
 
 const title = t('landing.contact.title')
 const description = t('landing.contact.description')
@@ -9,6 +10,8 @@ useSeoMeta({
     ogTitle: title,
     description,
     ogDescription: description,
+    ogImage: () => `${baseUrl}/og/contact-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
+    twitterImage: () => `${baseUrl}/og/contact-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
 })
 </script>
 
