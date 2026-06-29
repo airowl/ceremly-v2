@@ -7,7 +7,7 @@
 export interface JobPayloadMap {
   'data-export': { exportId: string; userId: string }
   'image-variant': { fileId: string }
-  // Ceremly — distribuzione inviti/reminder (SPEC §6, owner B3): 1 job per ospite.
+  // Ceremly — invite/reminder distribution (SPEC §6, owner B3): 1 job per guest.
   'send-invite-email': { guestId: string }
   'send-reminder-email': { guestId: string; reminderId: string }
 }

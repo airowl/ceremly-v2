@@ -1,7 +1,7 @@
 /**
- * Vercel Cron (04:00 UTC): cleanup eventi conclusi+inattivi (SPEC §9). Fase WARN
- * (email + cleanupWarnedAt) poi DELETE (warned ≥7gg → delete cascade). Org Atelier
- * escluse. Auth 3-way come send-reminders.
+ * Vercel Cron (04:00 UTC): cleanup of concluded+inactive events (SPEC §9). WARN phase
+ * (email + cleanupWarnedAt) then DELETE (warned ≥7 days → delete cascade). Atelier orgs
+ * excluded. 3-way auth like send-reminders.
  */
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { processStaleEventsWarn, processStaleEventsDelete } from "~~/server/services/eventCleanup.service";

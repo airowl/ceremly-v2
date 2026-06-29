@@ -1,12 +1,12 @@
 /**
- * Checkout Celebrazione (one-time per-evento) — SPEC §6.2.
- * Creato SERVER-SIDE così eventId/organizationId sono legati nel metadata e
- * l'ownership è verificata PRIMA di emettere il checkout. Lo sblocco avviene nel
- * webhook checkout.completed (server/utils/creem.ts), non qui.
+ * Celebration Checkout (one-time per-event) — SPEC §6.2.
+ * Created SERVER-SIDE so that eventId/organizationId are bound in the metadata and
+ * ownership is verified BEFORE emitting the checkout. Unlocking happens in the
+ * webhook checkout.completed (server/utils/creem.ts), not here.
  *
- * Fix 7.2: usa il client RAW Creem (createCreemClient → creem.createCheckout) per
- * ottenere l'intero CheckoutEntity con `checkout.id`. Il checkoutId viene persistito
- * via setEventCheckoutId per la recovery via reconcileEventUnlock.
+ * Fix 7.2: uses the RAW Creem client (createCreemClient → creem.createCheckout) to
+ * obtain the full CheckoutEntity with `checkout.id`. The checkoutId is persisted
+ * via setEventCheckoutId for recovery via reconcileEventUnlock.
  */
 import { createCreemClient } from "@creem_io/better-auth/server";
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
@@ -66,11 +66,11 @@ export async function createCelebrationCheckout(
         throw createError({ statusCode: 502, statusMessage: "Creem checkout senza URL" });
     }
 
-    // Persisti il checkoutId per la recovery via reconcileEventUnlock.
-    // NON swallowato: se la persistenza fallisce il checkout viene rigettato (500) e
-    // l'utente riprova. Un checkout Creem non tracciato che viene poi pagato è
-    // irrecuperabile; un checkout creato ma mai pagato (perché il flow si interrompe
-    // qui) è invece innocuo — Creem non addebita mai un checkout non completato.
+    // Persist the checkoutId for recovery via reconcileEventUnlock.
+    // NOT swallowed: if persistence fails the checkout is rejected (500) and
+    // the user retries. An untracked Creem checkout that is subsequently paid is
+    // unrecoverable; a checkout created but never paid (because the flow stops
+    // here) is however harmless — Creem never charges an incomplete checkout.
     await setEventCheckoutId(eventId, organizationId, checkout.id);
 
     return { url: checkout.checkoutUrl };

@@ -18,7 +18,7 @@ describe("isOrgAtelier", () => {
         [resolveOrgOwnerId, getUserPlanInfo, getPlanFromProductId].forEach((m) => m.mockReset());
     });
 
-    it("true se la subscription dell'owner mappa a 'atelier'", async () => {
+    it("true if the owner's subscription maps to 'atelier'", async () => {
         resolveOrgOwnerId.mockResolvedValue("user_owner");
         getUserPlanInfo.mockResolvedValue({ subscription: { productId: "prod_atelier" } });
         getPlanFromProductId.mockReturnValue("atelier");
@@ -26,14 +26,14 @@ describe("isOrgAtelier", () => {
         expect(await isOrgAtelier("org_1")).toBe(true);
     });
 
-    it("false se l'owner non ha subscription", async () => {
+    it("false if the owner has no subscription", async () => {
         resolveOrgOwnerId.mockResolvedValue("user_owner");
         getUserPlanInfo.mockResolvedValue({ subscription: null });
         const { isOrgAtelier } = await import("~~/server/services/eventAccess.service");
         expect(await isOrgAtelier("org_1")).toBe(false);
     });
 
-    it("false se la subscription non mappa a 'atelier' (es. prodotto sconosciuto)", async () => {
+    it("false if the subscription does not map to 'atelier' (e.g. unknown product)", async () => {
         resolveOrgOwnerId.mockResolvedValue("user_owner");
         getUserPlanInfo.mockResolvedValue({ subscription: { productId: "prod_x" } });
         getPlanFromProductId.mockReturnValue(null);
@@ -41,7 +41,7 @@ describe("isOrgAtelier", () => {
         expect(await isOrgAtelier("org_1")).toBe(false);
     });
 
-    it("false se l'org non ha owner risolvibile", async () => {
+    it("false if the org has no resolvable owner", async () => {
         resolveOrgOwnerId.mockResolvedValue(null);
         const { isOrgAtelier } = await import("~~/server/services/eventAccess.service");
         expect(await isOrgAtelier("org_1")).toBe(false);
@@ -54,7 +54,7 @@ describe("getEventLimits", () => {
         [resolveOrgOwnerId, getUserPlanInfo, getPlanFromProductId].forEach((m) => m.mockReset());
     });
 
-    it("org atelier -> tier atelier, illimitato (-1)", async () => {
+    it("atelier org -> tier atelier, unlimited (-1)", async () => {
         resolveOrgOwnerId.mockResolvedValue("u");
         getUserPlanInfo.mockResolvedValue({ subscription: { productId: "prod_atelier" } });
         getPlanFromProductId.mockReturnValue("atelier");
@@ -63,7 +63,7 @@ describe("getEventLimits", () => {
         expect(l).toEqual({ tier: "atelier", maxGuestsPerEvent: -1, maxReminders: -1 });
     });
 
-    it("evento celebration su org free -> tier celebration (250 ospiti, 3 reminder)", async () => {
+    it("celebration event on free org -> tier celebration (250 guests, 3 reminders)", async () => {
         resolveOrgOwnerId.mockResolvedValue("u");
         getUserPlanInfo.mockResolvedValue({ subscription: null });
         const { getEventLimits } = await import("~~/server/services/eventAccess.service");
@@ -71,7 +71,7 @@ describe("getEventLimits", () => {
         expect(l).toEqual({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
     });
 
-    it("evento free su org free -> tier free (30 ospiti, 3 reminder)", async () => {
+    it("free event on free org -> tier free (30 guests, 3 reminders)", async () => {
         resolveOrgOwnerId.mockResolvedValue("u");
         getUserPlanInfo.mockResolvedValue({ subscription: null });
         const { getEventLimits } = await import("~~/server/services/eventAccess.service");

@@ -69,7 +69,7 @@ export const AUDIT_ACTIONS = {
   'email.sent': 'email.sent',
   'email.failed': 'email.failed',
 
-  // Event (Ceremly — eventi invito, SPEC §6)
+  // Event (Ceremly — invite events, SPEC §6)
   'event.created': 'event.created',
   'event.updated': 'event.updated',
   'event.deleted': 'event.deleted',
@@ -77,24 +77,24 @@ export const AUDIT_ACTIONS = {
   'event.relocked': 'event.relocked',
   'event.cleanup_warned': 'event.cleanup_warned',
 
-  // Guest (Ceremly — ospiti evento, SPEC §6)
+  // Guest (Ceremly — event guests, SPEC §6)
   'guest.created': 'guest.created',
   'guest.updated': 'guest.updated',
   'guest.deleted': 'guest.deleted',
   'guest.imported': 'guest.imported',
 
-  // Distribuzione inviti (Ceremly — usata dall'agente B3)
+  // Invite distribution (Ceremly — used by agent B3)
   'invite.sent': 'invite.sent',
 
-  // Reminder (Ceremly — usata dall'agente B4)
+  // Reminder (Ceremly — used by agent B4)
   'reminder.updated': 'reminder.updated',
 
-  // Organization (FASE 1c)
+  // Organization (PHASE 1c)
   'organization.created': 'organization.created',
   'organization.updated': 'organization.updated',
   'organization.deleted': 'organization.deleted',
 
-  // Project (entità-esempio multi-tenant — FASE 4)
+  // Project (example multi-tenant entity — PHASE 4)
   'project.created': 'project.created',
   'project.updated': 'project.updated',
   'project.deleted': 'project.deleted',

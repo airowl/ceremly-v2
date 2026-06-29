@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Pagina pubblica ospite — /e/:slug/:token (SPEC §7 riga F8).
-// Port fedele di invite-mobile.jsx (sfondo gradient + footer mono) e
-// rsvp-mobile.jsx (RSVPConfirmMobile). SSR (route rule "/e/**"), layout nessuno.
-// Il token è l'autorità: lo slug nell'URL è ignorato.
+// Public guest page — /e/:slug/:token (SPEC §7 row F8).
+// Faithful port of invite-mobile.jsx (gradient background + mono footer) and
+// rsvp-mobile.jsx (RSVPConfirmMobile). SSR (route rule "/e/**"), no layout.
+// The token is authoritative: the slug in the URL is ignored.
 import type { CSSProperties } from "vue";
 import type {
     AttendingStatus,
@@ -31,23 +31,23 @@ definePageMeta({
 const route = useRoute();
 const token = computed(() => String(route.params.token ?? ""));
 
-// Modalità anteprima firmata: token "preview" + ?sig HMAC (link "Invia un test a
-// me"). Renderizza l'invito con ospite-esempio e RSVP in sola lettura. Senza sig
-// valido la fetch fallisce → schermata d'errore cortese (nessuna enumeration).
+// Signed preview mode: token "preview" + ?sig HMAC (link "Send a test to
+// me"). Renders the invite with a sample guest and read-only RSVP. Without a valid
+// sig the fetch fails → friendly error screen (no enumeration).
 const PREVIEW_TOKEN = "preview";
 const slug = computed(() => String(route.params.slug ?? ""));
 const sig = computed(() => String(route.query.sig ?? ""));
 const isPreview = computed(() => token.value === PREVIEW_TOKEN);
 
-// Brand env-driven (niente stringhe hardcoded): appName per il PRODID ICS,
-// host pubblico (es. "ceremly.app") da baseURL per footer e UID ICS.
+// Brand env-driven (no hardcoded strings): appName for the ICS PRODID,
+// public host (e.g. "ceremly.app") from baseURL for footer and ICS UID.
 const runtimeConfig = useRuntimeConfig();
 const appName = computed(() => String(runtimeConfig.public.appName ?? ""));
 const brandHost = computed(() => {
     try {
         const base = String(runtimeConfig.public.baseURL ?? "");
         if (base) return new URL(base).host;
-    } catch { /* baseURL assente o malformata: fallback sotto */ }
+    } catch { /* baseURL missing or malformed: fallback below */ }
     return appName.value.toLowerCase();
 });
 
@@ -57,7 +57,7 @@ const { data, error, status } = isPreview.value
     : await fetchInvite(token.value);
 
 // ---------------------------------------------------------------------------
-// SEO (noindex: pagina personale, mai indicizzata)
+// SEO (noindex: personal page, never indexed)
 // ---------------------------------------------------------------------------
 
 useSeoMeta({
@@ -69,14 +69,14 @@ useSeoMeta({
 });
 
 // ---------------------------------------------------------------------------
-// Stato pagina
+// Page state
 // ---------------------------------------------------------------------------
 
-/** Schermata di base: invito oppure conferma post-submit. */
+/** Base screen: invite or post-submit confirmation. */
 const screen = ref<"invite" | "confirm">("invite");
-/** Overlay full-screen del form RSVP. */
+/** Full-screen RSVP form overlay. */
 const formOpen = ref(false);
-/** Errori mostrati nell'overlay (410/422/altro) senza perdere i dati inseriti. */
+/** Errors shown in the overlay (410/422/other) without losing entered data. */
 const formErrors = ref<string[]>([]);
 
 const response = ref<PublicRsvpResponse | null>(data.value?.response ?? null);
@@ -88,8 +88,8 @@ const firstName = computed(() => guest.value?.firstName?.trim() || t("ceremly.gu
 
 const tpl = computed(() => {
     const base = ev.value ? getTemplate(ev.value.templateKey) : undefined;
-    // Con tema custom l'alone gradient della pagina segue l'accento scelto
-    // (deriveSoft), altrimenti resta l'accentSoft del template.
+    // With a custom theme the page gradient halo follows the chosen accent
+    // (deriveSoft), otherwise it falls back to the template's accentSoft.
     const customTheme = ev.value?.theme ?? null;
     return {
         accent: customTheme?.accent ?? base?.accent ?? "#d4a373",
@@ -97,14 +97,14 @@ const tpl = computed(() => {
     };
 });
 
-/** Nomi host dal block header ("Giulia & Tommaso"), fallback titolo evento. */
+/** Host names from the header block ("Giulia & Tommaso"), fallback to event title. */
 const hostNames = computed(() => {
     const header = ev.value?.blocks.find(b => b.type === "header");
     const names = header ? (header.data as HeaderBlockData).names.filter(n => n?.trim()) : [];
     return names.length ? names.join(" & ") : ev.value?.title ?? "";
 });
 
-// Lock dello scroll di pagina mentre l'overlay è aperto.
+// Lock page scroll while the overlay is open.
 watch(formOpen, (open) => {
     if (import.meta.client) document.body.style.overflow = open ? "hidden" : "";
 });
@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Helpers risposte (banner + riepilogo)
+// Response helpers (banner + summary)
 // ---------------------------------------------------------------------------
 
 const ATTENDANCE_ORDER: AttendingStatus[] = ["yes", "no", "maybe"];
@@ -152,7 +152,7 @@ function humanize(v: RsvpAnswerValue | null): string {
     return String(v);
 }
 
-/** Nomi accompagnatori da companion_names (fallback "Accompagnatore N"). */
+/** Companion names from companion_names (fallback "Companion N"). */
 const companionNames = computed<string[]>(() => {
     const resp = response.value;
     if (!resp) return [];
@@ -176,7 +176,7 @@ const peopleSummary = computed(() => {
     return `${firstName.value} + ${companionNames.value.join(", ")} (${n})`;
 });
 
-/** Riepilogo umanizzato: domande visibili → righe { l, v }. */
+/** Human-readable summary: visible questions → rows { l, v }. */
 const summaryRows = computed<{ l: string; v: string }[]>(() => {
     const resp = response.value;
     const config = ev.value?.rsvpConfig ?? [];
@@ -189,7 +189,7 @@ const summaryRows = computed<{ l: string; v: string }[]>(() => {
         rows.push({ l: t("ceremly.guest.summaryPeople"), v: peopleSummary.value });
     }
 
-    // Visibilità valutata con i valori autoritativi, come fa il server.
+    // Visibility evaluated with authoritative values, as the server does.
     const evaluation: RsvpAnswers = { ...(resp.answers ?? {}) };
     evaluation.attendance = resp.attending;
     if (evaluation.companions_count === undefined) evaluation.companions_count = resp.companionsCount;
@@ -222,7 +222,7 @@ const summaryRows = computed<{ l: string; v: string }[]>(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Apertura/chiusura form + submit
+// Form open/close + submit
 // ---------------------------------------------------------------------------
 
 const initialResponseForForm = computed(() => {
@@ -248,7 +248,7 @@ function closeForm() {
 
 async function onSubmit(payload: PublicRsvpPayload) {
     formErrors.value = [];
-    // Anteprima: il form è solo dimostrativo, nessuna risposta viene salvata.
+    // Preview: the form is for demonstration only, no response is saved.
     if (isPreview.value) {
         formErrors.value = [t("ceremly.guest.previewSubmitDisabled")];
         return;
@@ -262,7 +262,7 @@ async function onSubmit(payload: PublicRsvpPayload) {
         return;
     }
     if (result.kind === "closed") {
-        // Risposte chiuse nel frattempo: messaggio in form, dati preservati.
+        // Responses closed in the meantime: show message in form, data preserved.
         deadlinePassed.value = true;
         formErrors.value = [result.message];
         return;
@@ -275,7 +275,7 @@ async function onSubmit(payload: PublicRsvpPayload) {
 }
 
 // ---------------------------------------------------------------------------
-// Schermata conferma (port RSVPConfirmMobile)
+// Confirmation screen (port RSVPConfirmMobile)
 // ---------------------------------------------------------------------------
 
 const confirmCopy = computed(() => {
@@ -311,14 +311,14 @@ const confirmCopy = computed(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Salva in agenda (Google URL + .ics client-side)
+// Save to calendar (Google URL + .ics client-side)
 // ---------------------------------------------------------------------------
 
 function pad2(n: number): string {
     return String(n).padStart(2, "0");
 }
 
-/** Parti della data evento lette dall'ISO (no shift di timezone). */
+/** Event date parts read from ISO string (no timezone shift). */
 const dateParts = computed<{ y: number; m: number; d: number } | null>(() => {
     const iso = ev.value?.eventDate;
     if (!iso) return null;
@@ -340,7 +340,7 @@ const eventDateLabel = computed(() => {
         .format(new Date(p.y, p.m - 1, p.d));
 });
 
-/** "Villa Erba, Largo L. Visconti 4, Cernobbio (CO)" dal block location. */
+/** "Villa Erba, Largo L. Visconti 4, Cernobbio (CO)" from the location block. */
 const locationText = computed(() => {
     const block = ev.value?.blocks.find(b => b.type === "location");
     if (!block) return "";
@@ -401,7 +401,7 @@ function buildIcs(): string | null {
         lines.push(`DTSTART:${fmtLocal(start)}`, `DTEND:${fmtLocal(end)}`);
     }
     else {
-        // All-day: DTEND esclusivo = giorno successivo.
+        // All-day: DTEND exclusive = next day.
         lines.push(
             `DTSTART;VALUE=DATE:${fmtYmd(new Date(p.y, p.m - 1, p.d))}`,
             `DTEND;VALUE=DATE:${fmtYmd(new Date(p.y, p.m - 1, p.d + 1))}`,
@@ -428,7 +428,7 @@ function downloadIcs() {
 }
 
 // ---------------------------------------------------------------------------
-// Stili condivisi (port inline style dei mockup)
+// Shared styles (port of mockup inline styles)
 // ---------------------------------------------------------------------------
 
 const inviteWrapStyle = computed<CSSProperties>(() => ({
@@ -464,15 +464,15 @@ const agendaBtnStyle: CSSProperties = {
 
 <template>
     <div>
-        <!-- Switcher lingua (IT/EN) — fisso, sempre raggiungibile dagli ospiti -->
+        <!-- Language switcher (IT/EN) — fixed, always reachable by guests -->
         <CerLangSwitch :style="{ position: 'fixed', top: '16px', right: '16px', zIndex: 50 }" />
 
-        <!-- Badge anteprima firmata (solo modalità preview, invito renderizzato) -->
+        <!-- Signed preview badge (preview mode only, invite rendered) -->
         <div v-if="isPreview && data && !error" class="preview-badge">
             <CerIcon name="eye" :s="13" /> {{ $t("ceremly.guest.previewBadge") }}
         </div>
 
-        <!-- ERRORE (404 o altro): schermata cortese standalone -->
+        <!-- ERROR (404 or other): friendly standalone screen -->
         <div
             v-if="error"
             class="cer"
@@ -511,7 +511,7 @@ const agendaBtnStyle: CSSProperties = {
             </div>
         </div>
 
-        <!-- LOADING (solo navigazione client) -->
+        <!-- LOADING (client-side navigation only) -->
         <div
             v-else-if="status === 'pending' || !data"
             class="cer"
@@ -531,11 +531,11 @@ const agendaBtnStyle: CSSProperties = {
             </span>
         </div>
 
-        <!-- INVITO -->
+        <!-- INVITE -->
         <div v-else class="cer guest-page">
             <div class="guest-shell">
                 <template v-if="screen === 'invite'">
-                    <!-- Banner risposta esistente (sticky) -->
+                    <!-- Existing response banner (sticky) -->
                     <div
                         v-if="response"
                         :style="{ position: 'sticky', top: '0', zIndex: 20, padding: '10px 14px 0' }"
@@ -593,7 +593,7 @@ const agendaBtnStyle: CSSProperties = {
                         </div>
                     </div>
 
-                    <!-- Invito (gradient top come invite-mobile.jsx) -->
+                    <!-- Invite (top gradient as in invite-mobile.jsx) -->
                     <div :style="inviteWrapStyle">
                         <InviteRenderer
                             :blocks="ev!.blocks"
@@ -611,7 +611,7 @@ const agendaBtnStyle: CSSProperties = {
                     </div>
                 </template>
 
-                <!-- CONFERMA (port RSVPConfirmMobile) -->
+                <!-- CONFIRMATION (port RSVPConfirmMobile) -->
                 <div
                     v-else
                     :style="{
@@ -646,7 +646,7 @@ const agendaBtnStyle: CSSProperties = {
                     </div>
 
                     <div :style="{ padding: '36px 24px 0' }">
-                        <!-- Riepilogo -->
+                        <!-- Summary -->
                         <div class="cer-card" :style="{ padding: '22px' }">
                             <div
                                 class="mono"
@@ -673,7 +673,7 @@ const agendaBtnStyle: CSSProperties = {
                             </div>
                         </div>
 
-                        <!-- Salva in agenda (solo yes, con data evento) -->
+                        <!-- Save to calendar (yes only, with event date) -->
                         <div
                             v-if="response?.attending === 'yes' && dateParts"
                             :style="{
@@ -717,7 +717,7 @@ const agendaBtnStyle: CSSProperties = {
                             </div>
                         </div>
 
-                        <!-- Modifica la risposta -->
+                        <!-- Edit response -->
                         <div :style="{ marginTop: '22px', textAlign: 'center', fontFamily: 'var(--font-sans)' }">
                             <button
                                 v-if="!deadlinePassed"
@@ -740,7 +740,7 @@ const agendaBtnStyle: CSSProperties = {
                             </button>
                         </div>
 
-                        <!-- Quote firmata -->
+                        <!-- Signed quote -->
                         <div
                             :style="{
                                 marginTop: '28px',
@@ -773,7 +773,7 @@ const agendaBtnStyle: CSSProperties = {
                 </div>
             </div>
 
-            <!-- OVERLAY FORM RSVP (slide-up full-screen) -->
+            <!-- RSVP FORM OVERLAY (slide-up full-screen) -->
             <Transition name="rsvp-slide">
                 <div v-if="formOpen" class="rsvp-overlay">
                     <div class="rsvp-overlay-inner">
@@ -789,7 +789,7 @@ const agendaBtnStyle: CSSProperties = {
                         />
                     </div>
 
-                    <!-- Errori submit (410/422/rete): fissi in basso, dati preservati -->
+                    <!-- Submit errors (410/422/network): fixed at bottom, data preserved -->
                     <div v-if="formErrors.length" class="rsvp-error-strip" role="alert">
                         <div :style="{ flex: 1 }">
                             <div v-for="(msg, i) in formErrors" :key="i" :style="{ marginTop: i === 0 ? '0' : '4px' }">
@@ -819,7 +819,7 @@ const agendaBtnStyle: CSSProperties = {
 </template>
 
 <style scoped>
-/* Badge "Anteprima" fisso in alto a sinistra (modalità preview firmata) */
+/* "Preview" badge fixed top-left (signed preview mode) */
 .preview-badge {
     position: fixed;
     top: 16px;
@@ -840,7 +840,7 @@ const agendaBtnStyle: CSSProperties = {
     box-shadow: 0 8px 24px -16px rgba(63, 54, 34, 0.6);
 }
 
-/* Mobile-first: shell max 480 centrata; su desktop sfondo bone-100 + ombra */
+/* Mobile-first: shell max 480 centered; on desktop bone-100 background + shadow */
 .guest-page {
     min-height: 100dvh;
     background: var(--bone);
@@ -860,7 +860,7 @@ const agendaBtnStyle: CSSProperties = {
     }
 }
 
-/* Overlay full-screen del form RSVP */
+/* Full-screen RSVP form overlay */
 .rsvp-overlay {
     position: fixed;
     inset: 0;
@@ -886,7 +886,7 @@ const agendaBtnStyle: CSSProperties = {
     }
 }
 
-/* Striscia errori submit: fissa in basso, centrata col container */
+/* Submit error strip: fixed at bottom, centered with the container */
 .rsvp-error-strip {
     position: fixed;
     bottom: 0;
@@ -908,7 +908,7 @@ const agendaBtnStyle: CSSProperties = {
     line-height: 1.4;
 }
 
-/* Slide-up del form */
+/* Form slide-up */
 .rsvp-slide-enter-active,
 .rsvp-slide-leave-active {
     transition: transform 320ms cubic-bezier(0.22, 0.8, 0.36, 1), opacity 320ms ease;
@@ -919,7 +919,7 @@ const agendaBtnStyle: CSSProperties = {
     opacity: 0.5;
 }
 
-/* Spinner sobrio */
+/* Minimal spinner */
 .guest-spin {
     width: 28px;
     height: 28px;

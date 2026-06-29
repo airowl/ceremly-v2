@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Intestazione di sezione in-pagina — port di SiteH2 (site-shared.jsx).
-// Titolo via slot #title (può contenere <CerMark>) o prop title.
+// In-page section heading — port of SiteH2 (site-shared.jsx).
+// Title via slot #title (can contain <CerMark>) or prop title.
 withDefaults(
     defineProps<{
         tag?: string

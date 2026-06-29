@@ -6,18 +6,18 @@ import * as schema from "../schema";
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
- * Seeder di sviluppo (phase 1a).
- * Crea: 1 org B2C (1 membro owner) + 1 org B2B (owner/admin/member + 1 invito pending)
- * + alcuni projects per org (per testare l'isolamento tenant — vedi verify-isolation.ts).
+ * Development seeder (phase 1a).
+ * Creates: 1 B2C org (1 owner member) + 1 B2B org (owner/admin/member + 1 pending invite)
+ * + some projects per org (to test tenant isolation — see verify-isolation.ts).
  *
- * Nota: gli utenti qui sono righe `user` minimali per soddisfare le FK. L'auth reale
- * (password, sessioni) si crea via signup — non è compito del seeder.
+ * Note: users here are minimal `user` rows to satisfy FK constraints. Real auth
+ * (password, sessions) is created via signup — not the seeder's job.
  */
 async function seed() {
     const db = getDB();
     console.log("[seed] start");
 
-    // --- utenti (righe minimali per le FK member/invitation) ---
+    // --- users (minimal rows for member/invitation FK constraints) ---
     const userB2C = uuidv7();
     const userOwner = uuidv7();
     const userAdmin = uuidv7();
@@ -29,7 +29,7 @@ async function seed() {
         { id: userMember, name: "B2B Member", email: "member@example.com", emailVerified: true },
     ]);
 
-    // --- org B2C (1 membro owner) ---
+    // --- B2C org (1 owner member) ---
     const orgB2C = uuidv7();
     await db.insert(schema.organization).values({
         id: orgB2C,
@@ -45,7 +45,7 @@ async function seed() {
         createdAt: new Date(),
     });
 
-    // --- org B2B (3 membri + 1 invito pending) ---
+    // --- B2B org (3 members + 1 pending invite) ---
     const orgB2B = uuidv7();
     await db.insert(schema.organization).values({
         id: orgB2B,
@@ -69,7 +69,7 @@ async function seed() {
         createdAt: new Date(),
     });
 
-    // --- projects per testare l'isolamento (con description nullable + status enum) ---
+    // --- projects to test isolation (with nullable description + status enum) ---
     await db.insert(schema.projects).values([
         { id: uuidv7(), organizationId: orgB2C, name: "B2C Project 1", description: "Primo progetto personale", status: "active" },
         { id: uuidv7(), organizationId: orgB2C, name: "B2C Project 2", description: null, status: "archived" },

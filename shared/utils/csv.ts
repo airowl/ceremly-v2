@@ -1,12 +1,12 @@
 /**
- * Parsing CSV lato client per l'import ospiti (SPEC §0: il server riceve
- * righe JSON già strutturate). Parser RFC-4180-lite: campi quotati, virgole
- * e newline dentro le quote, escape `""`, terminatori \r\n e \n.
- * PURE FUNCTIONS, zero dipendenze.
+ * Client-side CSV parsing for guest import (SPEC §0: the server receives
+ * already-structured JSON rows). RFC-4180-lite parser: quoted fields, commas
+ * and newlines inside quotes, `""` escape, \r\n and \n terminators.
+ * PURE FUNCTIONS, zero dependencies.
  */
 
 export interface CsvError {
-  /** Numero di riga 1-based (in mapGuestRows: posizione del record, header incluso). */
+  /** 1-based line number (in mapGuestRows: record position, header included). */
   line: number
   reason: string
 }
@@ -16,7 +16,7 @@ export interface CsvParseResult {
   errors: CsvError[]
 }
 
-/** Riga ospite mappata dalle colonne posizionali [nome, cognome, email, telefono, gruppo]. */
+/** Guest row mapped from positional columns [nome, cognome, email, telefono, gruppo]. */
 export interface CsvGuestRow {
   firstName: string
   lastName: string
@@ -33,9 +33,9 @@ export interface MapGuestRowsResult {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Parsa il testo CSV in righe di campi. Le righe completamente vuote sono
- * scartate. Una quote non chiusa produce un errore (con la riga di apertura)
- * e il contenuto residuo viene comunque restituito come ultimo campo.
+ * Parses CSV text into rows of fields. Completely blank rows are discarded.
+ * An unclosed quote produces an error (with the opening line) and the
+ * remaining content is still returned as the last field.
  */
 export function parseCsv(text: string): CsvParseResult {
   const rows: string[][] = []
@@ -50,7 +50,7 @@ export function parseCsv(text: string): CsvParseResult {
   const pushRow = () => {
     row.push(field)
     field = ''
-    // scarta le righe completamente vuote (es. newline finale)
+    // discard completely blank rows (e.g. trailing newline)
     if (row.some(cell => cell.trim() !== '')) rows.push(row)
     row = []
   }
@@ -61,7 +61,7 @@ export function parseCsv(text: string): CsvParseResult {
     if (inQuotes) {
       if (ch === '"') {
         if (text[i + 1] === '"') {
-          field += '"' // escape RFC: "" → "
+          field += '"' // RFC escape: "" → "
           i++
         } else {
           inQuotes = false
@@ -97,10 +97,10 @@ export function parseCsv(text: string): CsvParseResult {
 }
 
 /**
- * Mappa le righe CSV in ospiti. Colonne posizionali: [nome, cognome, email,
- * telefono, gruppo]. Se la prima riga contiene 'nome'/'cognome'/'email'
- * (case-insensitive) è trattata come header e saltata.
- * `line` negli errori = posizione del record nel file (1-based, header incluso).
+ * Maps CSV rows to guests. Positional columns: [nome, cognome, email,
+ * telefono, gruppo]. If the first row contains 'nome'/'cognome'/'email'
+ * (case-insensitive) it is treated as a header and skipped.
+ * `line` in errors = record position in the file (1-based, header included).
  */
 export function mapGuestRows(rows: string[][]): MapGuestRowsResult {
   const guests: CsvGuestRow[] = []

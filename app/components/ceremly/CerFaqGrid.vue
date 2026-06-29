@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Griglia FAQ a due colonne — port di FaqGrid (site-shared.jsx).
+// Two-column FAQ grid — port of FaqGrid (site-shared.jsx).
 defineProps<{
     items: { q: string, a: string }[]
 }>()

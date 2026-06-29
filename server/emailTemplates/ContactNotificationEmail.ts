@@ -1,5 +1,5 @@
-// React Email template — notifica admin di un nuovo messaggio dal form contatti.
-// Design "Soft Meadow" (token/stili condivisi da ./_softMeadow). Solo italiano.
+// React Email template — admin notification for a new contact-form message.
+// "Soft Meadow" design (shared tokens/styles from ./_softMeadow). Italian only.
 // Uses React.createElement to avoid JSX/Vue conflicts.
 
 import * as React from 'react';

@@ -67,19 +67,19 @@ export default defineEventHandler(async (event) => {
         .set(updateData)
         .where(eq(schema.user.id, userId));
 
-    // Ban → revoca SUBITO le sessioni del target (DB + secondaryStorage Redis).
-    // Il flag `banned` è valutato solo a session.create (sign-in): senza questo,
-    // un utente abusivo già loggato resterebbe autenticato fino alla scadenza
-    // naturale della sessione cachata — esattamente la popolazione da tagliare.
-    // Stessa operazione interna di auth.api.banUser (internalAdapter.deleteSessions).
-    // try/catch come deleteAccount: un fallimento qui non deve annullare il ban
-    // già scritto, ma va loggato forte (è il bug che riemerge se silenziato).
+    // Ban → immediately revoke the target's sessions (DB + secondaryStorage Redis).
+    // The `banned` flag is evaluated only at session.create (sign-in): without this,
+    // an abusive user already logged in would remain authenticated until the natural
+    // expiry of the cached session — exactly the population we want to cut off.
+    // Same internal operation as auth.api.banUser (internalAdapter.deleteSessions).
+    // try/catch like deleteAccount: a failure here must not roll back the ban
+    // already written, but should be logged loudly (it's the bug that resurfaces if silenced).
     if (validatedData.banned === true) {
         try {
             const ctx = await useServerAuth().$context;
             await ctx.internalAdapter.deleteSessions(userId);
         } catch (err) {
-            console.error(`[admin.user.patch] revoca sessioni fallita per utente bannato ${userId}:`, err);
+            console.error(`[admin.user.patch] session revocation failed for banned user ${userId}:`, err);
         }
     }
 

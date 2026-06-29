@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Renderer dell'invito — port fedele di InvitePreview (docs/ui/project/screens/editor.jsx)
-// integrato con invite-mobile.jsx per i blocchi non presenti nell'editor
-// (countdown, gallery, logistics, mappa location con pin + bottone Maps).
-// Accent del template via CSS var --tpl-accent / --tpl-accent-soft inline sul root.
+// Invite renderer — faithful port of InvitePreview (docs/ui/project/screens/editor.jsx)
+// integrated with invite-mobile.jsx for blocks not present in the editor
+// (countdown, gallery, logistics, location map with pin + Maps button).
+// Template accent via CSS var --tpl-accent / --tpl-accent-soft inline on the root.
 import type { CSSProperties } from "vue";
 import type {
     BlockType,
@@ -24,7 +24,7 @@ import { deriveInk, deriveLine, deriveSoft } from "~~/shared/utils/inviteColor";
 import CerIcon from "./CerIcon.vue";
 import CountdownRing from "./CountdownRing.vue";
 
-/** Fallback generico per categoria: un sans/handwriting non deve cadere su serif durante il FOUT. */
+/** Generic fallback by category: a sans/handwriting font must not fall back to serif during FOUT. */
 const GENERIC_FALLBACK: Record<FontCategory, string> = {
     serif: "serif",
     sans: "sans-serif",
@@ -37,16 +37,16 @@ const { t } = useI18n();
 const props = withDefaults(
     defineProps<{
         blocks: InviteBlock[];
-        /** Oggetto { accent, accentSoft } oppure key risolta con getTemplate. */
+        /** Object { accent, accentSoft } or key resolved with getTemplate. */
         template: { accent: string; accentSoft: string } | string;
-        /** Tema colori custom. null/assente ⇒ accento dal template. */
+        /** Custom color theme. null/absent ⇒ accent from template. */
         theme?: InviteTheme | null;
-        /** Nome famiglia del catalogo font. null/assente ⇒ --font-display globale. */
+        /** Font catalog family name. null/absent ⇒ global --font-display. */
         font?: string | null;
         eventDate?: string | Date | null;
         rsvpDeadline?: string | Date | null;
         guestName?: string | null;
-        /** Editor: blocchi cliccabili con outline + label. */
+        /** Editor: clickable blocks with outline + label. */
         interactive?: boolean;
         activeBlockId?: string | null;
         deadlinePassed?: boolean;
@@ -90,27 +90,27 @@ const tpl = computed(() => {
     return props.template;
 });
 
-// Tema invito a livello evento: una palette scelta dall'utente vince sul
-// template; il carattere override --font-display. null ⇒ token globali .cer.
+// Event-level invite theme: a user-chosen palette overrides the template;
+// the font overrides --font-display. null ⇒ global .cer tokens.
 const theme = computed(() => props.theme ?? null);
 const catalogFont = computed(() => getCatalogFont(props.font));
 
-// Accento effettivo (theme se presente, altrimenti accento del template).
+// Effective accent (theme if present, otherwise template accent).
 const accent = computed(() => theme.value?.accent ?? tpl.value.accent);
 const accentSoft = computed(() => (theme.value ? deriveSoft(theme.value.accent) : tpl.value.accentSoft));
 
-// Classe webfont sul root: applica il carattere e fa rilevare la famiglia a
-// @nuxt/fonts (vedi .inv-font-* in ceremly.css).
+// Webfont class on the root: applies the font and makes the family discoverable by
+// @nuxt/fonts (see .inv-font-* in ceremly.css).
 const rootClass = computed(() => (catalogFont.value ? `inv-font-${fontSlug(catalogFont.value.family)}` : ""));
 
-// Card radius 16, padding 48px 36px, shadow soft (come InvitePreview). Gli
-// override dei token sono CONDIZIONALI: senza palette/font il root resta
-// identico a prima (zero regressione sugli inviti esistenti).
+// Card radius 16, padding 48px 36px, soft shadow (like InvitePreview). Token
+// overrides are CONDITIONAL: without palette/font the root stays
+// identical to before (zero regression on existing invites).
 const rootStyle = computed<CSSProperties>(() => {
     const t = theme.value;
     const f = catalogFont.value;
-    // Toni di testo derivati dal paper: l'utente sceglie lo sfondo ma non
-    // l'inchiostro, quindi su paper scuro il corpo testo passa a creme chiare.
+    // Text tones derived from the paper: the user picks the background but not
+    // the ink, so on a dark paper the body text shifts to light creams.
     const ink = t ? deriveInk(t.paper) : null;
     return {
         "--tpl-accent": accent.value,
@@ -119,8 +119,8 @@ const rootStyle = computed<CSSProperties>(() => {
             ? {
                 "--bone-50": t.paper,
                 "--bone-100": deriveSoft(t.accent),
-                // Linea/bordo tenue derivata dal paper: divisori, placeholder mappa
-                // e bordi seguono il tema (su carta scura non restano verde pallido).
+                // Subtle line/border derived from the paper: dividers, map placeholder
+                // and borders follow the theme (on dark paper they won't stay pale green).
                 "--bone-200": deriveLine(t.paper),
                 "--wine": t.accent,
                 "--wine-deep": t.deep,
@@ -140,7 +140,7 @@ const rootStyle = computed<CSSProperties>(() => {
     };
 });
 
-// Titoli di sezione mono spaziati (il mockup spazia a mano le lettere: qui CSS letter-spacing).
+// Spaced mono section headings (the mockup letter-spaces by hand: here CSS letter-spacing).
 const monoTitle: CSSProperties = {
     fontFamily: "var(--font-mono)",
     fontSize: "10px",
@@ -181,7 +181,7 @@ function onBlockClick(block: InviteBlock) {
     if (props.interactive) emit("select", block.id);
 }
 
-// Divider 1px bone-200 dopo l'header e prima del blocco rsvp (come nel mockup).
+// 1px bone-200 divider after the header and before the rsvp block (as in the mockup).
 function dividerBefore(index: number): boolean {
     const prev = props.blocks[index - 1];
     const cur = props.blocks[index];
@@ -189,7 +189,7 @@ function dividerBefore(index: number): boolean {
     return prev.type === "header" || cur.type === "rsvp";
 }
 
-// Getter tipizzati per la union discriminata (il template non narrowa da solo).
+// Typed getters for the discriminated union (the template does not narrow on its own).
 const headerData = (b: InviteBlock) => b.data as HeaderBlockData;
 const messageData = (b: InviteBlock) => b.data as MessageBlockData;
 const programData = (b: InviteBlock) => b.data as ProgramBlockData;
@@ -206,9 +206,9 @@ function headerDateLine(d: HeaderBlockData): string {
 }
 
 function mapsHref(d: LocationBlockData): string {
-    // Difesa in profondità: rende solo http(s). Un mapsUrl legacy/malevolo con
-    // schema javascript:/data: (lo schema guarda solo le scritture nuove) ricade
-    // sul link Google Maps sicuro invece di eseguire al click.
+    // Defense in depth: renders only http(s). A legacy/malicious mapsUrl with
+    // javascript:/data: scheme (the schema only guards new writes) falls back
+    // to the safe Google Maps link instead of executing on click.
     const url = d.mapsUrl?.trim();
     if (url && /^https?:\/\//i.test(url)) return url;
     return `https://maps.google.com/?q=${encodeURIComponent(d.address)}`;
@@ -233,7 +233,7 @@ const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"))
 
 <template>
     <div :class="['cer', rootClass]" :style="rootStyle">
-        <!-- Saluto personalizzato (come 'CARA ANNA' di invite-mobile.jsx, qui 'Ciao' neutro) -->
+        <!-- Personalized greeting (like 'CARA ANNA' in invite-mobile.jsx, here a neutral 'Ciao') -->
         <div v-if="guestName" :style="{ textAlign: 'center', paddingBottom: '12px' }">
             <div
                 class="mono"
@@ -548,8 +548,8 @@ const DEFAULT_CLOSED_MESSAGE = computed(() => t("ceremly.invite.closedDefault"))
 </template>
 
 <style>
-/* Catalogo font invito (classi .inv-font-* + @font-face self-hostati da @nuxt/fonts).
-   Importato qui — non in nuxt.config css[] — così carica solo nelle route che
-   montano il renderer (anteprima ospite ed editor), non su ogni pagina del sito. */
+/* Invite font catalog (.inv-font-* classes + @font-face self-hosted via @nuxt/fonts).
+   Imported here — not in nuxt.config css[] — so it loads only on the routes that
+   mount the renderer (guest preview and editor), not on every page of the site. */
 @import "../../assets/css/invite-fonts.css";
 </style>

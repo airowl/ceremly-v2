@@ -1,5 +1,5 @@
-// React Email — avviso cleanup evento concluso+inattivo (SPEC §9.2).
-// Inviato all'organizzatore ~7gg prima dell'eliminazione automatica.
+// React Email — archival warning for a closed and inactive event (SPEC §9.2).
+// Sent to the organiser ~7 days before automatic deletion.
 import * as React from 'react';
 import {
     Html, Head, Preview, Body, Container, Section, Text, Button,
@@ -9,9 +9,9 @@ import { colors, fonts } from './_softMeadow';
 export interface EventCleanupWarningProps {
     language: 'it' | 'en';
     eventTitle: string;
-    /** Link alla pagina evento in dashboard `{baseURL}/dashboard/events/{id}`. */
+    /** Link to the event page in the dashboard `{baseURL}/dashboard/events/{id}`. */
     dashboardUrl: string;
-    /** Giorni rimanenti prima dell'eliminazione (di norma 7). */
+    /** Days remaining before deletion (typically 7). */
     daysLeft: number;
     appName: string;
     appHost: string;

@@ -1,15 +1,15 @@
 /**
- * Reminder Service — logica di business dei reminder Ceremly (SPEC §6, owner B4).
+ * Reminder Service — business logic for Ceremly reminders (SPEC §6, owner B4).
  *
  * Pattern event.service:
- *   1. organizationId SEMPRE da event.context.organization (guard RBAC), mai da body/query.
- *   2. Query repository org-scoped by-construction.
- *   3. assertOwnership sull'evento come 2° guard.
- *   4. logAudit su ogni scrittura organizzatore ('reminder.updated').
+ *   1. organizationId ALWAYS from event.context.organization (RBAC guard), never from body/query.
+ *   2. Repository queries org-scoped by-construction.
+ *   3. assertOwnership on the event as 2nd guard.
+ *   4. logAudit on every organizer write ('reminder.updated').
  *
- * `processDueReminders` gira invece in contesto di sistema (Vercel Cron, nessun
- * utente): non audita (le consegne sono tracciate in guest_activities dal job
- * handler con type 'reminder_sent') e accoda 1 job 'send-reminder-email' per ospite.
+ * `processDueReminders` runs in system context instead (Vercel Cron, no user):
+ * it does not audit (deliveries are tracked in guest_activities by the job
+ * handler with type 'reminder_sent') and enqueues 1 'send-reminder-email' job per guest.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type { RemindersInput } from "~~/shared/schemas/ceremly";
@@ -26,10 +26,10 @@ import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 import { dispatch } from "../queue";
 
-/** Concorrenza massima dei dispatch QStash per reminder (#6: evita timeout su liste grandi). */
+/** Maximum QStash dispatch concurrency for reminders (#6: avoids timeout on large lists). */
 const REMINDER_DISPATCH_CONCURRENCY = 10;
 
-/** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
+/** Reads the active org from context. 401 if absent (RBAC guard not executed). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
     if (!orgId) {
@@ -41,7 +41,7 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
     return orgId;
 }
 
-/** Evento scoped + assertOwnership: 2° guard comune a list/save. */
+/** Scoped event + assertOwnership: 2nd guard common to list/save. */
 async function requireOwnedEvent(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -52,7 +52,7 @@ async function requireOwnedEvent(
     return { organizationId, eventRow };
 }
 
-/** Lista reminder dell'evento (SPEC §6 GET /api/events/:id/reminders). */
+/** Lists event reminders (SPEC §6 GET /api/events/:id/reminders). */
 export async function listReminders(event: H3Event<EventHandlerRequest>, eventId: string) {
     const { organizationId } = await requireOwnedEvent(event, eventId);
     const reminders = await findRemindersByEvent(organizationId, eventId);
@@ -60,11 +60,11 @@ export async function listReminders(event: H3Event<EventHandlerRequest>, eventId
 }
 
 /**
- * Bulk upsert dei reminder (SPEC §6 PUT /api/events/:id/reminders):
- * id presente → update se non inviato; assente → insert; esistenti non in
- * lista → delete se non inviati. I già inviati sono immutabili (skip silenzioso).
- * Valida il totale risultante (inviati conservati + aggiornati + nuovi) → 422
- * oltre MAX_REMINDERS.
+ * Bulk upsert of reminders (SPEC §6 PUT /api/events/:id/reminders):
+ * id present → update if not sent; absent → insert; existing not in
+ * list → delete if not sent. Already-sent reminders are immutable (silent skip).
+ * Validates the resulting total (sent kept + updated + new) → 422
+ * above MAX_REMINDERS.
  */
 export async function saveReminders(
     event: H3Event<EventHandlerRequest>,
@@ -74,8 +74,8 @@ export async function saveReminders(
     const { organizationId, eventRow } = await requireOwnedEvent(event, eventId);
     const { maxReminders } = await getEventLimits(eventRow);
 
-    // Validazione totale DOPO l'operazione: i reminder già inviati restano
-    // sempre (anche se omessi dalla lista), quindi contano nel totale.
+    // Full validation AFTER the operation: already-sent reminders always remain
+    // (even if omitted from the list), so they count toward the total.
     const existing = await findRemindersByEvent(organizationId, eventId);
     const existingById = new Map(existing.map((r) => [r.id, r]));
     const sentKept = existing.filter((r) => r.sentAt !== null).length;
@@ -87,11 +87,11 @@ export async function saveReminders(
             continue;
         }
         const current = existingById.get(item.id);
-        // Id di un reminder inviato (già contato in sentKept) o sconosciuto
-        // nello scope → skip silenzioso, non incide sul totale.
+        // Id of an already-sent reminder (already counted in sentKept) or unknown
+        // in scope → silent skip, does not affect the total.
         if (current && current.sentAt === null) updatedUnsent++;
     }
-    // -1 (atelier) = nessun limite reminder.
+    // -1 (atelier) = no reminder limit.
     if (maxReminders !== -1 && sentKept + updatedUnsent + inserts > maxReminders) {
         throw createError({
             statusCode: 422,
@@ -113,12 +113,12 @@ export async function saveReminders(
 }
 
 /**
- * Processa i reminder dovuti (SPEC §6 GET /api/cron/send-reminders):
- * per ogni reminder dovuto → ospiti pendenti (con email, non removed,
- * remindersDisabled=false, senza risposta) → dispatch 'send-reminder-email'
- * per ciascuno → markReminderSent SUBITO dopo l'enqueue (idempotenza: un cron
- * che rigira nello stesso giorno non re-invia). Il lavoro pesante (render +
- * send email, activity 'reminder_sent') sta nel job handler, non qui (Strada A).
+ * Processes due reminders (SPEC §6 GET /api/cron/send-reminders):
+ * for each due reminder → pending guests (with email, not removed,
+ * remindersDisabled=false, no response) → dispatch 'send-reminder-email'
+ * for each → markReminderSent IMMEDIATELY after enqueue (idempotency: a cron
+ * re-running the same day does not re-send). Heavy work (render +
+ * send email, activity 'reminder_sent') lives in the job handler, not here (Strada A).
  */
 export async function processDueReminders(): Promise<{ processed: number; queued: number }> {
     const due = await findDueReminders();
@@ -130,10 +130,10 @@ export async function processDueReminders(): Promise<{ processed: number; queued
             reminder.organizationId,
             reminder.eventId,
         );
-        // Dispatch concorrente a chunk (#6): un fallimento singolo NON aborta il
-        // run (Promise.allSettled), così markReminderSent gira sempre e non si
-        // ha re-invio di massa il giorno dopo; l'idempotenza handler/consumer
-        // evita comunque doppioni. I chunk evitano il timeout su liste grandi.
+        // Concurrent dispatch in chunks (#6): a single failure does NOT abort the
+        // run (Promise.allSettled), so markReminderSent always runs and there is no
+        // mass re-send the next day; handler/consumer idempotency prevents duplicates
+        // regardless. Chunks avoid timeout on large lists.
         for (let i = 0; i < guests.length; i += REMINDER_DISPATCH_CONCURRENCY) {
             const chunk = guests.slice(i, i + REMINDER_DISPATCH_CONCURRENCY);
             const settled = await Promise.allSettled(
@@ -143,7 +143,7 @@ export async function processDueReminders(): Promise<{ processed: number; queued
                 if (res.status === "fulfilled") {
                     queued++;
                 } else {
-                    console.error(`[cron:send-reminders] dispatch fallito per guest ${chunk[idx]!.id} reminder ${reminder.id}:`, res.reason);
+                    console.error(`[cron:send-reminders] dispatch failed for guest ${chunk[idx]!.id} reminder ${reminder.id}:`, res.reason);
                 }
             });
         }

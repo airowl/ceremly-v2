@@ -1,13 +1,13 @@
 /**
  * Organization service (phase 1b).
- * Logica pura riusabile dall'hook signup→org in server/utils/auth.ts.
- * Niente SDK qui: la creazione org reale avviene via auth.api.createOrganization.
+ * Pure reusable logic from the signup→org hook in server/utils/auth.ts.
+ * No SDK here: real org creation happens via auth.api.createOrganization.
  */
 import { v7 as uuidv7 } from "uuid";
 
 /**
- * Deriva un nome org leggibile dal nuovo utente.
- * Preferisce il name; fallback alla parte locale dell'email; fallback "Workspace".
+ * Derives a human-readable org name from the new user.
+ * Prefers name; fallback to the local part of the email; fallback "Workspace".
  */
 export function deriveOrgNameFromUser(user: { name?: string | null; email: string }): string {
     const fromName = (user.name ?? "").trim();
@@ -22,10 +22,10 @@ export function deriveOrgNameFromUser(user: { name?: string | null; email: strin
 }
 
 /**
- * Genera uno slug univoco-per-costruzione.
- * Base slugificata + suffisso uuid breve → collisione con
- * organization.slug (UNIQUE) praticamente impossibile, così
- * createOrganization non lancia mai ORGANIZATION_ALREADY_EXISTS.
+ * Generates a by-construction unique slug.
+ * Slugified base + short uuid suffix → collision with
+ * organization.slug (UNIQUE) is practically impossible, so
+ * createOrganization never throws ORGANIZATION_ALREADY_EXISTS.
  */
 export function generateUniqueOrgSlug(name: string): string {
     const base = name

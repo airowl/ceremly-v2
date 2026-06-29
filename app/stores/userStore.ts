@@ -82,7 +82,7 @@ export const useUserStore = defineStore("user", () => {
     }
 
     function forceLogout() {
-        // Stato locale già derivato da useAuth(): nulla da resettare qui.
+        // Local state is already derived from useAuth(): nothing to reset here.
     }
 
     async function logout() {

@@ -13,13 +13,13 @@ import { sendEmail } from "./email";
 beforeEach(() => vi.clearAllMocks());
 
 describe("sendEmail suppression", () => {
-    it("salta l'invio se il destinatario è soppresso", async () => {
+    it("skips sending if the recipient is suppressed", async () => {
         mocks.isEmailSuppressed.mockResolvedValue(true);
         const r = await sendEmail({ type: "verification", to: "x@x.com", verificationUrl: "https://x" });
         expect(r).toEqual({ success: false, error: "suppressed" });
         expect(send).not.toHaveBeenCalled();
     });
-    it("invia se non soppresso", async () => {
+    it("sends if not suppressed", async () => {
         mocks.isEmailSuppressed.mockResolvedValue(false);
         const r = await sendEmail({ type: "verification", to: "x@x.com", verificationUrl: "https://x" });
         expect(r.success).toBe(true);

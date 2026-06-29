@@ -1,20 +1,20 @@
 /**
- * useButtonSuccess — stato bottone idle → loading → success → idle
- * (pattern A della guida UI). Dopo un'azione async riuscita il bottone
- * resta in stato "success" (check) per ~1.5s prima di tornare a riposo,
- * dando una conferma inline oltre al toast.
+ * useButtonSuccess — button state idle → loading → success → idle
+ * (UI guide pattern A). After a successful async action the button
+ * stays in "success" state (checkmark) for ~1.5s before returning to idle,
+ * providing inline confirmation beyond the toast.
  *
  *   const save = useButtonSuccess()
  *   <button :class="{ success: save.isSuccess }" :disabled="save.busy"
  *           @click="save.run(() => doSave())">…</button>
  *
- * `run` rilancia l'errore (così il chiamante può comunque mostrare un toast):
- * in caso di errore NON entra in stato success.
+ * `run` rethrows the error (so the caller can still show a toast):
+ * on error it does NOT enter the success state.
  */
 export function useButtonSuccess(successMs = 1500) {
     const isLoading = ref(false);
     const isSuccess = ref(false);
-    // Disabilita il bottone sia durante l'azione sia durante la conferma.
+    // Disables the button both during the action and during the confirmation.
     const busy = computed(() => isLoading.value || isSuccess.value);
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -34,6 +34,6 @@ export function useButtonSuccess(successMs = 1500) {
 
     onScopeDispose(() => { if (timer) clearTimeout(timer); });
 
-    // reactive(): nel template l'accesso `save.isSuccess` è già unwrappato.
+    // reactive(): in the template `save.isSuccess` is already unwrapped.
     return reactive({ isLoading, isSuccess, busy, run });
 }

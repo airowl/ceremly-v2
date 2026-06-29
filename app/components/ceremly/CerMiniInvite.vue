@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Invito in miniatura — port di MiniInvite (site-shared.jsx). Usato nelle
-// gallerie modelli e negli hero dei casi d'uso. Nomi via slot #names.
+// Miniature invite card — port of MiniInvite (site-shared.jsx). Used in
+// template galleries and use-case heroes. Names via slot #names.
 withDefaults(
     defineProps<{
         bg?: string

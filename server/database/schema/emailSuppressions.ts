@@ -1,8 +1,8 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 
-// GLOBALE (account-level), non org-scoped: un hard bounce/complaint è oggettivo.
-// L'indice su `email` è implicito: il vincolo UNIQUE crea già un B-tree in Postgres.
+// GLOBAL (account-level), not org-scoped: a hard bounce/complaint is objective.
+// The index on `email` is implicit: the UNIQUE constraint already creates a B-tree in Postgres.
 export const emailSuppressions = pgTable("email_suppressions", {
     id: text("id").primaryKey().$default(() => uuidv7()),
     email: text("email").notNull().unique(),

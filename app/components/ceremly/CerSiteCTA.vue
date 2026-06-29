@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Banda CTA scura — port di SiteCTA (site-shared.jsx). Versione compatta della
-// CTA della landing. Titolo via slot #title (con default), CTA primaria gated
-// dal site-mode come la landing (active → /signup, waitinglist → form lista).
+// Dark CTA band — port of SiteCTA (site-shared.jsx). Compact version of the
+// landing CTA. Title via slot #title (with default), primary CTA gated
+// by site-mode like the landing (active → /signup, waitinglist → waitlist form).
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 
@@ -20,7 +20,7 @@ const localePath = useLocalePath()
 const { isActiveMode } = useSiteMode()
 
 const primaryLabel = computed(() => props.primary || t('ceremly.site.shared.ctaPrimary'))
-// In waitinglist mode la primaria porta al form lista d'attesa sulla landing.
+// In waitinglist mode the primary button points to the waiting list form on the landing.
 const primaryTo = computed(() => isActiveMode.value ? localePath('/signup') : `${localePath('/')}#lista-attesa`)
 </script>
 

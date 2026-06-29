@@ -1,4 +1,4 @@
-/** Utility colore per il tema invito: contrasto WCAG + derivazione tinta chiara. Funzioni pure. */
+/** Colour utility for the invite theme: WCAG contrast + light-tint derivation. Pure functions. */
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
     if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
@@ -22,7 +22,7 @@ export function relativeLuminance(hex: string): number {
     return 0.2126 * channelLin(r) + 0.7152 * channelLin(g) + 0.0722 * channelLin(b);
 }
 
-/** Rapporto di contrasto WCAG (1..21). */
+/** WCAG contrast ratio (1..21). */
 export function contrastRatio(fg: string, bg: string): number {
     const l1 = relativeLuminance(fg);
     const l2 = relativeLuminance(bg);
@@ -30,12 +30,12 @@ export function contrastRatio(fg: string, bg: string): number {
     return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Soglia WCAG AA: 4.5:1 testo normale, 3:1 testo grande. */
+/** WCAG AA threshold: 4.5:1 normal text, 3:1 large text. */
 export function isReadable(fg: string, bg: string, large = false): boolean {
     return contrastRatio(fg, bg) >= (large ? 3 : 4.5);
 }
 
-/** Tinta chiara dell'accento (mix con bianco all'85%) per `--bone-100`. */
+/** Light tint of the accent (mix with white at 85%) for `--bone-100`. */
 export function deriveSoft(accent: string): string {
     const { r, g, b } = hexToRgb(accent);
     const mix = (c: number) => Math.round(c + (255 - c) * 0.85);
@@ -43,22 +43,22 @@ export function deriveSoft(accent: string): string {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-/** Toni di testo del corpo (`--ink`/`--ink-700`/`--ink-500`). */
+/** Body text tones (`--ink`/`--ink-700`/`--ink-500`). */
 export interface InkTones {
     ink: string;
     ink700: string;
     ink500: string;
 }
 
-/** Ramo marroni scuri (`.cer` di default): leggibili su carta chiara. */
+/** Dark brown branch (`.cer` default): readable on light paper. */
 const INK_DARK: InkTones = { ink: "#3F3622", ink700: "#57492F", ink500: "#786949" };
-/** Ramo creme calde: leggibili su carta scura. */
+/** Warm cream branch: readable on dark paper. */
 const INK_LIGHT: InkTones = { ink: "#F4EEE4", ink700: "#E0D6C6", ink500: "#C6B9A2" };
 
 /**
- * Toni di testo leggibili sul `paper` scelto: l'utente sceglie lo sfondo ma non
- * l'inchiostro, quindi su carta scura serve testo chiaro (altrimenti marrone su
- * scuro = invisibile). Sceglie il ramo col contrasto migliore contro il paper.
+ * Readable text tones on the chosen `paper`: the user picks the background but not
+ * the ink, so dark paper needs light text (otherwise brown on dark = invisible).
+ * Picks the branch with the best contrast against the paper.
  */
 export function deriveInk(paper: string): InkTones {
     return contrastRatio(INK_DARK.ink, paper) >= contrastRatio(INK_LIGHT.ink, paper)
@@ -67,9 +67,9 @@ export function deriveInk(paper: string): InkTones {
 }
 
 /**
- * Linea/bordo tenue sul paper (per `--bone-200`: divisori, placeholder mappa,
- * bordi): mescola il paper col proprio inchiostro al 14% → resta una linea
- * appena visibile sia su carta chiara sia su carta scura, niente verde pallido.
+ * Subtle line/border on the paper (for `--bone-200`: dividers, map placeholder,
+ * borders): blends the paper with its own ink at 14% → yields a barely visible
+ * line on both light and dark paper, no pale-green artefact.
  */
 export function deriveLine(paper: string): string {
     const p = hexToRgb(paper);

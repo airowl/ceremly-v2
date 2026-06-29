@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Form RSVP multi-step — port di RSVPMobile (docs/ui/project/screens/rsvp-mobile.jsx).
-// Flusso: step 1 attendance → (no: messaggio di declino → submit) | (yes/maybe:
-// una domanda visibile per step, perPerson replicata per self + accompagnatori).
-// Componente puro mobile-first: nessun fetch, emit submit(payload) / close.
+// Multi-step RSVP form — port of RSVPMobile (docs/ui/project/screens/rsvp-mobile.jsx).
+// Flow: step 1 attendance → (no: decline message → submit) | (yes/maybe:
+// one question visible per step, perPerson replicated for self + companions).
+// Pure mobile-first component: no fetch, emits submit(payload) / close.
 import type { CSSProperties } from "vue";
 import type {
     AttendingStatus,
@@ -33,7 +33,7 @@ const props = withDefaults(
             declineMessage: string | null;
         } | null;
         guestName?: string | null;
-        /** Titolo evento nell'header sticky (es. "Giulia & Tommaso"). */
+        /** Event title in the sticky header (e.g. "Giulia & Tommaso"). */
         hostNames?: string;
         submitting?: boolean;
     }>(),
@@ -51,7 +51,7 @@ const emit = defineEmits<{
 }>();
 
 // ---------------------------------------------------------------------------
-// Stato risposta in costruzione
+// Response state being built
 // ---------------------------------------------------------------------------
 
 const state = reactive({
@@ -93,7 +93,7 @@ function isPerPersonShape(v: unknown): v is RsvpPerPersonAnswer {
     );
 }
 
-/** Vuoto = nessuna risposta (false e 0 sono risposte valide). */
+/** Empty = no answer (false and 0 are valid answers). */
 function isEmpty(v: unknown): boolean {
     if (v === undefined || v === null) return true;
     if (typeof v === "string") return v.trim() === "";
@@ -102,7 +102,7 @@ function isEmpty(v: unknown): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Attendance (mapping POSIZIONALE options → yes/no/maybe)
+// Attendance (POSITIONAL mapping of options → yes/no/maybe)
 // ---------------------------------------------------------------------------
 
 const ATTENDANCE_VALUES: AttendingStatus[] = ["yes", "no", "maybe"];
@@ -124,8 +124,8 @@ const attendanceOptions = computed<string[]>(() => {
 
 const attendanceQuestion = computed(() => props.config.find(c => c.id === "attendance"));
 
-// Label personalizzata dal builder, se diversa dal default "Partecipi?";
-// altrimenti il saluto personale col nome dell'ospite (come da mockup).
+// Custom label from the builder, if different from the default "Partecipi?";
+// otherwise the personal greeting with the guest's name (as in the mockup).
 const attendanceTitle = computed(() => {
     const label = attendanceQuestion.value?.label?.trim();
     if (label && label !== "Partecipi?") return label;
@@ -146,7 +146,7 @@ function selectAttendance(i: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Step (gruppi di domande)
+// Step (question groups)
 // ---------------------------------------------------------------------------
 
 type Step = { kind: "attendance" } | { kind: "decline" } | { kind: "question"; question: RsvpQuestion };
@@ -173,7 +173,7 @@ const steps = computed<Step[]>(() => {
     }
     for (const q of visibleQuestions.value) {
         if (q.id === "attendance") continue;
-        // scope 'companions' senza accompagnatori: nessuna sezione da mostrare
+        // scope 'companions' with no companions: no section to show
         if (q.perPerson && (q.perPersonScope ?? "all") === "companions" && companionsCount.value === 0) continue;
         list.push({ kind: "question", question: q });
     }
@@ -195,7 +195,7 @@ const progressTotal = computed(() => steps.value.length);
 const progressCurrent = computed(() => Math.min(stepIndex.value + 1, progressTotal.value));
 
 // ---------------------------------------------------------------------------
-// Persone (self + accompagnatori) per le domande perPerson
+// People (self + companions) for perPerson questions
 // ---------------------------------------------------------------------------
 
 interface PersonSlot {
@@ -228,7 +228,7 @@ function personSlotsFor(q: RsvpQuestion): PersonSlot[] {
 }
 
 // ---------------------------------------------------------------------------
-// Lettura/scrittura risposte
+// Reading/writing answers
 // ---------------------------------------------------------------------------
 
 function getAnswer(q: RsvpQuestion, slot: PersonSlot): RsvpAnswerValue | null | undefined {
@@ -286,7 +286,7 @@ const companionsNote = computed(() =>
 );
 
 // ---------------------------------------------------------------------------
-// Tag contestuali + sottotitoli
+// Contextual tags + subtitles
 // ---------------------------------------------------------------------------
 
 function showAttendanceTag(q: RsvpQuestion): boolean {
@@ -308,7 +308,7 @@ function slotAriaLabel(q: RsvpQuestion, slot: PersonSlot): string {
 }
 
 // ---------------------------------------------------------------------------
-// Validazione + navigazione + submit
+// Validation + navigation + submit
 // ---------------------------------------------------------------------------
 
 function validateCurrentStep(): boolean {
@@ -380,7 +380,7 @@ function submit() {
 }
 
 // ---------------------------------------------------------------------------
-// Stili riusati (port 1:1 degli inline style del mockup)
+// Reused styles (1:1 port of the mockup's inline styles)
 // ---------------------------------------------------------------------------
 
 function attendanceCardStyle(i: number): CSSProperties {
@@ -537,7 +537,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
             flexDirection: 'column',
         }"
     >
-        <!-- Header sticky: titolo evento + chiudi + progress a segmenti -->
+        <!-- Sticky header: event title + close + segmented progress -->
         <div
             :style="{
                 position: 'sticky',
@@ -614,7 +614,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
             </div>
         </div>
 
-        <!-- Step declino: messaggio opzionale -->
+        <!-- Decline step: optional message -->
         <div v-else-if="currentStep.kind === 'decline'" :style="{ padding: '28px 22px 0' }">
             <div class="serif" :style="{ fontSize: '30px', lineHeight: 1.15, letterSpacing: '-0.01em' }">
                 {{ $t('ceremly.rsvpForm.declineTitle') }}
@@ -632,7 +632,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
             />
         </div>
 
-        <!-- Step domanda -->
+        <!-- Question step -->
         <div v-else-if="currentQuestion" :style="{ padding: '28px 22px 0' }">
             <div v-if="hasTags(currentQuestion)" class="row" :style="{ gap: '8px', flexWrap: 'wrap' }">
                 <span
@@ -667,7 +667,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                 :key="slot.kind + '-' + slot.index"
                 :style="{ marginTop: si === 0 ? '18px' : '28px' }"
             >
-                <!-- sezione per persona: 'Preferenza menu · Anna' -->
+                <!-- per-person section: 'Preferenza menu · Anna' -->
                 <div
                     v-if="currentQuestion.perPerson"
                     class="serif"
@@ -676,7 +676,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     {{ currentQuestion.label }} · <em>{{ slot.name }}</em>
                 </div>
 
-                <!-- number: bottoni quadrati 56px -->
+                <!-- number: 56px square buttons -->
                 <div v-if="currentQuestion.type === 'number'">
                     <div class="row" :style="{ gap: '8px', flexWrap: 'wrap' }">
                         <button
@@ -698,7 +698,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     </div>
                 </div>
 
-                <!-- single: card radio con pallino -->
+                <!-- single: radio card with dot -->
                 <div v-else-if="currentQuestion.type === 'single'" class="col" :style="{ gap: '8px' }">
                     <button
                         v-for="opt in currentQuestion.options ?? []"
@@ -717,7 +717,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     </button>
                 </div>
 
-                <!-- multiple: card checkbox -->
+                <!-- multiple: checkbox card -->
                 <div v-else-if="currentQuestion.type === 'multiple'" class="col" :style="{ gap: '8px' }">
                     <button
                         v-for="opt in currentQuestion.options ?? []"
@@ -733,7 +733,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     </button>
                 </div>
 
-                <!-- boolean: due pill Sì/No -->
+                <!-- boolean: two Sì/No pills -->
                 <div v-else-if="currentQuestion.type === 'boolean'" class="row" :style="{ gap: '8px' }">
                     <button
                         type="button"
@@ -751,7 +751,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
                     </button>
                 </div>
 
-                <!-- text: textarea per domande libere, input per perPerson -->
+                <!-- text: textarea for open questions, input for perPerson -->
                 <textarea
                     v-else-if="currentQuestion.type === 'text' && !currentQuestion.perPerson"
                     class="cer-input"
@@ -775,7 +775,7 @@ const nextBtnStyle = computed<CSSProperties>(() => ({
             </div>
         </div>
 
-        <!-- Errore di validazione step -->
+        <!-- Step validation error -->
         <div
             v-if="stepError"
             :style="{ padding: '14px 22px 0', color: 'var(--decline)', fontSize: '13px', fontWeight: 500 }"

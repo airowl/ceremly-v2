@@ -1,18 +1,18 @@
 /**
- * Test per il route POST /api/events/:id/reconcile-unlock (fix 7.3).
+ * Tests for the route POST /api/events/:id/reconcile-unlock (fix 7.3).
  *
- * Stubbano gli auto-import Nitro prima che il modulo venga caricato:
- * - defineEventHandler: in vi.hoisted() (eseguito prima del parsing del modulo)
+ * Stubs for Nitro auto-imports are set up before the module is loaded:
+ * - defineEventHandler: in vi.hoisted() (executed before the module is parsed)
  * - getRouterParam / createError / requireAuth: via globalThis
  *
- * createError è già polyfillato da test/setup.ts.
+ * createError is already polyfilled by test/setup.ts.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Import dopo i mock
 import handler from "./reconcile-unlock.post";
 
-// --- vi.hoisted: inizializzato PRIMA che vi.mock hoisti le factory ---
+// --- vi.hoisted: initialized BEFORE vi.mock hoists the factories ---
 const mocks = vi.hoisted(() => {
     (globalThis as Record<string, unknown>).defineEventHandler = (fn: unknown) => fn;
 
@@ -45,7 +45,7 @@ describe("events/[id]/reconcile-unlock.post", () => {
     beforeEach(() => {
         vi.resetAllMocks();
 
-        // requireAuth e requireWrite sono auto-import Nitro / alias; mock globalThis
+        // requireAuth and requireWrite are Nitro auto-imports / aliases; mock via globalThis
         (globalThis as Record<string, unknown>).requireAuth = mocks.requireAuth;
         (globalThis as Record<string, unknown>).getRouterParam = (
             _event: unknown,
@@ -60,7 +60,7 @@ describe("events/[id]/reconcile-unlock.post", () => {
         mocks.reconcileEventUnlock.mockResolvedValue({ reconciled: false });
     });
 
-    it("(a) happy path → delega a reconcileEventUnlock e ritorna { reconciled }", async () => {
+    it("(a) happy path → delegates to reconcileEventUnlock and returns { reconciled }", async () => {
         mocks.reconcileEventUnlock.mockResolvedValue({ reconciled: true });
 
         const event = fakeEvent({ id: EVENT_ID });
@@ -71,7 +71,7 @@ describe("events/[id]/reconcile-unlock.post", () => {
         expect(result).toEqual({ reconciled: true });
     });
 
-    it("(b) id mancante → 400", async () => {
+    it("(b) missing id → 400", async () => {
         const event = fakeEvent({});
 
         await expect(handler(event)).rejects.toMatchObject({

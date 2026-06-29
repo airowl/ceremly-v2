@@ -10,7 +10,7 @@ const createDB = () => {
     return drizzle({ client: neon(runtimeConfig.databaseUrl), schema });
 };
 
-// HTTP stateless → singleton module-level sempre sicuro (nessuna connessione da gestire).
+// HTTP stateless → module-level singleton always safe (no connection to manage).
 let db: ReturnType<typeof createDB>;
 
 export const getDB = () => {
@@ -21,9 +21,9 @@ export const getDB = () => {
 };
 
 /**
- * Alias legacy di getDB(). Con neon-http (HTTP stateless) non serve più cachare
- * un'istanza su event.context.db: getDB() è già singleton. Mantenuto async +
- * stessa firma per non toccare i ~9 call site (`await useDB()`) di fileService/cleanup.
+ * Legacy alias for getDB(). With neon-http (HTTP stateless) there is no longer any
+ * need to cache an instance on event.context.db: getDB() is already a singleton.
+ * Kept async + same signature to avoid touching the ~9 call sites (`await useDB()`) in fileService/cleanup.
  */
 export const useDB = async (
     _event?: H3Event<EventHandlerRequest>,

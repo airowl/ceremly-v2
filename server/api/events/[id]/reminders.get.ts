@@ -1,6 +1,6 @@
 /**
  * GET /api/events/:id/reminders
- * Lista reminder dell'evento, max 3 (RBAC: requireMember + assertOwnership nel service).
+ * List of event reminders, max 3 (RBAC: requireMember + assertOwnership in the service).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { listReminders } from "~~/server/services/reminder.service";

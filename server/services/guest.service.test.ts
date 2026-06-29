@@ -40,7 +40,7 @@ describe("createGuest enforcement", () => {
         createGuestRow.mockResolvedValue({ id: "g_new" });
     });
 
-    it("ospite #31 su evento free -> 402", async () => {
+    it("guest #31 on free event -> 402", async () => {
         getEventLimits.mockResolvedValue({ tier: "free", maxGuestsPerEvent: 30, maxReminders: 3 });
         countActiveGuests.mockResolvedValue(30);
         const { createGuest } = await import("~~/server/services/guest.service");
@@ -48,7 +48,7 @@ describe("createGuest enforcement", () => {
         expect(createGuestRow).not.toHaveBeenCalled();
     });
 
-    it("ospite #31 su evento celebration -> ok (250)", async () => {
+    it("guest #31 on celebration event -> ok (250)", async () => {
         getEventLimits.mockResolvedValue({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
         countActiveGuests.mockResolvedValue(30);
         const { createGuest } = await import("~~/server/services/guest.service");
@@ -56,7 +56,7 @@ describe("createGuest enforcement", () => {
         expect(res.guest.id).toBe("g_new");
     });
 
-    it("ospite #251 su evento celebration -> 402 con messaggio cap 250 (non 'passa a Celebrazione')", async () => {
+    it("guest #251 on celebration event -> 402 with 250-cap message (not 'upgrade to Celebration')", async () => {
         getEventLimits.mockResolvedValue({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
         countActiveGuests.mockResolvedValue(250);
         const { createGuest } = await import("~~/server/services/guest.service");
@@ -65,7 +65,7 @@ describe("createGuest enforcement", () => {
         });
     });
 
-    it("402 celebration cap: messaggio contiene '250' e NON 'Sblocca con Celebrazione'", async () => {
+    it("402 celebration cap: message contains '250' and NOT 'Sblocca con Celebrazione'", async () => {
         getEventLimits.mockResolvedValue({ tier: "celebration", maxGuestsPerEvent: 250, maxReminders: 3 });
         countActiveGuests.mockResolvedValue(250);
         const { createGuest } = await import("~~/server/services/guest.service");
@@ -77,7 +77,7 @@ describe("createGuest enforcement", () => {
         expect(caughtMsg).not.toContain("Sblocca con Celebrazione");
     });
 
-    it("org atelier (-1) -> nessun limite ospiti", async () => {
+    it("org atelier (-1) -> no guest limit", async () => {
         getEventLimits.mockResolvedValue({ tier: "atelier", maxGuestsPerEvent: -1, maxReminders: -1 });
         countActiveGuests.mockResolvedValue(99999);
         const { createGuest } = await import("~~/server/services/guest.service");
@@ -101,7 +101,7 @@ describe("importGuests capacity", () => {
         createGuestsBulk.mockImplementation((_o, _e, rows: unknown[]) => Promise.resolve(rows));
     });
 
-    it("evento free a 28 ospiti: importa max 2, skippa il resto", async () => {
+    it("free event with 28 guests: import max 2, skip the rest", async () => {
         vi.doMock("~~/server/repositories/guestRepository", () => ({
             countActiveGuests: () => Promise.resolve(28),
             findActiveGuestNames: () => Promise.resolve([]),
@@ -119,7 +119,7 @@ describe("importGuests capacity", () => {
         expect(res.skipped.length).toBe(3);
     });
 
-    it("evento celebration: capacity 250, importa tutte le righe", async () => {
+    it("celebration event: capacity 250, import all rows", async () => {
         vi.doMock("~~/server/repositories/guestRepository", () => ({
             countActiveGuests: () => Promise.resolve(0),
             findActiveGuestNames: () => Promise.resolve([]),

@@ -1,15 +1,15 @@
 /**
  * Vercel Cron endpoint (07:00 UTC, crons in nuxt.config.ts → nitro.vercel):
- * processa i reminder dovuti (SPEC §6). Per ogni reminder enabled/mai inviato
- * di un evento active con rsvpDeadline raggiunta dalla finestra daysBefore:
- * enqueue 'send-reminder-email' per ogni ospite pendente, poi marca il reminder
- * come inviato (idempotenza — un run duplicato non re-invia). Il cron non fa
- * lavoro pesante: accoda soltanto.
+ * processes due reminders (SPEC §6). For each enabled/never-sent reminder
+ * of an active event whose rsvpDeadline falls within the daysBefore window:
+ * enqueues 'send-reminder-email' for each pending guest, then marks the reminder
+ * as sent (idempotency — a duplicate run does not re-send). The cron does no
+ * heavy work: it only enqueues.
  *
- * Protezione (SPEC §6): header `x-vercel-cron` (riservato alla piattaforma,
- * Vercel lo strippa dalle richieste esterne) oppure `Authorization: Bearer
- * ${CRON_SECRET}` (Vercel lo invia SOLO se sul progetto esiste un'env chiamata
- * esattamente CRON_SECRET, senza prefisso NUXT_); fallback per trigger manuale:
+ * Protection (SPEC §6): `x-vercel-cron` header (reserved to the platform,
+ * Vercel strips it from external requests) or `Authorization: Bearer
+ * ${CRON_SECRET}` (Vercel sends this ONLY if the project has an env var named
+ * exactly CRON_SECRET, without the NUXT_ prefix); fallback for manual trigger:
  * X-Admin-API-Key via requireAdminApiKey.
  */
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
         || (Boolean(cronSecret) && authorization === `Bearer ${cronSecret}`);
 
     if (!isVercelCron) {
-        // Non è Vercel Cron: consenti solo il trigger manuale admin.
+        // Not Vercel Cron: allow only the manual admin trigger.
         await requireAdminApiKey(event);
     }
 

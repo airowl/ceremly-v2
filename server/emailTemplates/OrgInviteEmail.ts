@@ -1,6 +1,6 @@
-// React Email template — invito a un team / organizzazione (Phase 1b).
-// Design "Soft Meadow" (token/stili condivisi da ./_softMeadow).
-// Uses React.createElement to avoid JSX/Vue conflicts. Lingue: it/en.
+// React Email template — team / organisation invite (Phase 1b).
+// "Soft Meadow" design (shared tokens/styles from ./_softMeadow).
+// Uses React.createElement to avoid JSX/Vue conflicts. Languages: it/en.
 
 import * as React from 'react';
 import { Html, Head, Preview, Body, Container, Section, Text, Button } from '@react-email/components';

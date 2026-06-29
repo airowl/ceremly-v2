@@ -1,10 +1,10 @@
 /**
- * useEventStats — wrapper $fetch tipizzato per GET /api/events/:id/stats
- * (pattern useProjects; shape verificata su event.service.ts → getEventStats).
+ * useEventStats — typed $fetch wrapper for GET /api/events/:id/stats
+ * (useProjects pattern; shape verified against event.service.ts → getEventStats).
  *
- * Include usePolling: polling leggero a intervallo fisso (default 30s),
- * in pausa quando il tab è nascosto (document.hidden), clear automatico
- * alla dispose dello scope (unmount del componente).
+ * Includes usePolling: lightweight polling at a fixed interval (default 30s),
+ * paused when the tab is hidden (document.hidden), automatically cleared
+ * on scope dispose (component unmount).
  */
 import type { EventStats } from "~~/shared/types/ceremly";
 
@@ -34,10 +34,10 @@ export function useEventStats() {
 }
 
 /**
- * Polling leggero: invoca `callback` ogni `intervalMs` (default 30s).
- * - tick saltato se `document.hidden` (tab in background);
- * - `stop()` automatico alla dispose dello scope corrente;
- * - `start()` idempotente (no doppi timer), no-op su server.
+ * Lightweight polling: invokes `callback` every `intervalMs` (default 30s).
+ * - tick skipped if `document.hidden` (tab in background);
+ * - automatic `stop()` on current scope dispose;
+ * - idempotent `start()` (no duplicate timers), no-op on server.
  */
 export function usePolling(
     callback: () => void | Promise<void>,
@@ -50,7 +50,7 @@ export function usePolling(
         if (import.meta.server || timer) return;
         isActive.value = true;
         timer = setInterval(() => {
-            if (document.hidden) return; // pausa: tab non visibile
+            if (document.hidden) return; // paused: tab not visible
             void callback();
         }, intervalMs);
     }

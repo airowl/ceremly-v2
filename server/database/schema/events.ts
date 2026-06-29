@@ -6,10 +6,10 @@ import type { InviteTheme } from "~~/shared/constants/inviteTheme";
 import { organization } from "./auth";
 
 /**
- * Eventi Ceremly (SPEC §2) — entità radice del dominio inviti.
- * Org-scoped come projects: organizationId NOT NULL + indice, cascade delete.
- * slug UNIQUE per URL pubblici `/e/{slug}/{token}`; blocks/rsvpConfig/distribution
- * sono jsonb tipizzati con le shape condivise di shared/types/ceremly (SPEC §3).
+ * Ceremly events (SPEC §2) — root entity of the invite domain.
+ * Org-scoped like projects: organizationId NOT NULL + index, cascade delete.
+ * slug UNIQUE for public URLs `/e/{slug}/{token}`; blocks/rsvpConfig/distribution
+ * are typed jsonb with the shared shapes from shared/types/ceremly (SPEC §3).
  */
 export const events = pgTable(
     "events",
@@ -20,15 +20,15 @@ export const events = pgTable(
             .references(() => organization.id, { onDelete: "cascade" }),
         type: text("type").notNull(), // matrimonio | laurea | compleanno | battesimo
         templateKey: text("template_key").notNull(),
-        // Tema invito custom: 4 colori hex (InviteTheme). NULL ⇒ token globali
-        // del design system .cer (look "toscana"), così gli eventi pre-esistenti
-        // restano invariati. inviteFont = nome famiglia del catalogo (o NULL).
+        // Custom invite theme: 4 hex colors (InviteTheme). NULL ⇒ global tokens
+        // of the .cer design system (look "toscana"), so pre-existing events
+        // remain unchanged. inviteFont = font family name from the catalog (or NULL).
         theme: jsonb("theme").$type<InviteTheme>(),
         inviteFont: text("invite_font"),
         title: text("title").notNull(),
         slug: text("slug").notNull().unique(),
         eventDate: timestamp("event_date"),
-        eventTime: text("event_time"), // es. "16:00" (solo display)
+        eventTime: text("event_time"), // e.g. "16:00" (display only)
         locationName: text("location_name"),
         locationAddress: text("location_address"),
         status: text("status").default("draft").notNull(), // draft | active | closed
@@ -40,13 +40,13 @@ export const events = pgTable(
             .$type<EventDistribution>()
             .default({} as EventDistribution)
             .notNull(),
-        // Pricing per-evento (Fase 1). `tier` è SOLO lo stato one-time dell'evento
-        // ('free' | 'celebration'); 'atelier' NON è un valore di tier (è una
-        // proprietà dell'org/owner risolta a runtime). creemOrderId ricollega un
-        // refund.created all'evento da re-lockare; cleanupWarnedAt traccia l'email
-        // di avviso del cron di cleanup. creemCheckoutId è persistito alla creazione
-        // del checkout (Fase 7, fix critical): permette la reconciliation via
-        // retrieveCheckout(checkoutId) quando il webhook fire-and-forget perde lo sblocco.
+        // Per-event pricing (Phase 1). `tier` is ONLY the one-time state of the event
+        // ('free' | 'celebration'); 'atelier' is NOT a tier value (it is a
+        // property of the org/owner resolved at runtime). creemOrderId links a
+        // refund.created back to the event to re-lock it; cleanupWarnedAt tracks the
+        // warning email from the cleanup cron. creemCheckoutId is persisted at checkout
+        // creation (Phase 7, critical fix): allows reconciliation via
+        // retrieveCheckout(checkoutId) when the fire-and-forget webhook loses the unlock.
         tier: text("tier").notNull().default("free"),
         unlockedAt: timestamp("unlocked_at"),
         creemOrderId: text("creem_order_id"),
@@ -60,9 +60,9 @@ export const events = pgTable(
     },
     (table) => [
         index("events_organization_id_idx").on(table.organizationId),
-        // Fix 7.5 (final review): relockEventByOrder(creemOrderId) faceva full table
-        // scan; indice unico — un order Creem sblocca esattamente un evento, quindi
-        // l'unicità è anche un vincolo di correttezza (Postgres ammette NULL multipli).
+        // Fix 7.5 (final review): relockEventByOrder(creemOrderId) was doing a full table
+        // scan; unique index — one Creem order unlocks exactly one event, so
+        // uniqueness is also a correctness constraint (Postgres allows multiple NULLs).
         uniqueIndex("events_creem_order_id_idx").on(table.creemOrderId),
     ],
 );

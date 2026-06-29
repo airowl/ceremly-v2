@@ -1,11 +1,11 @@
 /**
- * Event Service — logica di business degli eventi Ceremly (SPEC §6, owner B1).
+ * Event Service — business logic for Ceremly events (SPEC §6, owner B1).
  *
  * Pattern project.service:
- *   1. organizationId SEMPRE da event.context.organization (guard RBAC), mai da body/query.
- *   2. Query repository org-scoped by-construction.
- *   3. assertOwnership come 2° guard sui by-id.
- *   4. logAudit su ogni scrittura organizzatore.
+ *   1. organizationId ALWAYS from event.context.organization (RBAC guard), never from body/query.
+ *   2. Repository queries org-scoped by-construction.
+ *   3. assertOwnership as 2nd guard on by-id lookups.
+ *   4. logAudit on every organizer write.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type { CreateEventInput, UpdateEventInput } from "~~/shared/schemas/ceremly";
@@ -38,11 +38,11 @@ import { logAudit } from "../utils/audit";
 import { generateEventSlug } from "../utils/guestToken";
 import { isOrgAtelier } from "./eventAccess.service";
 
-/** Default italiano per il messaggio a form chiuso (SPEC §2). */
+/** Italian default for the closed-form message (SPEC §2). */
 export const DEFAULT_RSVP_CLOSED_MESSAGE
     = "Le risposte a questo invito sono chiuse. Per qualsiasi variazione contatta l'organizzatore.";
 
-/** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
+/** Reads the active org from context. 401 if missing (RBAC guard not executed). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
     if (!orgId) {
@@ -55,10 +55,10 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers creazione (template → blocchi personalizzati)
+// Creation helpers (template → customized blocks)
 // ---------------------------------------------------------------------------
 
-/** "12 settembre 2026" — formato display it-IT per i blocchi header. */
+/** "12 September 2026" — it-IT display format for header blocks. */
 function formatDateIt(date: Date): string {
     return new Intl.DateTimeFormat("it-IT", {
         day: "numeric",
@@ -68,8 +68,8 @@ function formatDateIt(date: Date): string {
 }
 
 /**
- * Nomi per il blocco header: per matrimonio il titolo "Giulia & Tommaso" /
- * "Giulia e Tommaso" viene splittato in più nomi; altrimenti [title].
+ * Names for the header block: for a wedding the title "Giulia & Tommaso" /
+ * "Giulia e Tommaso" is split into multiple names; otherwise [title].
  */
 function splitHeaderNames(type: EventTypeKey, title: string): string[] {
     if (type === "matrimonio") {
@@ -83,8 +83,8 @@ function splitHeaderNames(type: EventTypeKey, title: string): string[] {
 }
 
 /**
- * DEEP-CLONE dei defaultBlocks del template (MAI mutare le costanti esportate)
- * con i placeholder sostituiti dai dati reali se forniti (SPEC §6 POST /api/events).
+ * DEEP-CLONE of the template's defaultBlocks (NEVER mutate exported constants)
+ * with placeholders replaced by real data when provided (SPEC §6 POST /api/events).
  */
 function buildBlocksFromTemplate(
     defaultBlocks: InviteBlock[],
@@ -106,10 +106,10 @@ function buildBlocksFromTemplate(
 }
 
 // ---------------------------------------------------------------------------
-// Invarianti update (SPEC §6 PUT /api/events/:id) — 422 con messaggio chiaro
+// Update invariants (SPEC §6 PUT /api/events/:id) — 422 with clear message
 // ---------------------------------------------------------------------------
 
-/** Invarianti blocks: header presente e primo, rsvp presente e ultimo, unici. */
+/** Block invariants: header present and first, rsvp present and last, each unique. */
 function validateBlocksInvariants(blocks: InviteBlock[]): void {
     const fail = (message: string) => {
         throw createError({ statusCode: 422, statusMessage: message });
@@ -130,7 +130,7 @@ function validateBlocksInvariants(blocks: InviteBlock[]): void {
     }
 }
 
-/** Invarianti rsvpConfig: 'attendance' a indice 0, locked, single con 3 opzioni. */
+/** rsvpConfig invariants: 'attendance' at index 0, locked, single with 3 options. */
 function validateRsvpConfigInvariants(config: RsvpQuestion[]): void {
     const fail = (message: string) => {
         throw createError({ statusCode: 422, statusMessage: message });
@@ -156,7 +156,7 @@ function validateRsvpConfigInvariants(config: RsvpQuestion[]): void {
 // CRUD
 // ---------------------------------------------------------------------------
 
-/** Lista eventi dell'org con counts aggregati (SPEC §6 GET /api/events). */
+/** List of org events with aggregated counts (SPEC §6 GET /api/events). */
 export async function listEvents(event: H3Event<EventHandlerRequest>) {
     const organizationId = getOrgId(event);
     const rows = await findEventsByOrgWithCounts(organizationId);
@@ -166,8 +166,8 @@ export async function listEvents(event: H3Event<EventHandlerRequest>) {
             confirmed: row.confirmed,
             declined: row.declined,
             maybe: row.maybe,
-            // "In attesa" = ospiti SENZA risposta (i 'maybe' hanno risposto e
-            // sono esposti a parte) — stessa semantica del kpi.pending di stats.
+            // "Pending" = guests WITHOUT a response ('maybe' have responded and
+            // are exposed separately) — same semantics as kpi.pending in stats.
             pending: Math.max(0, row.guests - row.responded),
             opened: row.opened,
             sent: row.sent,
@@ -177,7 +177,7 @@ export async function listEvents(event: H3Event<EventHandlerRequest>) {
     return { events };
 }
 
-/** Singolo evento completo, scoped + assertOwnership. */
+/** Single complete event, scoped + assertOwnership. */
 export async function getEvent(event: H3Event<EventHandlerRequest>, id: string) {
     const organizationId = getOrgId(event);
     const row = await findEventByIdScoped(organizationId, id);
@@ -186,10 +186,10 @@ export async function getEvent(event: H3Event<EventHandlerRequest>, id: string) 
 }
 
 /**
- * Crea un evento da template (SPEC §6 POST /api/events):
- * template applicato con deep-clone, preset RSVP del tipo, distribution di
- * default, slug univoco (retry su 23505), status 'draft'.
- * Limite Free: >= maxActiveEvents eventi non chiusi → 402.
+ * Creates an event from a template (SPEC §6 POST /api/events):
+ * template applied with deep-clone, RSVP preset for the type, default
+ * distribution, unique slug (retry on 23505), status 'draft'.
+ * Free limit: >= maxActiveEvents non-closed events → 402.
  */
 export async function createEvent(
     event: H3Event<EventHandlerRequest>,
@@ -197,19 +197,19 @@ export async function createEvent(
 ) {
     const organizationId = getOrgId(event);
 
-    // 404 se il template non esiste o non corrisponde al tipo evento.
+    // 404 if the template does not exist or does not match the event type.
     const template = getTemplate(data.templateKey);
     if (!template || template.eventType !== data.type) {
         throw createError({ statusCode: 404, statusMessage: "Template non trovato per questo tipo di evento" });
     }
 
-    // Enforcement eventi attivi (design §5). Limite PER-ORG (Free=1, Atelier=∞):
-    // - org Atelier -> nessun limite (skip);
-    // - altrimenti conta gli eventi free non chiusi (gli sbloccati non consumano
-    //   lo slot, già filtrati in countActiveEventsByOrg) vs il limite Free.
+    // Active-event enforcement (design §5). Limit PER-ORG (Free=1, Atelier=∞):
+    // - Atelier org -> no limit (skip);
+    // - otherwise count non-closed free events (unlocked ones do not consume
+    //   a slot, already filtered in countActiveEventsByOrg) vs the Free limit.
     //
-    // #2 TOCTOU (rischio accettato): check-then-insert non atomico sul driver
-    // Neon HTTP. Impatto BASSO: limit-bypass, nessun leak.
+    // #2 TOCTOU (accepted risk): check-then-insert is not atomic on the Neon HTTP
+    // driver. LOW impact: limit-bypass, no data leak.
     if (!(await isOrgAtelier(organizationId))) {
         const activeCount = await countActiveEventsByOrg(organizationId);
         if (activeCount >= CEREMLY_TIER_LIMITS.free.maxActiveEvents) {
@@ -220,13 +220,13 @@ export async function createEvent(
         }
     }
 
-    // DEEP-CLONE di defaultBlocks e preset (mai mutare le costanti condivise).
+    // DEEP-CLONE of defaultBlocks and preset (never mutate shared constants).
     const blocks = buildBlocksFromTemplate(template.defaultBlocks, data);
     const rsvpConfig = structuredClone(RSVP_PRESETS[data.type]);
     const distribution = getDefaultDistribution(data.type, data.title);
 
-    // Slug univoco: il suffisso random rende la collisione rarissima; in caso
-    // di 23505 sull'unique(slug) si rigenera e si ritenta.
+    // Unique slug: the random suffix makes collisions extremely rare; on a
+    // 23505 unique(slug) violation, regenerate and retry.
     let created: Awaited<ReturnType<typeof createEventRow>>;
     const maxAttempts = 5;
     for (let attempt = 1; ; attempt++) {
@@ -265,7 +265,7 @@ export async function createEvent(
     return { event: created };
 }
 
-/** Update parziale con validazione invarianti blocks/rsvpConfig (422). */
+/** Partial update with blocks/rsvpConfig invariant validation (422). */
 export async function updateEvent(
     event: H3Event<EventHandlerRequest>,
     id: string,
@@ -317,7 +317,7 @@ export async function updateEvent(
     return { event: updated };
 }
 
-/** Hard delete (cascade su ospiti/risposte/attività/reminder) + audit. */
+/** Hard delete (cascade on guests/responses/activities/reminders) + audit. */
 export async function deleteEvent(event: H3Event<EventHandlerRequest>, id: string) {
     const organizationId = getOrgId(event);
     const existing = await findEventByIdScoped(organizationId, id);
@@ -347,7 +347,7 @@ function isPerPersonAnswer(value: unknown): value is RsvpPerPersonAnswer {
     );
 }
 
-/** Tutti i valori (self + companions) di una risposta, flat. */
+/** All values (self + companions) of a response, flattened. */
 function flattenAnswerValues(raw: unknown): RsvpAnswerValue[] {
     if (raw === undefined || raw === null) return [];
     if (isPerPersonAnswer(raw)) {
@@ -361,7 +361,7 @@ function flattenAnswerValues(raw: unknown): RsvpAnswerValue[] {
     return [raw as RsvpAnswerValue];
 }
 
-/** Statistiche evento (SPEC §6.1): kpi, timeline 28gg, menu, allergie, needsAttention. */
+/** Event statistics (SPEC §6.1): kpi, 28-day timeline, menu, allergies, needsAttention. */
 export async function getEventStats(
     event: H3Event<EventHandlerRequest>,
     id: string,
@@ -391,10 +391,10 @@ export async function getEventStats(
         totalPeople: kpiRow?.totalPeople ?? 0,
     };
 
-    // --- Timeline cumulativa, ultimi 28 giorni ----------------------------
-    // Ogni response conta nello stato attuale a partire da updatedAt
-    // (fallback submittedAt). Le response precedenti alla finestra entrano
-    // nella baseline del primo giorno (la serie è cumulativa).
+    // --- Cumulative timeline, last 28 days --------------------------------
+    // Each response counts in its current state starting from updatedAt
+    // (fallback submittedAt). Responses before the window enter the
+    // first-day baseline (the series is cumulative).
     const days = 28;
     const todayKey = now.toISOString().slice(0, 10);
     const startOfWindow = new Date(now.getTime() - (days - 1) * DAY_MS);
@@ -434,7 +434,7 @@ export async function getEventStats(
         timeline.push({ date: dateKey, ...running });
     }
 
-    // --- Aggregazione answers jsonb in TypeScript (SPEC §6.1) -------------
+    // --- Aggregation of answers jsonb in TypeScript (SPEC §6.1) ----------
     const config = owned.rsvpConfig ?? [];
     const menuQuestions = config.filter(
         (q) => q.type === "single" && q.label.toLowerCase().includes("menu"),

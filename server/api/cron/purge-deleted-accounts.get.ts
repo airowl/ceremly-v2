@@ -1,10 +1,10 @@
 /**
- * Vercel Cron endpoint: hard-delete definitivo degli account la cui grace window
- * è scaduta (diritto all'oblio GDPR). Idempotente — safe su run mancati/duplicati.
+ * Vercel Cron endpoint: permanent hard-delete of accounts whose grace window
+ * has expired (GDPR right to erasure). Idempotent — safe on missed/duplicate runs.
  *
- * Auth a 3 vie (come send-reminders): header `x-vercel-cron` (Vercel lo strippa
- * dalle richieste esterne) OPPURE `Authorization: Bearer ${CRON_SECRET}` OPPURE,
- * per il trigger manuale, X-Admin-API-Key.
+ * 3-way auth (like send-reminders): `x-vercel-cron` header (Vercel strips it
+ * from external requests) OR `Authorization: Bearer ${CRON_SECRET}` OR,
+ * for manual triggers, X-Admin-API-Key.
  */
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { purgeDueDeletedAccounts } from "~~/server/services/gdpr.service";

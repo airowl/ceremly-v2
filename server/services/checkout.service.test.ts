@@ -29,7 +29,7 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
         creemProductIdCelebration: "prod_celebration_test",
         public: {
             baseURL: "https://example.com",
-            // Scenario Vercel Preview: NODE_ENV=production ma deployment non-prod.
+            // Scenario Vercel Preview: NODE_ENV=production but non-prod deployment.
             appEnv: "production",
             isProdDeployment: false,
         },
@@ -94,24 +94,24 @@ describe("createCelebrationCheckout", () => {
         createCreemClient.mockReturnValue({ createCheckout: rawCreateCheckout });
     });
 
-    it("chiama createCheckout sul client raw con args corretti e propaga url", async () => {
+    it("calls createCheckout on the raw client with correct args and propagates url", async () => {
         const { createCelebrationCheckout } = await import(
             "~~/server/services/checkout.service"
         );
 
         const result = await createCelebrationCheckout(fakeH3Event, EVENT_ID);
 
-        // L'url restituito deve essere checkout.checkoutUrl
+        // The returned url must be checkout.checkoutUrl
         expect(result).toEqual({ url: CHECKOUT_URL });
 
-        // createCreemClient chiamato con apiKey + testMode
+        // createCreemClient called with apiKey + testMode
         expect(createCreemClient).toHaveBeenCalledOnce();
         expect(createCreemClient).toHaveBeenCalledWith({
             apiKey: "test_api_key",
-            testMode: true, // !isProdDeployment (scenario Preview: appEnv="production")
+            testMode: true, // !isProdDeployment (Preview scenario: appEnv="production")
         });
 
-        // rawCreateCheckout chiamato con l'argomento corretto (xApiKey + createCheckoutRequest)
+        // rawCreateCheckout called with the correct argument (xApiKey + createCheckoutRequest)
         expect(rawCreateCheckout).toHaveBeenCalledOnce();
         const [rawArg] = rawCreateCheckout.mock.calls[0] as [Record<string, unknown>];
         expect(rawArg).toMatchObject({
@@ -123,12 +123,12 @@ describe("createCelebrationCheckout", () => {
             },
         });
 
-        // setEventCheckoutId chiamato con checkoutId dall'entity
+        // setEventCheckoutId called with checkoutId from the entity
         expect(setEventCheckoutId).toHaveBeenCalledOnce();
         expect(setEventCheckoutId).toHaveBeenCalledWith(EVENT_ID, ORG_ID, CHECKOUT_ID);
     });
 
-    it("409 se l'evento è già tier celebration", async () => {
+    it("409 if the event is already tier celebration", async () => {
         findEventByIdScoped.mockResolvedValue({ ...fakeEventRow, tier: "celebration" });
         assertOwnership.mockReturnValue({ ...fakeEventRow, tier: "celebration" });
 
@@ -143,7 +143,7 @@ describe("createCelebrationCheckout", () => {
         expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
-    it("409 se org è Atelier (ha già eventi illimitati)", async () => {
+    it("409 if org is Atelier (already has unlimited events)", async () => {
         isOrgAtelier.mockResolvedValue(true);
 
         const { createCelebrationCheckout } = await import(
@@ -157,7 +157,7 @@ describe("createCelebrationCheckout", () => {
         expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
-    it("401 se non c'è organizzazione attiva nel context", async () => {
+    it("401 if there is no active organization in context", async () => {
         const noOrgEvent = { context: { user: { email: "x@y.com" } } } as never;
 
         const { createCelebrationCheckout } = await import(
@@ -171,7 +171,7 @@ describe("createCelebrationCheckout", () => {
         expect(rawCreateCheckout).not.toHaveBeenCalled();
     });
 
-    it("502 se createCheckout restituisce entità senza checkoutUrl", async () => {
+    it("502 if createCheckout returns entity without checkoutUrl", async () => {
         rawCreateCheckout.mockResolvedValue({ ...fakeCheckoutEntity, checkoutUrl: undefined });
 
         const { createCelebrationCheckout } = await import(
@@ -181,21 +181,21 @@ describe("createCelebrationCheckout", () => {
         await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toMatchObject({
             statusCode: 502,
         });
-        // La guard (riga 65) cortocircuita PRIMA di setEventCheckoutId.
+        // The guard (line 65) short-circuits BEFORE setEventCheckoutId.
         expect(setEventCheckoutId).not.toHaveBeenCalled();
     });
 
-    it("setEventCheckoutId failure PROPAGA: createCelebrationCheckout rigetta (nessun url restituito)", async () => {
+    it("setEventCheckoutId failure PROPAGATES: createCelebrationCheckout rejects (no url returned)", async () => {
         setEventCheckoutId.mockRejectedValue(new Error("DB error"));
 
         const { createCelebrationCheckout } = await import(
             "~~/server/services/checkout.service"
         );
 
-        // Il checkout Creem viene creato (rawCreateCheckout chiamato) ma il persist fallisce
-        // → la funzione rigetta e l'utente NON riceve l'url (sicuro: checkout non pagato = innocuo).
+        // The Creem checkout is created (rawCreateCheckout called) but persistence fails
+        // → the function rejects and the user does NOT receive the url (safe: unpaid checkout = harmless).
         await expect(createCelebrationCheckout(fakeH3Event, EVENT_ID)).rejects.toThrow("DB error");
-        // Conferma che il checkout Creem è stato comunque creato (persist avviene DOPO la chiamata Creem)
+        // Confirms that the Creem checkout was still created (persistence happens AFTER the Creem call)
         expect(rawCreateCheckout).toHaveBeenCalledOnce();
     });
 });

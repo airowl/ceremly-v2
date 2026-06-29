@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Card evento — port di EventCard (docs/ui/project/screens/events-home.jsx):
-// header gradient wine/sage per tipo, progress bar RSVP, footer sì/no/in attesa.
+// Event card — port of EventCard (docs/ui/project/screens/events-home.jsx):
+// wine/sage gradient header by type, RSVP progress bar, yes/no/pending footer.
 import CerIcon from "./CerIcon.vue";
 
 export interface CeremlyEventCardData {
@@ -28,7 +28,7 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n();
 
-// matrimonio/compleanno → wine (camel), laurea/battesimo → sage. Solo struttura (icona/tint); label da i18n.
+// matrimonio/compleanno → wine (camel), laurea/battesimo → sage. Structure only (icon/tint); label from i18n.
 const TYPE_META: Record<string, { icon: string; tint: "wine" | "sage" }> = {
     matrimonio: { icon: "ring", tint: "wine" },
     compleanno: { icon: "cake", tint: "wine" },

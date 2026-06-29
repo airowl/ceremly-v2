@@ -4,7 +4,7 @@ import { cacheClient } from "~~/server/utils/drivers";
 const DEDUPE_TTL_SECONDS = 86400; // 24h
 
 export default defineEventHandler(async (event) => {
-    const payload = await readRawBody(event); // mai readBody (romperebbe la firma)
+    const payload = await readRawBody(event); // never readBody (would break the signature)
     if (!payload) throw createError({ statusCode: 400, statusMessage: "Empty body" });
 
     const headers = {
@@ -20,13 +20,13 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 401, statusMessage: "Invalid signature" });
     }
 
-    // Idempotenza: dedup su svix-id, chiave settata SOLO a processing riuscito.
+    // Idempotency: dedup on svix-id, key set ONLY on successful processing.
     const dedupeKey = headers["svix-id"] ? `resend:webhook:${headers["svix-id"]}` : undefined;
     if (dedupeKey && (await cacheClient.get(dedupeKey))) {
         return { ok: true, deduped: true };
     }
 
-    // Env isolation: webhook account-wide → processa solo i domini di questo ambiente.
+    // Env isolation: account-wide webhook → processes only this environment's domains.
     if (!isOwnDomain(parsed.data.from)) {
         return { ok: true, skipped: "foreign-domain" };
     }

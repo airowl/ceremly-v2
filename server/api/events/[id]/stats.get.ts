@@ -1,6 +1,6 @@
 /**
  * GET /api/events/:id/stats
- * Statistiche evento §6.1 (RBAC: requireMember + assertOwnership nel service).
+ * Event statistics §6.1 (RBAC: requireMember + assertOwnership in the service).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { getEventStats } from "~~/server/services/event.service";

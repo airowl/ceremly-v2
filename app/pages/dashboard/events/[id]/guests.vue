@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Lista ospiti — port fedele di docs/ui/project/screens/guests.jsx
-// + drawer dettaglio (port GuestDetailDrawer di event-dashboard.jsx).
+// Guest list — faithful port of docs/ui/project/screens/guests.jsx
+// + detail drawer (port of GuestDetailDrawer from event-dashboard.jsx).
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerCheckbox from "~/components/ceremly/CerCheckbox.vue";
 import StatusPill from "~/components/ceremly/StatusPill.vue";
@@ -34,7 +34,7 @@ const {
 } = useEventGuests();
 const { withRefetch } = useRefetching();
 
-// ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
+// ─── Event context (sidebar) + breadcrumbs ───────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
@@ -54,7 +54,7 @@ watchEffect(() => {
     crumbs.value = [t("ceremly.event.guests.crumbEvents"), label, t("ceremly.event.guests.crumbGuests")];
 });
 
-// ─── Errori $fetch (shape minima, niente any) ────────────────────────
+// ─── $fetch errors (minimal shape, no any) ───────────────────────────
 interface FetchErrorLike {
     statusCode?: number;
     data?: { statusMessage?: string; message?: string };
@@ -65,7 +65,7 @@ function errOf(e: unknown): FetchErrorLike {
     return (e ?? {}) as FetchErrorLike;
 }
 
-// ─── Dati ────────────────────────────────────────────────────────────
+// ─── Data ────────────────────────────────────────────────────────────
 const guests = ref<GuestWithStatus[]>([]);
 const summary = ref<GuestListSummary | null>(null);
 const loading = ref(true);
@@ -102,16 +102,16 @@ async function refreshGuests() {
 
 onMounted(loadAll);
 
-// ─── Derivati header ─────────────────────────────────────────────────
+// ─── Header-derived values ────────────────────────────────────────────
 const activeGuests = computed(() => guests.value.filter(g => !g.removedAt));
 const sentCount = computed(() => activeGuests.value.filter(g => g.sentAt !== null).length);
 const toSendCount = computed(() => Math.max(0, (summary.value?.total ?? 0) - sentCount.value));
 
-// ─── Filtri + ricerca + paginazione ──────────────────────────────────
+// ─── Filters + search + pagination ───────────────────────────────────
 type FilterKey = "all" | "confirmed" | "pending" | "maybe" | "declined";
 const FILTER_KEYS: readonly FilterKey[] = ["all", "confirmed", "pending", "maybe", "declined"];
 
-/** Deep-link da Andamento (?filter=...): valori non supportati → 'all'. */
+/** Deep-link from Andamento (?filter=...): unsupported values → 'all'. */
 function filterFromQuery(): FilterKey {
     const q = String(route.query.filter ?? "");
     return (FILTER_KEYS as readonly string[]).includes(q) ? q as FilterKey : "all";
@@ -153,7 +153,7 @@ const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / 
 watch(totalPages, (tp) => { if (page.value > tp) page.value = tp; });
 const paged = computed(() => filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE));
 
-// ─── Selezione ───────────────────────────────────────────────────────
+// ─── Selection ───────────────────────────────────────────────────────
 const selected = ref<Set<string>>(new Set());
 
 function toggleSelect(id: string) {
@@ -188,7 +188,7 @@ function goToReminders() {
     router.push(`/dashboard/events/${eventId.value}/reminders`);
 }
 
-// ─── Formattazione ───────────────────────────────────────────────────
+// ─── Formatting ──────────────────────────────────────────────────────
 const shortDateFmt = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
 const timelineFmt = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -210,7 +210,7 @@ function responseCell(g: GuestWithStatus): string {
     return g.rsvpStatus === "not_opened" ? t("ceremly.event.guests.responseNotOpened") : t("ceremly.event.guests.responseOpenedNoReply");
 }
 
-// ─── Drawer dettaglio ────────────────────────────────────────────────
+// ─── Detail drawer ───────────────────────────────────────────────────
 const drawerRow = ref<GuestWithStatus | null>(null);
 const drawerDetail = ref<GuestDetailResult | null>(null);
 const drawerLoading = ref(false);
@@ -260,7 +260,7 @@ const ATTENDANCE_FALLBACK = computed<Record<string, string>>(() => ({
     maybe: t("ceremly.event.guests.attendanceMaybe"),
 }));
 
-/** Righe q→a umanizzate per il drawer (incluse perPerson per persona). */
+/** Humanized q→a rows for the drawer (including per-person rows per person). */
 const answerRows = computed<{ q: string; a: string }[]>(() => {
     const detail = drawerDetail.value;
     const response = detail?.response;
@@ -269,7 +269,7 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
     const rows: { q: string; a: string }[] = [];
     const guestName = detail.guest.firstName;
 
-    // Valutazione con i valori autoritativi iniettati (come fa il server).
+    // Evaluation with authoritative values injected (as the server does).
     const evaluation: RsvpAnswers = { ...(response.answers ?? {}) };
     const knownIds = new Set(config.map(q => q.id));
     if (knownIds.has("attendance")) evaluation.attendance = response.attending;
@@ -277,14 +277,14 @@ const answerRows = computed<{ q: string; a: string }[]>(() => {
         evaluation.companions_count = response.companionsCount;
     }
 
-    // Partecipazione: label dalla config (mapping posizionale yes/no/maybe).
+    // Attendance: label from config (positional mapping yes/no/maybe).
     const attendanceQ = config.find(q => q.id === "attendance");
     const canonicalIdx = ["yes", "no", "maybe"].indexOf(response.attending);
     const attendanceLabel = attendanceQ?.options?.[canonicalIdx]
         ?? ATTENDANCE_FALLBACK.value[response.attending] ?? response.attending;
     rows.push({ q: attendanceQ?.label ?? t("ceremly.event.guests.attendanceQuestion"), a: attendanceLabel });
 
-    // Nomi accompagnatori (per le righe perPerson e per la riga Accompagnatori).
+    // Companion names (for perPerson rows and the Companions row).
     const rawNames = evaluation.companion_names;
     const companionNames: string[] = isPerPersonAnswer(rawNames)
         ? rawNames.companions.map(v => (typeof v === "string" ? v.trim() : ""))
@@ -344,7 +344,7 @@ function activityLabel(a: { type: string; meta: Record<string, unknown> }): stri
     }
 }
 
-// ─── Elimina ospite (conferma) ───────────────────────────────────────
+// ─── Delete guest (with confirmation) ────────────────────────────────
 const confirmDeleteOpen = ref(false);
 const deleting = ref(false);
 
@@ -363,7 +363,7 @@ async function confirmDelete() {
     }
 }
 
-// ─── Modale "Aggiungi ospite" ────────────────────────────────────────
+// ─── "Add guest" modal ───────────────────────────────────────────────
 const addOpen = ref(false);
 const addSaving = ref(false);
 const addError = ref<string | null>(null);
@@ -413,7 +413,7 @@ async function submitAdd() {
     }
 }
 
-// ─── Modale "Importa CSV" ────────────────────────────────────────────
+// ─── "Import CSV" modal ───────────────────────────────────────────────
 const importOpen = ref(false);
 const importStep = ref<"pick" | "preview" | "done">("pick");
 const importRows = ref<CsvGuestRow[]>([]);
@@ -474,7 +474,7 @@ async function submitImport() {
     }
 }
 
-// ─── Paywall Celebrazione (402) ───────────────────────────────────────
+// ─── Celebrazione paywall (402) ───────────────────────────────────────
 const paywallOpen = ref(false);
 const paywallReason = ref("");
 
@@ -483,7 +483,7 @@ function openPaywall(reason: string) {
     paywallOpen.value = true;
 }
 
-// ─── Modale "Cambia gruppo" ──────────────────────────────────────────
+// ─── "Change group" modal ─────────────────────────────────────────────
 const groupOpen = ref(false);
 const groupName = ref("");
 const groupSaving = ref(false);
@@ -555,7 +555,7 @@ async function submitGroup() {
             </div>
         </div>
 
-        <!-- Ricerca -->
+        <!-- Search -->
         <div class="row" style="margin-top: 18px;">
             <div style="position: relative; width: 320px;">
                 <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-400); display: inline-flex;">
@@ -570,7 +570,7 @@ async function submitGroup() {
             </div>
         </div>
 
-        <!-- Action bar selezione -->
+        <!-- Selection action bar -->
         <div
             v-if="selected.size > 0"
             class="row"
@@ -593,18 +593,18 @@ async function submitGroup() {
             </button>
         </div>
 
-        <!-- Stato errore -->
+        <!-- Error state -->
         <div v-if="loadError" class="cer-card" style="margin-top: 18px; padding: 22px;">
             <div style="color: var(--decline); font-size: 14px;">{{ loadError }}</div>
             <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">{{ $t('common.retry') }}</button>
         </div>
 
-        <!-- Stato loading: skeleton sobrio -->
+        <!-- Loading state: minimal skeleton -->
         <div v-else-if="loading" class="cer-card" style="margin-top: 18px; padding: 22px;">
             <div v-for="i in 6" :key="i" class="cer-skeleton" style="height: 38px; margin-bottom: 10px;" />
         </div>
 
-        <!-- Empty state assoluto -->
+        <!-- Absolute empty state -->
         <div v-else-if="activeGuests.length === 0" class="cer-card" style="margin-top: 18px; padding: 48px 32px; text-align: center;">
             <div class="serif" style="font-size: 24px;">{{ $t('ceremly.event.guests.emptyTitle') }}</div>
             <div class="muted" style="font-size: 14px; margin-top: 8px; max-width: 420px; margin-left: auto; margin-right: auto;">
@@ -617,7 +617,7 @@ async function submitGroup() {
         </div>
 
         <template v-else>
-            <!-- Tabella -->
+            <!-- Table -->
             <div class="cer-card scroll" style="margin-top: 18px; padding: 0;">
                 <table class="cer-table">
                     <thead>
@@ -675,7 +675,7 @@ async function submitGroup() {
                 </table>
             </div>
 
-            <!-- Paginazione -->
+            <!-- Pagination -->
             <div class="row" style="margin-top: 12px; justify-content: space-between;">
                 <span class="small muted">{{ $t('ceremly.event.guests.showingCount', { shown: paged.length, total: filtered.length }) }}</span>
                 <div v-if="totalPages > 1" class="row" style="gap: 4px;">
@@ -694,7 +694,7 @@ async function submitGroup() {
             </div>
         </template>
 
-        <!-- ─── Drawer dettaglio ospite ─────────────────────────────── -->
+        <!-- ─── Guest detail drawer ──────────────────────────────────── -->
         <template v-if="drawerRow">
             <div class="cer-drawer-backdrop" @click="closeDrawer" />
             <aside class="cer-drawer scroll">
@@ -770,7 +770,7 @@ async function submitGroup() {
             </aside>
         </template>
 
-        <!-- ─── Modale conferma eliminazione ────────────────────────── -->
+        <!-- ─── Delete confirmation modal ───────────────────────────── -->
         <div v-if="confirmDeleteOpen && drawerRow" class="cer-overlay" @click.self="confirmDeleteOpen = false">
             <div class="cer-modal" style="max-width: 440px;">
                 <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.guests.confirmDeleteTitle', { firstName: drawerRow.firstName, lastName: drawerRow.lastName }) }}</div>
@@ -791,7 +791,7 @@ async function submitGroup() {
             </div>
         </div>
 
-        <!-- ─── Modale "Aggiungi ospite" ────────────────────────────── -->
+        <!-- ─── "Add guest" modal ────────────────────────────────────── -->
         <div v-if="addOpen" class="cer-overlay" @click.self="addOpen = false">
             <div class="cer-modal">
                 <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.guests.addModalTitle') }}</div>
@@ -835,7 +835,7 @@ async function submitGroup() {
             </div>
         </div>
 
-        <!-- ─── Modale "Importa CSV" ────────────────────────────────── -->
+        <!-- ─── "Import CSV" modal ───────────────────────────────────── -->
         <div v-if="importOpen" class="cer-overlay" @click.self="importOpen = false">
             <div class="cer-modal" style="max-width: 640px;">
                 <div class="serif" style="font-size: 22px;">{{ $t('ceremly.event.guests.importModalTitle') }}</div>
@@ -843,7 +843,7 @@ async function submitGroup() {
                     {{ $t('ceremly.event.guests.importModalSubtitle') }}
                 </div>
 
-                <!-- Step 1: scelta file -->
+                <!-- Step 1: file pick -->
                 <template v-if="importStep === 'pick'">
                     <label
                         style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 18px; padding: 32px; border: 1.5px dashed var(--bone-300); border-radius: 12px; cursor: pointer; background: var(--bone);"
@@ -855,7 +855,7 @@ async function submitGroup() {
                     </label>
                 </template>
 
-                <!-- Step 2: anteprima -->
+                <!-- Step 2: preview -->
                 <template v-else-if="importStep === 'preview'">
                     <div class="row" style="margin-top: 16px; justify-content: space-between;">
                         <span class="cer-tag">{{ importFileName }}</span>
@@ -909,7 +909,7 @@ async function submitGroup() {
                     </div>
                 </template>
 
-                <!-- Step 3: report -->
+                <!-- Step 3: result -->
                 <template v-else-if="importStep === 'done' && importResult">
                     <div class="row" style="gap: 10px; margin-top: 18px;">
                         <span class="pill confirm"><span class="cer-dot" />{{ $t('ceremly.event.guests.importDoneImported', { count: importResult.imported }) }}</span>
@@ -935,14 +935,14 @@ async function submitGroup() {
             </div>
         </div>
 
-        <!-- ─── Paywall Celebrazione (limite Free) ─────────────────── -->
+        <!-- ─── Celebrazione paywall (Free plan limit) ─────────────── -->
         <CerCelebrationPaywall
             v-model:open="paywallOpen"
             :event-id="eventId"
             :reason="paywallReason || undefined"
         />
 
-        <!-- ─── Modale "Cambia gruppo" ──────────────────────────────── -->
+        <!-- ─── "Change group" modal ─────────────────────────────────── -->
         <div v-if="groupOpen" class="cer-overlay" @click.self="groupOpen = false">
             <div class="cer-modal" style="max-width: 440px;">
                 <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.guests.groupModalTitle') }}</div>
@@ -965,7 +965,7 @@ async function submitGroup() {
 </template>
 
 <style scoped>
-/* Bottoni della action bar su sfondo ink (stile inline del mockup) */
+/* Action bar buttons on ink background (inline style from the mockup) */
 .bar-btn {
     background: transparent;
     color: var(--bone-50);
@@ -978,7 +978,7 @@ async function submitGroup() {
     box-shadow: none;
 }
 
-/* Overlay e modali custom .cer (coerenza visiva col design system) */
+/* Custom .cer overlay and modals (visual consistency with the design system) */
 .cer-overlay {
     position: fixed;
     inset: 0;
@@ -1001,7 +1001,7 @@ async function submitGroup() {
     box-shadow: var(--hard);
 }
 
-/* Drawer laterale dettaglio ospite */
+/* Guest detail side drawer */
 .cer-drawer-backdrop {
     position: fixed;
     inset: 0;
@@ -1022,7 +1022,7 @@ async function submitGroup() {
     overflow: auto;
 }
 
-/* Label form mono (stile inline del mockup) */
+/* Mono form label (inline style from the mockup) */
 .cer-flabel {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -1031,7 +1031,7 @@ async function submitGroup() {
     color: var(--ink-500);
 }
 
-/* Skeleton sobrio */
+/* Subtle skeleton */
 .cer-skeleton {
     background: var(--bone-100);
     border-radius: 8px;

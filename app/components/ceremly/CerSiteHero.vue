@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Hero delle sotto-pagine del sito pubblico — port di SiteHero (site-shared.jsx).
-// Banda full-bleed con contenuto centrato a 1400px (.cer-site-wrap). Titolo via
-// slot #title (può contenere <br> e <CerMark>), sottotitolo via prop o slot #sub,
-// contenuto extra (chip, search…) nello slot default.
+// Hero for public site sub-pages — port of SiteHero (site-shared.jsx).
+// Full-bleed band with content centered at 1400px (.cer-site-wrap). Title via
+// slot #title (can contain <br> and <CerMark>), subtitle via prop or slot #sub,
+// extra content (chips, search…) in the default slot.
 withDefaults(
     defineProps<{
         tag?: string

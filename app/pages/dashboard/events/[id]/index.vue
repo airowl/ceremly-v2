@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Dashboard evento "Andamento" — port fedele di docs/ui/project/screens/event-dashboard.jsx
-// (incluso RsvpChart svg con hover interattivo e GuestDetailDrawer).
-// Dati reali: GET /api/events/:id/stats (polling 30s), GET /api/events/:id,
-// GET /api/events/:id/guests (+ /:guestId per il drawer).
+// Event "Andamento" dashboard — faithful port of docs/ui/project/screens/event-dashboard.jsx
+// (including RsvpChart SVG with interactive hover and GuestDetailDrawer).
+// Real data: GET /api/events/:id/stats (30s polling), GET /api/events/:id,
+// GET /api/events/:id/guests (+ /:guestId for the drawer).
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import KpiCard from "~/components/ceremly/KpiCard.vue";
 import StatusPill from "~/components/ceremly/StatusPill.vue";
@@ -29,7 +29,7 @@ const route = useRoute();
 const router = useRouter();
 const eventId = computed(() => String(route.params.id));
 
-// ─── Breadcrumbs + contesto evento sidebar (shape del layout ceremly) ──
+// ─── Breadcrumbs + event context sidebar (ceremly layout shape) ─────────
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 const eventCtx = useState<{ id: string; title: string; type: string } | null>(
     "ceremly-event-ctx",
@@ -54,7 +54,7 @@ async function refreshStats(silent = false) {
         lastFetchedAt.value = Date.now();
         statsError.value = null;
     } catch (e) {
-        // Silent (polling): mantieni gli ultimi dati, errore visibile solo se non c'è nulla.
+        // Silent (polling): keep the last data, error visible only if there is nothing.
         if (!silent || !stats.value) {
             const err = e as { data?: { statusMessage?: string; message?: string } };
             statsError.value
@@ -69,7 +69,7 @@ async function refreshStats(silent = false) {
 
 const polling = usePolling(() => refreshStats(true), 30_000);
 
-// ─── "Ultimo aggiornamento: Ns fa" (contatore reattivo, tick 1s) ───────
+// ─── "Last updated: Ns ago" (reactive counter, 1s tick) ────────────────
 const nowTick = ref(Date.now());
 let tickTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -80,7 +80,7 @@ const lastUpdatedLabel = computed(() => {
     return t("ceremly.event.detail.lastUpdatedMin", { m: Math.floor(s / 60) });
 });
 
-// ─── Evento (data header + rsvpConfig per umanizzare le risposte) ──────
+// ─── Event (header date + rsvpConfig for humanizing responses) ──────────
 const eventData = ref<CeremlyEvent | null>(null);
 const eventError = ref<string | null>(null);
 
@@ -123,7 +123,7 @@ const dateLine = computed(() => {
     return `${formatted} · ${rel}`;
 });
 
-// ─── Lista ospiti (sub KPI "con email" + default drawer) ───────────────
+// ─── Guest list (sub KPI "with email" + default drawer) ────────────────
 const { listGuests, getGuest } = useEventGuests();
 const guestsIndex = ref<GuestWithStatus[] | null>(null);
 
@@ -131,7 +131,7 @@ async function loadGuests() {
     try {
         const res = await listGuests(eventId.value);
         guestsIndex.value = res.guests.filter((g) => !g.removedAt);
-        // Default drawer: l'ultimo ospite che ha risposto
+        // Default drawer: the last guest who responded
         if (!selectedGuestId.value) {
             const responded = guestsIndex.value
                 .filter((g) => g.respondedAt)
@@ -139,7 +139,7 @@ async function loadGuests() {
             if (responded[0]) void selectGuest(responded[0].id);
         }
     } catch {
-        guestsIndex.value = null; // degradazione: sub KPI vuoto, drawer in empty state
+        guestsIndex.value = null; // graceful degradation: sub KPI empty, drawer in empty state
     }
 }
 
@@ -171,7 +171,7 @@ const kpiCards = computed(() => {
             value: k.opened,
             sub: `${pct(k.opened, k.totalGuests)} · ${t("ceremly.event.detail.kpiOpenedTarget")}`,
             accent: false,
-            // Nessun ?filter: guests.vue non ha un filtro 'opened' (solo all/confirmed/pending/maybe/declined)
+            // No ?filter: guests.vue has no 'opened' filter (only all/confirmed/pending/maybe/declined)
             to: `/dashboard/events/${eventId.value}/guests`,
         },
         {
@@ -180,7 +180,7 @@ const kpiCards = computed(() => {
             value: k.responded,
             sub: `${pct(k.responded, k.opened)} ${t("ceremly.event.detail.kpiRespondedSub")}`,
             accent: false,
-            // Nessun ?filter: guests.vue non ha un filtro 'responded'
+            // No ?filter: guests.vue has no 'responded' filter
             to: `/dashboard/events/${eventId.value}/guests`,
         },
         {
@@ -194,7 +194,7 @@ const kpiCards = computed(() => {
     ];
 });
 
-// ─── Chart SVG (port di RsvpChart, scala dinamica + hover) ────────────
+// ─── Chart SVG (port of RsvpChart, dynamic scale + hover) ─────────────
 const CHART = { W: 720, H: 200, padL: 30, padR: 8, padT: 10, padB: 24 };
 const chartInnerW = CHART.W - CHART.padL - CHART.padR;
 const chartInnerH = CHART.H - CHART.padT - CHART.padB;
@@ -204,7 +204,7 @@ const timeline = computed(() => stats.value?.timeline ?? []);
 const chartMax = computed(() => {
     let m = 0;
     for (const p of timeline.value) m = Math.max(m, p.confirmed, p.declined, p.maybe);
-    // Arrotonda al multiplo di 4 così i livelli 25/50/75% restano interi
+    // Round to the nearest multiple of 4 so the 25/50/75% levels stay as integers
     return Math.max(4, Math.ceil(m / 4) * 4);
 });
 
@@ -301,7 +301,7 @@ const hoverPoint = computed(() => {
     };
 });
 
-// ─── Preferenze menu / allergie ────────────────────────────────────────
+// ─── Menu preferences / allergies ─────────────────────────────────────
 const MENU_COLORS = ["var(--purple)", "var(--blue)", "var(--confirm)", "var(--orange)"];
 
 const menuDenominator = computed(() => {
@@ -315,7 +315,7 @@ const allergyTotal = computed(
     () => stats.value?.allergies.reduce((sum, a) => sum + a.count, 0) ?? 0,
 );
 
-// ─── Drawer dettaglio ospite ───────────────────────────────────────────
+// ─── Guest detail drawer ───────────────────────────────────────────────
 const selectedGuestId = ref<string | null>(null);
 const detail = ref<GuestDetailResult | null>(null);
 const detailLoading = ref(false);
@@ -371,7 +371,7 @@ const drawerStatus = computed<GuestRsvpStatus>(() => {
     return d.guest.firstOpenedAt ? "opened" : "not_opened";
 });
 
-// ─── Umanizzazione risposte RSVP ───────────────────────────────────────
+// ─── RSVP response humanization ───────────────────────────────────────
 function isPerPersonAnswer(v: unknown): v is RsvpPerPersonAnswer {
     return (
         typeof v === "object"
@@ -408,7 +408,7 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
     const config = eventData.value?.rsvpConfig ?? [];
     const rows: { q: string; a: string }[] = [];
 
-    // 1. Partecipi? — label dell'opzione scelta (mapping posizionale yes/no/maybe)
+    // 1. Attending? — label of the chosen option (positional mapping yes/no/maybe)
     const attQ = config.find((q) => q.id === "attendance");
     const attIdx = res.attending === "yes" ? 0 : res.attending === "no" ? 1 : 2;
     rows.push({
@@ -418,7 +418,7 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
 
     const names = companionNames(res.answers);
 
-    // 2. Accompagnatori — conteggio autoritativo + nomi da companion_names
+    // 2. Companions — authoritative count + names from companion_names
     if (res.attending === "yes" && config.some((q) => q.id === "companions_count")) {
         const count = res.companionsCount ?? 0;
         const validNames = names.filter(Boolean);
@@ -432,7 +432,7 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
         });
     }
 
-    // 3. Altre domande in ordine di config (perPerson replicate per persona)
+    // 3. Other questions in config order (perPerson replicated per person)
     for (const q of config) {
         if (q.id === "attendance" || q.id === "companions_count" || q.id === "companion_names") {
             continue;
@@ -457,13 +457,13 @@ const qaRows = computed<{ q: string; a: string }[]>(() => {
         }
     }
 
-    // 4. Messaggio del declino
+    // 4. Decline message
     if (res.declineMessage) rows.push({ q: t("ceremly.event.detail.qaMessage"), a: res.declineMessage });
 
     return rows;
 });
 
-// ─── Timeline attività (etichette italiane) ────────────────────────────
+// ─── Activity timeline (Italian labels) ───────────────────────────────
 const ORDINALS = ["", "1ª", "2ª", "3ª", "4ª", "5ª", "6ª", "7ª", "8ª", "9ª"];
 
 function activityLabel(a: { type: string; meta: Record<string, unknown> }): string {
@@ -499,7 +499,7 @@ function activityDate(iso: string): string {
     return `${day} · ${time}`;
 }
 
-// ─── Azioni topbar ─────────────────────────────────────────────────────
+// ─── Topbar actions ─────────────────────────────────────────────────────
 function onExport() {
     window.open(`/api/events/${eventId.value}/export`, "_blank");
 }
@@ -519,20 +519,20 @@ function goToGuests(to: string) {
 // ─── Lifecycle ─────────────────────────────────────────────────────────
 
 /**
- * Se l'utente torna dal checkout Creem con ?unlocked=true, riconcilia l'unlock
- * una volta sola (il webhook è fire-and-forget e potrebbe aver perso il lavoro).
- * Resiliente: un errore di rete non blocca il caricamento della pagina.
+ * If the user returns from Creem checkout with ?unlocked=true, reconciles the unlock
+ * exactly once (the webhook is fire-and-forget and may have missed the job).
+ * Resilient: a network error does not block the page from loading.
  */
 async function maybeReconcileUnlock() {
     if (route.query.unlocked !== "true") return;
-    // Rimuovi il parametro subito (evita ri-esecuzione su refresh manuale)
+    // Remove the param immediately (prevents re-execution on manual refresh)
     void router.replace({ query: { ...route.query, unlocked: undefined } });
     try {
         await $fetch(`/api/events/${eventId.value}/reconcile-unlock`, { method: "POST" });
-        // Ricarica l'evento per riflettere il nuovo tier (es. 'celebration')
+        // Reload the event to reflect the new tier (e.g. 'celebration')
         await loadEvent();
     } catch {
-        // Silenzioso: la pagina si carica normalmente, il tier sarà aggiornato al prossimo load
+        // Silent: the page loads normally, the tier will be updated on the next load
     }
 }
 
@@ -591,7 +591,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- Errore iniziale stats -->
+        <!-- Initial stats error -->
         <div
             v-if="statsError && !stats"
             class="cer-card"
@@ -656,7 +656,7 @@ onUnmounted(() => {
             </div>
 
             <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-top: 22px;">
-                <!-- Left: andamento RSVP -->
+                <!-- Left: RSVP progress -->
                 <div class="cer-card" style="padding: 22px;">
                     <div class="row" style="justify-content: space-between;">
                         <div>
@@ -877,7 +877,7 @@ onUnmounted(() => {
 
             <!-- Bottom grid -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 22px;">
-                <!-- Da contattare -->
+                <!-- Needs attention -->
                 <div class="cer-card" style="padding: 20px;">
                     <div class="row" style="justify-content: space-between;">
                         <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.detail.needsAttentionTitle') }}</div>
@@ -1014,7 +1014,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Skeleton sobrio per il primo caricamento */
+/* Subtle skeleton for initial load */
 .skel {
     background: var(--bone-200);
     border-radius: var(--r-sm);
@@ -1026,13 +1026,13 @@ onUnmounted(() => {
     50% { opacity: 1; }
 }
 
-/* Tab periodo non ancora disponibili (il backend fornisce solo 28 giorni) */
+/* Period tabs not yet available (the backend provides only 28 days) */
 .tag-disabled {
     opacity: 0.55;
     cursor: not-allowed;
 }
 
-/* Riga "Da contattare" cliccabile → mostra l'ospite nel drawer */
+/* Clickable "Da contattare" row → shows the guest in the drawer */
 .attn-row {
     cursor: pointer;
     transition: border-color 120ms ease, background 120ms ease;
@@ -1046,7 +1046,7 @@ onUnmounted(() => {
     border-color: var(--ink) !important;
 }
 
-/* Spinner sobrio */
+/* Subtle spinner */
 .cer-spin {
     width: 18px;
     height: 18px;

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Signup Ceremly — port di RegisterScreen (docs/ui/project/screens/auth.jsx).
-// La logica Better Auth (signUp email/password + Google, error handling,
-// fetchSession post-registrazione) è identica alla pagina precedente:
-// cambia solo la pelle. Il tipo di evento scelto è salvato in localStorage
-// ('ceremly:onboarding-type') per la pre-selezione del wizard, NON nel backend.
+// Ceremly signup — port of RegisterScreen (docs/ui/project/screens/auth.jsx).
+// The Better Auth logic (signUp email/password + Google, error handling,
+// fetchSession post-registration) is identical to the previous page:
+// only the skin changes. The chosen event type is saved in localStorage
+// ('ceremly:onboarding-type') for the wizard pre-selection, NOT in the backend.
 import * as z from 'zod'
 import { EVENT_TYPES } from '~~/shared/constants/eventTypes'
 import type { EventTypeKey } from '~~/shared/types/ceremly'
@@ -50,7 +50,7 @@ function selectType(key: EventTypeKey) {
     }
 }
 
-// Strength bar 4 segmenti: lunghezza >= 12, 1 numero, 1 simbolo, 1 maiuscola.
+// 4-segment strength bar: length >= 12, 1 number, 1 symbol, 1 uppercase.
 const strengthScore = computed(() => [
     password.value.length >= 12,
     /\d/.test(password.value),
@@ -155,7 +155,7 @@ async function onSubmit() {
         </p>
 
         <div style="margin-top: 28px;">
-            <!-- Social: SOLO Google (Apple non configurato) -->
+            <!-- Social: Google ONLY (Apple not configured) -->
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
                 <button
                     type="button"

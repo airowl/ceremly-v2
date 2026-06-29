@@ -20,12 +20,12 @@ useSeoMeta({
     ogTitle: title,
     description,
     ogDescription: description,
-    // La pagina di manutenzione non va indicizzata (vale anche per /en/maintenance).
+    // The maintenance page must not be indexed (applies to /en/maintenance as well).
     robots: "noindex, nofollow",
 });
 
-// Semantica HTTP corretta per un downtime pianificato: rispondere 503 + Retry-After
-// sul documento (non un 200), così i crawler sanno che è temporaneo. Solo SSR.
+// Correct HTTP semantics for planned downtime: respond with 503 + Retry-After
+// on the document (not a 200), so crawlers know it is temporary. SSR only.
 if (import.meta.server) {
     const event = useRequestEvent();
     if (event) {

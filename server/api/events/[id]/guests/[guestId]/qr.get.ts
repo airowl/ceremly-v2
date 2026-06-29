@@ -1,8 +1,8 @@
 /**
  * GET /api/events/:id/guests/:guestId/qr
- * PNG QR del link personale `{baseURL}/e/{slug}/{token}` (width 600, margin 2).
- * RBAC: requireMember + assertOwnership nel service. Cache privata: il QR
- * incorpora il token dell'ospite.
+ * PNG QR of the personal link `{baseURL}/e/{slug}/{token}` (width 600, margin 2).
+ * RBAC: requireMember + assertOwnership in the service. Private cache: the QR
+ * embeds the guest's token.
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { getGuestQrPng } from "~~/server/services/guest.service";

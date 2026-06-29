@@ -5,7 +5,7 @@ definePageMeta({
 
 const { t } = useI18n()
 
-// Email brand: env-driven (fuori da i18n per il carattere '@')
+// Brand email: env-driven (outside i18n due to the '@' character)
 const privacyEmail = useRuntimeConfig().public.privacyEmail
 </script>
 
@@ -30,7 +30,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
           <div class="prose prose-neutral dark:prose-invert max-w-none">
             <UDivider class="my-8" />
 
-            <!-- 1) Quali dati raccogliamo -->
+            <!-- 1) What data we collect -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.dataCollection.number') }}. {{ t('privacy.sections.dataCollection.title') }}
@@ -61,7 +61,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 2) Finalità e basi giuridiche -->
+            <!-- 2) Purposes and legal bases -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.purposes.number') }}. {{ t('privacy.sections.purposes.title') }}
@@ -88,7 +88,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 3) Condivisione dati -->
+            <!-- 3) Data sharing -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.sharing.number') }}. {{ t('privacy.sections.sharing.title') }}
@@ -123,7 +123,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 5) Sicurezza -->
+            <!-- 5) Security -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.security.number') }}. {{ t('privacy.sections.security.title') }}
@@ -136,7 +136,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 6) Diritti degli utenti -->
+            <!-- 6) User rights -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.rights.number') }}. {{ t('privacy.sections.rights.title') }}
@@ -161,7 +161,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 7) Conservazione dati -->
+            <!-- 7) Data retention -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.retention.number') }}. {{ t('privacy.sections.retention.title') }}
@@ -185,7 +185,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 8) Aggiornamenti -->
+            <!-- 8) Updates -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.changes.number') }}. {{ t('privacy.sections.changes.title') }}
@@ -198,7 +198,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- 9) Legge applicabile -->
+            <!-- 9) Applicable law -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('privacy.sections.law.number') }}. {{ t('privacy.sections.law.title') }}
@@ -211,7 +211,7 @@ const privacyEmail = useRuntimeConfig().public.privacyEmail
 
             <UDivider class="my-8" />
 
-            <!-- Note aggiuntive -->
+            <!-- Additional notes -->
             <section class="mb-12">
               <div class="bg-elevated rounded-lg p-6">
                 <h3 class="text-lg font-semibold text-highlighted mb-3">

@@ -1,20 +1,20 @@
 /**
- * Generatore OG image per il sito pubblico Ceremly.
+ * OG image generator for the public Ceremly website.
  *
- * Replica fedelmente il design system "Soft Meadow" (app/assets/css/ceremly.css):
- * canvas crema, accenti camel/sage, badge busta+check, font Bricolage Grotesque
- * (display) / Be Vietnam Pro (body) / Space Mono (tag) — gli stessi che il sito
- * carica via @nuxt/fonts. Niente template generico: ogni pagina ha titolo, tag e
- * tinta coerenti con la propria categoria, così l'anteprima social è "nativa".
+ * Faithfully replicates the "Soft Meadow" design system (app/assets/css/ceremly.css):
+ * cream canvas, camel/sage accents, envelope+check badge, Bricolage Grotesque font
+ * (display) / Be Vietnam Pro (body) / Space Mono (tag) — the same fonts the site
+ * loads via @nuxt/fonts. No generic template: each page has a title, tag and
+ * tint consistent with its own category, so the social preview is "native".
  *
- * I testi (titolo breve curato + descrizione SEO) sono presi da i18n per IT ed EN.
+ * Texts (curated short title + SEO description) are pulled from i18n for IT and EN.
  * Output: public/og/<slug>-<locale>.png (1200x630).
  *
- * Uso:
- *   node scripts/generate-og.mjs            # tutte le route, IT + EN
- *   node scripts/generate-og.mjs pricing    # solo gli slug passati (campione)
+ * Usage:
+ *   node scripts/generate-og.mjs            # all routes, IT + EN
+ *   node scripts/generate-og.mjs pricing    # only the passed slugs (sample)
  *
- * Richiede: playwright (chromium). Vedi README in fondo.
+ * Requires: playwright (chromium). See README at the bottom.
  */
 import { chromium } from 'playwright'
 import sharp from 'sharp'
@@ -35,19 +35,19 @@ const get = (obj, path) => path.split('.').reduce((a, k) => (a == null ? a : a[k
 const W = 1200
 const H = 630
 
-// ── Temi per categoria (palette Soft Meadow) ──────────────────────────────
-// bg: gradiente caldo del canvas · c1/c2: cerchi decorativi · accent: tag + footer
+// ── Themes by category (Soft Meadow palette) ──────────────────────────────
+// bg: warm canvas gradient · c1/c2: decorative circles · accent: tag + footer
 const THEMES = {
     prodotto: { tag: { it: 'Prodotto', en: 'Product' }, bg: 'linear-gradient(135deg,#fffdf7 0%,#fefae0 52%,#faedcd 100%)', c1: '#f6e7c8', c2: '#efddb9', accent: '#c28c54' },
     perchi: { tag: null, bg: 'linear-gradient(135deg,#fffdf7 0%,#fefae0 46%,#e9edc9 100%)', c1: '#e2e9c4', c2: '#d6e0b6', accent: '#6e8b2f' },
     risorse: { tag: { it: 'Risorse', en: 'Resources' }, bg: 'linear-gradient(135deg,#ffffff 0%,#fefae0 58%,#f4ead4 100%)', c1: '#f6e7c8', c2: '#ece0c5', accent: '#c28c54' },
     ceremly: { tag: { it: 'Ceremly', en: 'Ceremly' }, bg: 'linear-gradient(135deg,#fefae0 0%,#faedcd 58%,#ecdcbd 100%)', c1: '#f0e2c2', c2: '#e6d3b0', accent: '#6E4A1F' },
-    // Home: hero senza tag · Blog: tinta sage con badge BLOG (path di output dedicati, vedi route.out)
+    // Home: hero without tag · Blog: sage tint with BLOG badge (dedicated output paths, see route.out)
     home: { tag: null, bg: 'linear-gradient(135deg,#fffdf7 0%,#fefae0 50%,#f6e8cb 100%)', c1: '#f4e3c2', c2: '#ecdab4', accent: '#c28c54' },
     blog: { tag: { it: 'Blog', en: 'Blog' }, bg: 'linear-gradient(135deg,#fffdf7 0%,#fbf6e4 48%,#e9edc9 100%)', c1: '#e2e9c4', c2: '#d6e0b6', accent: '#6e8b2f' },
 }
 
-// Icone tematiche (path SVG da app/components/ceremly/CerIcon.vue, viewBox 24)
+// Thematic icons (SVG paths from app/components/ceremly/CerIcon.vue, viewBox 24)
 const ICONS = {
     ring: ['M12 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10z', 'M7 9l-3-4 4-3 4 3', 'M17 9l3-4-4-3-4 3'],
     cap: ['M2 9l10-5 10 5-10 5L2 9z', 'M6 10.6V16a2 2 0 0 0 1 1.7c1.5 1 3.3 1.5 5 1.5s3.5-.5 5-1.5a2 2 0 0 0 1-1.7v-5.4', 'M21 9v7'],
@@ -56,40 +56,40 @@ const ICONS = {
     sparkle: ['M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z'],
 }
 
-// ── Route → contenuto OG ──────────────────────────────────────────────────
-// title: titolo breve curato (il badge dice già "Ceremly"). desc: chiave i18n
-// della descrizione SEO (testo già rifinito). tag/icon: override per le use-case.
+// ── Route → OG content ──────────────────────────────────────────────────
+// title: curated short title (the badge already says "Ceremly"). desc: i18n key
+// of the SEO description (already polished text). tag/icon: override for use-cases.
 const ROUTES = [
-    // Prodotto
+    // Product
     { slug: 'how-it-works', cat: 'prodotto', title: { it: 'Come funziona', en: 'How it works' }, desc: 'ceremly.site.comeFunziona.seoDescription' },
     { slug: 'features', cat: 'prodotto', title: { it: 'Funzionalità', en: 'Features' }, desc: 'ceremly.site.funzionalita.seoDescription' },
     { slug: 'templates', cat: 'prodotto', title: { it: 'Modelli di invito', en: 'Invitation templates' }, desc: 'ceremly.site.modelli.seoDescription' },
     { slug: 'pricing', cat: 'prodotto', title: { it: 'Prezzi', en: 'Pricing' }, desc: 'ceremly.site.prezzi.seoDescription' },
     { slug: 'examples', cat: 'prodotto', title: { it: 'Esempi di invito', en: 'Invitation examples' }, desc: 'ceremly.site.esempi.seoDescription' },
-    // Per chi (use-case) — tag = tipo evento, icona dedicata, tinta sage
+    // For whom (use-case) — tag = event type, dedicated icon, sage tint
     { slug: 'weddings', cat: 'perchi', title: { it: 'Matrimoni', en: 'Weddings' }, desc: 'ceremly.site.usecases.matrimoni.seoDescription', tag: { it: 'Matrimoni', en: 'Weddings' }, icon: 'ring' },
     { slug: 'graduations', cat: 'perchi', title: { it: 'Lauree', en: 'Graduations' }, desc: 'ceremly.site.usecases.lauree.seoDescription', tag: { it: 'Lauree', en: 'Graduations' }, icon: 'cap' },
     { slug: 'birthdays', cat: 'perchi', title: { it: 'Compleanni', en: 'Birthdays' }, desc: 'ceremly.site.usecases.compleanni.seoDescription', tag: { it: 'Compleanni', en: 'Birthdays' }, icon: 'cake' },
     { slug: 'baptisms', cat: 'perchi', title: { it: 'Battesimi', en: 'Christenings' }, desc: 'ceremly.site.usecases.battesimi.seoDescription', tag: { it: 'Battesimi', en: 'Christenings' }, icon: 'cross' },
     { slug: 'wedding-planner', cat: 'perchi', title: { it: 'Per wedding planner', en: 'For wedding planners' }, desc: 'ceremly.site.usecases.planner.seoDescription', tag: { it: 'Wedding planner', en: 'Wedding planners' }, icon: 'sparkle' },
-    // Risorse
+    // Resources
     { slug: 'rsvp-guide', cat: 'risorse', title: { it: 'Guida RSVP', en: 'RSVP guide' }, desc: 'ceremly.site.guidaRsvp.seoDescription' },
     { slug: 'help-center', cat: 'risorse', title: { it: 'Centro aiuto', en: 'Help center' }, desc: 'ceremly.site.centroAiuto.seoDescription' },
     { slug: 'status', cat: 'risorse', title: { it: 'Stato del servizio', en: 'Service status' }, desc: 'ceremly.site.stato.seoDescription' },
     { slug: 'changelog', cat: 'risorse', title: { it: 'Changelog', en: 'Changelog' }, desc: 'ceremly.site.changelog.seoDescription' },
     { slug: 'api', cat: 'risorse', title: { it: 'API per partner', en: 'Partner API' }, desc: 'ceremly.site.api.seoDescription' },
-    // Ceremly
+    // Ceremly brand
     { slug: 'about', cat: 'ceremly', title: { it: 'Chi siamo', en: 'About us' }, desc: 'ceremly.site.chiSiamo.seoDescription' },
     { slug: 'contact', cat: 'ceremly', title: { it: 'Contatti', en: 'Contact' }, desc: 'landing.contact.description' },
-    // Home + Blog: sovrascrivono gli asset esistenti (path di output dedicati) → niente modifiche a app.vue/pagine blog.
-    // NB: landing.seo.* e blog.seo.* contengono ancora testo del boilerplate, quindi usiamo ceremly.home.seo / testo curato.
+    // Home + Blog: overwrite existing assets (dedicated output paths) → no changes to app.vue/blog pages.
+    // NB: landing.seo.* and blog.seo.* still contain boilerplate text, so we use ceremly.home.seo / curated text.
     { slug: 'home', cat: 'home', out: (loc) => `ogImage-${loc}`, title: { it: 'Inviti digitali e RSVP intelligenti', en: 'Digital invitations and smart RSVPs' }, desc: 'ceremly.home.seo.description' },
     { slug: 'blog', cat: 'blog', out: (loc) => `og/blog-${loc}`, title: { it: 'Guide e Consigli', en: 'Guides and Tips' }, descText: { it: 'Articoli pratici per organizzare eventi indimenticabili e gestire le conferme senza stress.', en: 'Practical articles to organize unforgettable events and manage RSVPs without stress.' } },
 ]
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-// Font-size del titolo in base alla lunghezza (parole corte → titolo enorme)
+// Title font-size based on length (short words → huge title)
 const titleSize = (s) => {
     const n = s.length
     if (n <= 10) return 86
@@ -98,7 +98,7 @@ const titleSize = (s) => {
     return 54
 }
 
-// Tronca la descrizione a ~115 char sul confine di parola (2 righe pulite)
+// Clamp the description to ~115 chars at a word boundary (2 clean lines)
 const clampDesc = (s) => {
     if (s.length <= 118) return s
     const cut = s.slice(0, 115)
@@ -110,7 +110,7 @@ const iconSvg = (name, color, size = 26) => {
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`
 }
 
-// Badge busta+check (l'identità visiva delle OG Ceremly), gradiente camel
+// Envelope+check badge (the visual identity of Ceremly OG images), camel gradient
 const brandMark = () => `
   <div style="width:60px;height:60px;border-radius:15px;background:linear-gradient(150deg,#dcae7d 0%,#c28c54 100%);box-shadow:0 6px 18px rgba(94,68,38,0.22);display:flex;align-items:center;justify-content:center;">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fffaf0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -178,7 +178,7 @@ async function main() {
     const only = process.argv.slice(2)
     const routes = only.length ? ROUTES.filter((r) => only.includes(r.slug)) : ROUTES
     if (!routes.length) {
-        console.error('Nessuna route corrisponde a:', only.join(', '))
+        console.error('No route matches:', only.join(', '))
         process.exit(1)
     }
     mkdirSync(OUT, { recursive: true })
@@ -197,14 +197,14 @@ async function main() {
             const file = resolve(ROOT, 'public', `${rel}.png`)
             mkdirSync(dirname(file), { recursive: true })
             const buf = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: W, height: H } })
-            // PNG quantizzato (palette + dithering) per restare sotto ~150KB senza banding visibile
+            // Quantized PNG (palette + dithering) to stay under ~150KB without visible banding
             await sharp(buf).png({ compressionLevel: 9, palette: true, quality: 90, dither: 1, effort: 10 }).toFile(file)
             n++
             console.log(`✓ ${route.slug}-${locale}.png  [${route.cat}]`)
         }
     }
     await browser.close()
-    console.log(`\nGenerate ${n} immagini in public/og/`)
+    console.log(`\nGenerated ${n} images in public/og/`)
 }
 
 main().catch((e) => {

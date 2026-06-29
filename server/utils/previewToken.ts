@@ -1,40 +1,40 @@
 /**
- * Token di anteprima firmato per il link dell'email di test.
+ * Signed preview token for the test email link.
  *
- * Il link pubblico `/e/{slug}/preview?sig=...` NON corrisponde a un ospite reale:
- * `sig` ha forma `{exp}.{hmac}` dove hmac = HMAC-SHA256(betterAuthSecret,
- * "preview:{slug}:{exp}") ed `exp` è l'epoch (secondi) di scadenza. Autorizza la
- * modalità anteprima (invito renderizzato con ospite-esempio, RSVP sola lettura).
- * Impossibile da indovinare → niente enumeration (SPEC §8.2), e funziona anche
- * dall'email non autenticata. Scadenza di 30 giorni firmata DENTRO l'HMAC (quindi
- * non manomettibile): un link inoltrato/leakato smette di funzionare e un test
- * scaduto si ri-invia.
+ * The public link `/e/{slug}/preview?sig=...` does NOT correspond to a real guest:
+ * `sig` has the form `{exp}.{hmac}` where hmac = HMAC-SHA256(betterAuthSecret,
+ * "preview:{slug}:{exp}") and `exp` is the expiry epoch (seconds). It authorises
+ * preview mode (invite rendered with a sample guest, RSVP read-only).
+ * Impossible to guess → no enumeration (SPEC §8.2), and works from an
+ * unauthenticated email. 30-day expiry signed INSIDE the HMAC (therefore
+ * non-tamperable): a forwarded/leaked link stops working and an expired test
+ * link is re-sent.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-/** Durata di validità del link di anteprima (30 giorni). */
+/** Preview link validity duration (30 days). */
 const PREVIEW_TTL_SECONDS = 30 * 24 * 60 * 60;
 
-/** Epoch corrente in secondi. */
+/** Current epoch in seconds. */
 function nowSeconds(): number {
     return Math.floor(Date.now() / 1000);
 }
 
-/** HMAC esadecimale di slug+scadenza con il segreto server (mai esposto al client). */
+/** Hex HMAC of slug+expiry with the server secret (never exposed to the client). */
 function computeSig(slug: string, exp: number): string {
     const secret = String(useRuntimeConfig().betterAuthSecret ?? "");
     return createHmac("sha256", secret).update(`preview:${slug}:${exp}`).digest("hex");
 }
 
-/** Token `{exp}.{hmac}` per il link di anteprima dello slug (valido 30 giorni). */
+/** Token `{exp}.{hmac}` for the preview link of the slug (valid for 30 days). */
 export function signPreviewToken(slug: string): string {
     const exp = nowSeconds() + PREVIEW_TTL_SECONDS;
     return `${exp}.${computeSig(slug, exp)}`;
 }
 
 /**
- * true se `sig` (forma `{exp}.{hmac}`) è la firma valida per lo slug e non è
- * scaduta (confronto timing-safe). `exp` è dentro l'HMAC → non manomettibile.
+ * true if `sig` (form `{exp}.{hmac}`) is the valid signature for the slug and is
+ * not expired (timing-safe comparison). `exp` is inside the HMAC → non-tamperable.
  */
 export function verifyPreviewToken(slug: string, sig: string): boolean {
     if (!sig) return false;
@@ -42,10 +42,10 @@ export function verifyPreviewToken(slug: string, sig: string): boolean {
     if (dot < 1) return false;
     const exp = Number(sig.slice(0, dot));
     if (!Number.isInteger(exp)) return false;
-    if (nowSeconds() > exp) return false; // link scaduto
+    if (nowSeconds() > exp) return false; // link expired
     const provided = sig.slice(dot + 1);
     const expected = computeSig(slug, exp);
-    // Lunghezze diverse → timingSafeEqual lancerebbe: scarta prima del confronto.
+    // Different lengths → timingSafeEqual would throw: discard before comparison.
     if (provided.length !== expected.length) return false;
     try {
         return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));

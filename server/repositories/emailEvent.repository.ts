@@ -65,7 +65,7 @@ export async function insertEmailEvent(input: {
     });
 }
 
-// Aggiorna i contatori apertura sull'ospite (colonne già esistenti su `guests`).
+// Updates the open counters on the guest (columns already present on `guests`).
 export async function recordGuestOpen(guestId: string, occurredAt: Date): Promise<void> {
     const db = getDB();
     await db

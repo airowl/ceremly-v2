@@ -1,19 +1,19 @@
 /**
  * GET /api/public/pixel/:token.gif
- * Pixel di tracking apertura email (SPEC §6). Risponde SEMPRE 200 con una GIF
- * 1x1 trasparente, anche con token invalido o errore interno: un pixel non
- * deve mai produrre 500 né rivelare se il token esiste (§8.2).
+ * Email open tracking pixel (SPEC §6). ALWAYS responds 200 with a 1x1 transparent
+ * GIF, even with an invalid token or internal error: a pixel must never return
+ * 500 nor reveal whether the token exists (§8.2).
  */
 import { trackEmailOpen } from "~~/server/services/publicInvite.service";
 
-/** GIF 1x1 trasparente (43 byte). */
+/** 1x1 transparent GIF (43 bytes). */
 const TRANSPARENT_GIF = Buffer.from(
     "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
     "base64",
 );
 
 export default defineEventHandler(async (event) => {
-    // Il catch-all arriva come "{token}.gif": strippa l'estensione.
+    // The catch-all arrives as "{token}.gif": strip the extension.
     const raw = getRouterParam(event, "token") ?? "";
     const token = raw.replace(/\.gif$/i, "");
 
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
         try {
             await trackEmailOpen(token);
         } catch (e) {
-            // Errori inghiottiti di proposito: il pixel risponde comunque 200.
+            // Errors intentionally swallowed: the pixel always responds 200.
             console.error("[public.pixel.[token].get] swallowed error:", e);
         }
     }

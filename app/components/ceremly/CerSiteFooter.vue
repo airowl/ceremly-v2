@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Footer condiviso del sito pubblico (landing + sotto-pagine). Le quattro colonne
-// (Prodotto · Per chi · Risorse · Ceremly) puntano alle pagine dedicate.
+// Shared footer for the public site (landing + sub-pages). The four columns
+// (Prodotto · Per chi · Risorse · Ceremly) link to the dedicated pages.
 const { t, locale, setLocale } = useI18n()
 const localePath = useLocalePath()
 

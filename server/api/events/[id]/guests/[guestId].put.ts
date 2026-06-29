@@ -1,6 +1,6 @@
 /**
  * PUT /api/events/:id/guests/:guestId
- * Update ospite — token IMMUTABILE, email svuotabile (RBAC: requireWrite).
+ * Update guest — token IMMUTABLE, email clearable (RBAC: requireWrite).
  */
 import { updateGuestSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

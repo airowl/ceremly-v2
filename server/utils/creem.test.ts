@@ -1,7 +1,7 @@
 /**
  * Test webhook handlers: handleCheckoutCompleted + handleRefundCreated.
- * DB-backed: seed un evento free su `test-org-webhook-3-5` / `test-evt-webhook-3-5`,
- * poi verifica che il tier cambi dopo unlock/relock.
+ * DB-backed: seeds a free event on `test-org-webhook-3-5` / `test-evt-webhook-3-5`,
+ * then verifies that the tier changes after unlock/relock.
  */
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
@@ -21,7 +21,7 @@ const EVT_ID = "test-evt-webhook-3-5";
 const ORDER_ID = "order-webhook-3-5";
 
 async function seedFreeEvent() {
-    // Idempotente: cancella e ricrea sempre da zero
+    // Idempotent: always deletes and recreates from scratch
     await db.delete(schema.events).where(eq(schema.events.id, EVT_ID));
     await db.delete(schema.organization).where(eq(schema.organization.id, ORG_ID));
 
@@ -52,7 +52,7 @@ afterAll(async () => {
 describe("handleCheckoutCompleted", () => {
     beforeEach(seedFreeEvent);
 
-    it("(a) one-time + metadata.eventId → tier='celebration', creemOrderId impostato", async () => {
+    it("(a) one-time + metadata.eventId → tier='celebration', creemOrderId set", async () => {
         const payload = {
             webhookEventType: "checkout.completed",
             webhookId: "wh_test_a",
@@ -73,7 +73,7 @@ describe("handleCheckoutCompleted", () => {
         expect(evt.unlockedAt).toBeInstanceOf(Date);
     });
 
-    it("(b) recurring order → nessuna mutazione (tier resta 'free')", async () => {
+    it("(b) recurring order → no mutation (tier stays 'free')", async () => {
         const payload = {
             webhookEventType: "checkout.completed",
             webhookId: "wh_test_b",
@@ -92,7 +92,7 @@ describe("handleCheckoutCompleted", () => {
         expect(evt.creemOrderId).toBeNull();
     });
 
-    it("(c) manca metadata.eventId → nessuna mutazione", async () => {
+    it("(c) missing metadata.eventId → no mutation", async () => {
         const payload = {
             webhookEventType: "checkout.completed",
             webhookId: "wh_test_c",
@@ -115,11 +115,11 @@ describe("handleCheckoutCompleted", () => {
 describe("handleRefundCreated", () => {
     beforeEach(async () => {
         await seedFreeEvent();
-        // Metti l'evento in stato celebration (come se fosse già pagato)
+        // Put the event in celebration state (as if it were already paid)
         await unlockEvent(EVT_ID, ORG_ID, ORDER_ID);
     });
 
-    it("(d) order come oggetto → relock (tier='free')", async () => {
+    it("(d) order as object → relock (tier='free')", async () => {
         const payload = {
             webhookEventType: "refund.created",
             webhookId: "wh_test_d",
@@ -137,7 +137,7 @@ describe("handleRefundCreated", () => {
         expect(evt.unlockedAt).toBeNull();
     });
 
-    it("(e) order come stringa → relock (tier='free')", async () => {
+    it("(e) order as string → relock (tier='free')", async () => {
         const payload = {
             webhookEventType: "refund.created",
             webhookId: "wh_test_e",
@@ -155,9 +155,9 @@ describe("handleRefundCreated", () => {
         expect(evt.unlockedAt).toBeNull();
     });
 
-    it("(f) orderId solo via checkout.order.id → relock (tier='free')", async () => {
-        // Forza il branch 3 di extractCreemOrderId: nessun campo order (branch 1+2 falliscono),
-        // orderId leggibile solo da checkout.order.id
+    it("(f) orderId only via checkout.order.id → relock (tier='free')", async () => {
+        // Forces branch 3 of extractCreemOrderId: no order field (branches 1+2 fail),
+        // orderId readable only from checkout.order.id
         const payload = {
             webhookEventType: "refund.created",
             webhookId: "wh_test_f",

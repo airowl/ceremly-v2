@@ -8,7 +8,7 @@ const { fetchSession } = useAuth();
 const localePath = useLocalePath();
 const toast = useToast();
 
-// Eventi sbloccati (Celebrazione)
+// Unlocked events (Celebrazione)
 const events = ref<EventWithCounts[]>([]);
 const eventsLoading = ref(true);
 const unlockedEvents = computed(() => events.value.filter(e => e.tier === "celebration"));
@@ -20,11 +20,11 @@ async function loadEvents() {
     finally { eventsLoading.value = false; }
 }
 
-// Tier corrente
+// Current tier
 const currentTierLabel = computed(() => isAtelier.value ? t("subscription.tier.atelier") : t("subscription.tier.free"));
 const currentTierDesc = computed(() => isAtelier.value ? t("subscription.tier.atelierDesc") : t("subscription.tier.freeDesc"));
 
-// Data rinnovo (solo Atelier)
+// Renewal date (Atelier only)
 const renewalDate = computed(() => {
     const sub = subscription.value as { periodEnd?: string | Date | null } | null;
     if (!sub?.periodEnd) return null;
@@ -36,7 +36,7 @@ function formatUnlockedDate(iso: string | null): string {
     return new Date(iso).toLocaleDateString(locale.value === "it" ? "it-IT" : "en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// Gestione Atelier via portal
+// Atelier management via portal
 const isPortalLoading = ref(false);
 async function handleOpenPortal() {
     isPortalLoading.value = true;
@@ -76,7 +76,7 @@ onMounted(async () => { await Promise.all([refreshSubscription(), loadEvents()])
 
         <template #body>
             <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 space-y-10">
-                <!-- Card: piano corrente -->
+                <!-- Card: current plan -->
                 <div class="rounded-xl border border-default bg-default p-6 sm:p-8 shadow-sm">
                     <div class="flex flex-wrap items-center justify-between gap-6">
                         <div class="flex items-center gap-5">
@@ -105,7 +105,7 @@ onMounted(async () => { await Promise.all([refreshSubscription(), loadEvents()])
                     </div>
                 </div>
 
-                <!-- Eventi sbloccati (Celebrazione) -->
+                <!-- Unlocked events (Celebrazione) -->
                 <div class="space-y-4">
                     <h3 class="text-lg font-bold">{{ $t('subscription.unlockedEvents.title') }}</h3>
                     <p class="text-sm text-muted">{{ $t('subscription.unlockedEvents.subtitle') }}</p>
@@ -125,7 +125,7 @@ onMounted(async () => { await Promise.all([refreshSubscription(), loadEvents()])
                     </ul>
                 </div>
 
-                <!-- Gestione fatturazione Atelier -->
+                <!-- Atelier billing management -->
                 <div v-if="isAtelier && hasActiveSubscription" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <UPageCard :title="$t('subscription.paymentMethods.title')" variant="subtle">
                         <UButton :loading="isPortalLoading" color="neutral" variant="outline" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">{{ $t('subscription.paymentMethods.cta') }}</UButton>

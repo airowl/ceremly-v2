@@ -6,18 +6,18 @@ import { logAudit } from '~~/server/utils/audit'
 import { requireAdminApiKey } from '~~/server/utils/requireAdminApiKey'
 
 /**
- * Vercel Cron endpoint: housekeeping quotidiano.
- *  - elimina gli upload pending orfani oltre la grace period (R2);
- *  - hard-delete definitivo degli account la cui grace window è scaduta
- *    (diritto all'oblio GDPR — vedi gdpr.service.purgeDueDeletedAccounts).
- * Idempotente — safe su run mancati/duplicati. (Il purge è agganciato qui per
- * non superare il limite di cron job dei piani Vercel Hobby; resta disponibile
- * anche l'endpoint dedicato /api/cron/purge-deleted-accounts per il trigger
- * manuale admin.)
+ * Vercel Cron endpoint: daily housekeeping.
+ *  - deletes orphaned pending uploads past the grace period (R2);
+ *  - hard-deletes accounts whose grace window has expired
+ *    (GDPR right to erasure — see gdpr.service.purgeDueDeletedAccounts).
+ * Idempotent — safe on missed/duplicate runs. (The purge is hooked here to
+ * avoid exceeding the cron job limit on Vercel Hobby plans; the dedicated
+ * endpoint /api/cron/purge-deleted-accounts remains available for manual
+ * admin triggers.)
  *
- * Auth a 3 vie (coerente con send-reminders): header `x-vercel-cron` (la
- * piattaforma lo strippa dalle richieste esterne) OPPURE `Authorization:
- * Bearer ${CRON_SECRET}` OPPURE, per il trigger manuale, X-Admin-API-Key.
+ * 3-way auth (consistent with send-reminders): `x-vercel-cron` header (the
+ * platform strips it from external requests) OR `Authorization:
+ * Bearer ${CRON_SECRET}` OR, for manual triggers, X-Admin-API-Key.
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     || (Boolean(cronSecret) && authorization === `Bearer ${cronSecret}`)
 
   if (!isVercelCron) {
-    // Non è Vercel Cron: consenti solo il trigger manuale admin.
+    // Not Vercel Cron: allow only the manual admin trigger.
     await requireAdminApiKey(event)
   }
 
@@ -37,8 +37,8 @@ export default defineEventHandler(async (event) => {
 
   const files = await cleanupOrphanFiles(storage, 1)
 
-  // Hard-delete degli account programmati la cui grace window è scaduta.
-  // Isolato: un suo errore non deve far fallire la pulizia file.
+  // Hard-delete of scheduled accounts whose grace window has expired.
+  // Isolated: its errors must not cause the file cleanup to fail.
   let accounts: Awaited<ReturnType<typeof purgeDueDeletedAccounts>> | { error: string }
   try {
     accounts = await purgeDueDeletedAccounts()

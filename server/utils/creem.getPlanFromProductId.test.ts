@@ -7,12 +7,12 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
 describe("getPlanFromProductId", () => {
     beforeEach(() => vi.resetModules());
 
-    it("mappa il prodotto Atelier -> 'atelier'", async () => {
+    it("maps the Atelier product -> 'atelier'", async () => {
         const { getPlanFromProductId } = await import("~~/server/utils/creem");
         expect(getPlanFromProductId("prod_atelier_x")).toBe("atelier");
     });
 
-    it("ritorna null per un productId sconosciuto (incluso Celebrazione, che è one-time)", async () => {
+    it("returns null for an unknown productId (including Celebrazione, which is one-time)", async () => {
         const { getPlanFromProductId } = await import("~~/server/utils/creem");
         expect(getPlanFromProductId("prod_celeb_x")).toBeNull();
         expect(getPlanFromProductId("prod_unknown")).toBeNull();

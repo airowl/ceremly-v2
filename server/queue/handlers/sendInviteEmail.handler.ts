@@ -8,22 +8,22 @@ import {
   buildGuestPixelUrl,
 } from '~~/server/services/distribution.service'
 
-/** Corpo di fallback se event.distribution non ha ancora un emailBody. */
+/** Fallback body if event.distribution does not yet have an emailBody. */
 const FALLBACK_INVITE_BODY
   = 'Ciao {nome},\n\nc\'è un invito che ti aspetta. Apri il link per scoprire tutti i dettagli e confermare la tua presenza:\n{link}'
 
 /**
- * Invia l'email d'invito a UN ospite (1 job per ospite, SPEC §6).
- * Re-fetch guest+event dal DB (il payload porta solo l'id); subject/body
- * arrivano da event.distribution (salvati dal service prima del dispatch),
- * con {nome}/{link} sostituiti qui. Skip SILENZIOSO se l'ospite è stato
- * rimosso o non ha email (può cambiare tra enqueue e delivery).
- * Su invio fallito lancia → QStash ritenta.
+ * Sends the invite email to ONE guest (1 job per guest, SPEC §6).
+ * Re-fetches guest+event from the DB (the payload carries only the id); subject/body
+ * come from event.distribution (saved by the service before dispatch),
+ * with {nome}/{link} substituted here. SILENT skip if the guest has been
+ * removed or has no email (can change between enqueue and delivery).
+ * On send failure, throws → QStash retries.
  */
 export async function handleSendInviteEmail(payload: JobPayload<'send-invite-email'>): Promise<void> {
   const row = await findGuestForEmail(payload.guestId)
   if (!row) {
-    console.warn(`[job:send-invite-email] guest ${payload.guestId} non trovato, skip`)
+    console.warn(`[job:send-invite-email] guest ${payload.guestId} not found, skip`)
     return
   }
   const { guest, event } = row
@@ -52,6 +52,6 @@ export async function handleSendInviteEmail(payload: JobPayload<'send-invite-ema
 
   const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
   if (!result.success) {
-    throw new Error(`[job:send-invite-email] invio fallito per guest ${guest.id}: ${result.error}`)
+    throw new Error(`[job:send-invite-email] send failed for guest ${guest.id}: ${result.error}`)
   }
 }

@@ -1,6 +1,6 @@
 /**
  * GET /api/organizations
- * Lista le organizzazioni di cui l'utente è membro.
+ * Lists the organizations the user is a member of.
  */
 import { listOrganizations } from "~~/server/services/organization.service";
 

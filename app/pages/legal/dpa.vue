@@ -5,7 +5,7 @@ definePageMeta({
 
 const { t } = useI18n()
 
-// Email brand: env-driven (fuori da i18n per il carattere '@')
+// Brand email: env-driven (outside i18n due to the '@' character)
 const legalEmail = useRuntimeConfig().public.legalEmail
 </script>
 
@@ -31,7 +31,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
           <div class="prose prose-neutral dark:prose-invert max-w-none">
             <UDivider class="my-8" />
 
-            <!-- Sintesi -->
+            <!-- Summary -->
             <section class="mb-12">
               <div class="bg-elevated rounded-lg p-6">
                 <h2 class="text-2xl font-bold text-highlighted mb-4">
@@ -48,7 +48,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 1) Oggetto, durata e finalità -->
+            <!-- 1) Subject, duration and purpose -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.purpose.number') }}. {{ t('dpa.sections.purpose.title') }}
@@ -60,7 +60,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 2) Categorie di interessati e dati -->
+            <!-- 2) Categories of data subjects and data -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.categories.number') }}. {{ t('dpa.sections.categories.title') }}
@@ -78,7 +78,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 3) Istruzioni e conformità -->
+            <!-- 3) Instructions and compliance -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.instructions.number') }}. {{ t('dpa.sections.instructions.title') }}
@@ -90,7 +90,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 4) Riservatezza -->
+            <!-- 4) Confidentiality -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.confidentiality.number') }}. {{ t('dpa.sections.confidentiality.title') }}
@@ -102,7 +102,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 5) Sicurezza -->
+            <!-- 5) Security -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.security.number') }}. {{ t('dpa.sections.security.title') }}
@@ -114,7 +114,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 6) Sub-responsabili -->
+            <!-- 6) Sub-processors -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.subprocessors.number') }}. {{ t('dpa.sections.subprocessors.title') }}
@@ -129,7 +129,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 7) Assistenza al Titolare -->
+            <!-- 7) Assistance to the Controller -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.assistance.number') }}. {{ t('dpa.sections.assistance.title') }}
@@ -141,7 +141,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 8) Violazioni -->
+            <!-- 8) Breaches -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.breach.number') }}. {{ t('dpa.sections.breach.title') }}
@@ -153,7 +153,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 9) Cancellazione o restituzione -->
+            <!-- 9) Deletion or return -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.deletion.number') }}. {{ t('dpa.sections.deletion.title') }}
@@ -165,7 +165,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 10) Audit e prove -->
+            <!-- 10) Audit and evidence -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.audit.number') }}. {{ t('dpa.sections.audit.title') }}
@@ -177,7 +177,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 11) Trasferimenti extra SEE -->
+            <!-- 11) Extra-EEA transfers -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.transfers.number') }}. {{ t('dpa.sections.transfers.title') }}
@@ -189,7 +189,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- 12) Gerarchia -->
+            <!-- 12) Hierarchy -->
             <section class="mb-12">
               <h2 class="text-3xl font-bold text-highlighted mb-6">
                 {{ t('dpa.sections.hierarchy.number') }}. {{ t('dpa.sections.hierarchy.title') }}
@@ -201,7 +201,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
             <UDivider class="my-8" />
 
-            <!-- Allegato A -->
+            <!-- Annex A -->
             <section class="mb-12">
               <div class="bg-elevated rounded-lg p-6">
                 <h2 class="text-2xl font-bold text-highlighted mb-6">

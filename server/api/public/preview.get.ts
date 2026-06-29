@@ -1,8 +1,8 @@
 /**
  * GET /api/public/preview?slug=&sig=
- * Anteprima firmata dell'invito (link della "Invia un test a me"). NESSUNA auth:
- * la firma HMAC è l'autorità. 404 generico se la firma non è valida o lo slug
- * non esiste (niente enumeration, §8.2). Nessun side-effect di tracking.
+ * Signed invite preview (the "Send a test to me" link). NO auth:
+ * the HMAC signature is the authority. Generic 404 if the signature is invalid or the
+ * slug does not exist (no enumeration, §8.2). No tracking side-effects.
  */
 import { getInvitePreview } from "~~/server/services/publicInvite.service";
 import { previewQuerySchema } from "~~/shared/schemas/ceremly";

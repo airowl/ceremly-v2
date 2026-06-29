@@ -9,9 +9,9 @@ definePageMeta({
 
 const route = useRoute();
 
-// Le route Ceremly (layout 'ceremly' in definePageMeta) sono figlie annidate di
-// questa pagina parent legacy: per loro questo componente è un puro passthrough,
-// altrimenti UDashboardGroup (fixed inset-0) coprirebbe la shell Ceremly.
+// Ceremly routes (layout 'ceremly' in definePageMeta) are nested children of
+// this legacy parent page: for them this component is a pure passthrough,
+// otherwise UDashboardGroup (fixed inset-0) would cover the Ceremly shell.
 const isCeremlyRoute = computed(() => route.meta.layout === "ceremly");
 
 const open = ref(false);
@@ -100,7 +100,7 @@ watch([() => route.name, locale], () => {
 </script>
 
 <template>
-    <!-- Route Ceremly: passthrough — il layout 'ceremly' è già applicato da app.vue -->
+    <!-- Ceremly route: passthrough — the 'ceremly' layout is already applied by app.vue -->
     <NuxtPage v-if="isCeremlyRoute" />
 
     <NuxtLayout v-else name="dashboard">

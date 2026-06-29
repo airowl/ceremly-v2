@@ -1,7 +1,7 @@
 /**
  * PUT /api/events/:id/reminders
- * Bulk upsert reminder (RBAC: requireWrite). 422 se il totale supera i 3;
- * i reminder già inviati sono immutabili (skip silenzioso nel service).
+ * Bulk upsert of reminders (RBAC: requireWrite). 422 if the total exceeds 3;
+ * already-sent reminders are immutable (silent skip in the service).
  */
 import { remindersSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

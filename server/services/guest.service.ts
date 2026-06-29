@@ -1,8 +1,8 @@
 /**
- * Guest Service — logica di business degli ospiti Ceremly (SPEC §6, owner B1).
+ * Guest Service — business logic for Ceremly guests (SPEC §6, owner B1).
  *
- * Pattern project.service: org da context, repository scoped, assertOwnership
- * sui by-id, logAudit su ogni scrittura organizzatore.
+ * Pattern project.service: org from context, scoped repository, assertOwnership
+ * on by-id lookups, logAudit on every organizer write.
  */
 import QRCode from "qrcode";
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
@@ -37,14 +37,14 @@ import { getEventLimits } from "./eventAccess.service";
 
 const GUEST_CAPACITY_REASON = "Limite ospiti dell'evento raggiunto";
 
-/** True se il 23505 viene dall'indice unique email (non dalla collisione token). */
+/** True if the 23505 comes from the unique email index (not a token collision). */
 function isEmailUniqueViolation(e: unknown): boolean {
     const err = e as { constraint?: string; message?: string; detail?: string };
     const haystack = `${err.constraint ?? ""} ${err.message ?? ""} ${err.detail ?? ""}`;
     return haystack.includes("guests_event_email_unique_idx");
 }
 
-/** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
+/** Reads the active org from context. 401 if absent (RBAC guard not executed). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
     if (!orgId) {
@@ -56,7 +56,7 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
     return orgId;
 }
 
-/** Evento scoped + assertOwnership (guard comune a tutte le route nested). */
+/** Scoped event + assertOwnership (common guard for all nested routes). */
 async function requireEventScoped(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -66,13 +66,13 @@ async function requireEventScoped(
     return { organizationId, eventRow: assertOwnership(eventRow, organizationId) };
 }
 
-/** Normalizza l'email dei form/CSV: stringa vuota → null. */
+/** Normalises email from forms/CSV: empty string → null. */
 function normalizeEmail(email: string | null | undefined): string | null {
     const trimmed = email?.trim();
     return trimmed ? trimmed : null;
 }
 
-/** Stato derivato (SPEC §6): risposta → attending; altrimenti opened/not_opened. */
+/** Derived status (SPEC §6): response → attending; otherwise opened/not_opened. */
 function deriveRsvpStatus(
     attending: string | null,
     firstOpenedAt: Date | null,
@@ -84,12 +84,12 @@ function deriveRsvpStatus(
 }
 
 // ---------------------------------------------------------------------------
-// Lista + dettaglio
+// List + detail
 // ---------------------------------------------------------------------------
 
 /**
- * Tutti gli ospiti dell'evento (anche removed, flag `removedAt`) con stato
- * derivato, respondedAt e totalPeople (1+companions se confirmed) + summary.
+ * All event guests (including removed, flag `removedAt`) with derived status,
+ * respondedAt, and totalPeople (1+companions if confirmed) + summary.
  */
 export async function listGuests(event: H3Event<EventHandlerRequest>, eventId: string) {
     const { organizationId } = await requireEventScoped(event, eventId);
@@ -105,7 +105,7 @@ export async function listGuests(event: H3Event<EventHandlerRequest>, eventId: s
         };
     });
 
-    // Summary per header/filtri (solo ospiti attivi, come i counts della lista eventi).
+    // Summary for header/filters (active guests only, matching event list counts).
     const active = guests.filter((g) => !g.removedAt);
     const summary = {
         total: active.length,
@@ -120,7 +120,7 @@ export async function listGuests(event: H3Event<EventHandlerRequest>, eventId: s
     return { guests, summary };
 }
 
-/** Dettaglio ospite: guest + response completa + attività ordinate desc. */
+/** Guest detail: guest + full response + activities ordered desc. */
 export async function getGuest(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -137,10 +137,10 @@ export async function getGuest(
 }
 
 // ---------------------------------------------------------------------------
-// Scritture
+// Writes
 // ---------------------------------------------------------------------------
 
-/** Crea un ospite con token nuovo. Limite Free 30 ospiti/evento → 402. */
+/** Creates a guest with a new token. Free limit 30 guests/event → 402. */
 export async function createGuest(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -148,15 +148,15 @@ export async function createGuest(
 ) {
     const { organizationId, eventRow } = await requireEventScoped(event, eventId);
 
-    // Limite ospiti tier-aware (design §5): -1 = illimitato (atelier).
-    // #2 TOCTOU: check-then-insert non atomico (rischio accettato, impatto basso
-    // — limit-bypass, no leak; fix atomico non fattibile sul driver Neon HTTP).
+    // Tier-aware guest limit (design §5): -1 = unlimited (atelier).
+    // #2 TOCTOU: check-then-insert is non-atomic (accepted risk, low impact
+    // — limit-bypass, no leak; atomic fix not feasible on the Neon HTTP driver).
     const limits = await getEventLimits(eventRow);
     if (limits.maxGuestsPerEvent !== -1) {
         const current = await countActiveGuests(organizationId, eventId);
         if (current >= limits.maxGuestsPerEvent) {
-            // Messaggio tier-aware: per Celebrazione (già sbloccato, cap 250) il
-            // messaggio "passa a Celebrazione" non ha senso — evento già celebration.
+            // Tier-aware message: for Celebration (already unlocked, cap 250) the
+            // "upgrade to Celebration" message makes no sense — event already celebration.
             const statusMessage = limits.maxGuestsPerEvent === 250
                 ? "Hai raggiunto il limite di 250 ospiti per questo evento."
                 : `Questo evento include fino a ${limits.maxGuestsPerEvent} ospiti. Sblocca con Celebrazione per aggiungerne altri.`;
@@ -166,8 +166,8 @@ export async function createGuest(
 
     const normalizedEmail = normalizeEmail(data.email);
 
-    // #22: unicità email per evento (ospiti attivi). Pre-check per un 409 chiaro
-    // nel caso comune; l'indice unique parziale resta il guard reale sulle race.
+    // #22: email uniqueness per event (active guests). Pre-check for a clear 409
+    // in the common case; the partial unique index remains the real guard under races.
     if (normalizedEmail && await activeGuestEmailExists(organizationId, eventId, normalizedEmail)) {
         throw createError({
             statusCode: 409,
@@ -175,9 +175,9 @@ export async function createGuest(
         });
     }
 
-    // Collisione token (unique) astronomicamente rara: retry difensivo su 23505.
-    // Un 23505 dall'indice email (race) → 409 chiaro, NON retry (il token nuovo
-    // non risolverebbe il conflitto di email).
+    // Token collision (unique) is astronomically rare: defensive retry on 23505.
+    // A 23505 from the email index (race) → clear 409, NOT a retry (a new token
+    // would not resolve the email conflict).
     let created: Awaited<ReturnType<typeof createGuestRow>>;
     const maxAttempts = 3;
     for (let attempt = 1; ; attempt++) {
@@ -200,7 +200,7 @@ export async function createGuest(
                         statusMessage: `Esiste già un ospite con l'email ${normalizedEmail} per questo evento.`,
                     });
                 }
-                if (attempt < maxAttempts) continue; // collisione token → retry
+                if (attempt < maxAttempts) continue; // token collision → retry
             }
             throw e;
         }
@@ -218,7 +218,7 @@ export async function createGuest(
     return { guest: created };
 }
 
-/** Update ospite (token IMMUTABILE; email svuotabile: '' o null → null). */
+/** Update guest (token IMMUTABLE; email clearable: '' or null → null). */
 export async function updateGuest(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -256,7 +256,7 @@ export async function updateGuest(
     return { guest };
 }
 
-/** Soft-delete: link inattivo, risposta conservata (PRD edge case). */
+/** Soft-delete: link deactivated, response preserved (PRD edge case). */
 export async function softDeleteGuest(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -276,20 +276,20 @@ export async function softDeleteGuest(
 }
 
 // ---------------------------------------------------------------------------
-// Import bulk (SPEC §6 POST /api/events/:id/guests/import)
+// Bulk import (SPEC §6 POST /api/events/:id/guests/import)
 // ---------------------------------------------------------------------------
 
 export interface ImportRowIssue {
-    /** Indice 1-based nella lista `rows` inviata. */
+    /** 1-based index in the submitted `rows` list. */
     row: number;
     reason: string;
 }
 
 /**
- * Import bulk (righe già validate da importGuestsSchema):
- * - warnings per duplicati nome+cognome (case-insensitive) vs DB e intra-batch
- *   (la riga viene comunque importata);
- * - rispetta il limite Free: importa fino al limite, il resto in `skipped`.
+ * Bulk import (rows already validated by importGuestsSchema):
+ * - warnings for first+last name duplicates (case-insensitive) vs DB and intra-batch
+ *   (the row is imported anyway);
+ * - respects the Free limit: imports up to the limit, the rest go into `skipped`.
  */
 export async function importGuests(
     event: H3Event<EventHandlerRequest>,
@@ -304,7 +304,7 @@ export async function importGuests(
         findActiveGuestNames(organizationId, eventId),
         findActiveGuestEmails(organizationId, eventId),
     ]);
-    // -1 = illimitato (atelier) -> Infinity. Altrimenti spazio residuo nel limite.
+    // -1 = unlimited (atelier) -> Infinity. Otherwise the remaining space in the limit.
     let capacity = limits.maxGuestsPerEvent === -1
         ? Number.POSITIVE_INFINITY
         : Math.max(0, limits.maxGuestsPerEvent - current);
@@ -312,9 +312,9 @@ export async function importGuests(
     const nameKey = (firstName: string, lastName: string) =>
         `${firstName.trim().toLowerCase()}|${lastName.trim().toLowerCase()}`;
     const knownNames = new Set(existingNames.map((n) => nameKey(n.firstName, n.lastName)));
-    // #22: email già attive (DB + intra-batch). L'indice unique parziale rifiuta
-    // i duplicati di email, quindi qui li si SALTA (skip rigido) invece di farli
-    // fallire l'intero insert bulk con un 23505.
+    // #22: already active emails (DB + intra-batch). The partial unique index rejects
+    // email duplicates, so here they are SKIPPED (hard skip) instead of letting them
+    // fail the entire bulk insert with a 23505.
     const knownEmails = new Set(existingEmails);
 
     const toInsert: CreateGuestValues[] = [];
@@ -329,7 +329,7 @@ export async function importGuests(
         }
         const email = normalizeEmail(row.email);
         if (email && knownEmails.has(email.toLowerCase())) {
-            // Email duplicata (ospite attivo esistente o già vista nel file): skip.
+            // Duplicate email (existing active guest or already seen in file): skip.
             skipped.push({
                 row: rowNumber,
                 reason: `Email «${email}» già presente per questo evento`,
@@ -340,7 +340,7 @@ export async function importGuests(
 
         const key = nameKey(row.firstName, row.lastName);
         if (knownNames.has(key)) {
-            // Duplicato di NOME (DB o intra-batch): si importa comunque, ma si segnala.
+            // NAME duplicate (DB or intra-batch): imported anyway, but flagged.
             warnings.push({
                 row: rowNumber,
                 reason: `Possibile duplicato: «${row.firstName} ${row.lastName}» è già in lista`,
@@ -359,9 +359,9 @@ export async function importGuests(
         capacity--;
     });
 
-    // Collisione token (unique) nel batch (23505): astronomicamente rara, ma
-    // farebbe fallire l'intero import. Rigenera i token di TUTTE le righe e
-    // ritenta UNA volta; se collide ancora, errore chiaro.
+    // Token collision (unique) in the batch (23505): astronomically rare, but
+    // would fail the entire import. Regenerate tokens for ALL rows and
+    // retry ONCE; if it collides again, surface a clear error.
     let inserted: Awaited<ReturnType<typeof createGuestsBulk>>;
     try {
         inserted = await createGuestsBulk(organizationId, eventId, toInsert);
@@ -394,7 +394,7 @@ export async function importGuests(
 // QR code (SPEC §6 GET /api/events/:id/guests/:guestId/qr)
 // ---------------------------------------------------------------------------
 
-/** PNG QR del link personale `{baseURL}/e/{slug}/{token}` (width 600, margin 2). */
+/** PNG QR of the personal link `{baseURL}/e/{slug}/{token}` (width 600, margin 2). */
 export async function getGuestQrPng(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -426,17 +426,17 @@ function isPerPersonAnswer(value: unknown): value is RsvpPerPersonAnswer {
 }
 
 /**
- * Escape di una cella CSV in due passi:
- * 1. anti formula-injection (CWE-1236): i valori che iniziano con `= + - @`
- *    o TAB/CR vengono prefissati con apostrofo `'` così Excel/LibreOffice/
- *    Sheets li trattano come testo (le answers arrivano dall'endpoint RSVP
- *    pubblico non autenticato, nome/gruppo/email anche da CSV importato);
- * 2. quoting RFC 4180: virgolette se il campo contiene `, " \n \r`.
+ * CSV cell escape in two steps:
+ * 1. anti formula-injection (CWE-1236): values starting with `= + - @`
+ *    or TAB/CR are prefixed with an apostrophe `'` so Excel/LibreOffice/
+ *    Sheets treat them as text (answers come from the unauthenticated public
+ *    RSVP endpoint; name/group/email may also come from imported CSV);
+ * 2. RFC 4180 quoting: double-quote if the field contains `, " \n \r`.
  */
 function csvEscape(value: string): string {
-    // Eccezione: contenuto puramente numerico con segno iniziale (telefoni
-    // '+39 ...', range '-5') non può formare una formula con funzioni — resta
-    // intatto per non alterare il dato esportato.
+    // Exception: purely numeric content with a leading sign (phone numbers
+    // '+39 ...', ranges '-5') cannot form a formula with functions — left
+    // intact so as not to alter the exported data.
     const numericLike = /^[+-][\d\s().\-/]*$/.test(value);
     const cell = /^[=+\-@\t\r]/.test(value) && !numericLike ? `'${value}` : value;
     if (/[",\n\r]/.test(cell)) {
@@ -445,7 +445,7 @@ function csvEscape(value: string): string {
     return cell;
 }
 
-/** Valore singolo umano-leggibile (boolean → Sì/No, multiple → '; '). */
+/** Single human-readable value (boolean → Sì/No, multiple → '; '). */
 function formatFlatValue(value: RsvpAnswerValue | null | undefined): string {
     if (value === null || value === undefined) return "";
     if (typeof value === "boolean") return value ? "Sì" : "No";
@@ -453,7 +453,7 @@ function formatFlatValue(value: RsvpAnswerValue | null | undefined): string {
     return String(value);
 }
 
-/** Cella per una domanda: perPerson → self e accompagnatori joinati con ' / '. */
+/** Cell for a question: perPerson → self and companions joined with ' / '. */
 function formatAnswerCell(q: RsvpQuestion, answers: RsvpAnswers): string {
     const raw = answers[q.id];
     if (raw === undefined || raw === null) return "";
@@ -479,9 +479,9 @@ const STATUS_LABELS: Record<GuestRsvpStatus, string> = {
 };
 
 /**
- * CSV ospiti (UTF-8 BOM, separatore virgola, CRLF, quoting RFC 4180):
- * colonne fisse + 1 colonna dinamica per domanda di rsvpConfig
- * ('attendance' esclusa: è già la colonna "Stato"). Esclude gli ospiti removed.
+ * Guest CSV (UTF-8 BOM, comma separator, CRLF, RFC 4180 quoting):
+ * fixed columns + 1 dynamic column per rsvpConfig question
+ * ('attendance' excluded: it is already the "Stato" column). Excludes removed guests.
  */
 export async function exportGuestsCsv(
     event: H3Event<EventHandlerRequest>,
@@ -533,7 +533,7 @@ export async function exportGuestsCsv(
         lines.push(cells.map(csvEscape).join(","));
     }
 
-    // BOM (\ufeff) per Excel + CRLF come da RFC 4180.
+    // BOM (\ufeff) for Excel + CRLF as per RFC 4180.
     const csv = `\ufeff${lines.join("\r\n")}\r\n`;
     return { csv, filename: `ospiti-${eventRow.slug}.csv` };
 }

@@ -1,8 +1,8 @@
 /**
  * GET /api/public/invite/:token
- * Invito pubblico ospite (SPEC §6.2) — NESSUNA auth: lookup SOLO by token (§8.2).
- * 404 generico e indistinguibile (token inesistente / ospite rimosso / evento draft).
- * Side-effect tracking (firstOpenedAt, openCount, activity) nel service.
+ * Public guest invite (SPEC §6.2) — NO auth: lookup by token ONLY (§8.2).
+ * Generic and indistinguishable 404 (non-existent token / removed guest / draft event).
+ * Side-effect tracking (firstOpenedAt, openCount, activity) in the service.
  */
 import { getPublicInvite } from "~~/server/services/publicInvite.service";
 

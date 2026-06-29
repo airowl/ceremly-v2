@@ -1,16 +1,16 @@
 <script setup lang="ts">
-// Paywall per-evento: intercetta il 402 (limite Free) e propone lo sblocco
-// Celebrazione (€39 una tantum). Lo sblocco crea il checkout Creem server-side
-// e fa redirect — vedi useSubscription().unlockEvent.
+// Per-event paywall: intercepts the 402 (Free plan limit) and offers the
+// Celebration unlock (€39 one-time). The unlock creates a Creem checkout
+// server-side and redirects — see useSubscription().unlockEvent.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import { CELEBRATION_PRICE_CENTS } from "~~/shared/constants/pricing";
 
 const props = defineProps<{
-    /** Apertura controllata dal genitore (v-model:open). */
+    /** Opening controlled by the parent (v-model:open). */
     open: boolean;
-    /** Evento da sbloccare. */
+    /** Event to unlock. */
     eventId: string;
-    /** Messaggio dal 402. */
+    /** Message from the 402. */
     reason?: string;
 }>();
 
@@ -32,8 +32,8 @@ function onClose() { emit("update:open", false); emit("close"); }
 async function onUnlock() {
     loading.value = true;
     try {
-        // unlockEvent fa redirect al checkout Creem: in caso di successo la
-        // pagina cambia e questo codice non prosegue.
+        // unlockEvent redirects to the Creem checkout: on success the
+        // page changes and this code does not continue.
         await unlockEvent(props.eventId);
     } catch {
         loading.value = false;

@@ -46,21 +46,21 @@ beforeEach(() => {
 });
 
 describe("POST /api/webhooks/resend", () => {
-    it("processa e setta il dedup a successo", async () => {
+    it("processes and sets dedup to success", async () => {
         const r = await (handler as any)({});
         expect(handleResendEvent).toHaveBeenCalledOnce();
         expect(set).toHaveBeenCalledWith("resend:webhook:id1", "1", 86400);
         expect(r).toEqual({ ok: true });
     });
 
-    it("dedup hit → non riprocessa", async () => {
+    it("dedup hit → does not reprocess", async () => {
         get.mockResolvedValueOnce("1");
         const r = await (handler as any)({});
         expect(handleResendEvent).not.toHaveBeenCalled();
         expect(r).toEqual({ ok: true, deduped: true });
     });
 
-    it("firma invalida → lancia 401", async () => {
+    it("invalid signature → throws 401", async () => {
         verifyResendEvent.mockImplementationOnce(() => {
             throw new Error("bad signature");
         });
@@ -68,14 +68,14 @@ describe("POST /api/webhooks/resend", () => {
         expect((err as any).statusCode).toBe(401);
     });
 
-    it("dominio esterno → skip senza processare", async () => {
+    it("external domain → skip without processing", async () => {
         isOwnDomain.mockReturnValueOnce(false);
         const r = await (handler as any)({});
         expect(handleResendEvent).not.toHaveBeenCalled();
         expect(r).toEqual({ ok: true, skipped: "foreign-domain" });
     });
 
-    it("body vuoto → lancia 400", async () => {
+    it("empty body → throws 400", async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (readRawBodyMock as any).mockImplementationOnce(() => Promise.resolve(undefined));
         const err = await (handler as any)({}).catch((e: unknown) => e);

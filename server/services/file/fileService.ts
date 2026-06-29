@@ -85,9 +85,9 @@ export class FileService {
     if (eventId) {
       conditions.push(eq(fileTable.organizationId, eventId))
     } else {
-      // Scope globale: i record si inseriscono con organizationId NULL (riga
-      // `organizationId: eventId || null`), quindi serve IS NULL — `= ''` non
-      // matchava mai e la dedup era di fatto disattivata per i file globali.
+      // Global scope: records are inserted with organizationId NULL (line
+      // `organizationId: eventId || null`), so IS NULL is required — `= ''`
+      // never matched and dedup was effectively disabled for global files.
       conditions.push(isNull(fileTable.organizationId))
     }
 
@@ -570,9 +570,9 @@ export class FileService {
     }
 
     // Private file — enforce ownership before signing a download URL.
-    // Criterio base uploader-only: i record legacy hanno organizationId NULL,
-    // quindi il match su uploadedBy resta il gate primario. 404 (non 403) per
-    // non fare da oracolo sull'esistenza degli id. Coerente con [id].delete.ts.
+    // Basic uploader-only criterion: legacy records have organizationId NULL,
+    // so the uploadedBy match remains the primary gate. 404 (not 403) to avoid
+    // acting as an oracle for id existence. Consistent with [id].delete.ts.
     if (!userId || file.uploadedBy !== userId) {
       throw createError({ statusCode: 404, message: 'File not found' })
     }

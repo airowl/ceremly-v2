@@ -1,7 +1,7 @@
 /**
- * Zod schemas Ceremly (SPEC §5). Shape allineate a shared/types/ceremly.ts:
- * i tipi restano la documentazione, questi schema sono la validazione runtime
- * (parseBody/parseQueryParams nelle route).
+ * Ceremly Zod schemas (SPEC §5). Shapes aligned with shared/types/ceremly.ts:
+ * the types remain the documentation, these schemas are the runtime validation
+ * (parseBody/parseQueryParams in routes).
  */
 import { z } from "zod";
 import { isCatalogFont } from "../constants/inviteTheme";
@@ -19,11 +19,11 @@ export const themeSchema = z.object({
     onAccent: hexColorSchema,
 });
 
-/** Email opzionale: accetta anche stringa vuota (form/CSV), il service la normalizza a null. */
+/** Optional email: also accepts an empty string (form/CSV), the service normalises it to null. */
 const optionalEmail = z.union([z.string().email(), z.literal("")]).optional();
 
 // ---------------------------------------------------------------------------
-// Blocchi invito (§3.1) — discriminated union su `type`
+// Invite blocks (§3.1) — discriminated union on `type`
 // ---------------------------------------------------------------------------
 
 const programItemSchema = z.object({
@@ -65,9 +65,9 @@ export const blockSchema = z.discriminatedUnion("type", [
             name: z.string().max(200),
             address: z.string().max(300),
             showMap: z.boolean(),
-            // Solo http(s) o vuoto: blocca schemi pericolosi (javascript:, data:)
-            // che verrebbero resi in :href sulla pagina invito pubblica (XSS al
-            // click). z.url() da solo NON basta: accetta javascript: come URL valido.
+            // Only http(s) or empty: blocks dangerous schemes (javascript:, data:)
+            // that would be rendered in :href on the public invite page (XSS on
+            // click). z.url() alone is NOT enough: it accepts javascript: as a valid URL.
             mapsUrl: z.string().max(1000).refine(
                 (v) => v.trim() === "" || /^https?:\/\//i.test(v.trim()),
                 { message: "L'URL della mappa deve iniziare con http:// o https://" },
@@ -115,7 +115,7 @@ export const blockSchema = z.discriminatedUnion("type", [
 export type BlockInput = z.infer<typeof blockSchema>;
 
 // ---------------------------------------------------------------------------
-// Domande RSVP (§3.2)
+// RSVP questions (§3.2)
 // ---------------------------------------------------------------------------
 
 export const rsvpQuestionTypeEnum = z.enum(["text", "single", "multiple", "number", "boolean"]);
@@ -154,7 +154,7 @@ export const rsvpQuestionSchema = z
 export type RsvpQuestionInput = z.infer<typeof rsvpQuestionSchema>;
 
 // ---------------------------------------------------------------------------
-// Eventi
+// Events
 // ---------------------------------------------------------------------------
 
 export const distributionSchema = z.object({
@@ -194,7 +194,7 @@ export const updateEventSchema = z.object({
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 
 // ---------------------------------------------------------------------------
-// Ospiti
+// Guests
 // ---------------------------------------------------------------------------
 
 export const createGuestSchema = z.object({
@@ -224,7 +224,7 @@ export const importGuestsSchema = z.object({
 export type ImportGuestsInput = z.infer<typeof importGuestsSchema>;
 
 // ---------------------------------------------------------------------------
-// Distribuzione e RSVP pubblico
+// Distribution and public RSVP
 // ---------------------------------------------------------------------------
 
 export const sendInvitesSchema = z.object({
@@ -234,15 +234,15 @@ export const sendInvitesSchema = z.object({
 });
 export type SendInvitesInput = z.infer<typeof sendInvitesSchema>;
 
-/** Body di POST /api/events/:id/mark-sent (bottone "Copia" WhatsApp). */
+/** Body of POST /api/events/:id/mark-sent (WhatsApp "Copy" button). */
 export const markSentSchema = z.object({
     guestIds: z.array(nonEmptyString).min(1).max(500),
 });
 export type MarkSentInput = z.infer<typeof markSentSchema>;
 
 /**
- * Body OPZIONALE di POST /api/events/:id/send-test: override di oggetto/corpo
- * per l'anteprima. `.default({})` accetta anche la richiesta senza body.
+ * OPTIONAL body of POST /api/events/:id/send-test: subject/body override
+ * for the preview. `.default({})` also accepts requests with no body.
  */
 export const sendTestSchema = z.object({
     subject: nonEmptyString.max(200).optional(),
@@ -250,18 +250,18 @@ export const sendTestSchema = z.object({
 }).default({});
 export type SendTestInput = z.infer<typeof sendTestSchema>;
 
-/** Body di POST /api/public/invite/:token/rsvp; `answers` è poi validato da validateRsvpSubmission. */
+/** Body of POST /api/public/invite/:token/rsvp; `answers` is then validated by validateRsvpSubmission. */
 export const publicRsvpSchema = z.object({
     attending: attendingEnum,
     companionsCount: z.number().int().min(0).max(10).default(0),
     answers: z.record(z.string(), z.unknown()).default({}),
-    // `.nullish()`: il client (RsvpFormRenderer) emette sempre la chiave, con
-    // null per attending != 'no'; il service normalizza comunque a null.
+    // `.nullish()`: the client (RsvpFormRenderer) always emits the key, with
+    // null for attending != 'no'; the service normalises it to null regardless.
     declineMessage: z.string().max(1000).nullish(),
 });
 export type PublicRsvpInput = z.infer<typeof publicRsvpSchema>;
 
-/** Query di GET /api/public/preview: slug + firma HMAC (anteprima dell'invito). */
+/** Query for GET /api/public/preview: slug + HMAC signature (invite preview). */
 export const previewQuerySchema = z.object({
     slug: z.string().min(1).max(200),
     sig: z.string().min(1).max(200),
@@ -269,7 +269,7 @@ export const previewQuerySchema = z.object({
 export type PreviewQueryInput = z.infer<typeof previewQuerySchema>;
 
 // ---------------------------------------------------------------------------
-// Reminder
+// Reminders
 // ---------------------------------------------------------------------------
 
 export const remindersSchema = z.object({

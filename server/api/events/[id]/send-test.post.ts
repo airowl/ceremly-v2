@@ -1,7 +1,7 @@
 /**
  * POST /api/events/:id/send-test
- * Invia subito l'email d'invito di prova all'utente corrente, con ospite
- * d'esempio "Anna" (RBAC: requireWrite). Body opzionale: override subject/body.
+ * Immediately sends the test invite email to the current user, with sample
+ * guest "Anna" (RBAC: requireWrite). Optional body: override subject/body.
  */
 import { sendTestSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

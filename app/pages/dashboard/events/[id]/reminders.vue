@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Reminder automatici — port fedele di docs/ui/project/screens/reminders.jsx.
-// Sinistra: deadline RSVP + fino a 3 ReminderCard editabili (R1/R2/R3).
-// Destra: destinatari, esclusioni per ospite (remindersDisabled), card "Niente spam".
-// Salvataggio: PUT /api/events/:id/reminders (bulk) + PUT rsvpDeadline se cambiata.
+// Automatic reminders — faithful port of docs/ui/project/screens/reminders.jsx.
+// Left: RSVP deadline + up to 3 editable ReminderCards (R1/R2/R3).
+// Right: recipients, per-guest exclusions (remindersDisabled), "No spam" card.
+// Save: PUT /api/events/:id/reminders (bulk) + PUT rsvpDeadline if changed.
 import type { CeremlyEvent, EventReminderData, GuestWithStatus } from "~~/shared/types/ceremly";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
@@ -38,7 +38,7 @@ interface LocalReminder {
     sentAt: string | null;
 }
 
-// ─── Stato pagina ────────────────────────────────────────────────────
+// ─── Page state ──────────────────────────────────────────────────────
 const loading = ref(true);
 const loadError = ref<string | null>(null);
 const saveBtn = useButtonSuccess();
@@ -56,7 +56,7 @@ function pad2(n: number): string {
     return String(n).padStart(2, "0");
 }
 
-/** Estrae il messaggio (statusMessage del server o message) da un errore $fetch. */
+/** Extracts the message (server statusMessage or message) from a $fetch error. */
 function errorMessage(e: unknown): string | undefined {
     const err = e as { data?: { statusMessage?: string }, message?: string } | null;
     return err?.data?.statusMessage || err?.message;
@@ -157,8 +157,8 @@ function reminderStatusLine(r: LocalReminder): string {
 }
 
 // ─── Reminder: add / remove / defaults ───────────────────────────────
-// -1 = illimitato (Atelier). Free/Celebrazione restano a maxReminders (anche celebration:
-// i reminder non sono sbloccabili one-time, solo Atelier li rende illimitati).
+// -1 = unlimited (Atelier). Free/Celebrazione stay at maxReminders (even celebration:
+// reminders are not one-time unlockable — only Atelier makes them unlimited).
 const maxReminders = computed(() => (isAtelier.value ? Infinity : CEREMLY_TIER_LIMITS.free.maxReminders));
 
 function reminderDefaults(): Omit<LocalReminder, "id">[] {
@@ -213,14 +213,14 @@ function confirmRemoveReminder() {
     removeTarget.value = null;
 }
 
-// ─── Destinatari (calcolati dalla lista ospiti) ──────────────────────
+// ─── Recipients (computed from the guest list) ───────────────────────
 const activeGuests = computed(() => guests.value.filter(g => !g.removedAt));
 const pendingGuests = computed(() =>
     activeGuests.value.filter(g => g.rsvpStatus === "opened" || g.rsvpStatus === "not_opened"));
 const pendingWithEmail = computed(() => pendingGuests.value.filter(g => !!g.email));
 const pendingNoEmail = computed(() => pendingGuests.value.filter(g => !g.email));
 
-// ─── Esclusioni (remindersDisabled per ospite) ───────────────────────
+// ─── Exclusions (remindersDisabled per guest) ────────────────────────
 const excludedGuests = computed(() => activeGuests.value.filter(g => g.remindersDisabled));
 const excludeCandidates = computed(() =>
     pendingGuests.value.filter(g => !g.remindersDisabled));
@@ -263,11 +263,11 @@ async function onExcludePicked() {
     if (guestId) await setGuestExcluded(guestId, true);
 }
 
-// ─── Salvataggio ─────────────────────────────────────────────────────
+// ─── Save ─────────────────────────────────────────────────────────────
 function validateReminders(): string[] {
     const errors: string[] = [];
     reminders.value.forEach((r, i) => {
-        if (r.sentAt) return; // immutabili lato server
+        if (r.sentAt) return; // immutable server-side
         const days = Number(r.daysBefore);
         if (!Number.isInteger(days) || days < 1 || days > 60) {
             errors.push(t("ceremly.event.reminders.validationDays", { n: i + 1 }));
@@ -287,7 +287,7 @@ async function saveAll() {
     }
     try {
         await saveBtn.run(async () => {
-            // 1. Deadline (se cambiata)
+            // 1. Deadline (if changed)
             if (deadlineInput.value !== savedDeadlineInput.value) {
                 const evRes = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
                     method: "PUT",
@@ -297,7 +297,7 @@ async function saveAll() {
                 savedDeadlineInput.value = deadlineInput.value;
             }
 
-            // 2. Bulk upsert reminder (gli inviati sono skip silenzioso lato server)
+            // 2. Bulk upsert reminders (already-sent ones are silently skipped server-side)
             const res = await $fetch<{ reminders: EventReminderData[] }>(
                 `/api/events/${eventId.value}/reminders`,
                 {
@@ -382,9 +382,9 @@ function openDistribution() {
             </div>
 
             <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 24px;">
-                <!-- ── Colonna sinistra ─────────────────────────────── -->
+                <!-- ── Left column ────────────────────────────────────── -->
                 <div class="col" style="gap: 16px;">
-                    <!-- Deadline RSVP -->
+                    <!-- RSVP deadline -->
                     <div class="cer-card" style="padding: 20px;">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.deadlineLabel') }}</div>
                         <div class="row" style="margin-top: 12px; gap: 12px; align-items: center; flex-wrap: wrap;">
@@ -521,9 +521,9 @@ function openDistribution() {
                     </div>
                 </div>
 
-                <!-- ── Colonna destra ───────────────────────────────── -->
+                <!-- ── Right column ─────────────────────────────────── -->
                 <div class="col" style="gap: 16px;">
-                    <!-- Destinatari -->
+                    <!-- Recipients -->
                     <div class="cer-card" style="padding: 20px;">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.recipientsLabel') }}</div>
                         <div class="serif" style="font-size: 36px; margin-top: 6px;">{{ pendingWithEmail.length }}</div>
@@ -553,7 +553,7 @@ function openDistribution() {
                         </div>
                     </div>
 
-                    <!-- Esclusioni -->
+                    <!-- Exclusions -->
                     <div class="cer-card" style="padding: 20px;">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.reminders.exclusionsLabel') }}</div>
                         <div class="small muted" style="margin-top: 8px;">
@@ -610,7 +610,7 @@ function openDistribution() {
                         </div>
                     </div>
 
-                    <!-- Niente spam -->
+                    <!-- No spam -->
                     <div class="cer-card" style="padding: 20px; background: var(--ink); color: var(--bone-50); border-color: var(--ink);">
                         <div class="row" style="gap: 10px; align-items: flex-start;">
                             <CerIcon name="bell" :s="16" style="flex-shrink: 0; margin-top: 2px;" />
@@ -626,7 +626,7 @@ function openDistribution() {
             </div>
         </template>
 
-        <!-- ── Conferma eliminazione reminder ───────────────────────── -->
+        <!-- ── Delete reminder confirmation ──────────────────────────── -->
         <div
             v-if="removeTarget !== null"
             class="cer"

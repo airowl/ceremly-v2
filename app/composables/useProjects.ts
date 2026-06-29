@@ -15,7 +15,7 @@ export interface ProjectItem {
 }
 
 export function useProjects() {
-    // Toast gestiti dalle pagine (possiedono le chiavi i18n) → errorToast: false.
+    // Toasts managed by pages (they own the i18n keys) → errorToast: false.
     const { isLoading, error, run } = useApi();
 
     async function list(): Promise<ProjectItem[]> {

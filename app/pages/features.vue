@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Prodotto → Funzionalità. Port di FunzionalitaPage (site-product.jsx).
+// Public site → Product → Features. Port of FunzionalitaPage (site-product.jsx).
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteHero from '~/components/ceremly/CerSiteHero.vue'
@@ -24,7 +24,7 @@ useSeoMeta({
     ogType: 'website',
 })
 
-// Icone per gruppo (3 feat ciascuno), per indice — non-testuali, restano nel .vue.
+// Icons per group (3 features each), by index — non-textual, kept in the .vue.
 const groupIcons: string[][] = [
     ['sparkle', 'edit', 'qr'],
     ['guests', 'heart', 'bell'],

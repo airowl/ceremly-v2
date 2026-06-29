@@ -1,18 +1,18 @@
 /**
- * GDPR Service — cancellazione definitiva (hard-delete) degli account la cui
- * grace window è scaduta (SPEC: diritto all'oblio). Eseguito dal cron
- * `purge-deleted-accounts`, in contesto di sistema (nessuna sessione).
+ * GDPR Service — permanent hard-delete of accounts whose grace window has
+ * expired (SPEC: right to erasure). Run by the `purge-deleted-accounts` cron
+ * in system context (no session).
  *
- * Flusso per ogni utente dovuto:
- *  1. org POSSEDUTE: se l'utente è l'UNICO membro → l'org viene eliminata
- *     (R2 files + cascade DB events/guests/rsvp/...); se ci sono ALTRI membri →
- *     la ownership viene TRASFERITA (mai distruggere i dati di altri tenant) e
- *     la membership dell'utente rimossa.
- *  2. subscription Creem (referenceId, senza FK) eliminate esplicitamente.
- *  3. sessioni (Redis secondaryStorage) revocate via internalAdapter.
- *  4. riga user eliminata → cascade su account/member/twoFactor.
+ * Flow for each due user:
+ *  1. OWNED orgs: if the user is the ONLY member → the org is deleted
+ *     (R2 files + DB cascade events/guests/rsvp/...); if there are OTHER members →
+ *     ownership is TRANSFERRED (never destroy other tenants' data) and
+ *     the user's membership is removed.
+ *  2. Creem subscriptions (referenceId, no FK) deleted explicitly.
+ *  3. Sessions (Redis secondaryStorage) revoked via internalAdapter.
+ *  4. User row deleted → cascade on account/member/twoFactor.
  *
- * Ogni utente è isolato in try/catch: un fallimento non aborta il batch.
+ * Each user is isolated in try/catch: a failure does not abort the batch.
  */
 import { createR2Storage } from "./file/storage/r2";
 import { runtimeConfig } from "../utils/runtimeConfig";
@@ -31,7 +31,7 @@ import {
     transferOrgOwnership,
 } from "../repositories/gdprRepository";
 
-/** Giorni di grazia prima della cancellazione definitiva. */
+/** Grace days before permanent deletion. */
 export const ACCOUNT_DELETION_GRACE_DAYS = 30;
 
 export interface PurgeResult {
@@ -43,7 +43,7 @@ export interface PurgeResult {
     errors: string[];
 }
 
-/** Estrae la data di purge codificata nel banReason (ISO dopo il prefisso). */
+/** Extracts the purge date encoded in banReason (ISO string after the prefix). */
 function parsePurgeDate(banReason: string | null): Date | null {
     if (!banReason || !banReason.startsWith(ACCOUNT_DELETION_REASON_PREFIX)) return null;
     const iso = banReason.slice(ACCOUNT_DELETION_REASON_PREFIX.length);
@@ -51,7 +51,7 @@ function parsePurgeDate(banReason: string | null): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** Sceglie il nuovo owner: admin più anziano, altrimenti membro più anziano. */
+/** Picks the new owner: most tenured admin, otherwise most tenured member. */
 function pickNewOwner(
     members: Awaited<ReturnType<typeof findMembers>>,
     leavingUserId: string,
@@ -65,7 +65,7 @@ function pickNewOwner(
     return [...others].sort(byTenure)[0]!.userId;
 }
 
-/** Elimina un'org solo-membro: oggetti R2 + righe file, poi cascade DB. */
+/** Deletes a single-member org: R2 objects + file rows, then DB cascade. */
 async function purgeOrganization(
     organizationId: string,
     storage: ReturnType<typeof createR2Storage>,
@@ -74,7 +74,7 @@ async function purgeOrganization(
     const files = await findFilesByOrg(organizationId);
     for (const f of files) {
         try {
-            // S3/R2 DeleteObject è idempotente (ok anche se la chiave non esiste).
+            // S3/R2 DeleteObject is idempotent (ok even if the key does not exist).
             await storage.delete(f.path);
             result.filesDeleted++;
         } catch (e) {
@@ -87,9 +87,9 @@ async function purgeOrganization(
 }
 
 /**
- * Cancella definitivamente gli account dovuti.
- * @param options.restrictToUserIds limita il purge a questi utenti (per i test);
- *        gli altri utenti dovuti vengono ignorati.
+ * Permanently deletes due accounts.
+ * @param options.restrictToUserIds restricts the purge to these users (for tests);
+ *        other due users are ignored.
  */
 export async function purgeDueDeletedAccounts(
     options?: { restrictToUserIds?: string[] },
@@ -126,20 +126,20 @@ export async function purgeDueDeletedAccounts(
                 const members = await findMembers(orgId);
                 const newOwnerId = pickNewOwner(members, u.id);
                 if (newOwnerId === null) {
-                    // Org solo-membro → eliminazione completa.
+                    // Single-member org → full deletion.
                     await purgeOrganization(orgId, storage, result);
                 } else {
-                    // Org con altri membri → trasferimento ownership (dati salvi).
+                    // Org with other members → ownership transfer (data preserved).
                     await transferOrgOwnership(orgId, newOwnerId);
                     await removeMembership(orgId, u.id);
                     result.orgsTransferred++;
                 }
             }
 
-            // Subscription Creem (nessuna FK → vanno rimosse a mano).
+            // Creem subscriptions (no FK → must be removed manually).
             await deleteCreemSubscriptionsByReference(u.id);
 
-            // Sessioni in Redis (nessuna tabella DB session) — come per l'admin ban.
+            // Sessions in Redis (no DB session table) — same mechanism as admin ban.
             try {
                 const ctx = await auth.$context;
                 await ctx.internalAdapter.deleteSessions(u.id);
@@ -147,7 +147,7 @@ export async function purgeDueDeletedAccounts(
                 result.errors.push(`deleteSessions ${u.id}: ${e instanceof Error ? e.message : "errore"}`);
             }
 
-            // Riga user → cascade su account/member (residue)/twoFactor.
+            // User row → cascade on account/member (residual)/twoFactor.
             await deleteUserRow(u.id);
             result.purged++;
         } catch (e) {

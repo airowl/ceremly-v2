@@ -1,6 +1,6 @@
 /**
  * GET /api/events/:id
- * Evento completo (RBAC: requireMember + assertOwnership nel service).
+ * Full event (RBAC: requireMember + assertOwnership in the service).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { getEvent } from "~~/server/services/event.service";

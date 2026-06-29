@@ -1,39 +1,39 @@
 /**
- * Site mode autorevole lato SERVER.
+ * Authoritative site mode on the SERVER side.
  *
- * Authority condivisa fra TUTTI i gate server (middleware 0.site-mode + catch-all
- * auth): se ogni branch leggesse `config.public.siteMode` per conto proprio, un
- * toggle a runtime ne aggiornerebbe alcuni e non altri → stato incoerente.
+ * Authority shared across ALL server gates (middleware 0.site-mode + catch-all
+ * auth): if each branch read `config.public.siteMode` independently, a runtime
+ * toggle would update some but not others → inconsistent state.
  *
- * Precedenza: override runtime (Upstash Redis) → valore d'ambiente → "active".
+ * Precedence: runtime override (Upstash Redis) → env value → "active".
  *
- * Serverless: ogni lambda mantiene una cache in-process con TTL breve. Dopo un
- * cambio via endpoint admin, le istanze già calde convergono entro il TTL — è un
- * kill-switch best-effort, NON una transizione atomica/istantanea.
+ * Serverless: each lambda maintains a short-TTL in-process cache. After a change
+ * via the admin endpoint, warm instances converge within the TTL — this is a
+ * best-effort kill-switch, NOT an atomic/instantaneous transition.
  *
- * Resilienza: se Redis è irraggiungibile si ricade sul valore d'ambiente, mai su
- * "active" — un guasto di rete non deve togliere silenziosamente la maintenance.
+ * Resilience: if Redis is unreachable, falls back to the env value, never to
+ * "active" — a network fault must not silently lift maintenance mode.
  */
 import { resolveSiteMode, type SiteMode } from "~~/shared/constants/siteMode";
 import { cacheClient } from "./drivers";
 
-/** Chiave Redis dell'override runtime. */
+/** Redis key for the runtime override. */
 export const SITE_MODE_OVERRIDE_KEY = "site:mode";
 
-/** TTL della cache per-istanza (ms). Breve: propagazione del toggle entro questo limite. */
+/** Per-instance cache TTL (ms). Short: toggle propagation within this limit. */
 const CACHE_TTL_MS = 10_000;
 
 let cached: { mode: SiteMode; at: number } | undefined;
 
-/** Valore d'ambiente normalizzato (default site mode quando non c'è override). */
+/** Normalised env value (default site mode when there is no override). */
 function envSiteMode(): SiteMode {
     const config = useRuntimeConfig();
     return resolveSiteMode(config.public.siteMode);
 }
 
 /**
- * Modalità sito autorevole per il server. Redis override → env → "active".
- * Memoizzata per ~CACHE_TTL_MS per non aggiungere un round-trip Redis a ogni request.
+ * Authoritative site mode for the server. Redis override → env → "active".
+ * Memoised for ~CACHE_TTL_MS to avoid adding a Redis round-trip to every request.
  */
 export async function getServerSiteMode(): Promise<SiteMode> {
     const now = Date.now();
@@ -48,26 +48,26 @@ export async function getServerSiteMode(): Promise<SiteMode> {
             mode = resolveSiteMode(override);
         }
     } catch {
-        // Redis down → resta il valore d'ambiente (nessun un-maintenance silenzioso).
+        // Redis down → keep the env value (no silent un-maintenance).
     }
 
     cached = { mode, at: now };
     return mode;
 }
 
-/** Imposta l'override runtime e invalida la cache locale di questa istanza. */
+/** Sets the runtime override and invalidates this instance's local cache. */
 export async function setServerSiteMode(mode: SiteMode): Promise<void> {
     await cacheClient.set(SITE_MODE_OVERRIDE_KEY, mode, undefined);
     cached = undefined;
 }
 
-/** Rimuove l'override runtime: il server torna a seguire il valore d'ambiente. */
+/** Removes the runtime override: the server reverts to following the env value. */
 export async function clearServerSiteModeOverride(): Promise<void> {
     await cacheClient.delete(SITE_MODE_OVERRIDE_KEY);
     cached = undefined;
 }
 
-/** Stato diagnostico per l'endpoint admin: override grezzo + default d'ambiente. */
+/** Diagnostic state for the admin endpoint: raw override + env default. */
 export async function getSiteModeStatus(): Promise<{
     effective: SiteMode;
     override: SiteMode | null;

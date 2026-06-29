@@ -1,7 +1,7 @@
 /**
  * POST /api/events
- * Crea un evento da template nell'org attiva (RBAC: requireWrite).
- * 404 template inesistente/mismatch, 402 limite piano Free.
+ * Creates an event from a template in the active org (RBAC: requireWrite).
+ * 404 for non-existent/mismatched template, 402 for Free plan limit.
  */
 import { createEventSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

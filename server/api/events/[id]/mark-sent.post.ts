@@ -1,7 +1,7 @@
 /**
  * POST /api/events/:id/mark-sent
- * Marca gli ospiti selezionati come inviati via WhatsApp — usato dal bottone
- * "Copia" della pagina distribuzione (RBAC: requireWrite). Ritorna { marked }.
+ * Marks selected guests as sent via WhatsApp — used by the "Copia" button
+ * on the distribution page (RBAC: requireWrite). Returns { marked }.
  */
 import { markSentSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

@@ -9,16 +9,16 @@ import { ACCOUNT_DELETION_REASON_PREFIX, findUsersScheduledForDeletion } from ".
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
- * Gate FIX #20/#19: il hard-delete GDPR cancella davvero l'utente + la sua org
- * solo-membro (DB cascade + righe file/R2) quando la grace window è scaduta,
- * SENZA toccare gli altri tenant.
+ * Gate FIX #20/#19: GDPR hard-delete actually deletes the user + their sole-member
+ * org (DB cascade + file/R2 rows) when the grace window has expired,
+ * WITHOUT touching other tenants.
  *
- * Self-contained e SICURO: crea una fixture usa-e-getta (user + org solo +
- * file), la marca come dovuta (banReason con data PASSATA), esegue il purge
- * RISTRETTO al solo fixture user, e verifica:
- *  - fixture user/org/file eliminati;
- *  - TRIPWIRE: tutte le org reali preesistenti sopravvivono.
- * Pulisce sempre la propria fixture (finally). Richiede un Postgres vivo.
+ * Self-contained and SAFE: creates a disposable fixture (user + solo org +
+ * file), marks it as due (banReason with a PAST date), runs the purge
+ * RESTRICTED to the fixture user only, and verifies:
+ *  - fixture user/org/file deleted;
+ *  - TRIPWIRE: all pre-existing real orgs survive.
+ * Always cleans up its own fixture (finally). Requires a live Postgres.
  */
 async function main() {
     const db = getDB();
@@ -28,16 +28,16 @@ async function main() {
     const memberId = `verify-purge-member-${suffix}`;
     const fileId = uuidv7();
 
-    // TRIPWIRE: snapshot delle org REALI prima di qualsiasi operazione.
+    // TRIPWIRE: snapshot of REAL orgs before any operation.
     const realOrgsBefore = (await db.select({ id: schema.organization.id }).from(schema.organization))
         .map((o) => o.id);
 
     let failed = false;
 
     try {
-        // --- Fixture: org + owner (solo membro) + file org-scoped ---
+        // --- Fixture: org + owner (sole member) + org-scoped file ---
         const now = new Date();
-        const pastPurge = new Date(now.getTime() - 60 * 1000); // scaduta da 1 min
+        const pastPurge = new Date(now.getTime() - 60 * 1000); // expired 1 min ago
         await db.insert(schema.organization).values({ id: orgId, name: "Verify Purge Org", slug: `verify-purge-${suffix}`, createdAt: now });
         await db.insert(schema.user).values({
             id: userId,
@@ -57,55 +57,55 @@ async function main() {
             createdAt: now, updatedAt: now,
         });
 
-        // 1. La fixture risulta programmata per cancellazione.
+        // 1. The fixture shows up as scheduled for deletion.
         const scheduled = await findUsersScheduledForDeletion();
         if (!scheduled.some((u) => u.id === userId)) {
-            console.error("[FAIL] findUsersScheduledForDeletion non include la fixture");
+            console.error("[FAIL] findUsersScheduledForDeletion does not include the fixture");
             failed = true;
         }
 
-        // 2. Purge RISTRETTO al solo fixture user (mai gli altri).
+        // 2. Purge RESTRICTED to the fixture user only (never others).
         const result = await purgeDueDeletedAccounts({ restrictToUserIds: [userId] });
-        if (result.purged !== 1) { console.error(`[FAIL] purged atteso 1, è ${result.purged}`); failed = true; }
-        if (result.orgsDeleted !== 1) { console.error(`[FAIL] orgsDeleted atteso 1, è ${result.orgsDeleted}`); failed = true; }
+        if (result.purged !== 1) { console.error(`[FAIL] purged expected 1, got ${result.purged}`); failed = true; }
+        if (result.orgsDeleted !== 1) { console.error(`[FAIL] orgsDeleted expected 1, got ${result.orgsDeleted}`); failed = true; }
 
-        // 3. Fixture eliminata (user, org, member, file).
+        // 3. Fixture deleted (user, org, member, file).
         const userGone = (await db.select({ id: schema.user.id }).from(schema.user).where(eq(schema.user.id, userId))).length === 0;
         const orgGone = (await db.select({ id: schema.organization.id }).from(schema.organization).where(eq(schema.organization.id, orgId))).length === 0;
         const fileGone = (await db.select({ id: schema.file.id }).from(schema.file).where(eq(schema.file.id, fileId))).length === 0;
-        if (!userGone) { console.error("[FAIL] user fixture non eliminato"); failed = true; }
-        if (!orgGone) { console.error("[FAIL] org fixture non eliminata"); failed = true; }
-        if (!fileGone) { console.error("[FAIL] file fixture non eliminato"); failed = true; }
+        if (!userGone) { console.error("[FAIL] fixture user not deleted"); failed = true; }
+        if (!orgGone) { console.error("[FAIL] fixture org not deleted"); failed = true; }
+        if (!fileGone) { console.error("[FAIL] fixture file not deleted"); failed = true; }
 
-        // 4. TRIPWIRE: le org reali preesistenti devono esistere ancora.
+        // 4. TRIPWIRE: pre-existing real orgs must still exist.
         if (realOrgsBefore.length > 0) {
             const stillThere = (await db.select({ id: schema.organization.id }).from(schema.organization)
                 .where(inArray(schema.organization.id, realOrgsBefore))).map((o) => o.id);
             const missing = realOrgsBefore.filter((id) => !stillThere.includes(id));
             if (missing.length > 0) {
-                console.error(`[FAIL] TRIPWIRE: org reali eliminate per errore: ${missing.join(", ")}`);
+                console.error(`[FAIL] TRIPWIRE: real orgs deleted by mistake: ${missing.join(", ")}`);
                 failed = true;
             }
         }
     } finally {
-        // Cleanup difensivo della fixture (se un fallimento l'ha lasciata).
+        // Defensive cleanup of the fixture (in case a failure left it behind).
         await db.delete(schema.file).where(eq(schema.file.id, fileId)).catch(() => {});
         await db.delete(schema.member).where(eq(schema.member.id, memberId)).catch(() => {});
         await db.delete(schema.organization).where(eq(schema.organization.id, orgId)).catch(() => {});
         await db.delete(schema.user).where(eq(schema.user.id, userId)).catch(() => {});
-        // Sanity: nessun residuo di fixture verify-purge orfano in giro.
+        // Sanity: no leftover orphaned verify-purge fixture rows.
         await db.delete(schema.user).where(like(schema.user.email, "verify-purge-%@example.invalid")).catch(() => {});
     }
 
     if (failed) {
-        console.error("[verify-account-purge] HARD-DELETE NON CORRETTO");
+        console.error("[verify-account-purge] HARD-DELETE INCORRECT");
         process.exit(1);
     }
-    console.log(`[verify-account-purge] OK — fixture user+org+file eliminati, ${realOrgsBefore.length} org reali intatte (tripwire).`);
+    console.log(`[verify-account-purge] OK — fixture user+org+file deleted, ${realOrgsBefore.length} real orgs intact (tripwire).`);
     process.exit(0);
 }
 
 main().catch((e) => {
-    console.error("[verify-account-purge] errore", e);
+    console.error("[verify-account-purge] error", e);
     process.exit(1);
 });

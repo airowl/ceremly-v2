@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Prodotto → Come funziona. Port di ComeFunzionaPage (site-product.jsx).
+// Public site → Product → How it works. Port of ComeFunzionaPage (site-product.jsx).
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteHero from '~/components/ceremly/CerSiteHero.vue'
@@ -33,7 +33,7 @@ const stepsRaw = computed(() => (tm('ceremly.site.comeFunziona.steps') as Step[]
     d: rt(x.d),
     bullets: (x.bullets as unknown as string[]).map(b => rt(b)),
 })))
-// Step nominati (i 4 esistono sempre): accesso tipizzato senza undefined nel template.
+// Named steps (the 4 always exist): typed access without undefined in the template.
 const steps = computed(() => ({
     s1: stepsRaw.value[0] ?? EMPTY_STEP,
     s2: stepsRaw.value[1] ?? EMPTY_STEP,
@@ -57,7 +57,7 @@ const distChannels = computed(() => [
         </CerSiteHero>
 
         <div class="cer-site-wrap" style="padding-top: 8px; padding-bottom: 72px;">
-            <!-- 01 · Crea -->
+            <!-- 01 · Create -->
             <div class="cer-cf-step">
                 <div class="cer-cf-text">
                     <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--orange);">{{ steps.s1.k }}</div>
@@ -76,7 +76,7 @@ const distChannels = computed(() => [
                 </div>
             </div>
 
-            <!-- 02 · Importa -->
+            <!-- 02 · Import -->
             <div class="cer-cf-step">
                 <div class="cer-cf-text cer-cf-flip-text">
                     <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--orange);">{{ steps.s2.k }}</div>
@@ -107,7 +107,7 @@ const distChannels = computed(() => [
                 </div>
             </div>
 
-            <!-- 03 · Distribuisci -->
+            <!-- 03 · Distribute -->
             <div class="cer-cf-step">
                 <div class="cer-cf-text">
                     <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--orange);">{{ steps.s3.k }}</div>
@@ -137,7 +137,7 @@ const distChannels = computed(() => [
                 </div>
             </div>
 
-            <!-- 04 · Raccogli -->
+            <!-- 04 · Collect -->
             <div class="cer-cf-step cer-cf-last">
                 <div class="cer-cf-text cer-cf-flip-text">
                     <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--orange);">{{ steps.s4.k }}</div>

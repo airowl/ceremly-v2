@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Per chi → Wedding planner. Pagina sottile: SEO + corpo condiviso.
+// Public site → For whom → Wedding planner. Thin page: SEO + shared body.
 import CerUseCase from '~/components/ceremly/CerUseCase.vue'
 
 definePageMeta({ layout: 'public-site', auth: false })

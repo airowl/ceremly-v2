@@ -1,8 +1,8 @@
 /**
- * Composable per gestire i tre stati del sito:
- * - waitinglist: Landing page con waiting list attiva, nessun accesso a dashboard/auth
- * - active: SaaS completamente attivo, newsletter invece di waiting list
- * - maintenance: Solo pagina di manutenzione accessibile
+ * Composable for managing the three site states:
+ * - waitinglist: Landing page with active waiting list, no access to dashboard/auth
+ * - active: Fully active SaaS, newsletter instead of waiting list
+ * - maintenance: Only the maintenance page is accessible
  */
 
 import { resolveSiteMode, type SiteMode } from "~~/shared/constants/siteMode";
@@ -13,62 +13,62 @@ export const useSiteMode = () => {
     const config = useRuntimeConfig();
 
     /**
-     * Modalità corrente lato client, dal valore inlined in runtimeConfig.public.
-     * Best-effort: il client NON vede un eventuale override runtime (Redis) finché
-     * non ricarica; la difesa autorevole è il middleware server. La validazione/
-     * default è centralizzata in resolveSiteMode (shared).
+     * Current mode on the client side, from the inlined value in runtimeConfig.public.
+     * Best-effort: the client does NOT see a runtime override (Redis) until it
+     * reloads; the authoritative defence is the server middleware. Validation/
+     * defaults are centralised in resolveSiteMode (shared).
      */
     const siteMode = computed<SiteMode>(() =>
         resolveSiteMode(config.public.siteMode)
     );
 
     /**
-     * Verifica se il sito è in modalità waiting list
+     * Checks whether the site is in waiting list mode
      */
     const isWaitingListMode = computed(() => siteMode.value === "waitinglist");
 
     /**
-     * Verifica se il sito è in modalità attiva (SaaS disponibile)
+     * Checks whether the site is in active mode (SaaS available)
      */
     const isActiveMode = computed(() => siteMode.value === "active");
 
     /**
-     * Verifica se il sito è in manutenzione
+     * Checks whether the site is in maintenance mode
      */
     const isMaintenanceMode = computed(() => siteMode.value === "maintenance");
 
     /**
-     * Verifica se l'autenticazione è abilitata
-     * (disabilitata in waitinglist e maintenance)
+     * Checks whether authentication is enabled
+     * (disabled in waitinglist and maintenance)
      */
     const isAuthEnabled = computed(() => isActiveMode.value);
 
     /**
-     * Verifica se la dashboard è accessibile
-     * (solo in modalità active)
+     * Checks whether the dashboard is accessible
+     * (active mode only)
      */
     const isDashboardEnabled = computed(() => isActiveMode.value);
 
     /**
-     * Verifica se mostrare la waiting list CTA
+     * Checks whether to show the waiting list CTA
      */
     const shouldShowWaitingListCTA = computed(() => isWaitingListMode.value);
 
     /**
-     * Verifica se mostrare la newsletter CTA
+     * Checks whether to show the newsletter CTA
      */
     const shouldShowNewsletterCTA = computed(() => isActiveMode.value);
 
     /**
-     * Verifica se mostrare i link di autenticazione nella navbar/footer
+     * Checks whether to show authentication links in the navbar/footer
      */
     const shouldShowAuthLinks = computed(() => isActiveMode.value);
 
     return {
-        // Stato
+        // State
         siteMode,
 
-        // Checks booleani
+        // Boolean checks
         isWaitingListMode,
         isActiveMode,
         isMaintenanceMode,

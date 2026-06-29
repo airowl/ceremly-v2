@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Prodotto → Modelli di invito. Port di ModelliPage (site-product.jsx).
+// Public site → Product → Invite templates. Port of ModelliPage (site-product.jsx).
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteHero from '~/components/ceremly/CerSiteHero.vue'
@@ -27,7 +27,7 @@ useSeoMeta({
 
 const chips = computed(() => (tm('ceremly.site.modelli.chips') as string[]).map(c => rt(c)))
 
-// Dati visivi e contenuto-vetrina (nomi/date/luoghi) per indice — restano nel .vue.
+// Visual data and showcase content (names/dates/venues) for the index — kept in the .vue.
 const tplVisuals = [
     { bg: 'var(--bone-300)', color: 'var(--ink)', date: '12 · settembre · 2026', nameLine1: 'Giulia &', nameLine2: 'Tommaso', italic: 'si sposano', sub: 'Villa Erba, Cernobbio' },
     { bg: 'var(--ink)', color: 'var(--bone-50)', date: '20 · giugno · 2026', nameLine1: 'Anna &', nameLine2: 'Filippo', italic: 'si sposano', sub: 'Masseria Lamacoppa, Ostuni' },

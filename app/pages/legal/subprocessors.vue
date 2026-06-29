@@ -25,7 +25,7 @@ const rows = computed(() => (tm('subprocessors.rows') as Row[]).map(r => ({
             class="px-0"
           />
 
-          <!-- Avviso bozza: rimuovere dopo verifica fornitori/basi di trasferimento -->
+          <!-- Draft warning: remove after verifying suppliers/transfer bases -->
           <UAlert
             color="warning"
             variant="subtle"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Sito pubblico → Per chi (casi d'uso). Corpo condiviso di UseCasePage
-// (site-usecases.jsx). Un template, cinque declinazioni lette da i18n in
-// ceremly.site.usecases.<id>.*. La SEO sta nelle singole pagine.
+// Public site → For whom (use cases). Shared body of UseCasePage
+// (site-usecases.jsx). One template, five variants read from i18n in
+// ceremly.site.usecases.<id>.*. SEO lives in the individual pages.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerMiniInvite from '~/components/ceremly/CerMiniInvite.vue'
@@ -16,7 +16,7 @@ const localePath = useLocalePath()
 const base = computed(() => `ceremly.site.usecases.${props.id}`)
 const isPlanner = computed(() => props.id === 'planner')
 
-// Valori strutturali/CSS per id — NON in i18n (sono valori CSS o nomi icona).
+// Structural/CSS values per id — NOT in i18n (they are CSS values or icon names).
 interface InviteMeta { bg: string, color: string, cta: string }
 const inviteMeta: Record<string, InviteMeta> = {
     matrimoni: { bg: 'var(--bone-300)', color: 'var(--ink)', cta: 'Conferma →' },
@@ -27,7 +27,7 @@ const inviteMeta: Record<string, InviteMeta> = {
 }
 const invite = computed(() => inviteMeta[props.id] || inviteMeta.matrimoni!)
 
-// Colore dell'evidenziatore nel titolo hero per id (default viola).
+// Hero title highlighter color per id (default purple).
 const markColor: Record<string, string> = {
     matrimoni: 'var(--purple)',
     lauree: 'var(--purple)',
@@ -37,7 +37,7 @@ const markColor: Record<string, string> = {
 }
 const heroMarkColor = computed(() => markColor[props.id] || 'var(--purple)')
 
-// Icone delle feature per id (4 per id) — nomi CerIcon, non traducibili.
+// Feature icons per id (4 per id) — CerIcon names, not translatable.
 const featIcons: Record<string, string[]> = {
     matrimoni: ['guests', 'heart', 'bell', 'upload'],
     lauree: ['sparkle', 'whatsapp', 'calendar', 'chart'],
@@ -60,7 +60,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contact') : 
 
 <template>
     <div>
-        <!-- hero 2 colonne (full-bleed) -->
+        <!-- 2-column hero (full-bleed) -->
         <section style="border-bottom: 1px solid var(--line);">
             <div class="cer-site-wrap cer-uc-hero">
                 <div>
@@ -105,7 +105,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contact') : 
             </div>
         </section>
 
-        <!-- pains (banda bone-100) -->
+        <!-- pains (bone-100 band) -->
         <section style="background: var(--bone-100); border-bottom: 1px solid var(--line);">
             <div class="cer-site-wrap" style="padding: 72px 0;">
                 <CerSiteH2
@@ -141,7 +141,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contact') : 
             </div>
         </div>
 
-        <!-- quote (banda bone-100) -->
+        <!-- quote (bone-100 band) -->
         <section style="background: var(--bone-100); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
             <div class="cer-site-wrap" style="padding: 64px 0;">
                 <div style="max-width: 860px; margin: 0 auto; text-align: center;">
@@ -150,7 +150,7 @@ const heroPrimaryTo = computed(() => isPlanner.value ? localePath('/contact') : 
             </div>
         </section>
 
-        <!-- CTA: planner custom, gli altri default + sub + secondary -->
+        <!-- CTA: planner custom, others default + sub + secondary -->
         <CerSiteCTA
             v-if="isPlanner"
             :sub="t(`${base}.ctaSub`)"

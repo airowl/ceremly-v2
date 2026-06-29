@@ -11,12 +11,12 @@ const EVT_ID = "test-evt-relock-3-2";
 const ORDER_ID = "order_relock_3_2";
 
 beforeAll(async () => {
-    // Crea l'org sintetica
+    // Create the synthetic org
     await db
         .insert(schema.organization)
         .values({ id: ORG_ID, name: "Test Relock Org", slug: ORG_ID, createdAt: new Date() });
 
-    // Crea l'evento già sbloccato (celebration) con un orderId noto
+    // Create the already-unlocked event (celebration) with a known orderId
     await db.insert(schema.events).values({
         id: EVT_ID,
         organizationId: ORG_ID,
@@ -37,7 +37,7 @@ afterAll(async () => {
 });
 
 describe("relockEventByOrder", () => {
-    it("(a) re-locka un evento celebration → tier='free', unlockedAt=null, creemOrderId=null", async () => {
+    it("(a) re-locks a celebration event → tier='free', unlockedAt=null, creemOrderId=null", async () => {
         await relockEventByOrder(ORDER_ID);
 
         const rows = await db
@@ -52,11 +52,11 @@ describe("relockEventByOrder", () => {
         expect(evt.creemOrderId).toBeNull();
     });
 
-    it("(b) no-op silenzioso per orderId sconosciuto: nessun errore, nessuna modifica", async () => {
-        // L'evento è già 'free' dal test (a). Passa un orderId inesistente.
+    it("(b) silent no-op for unknown orderId: no error, no modification", async () => {
+        // The event is already 'free' from test (a). Pass a non-existent orderId.
         await expect(relockEventByOrder("order_unknown_xyz")).resolves.toBeUndefined();
 
-        // Lo stato dell'evento non è cambiato
+        // The event state has not changed
         const rows = await db
             .select()
             .from(schema.events)

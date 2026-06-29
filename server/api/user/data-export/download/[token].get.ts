@@ -20,9 +20,9 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Fail-closed: un export completato senza expiresAt è trattato come SCADUTO.
-    // Oggi processExport setta sempre expiresAt; questo evita che un futuro
-    // percorso senza set lasci un dump GDPR scaricabile a tempo indeterminato.
+    // Fail-closed: a completed export without expiresAt is treated as EXPIRED.
+    // Currently processExport always sets expiresAt; this prevents a future
+    // code path that omits the set from leaving a GDPR dump downloadable indefinitely.
     if (!dataExport.expiresAt || new Date(dataExport.expiresAt) < new Date()) {
         throw createError({
             statusCode: 410,

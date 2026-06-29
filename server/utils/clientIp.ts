@@ -1,11 +1,11 @@
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 
 /**
- * IP del client per rate limiting / audit. Su Vercel il primo hop di
- * `x-forwarded-for` è l'IP reale (la piattaforma lo imposta). Fallback al
- * socket remoto, poi "unknown". NB: in ambienti senza proxy fidato l'header è
- * spoofabile — qui è accettabile perché serve a un limiter best-effort, non a
- * decisioni di sicurezza forti.
+ * Client IP for rate limiting / audit. On Vercel the first hop of
+ * `x-forwarded-for` is the real IP (set by the platform). Fallback to the
+ * remote socket, then "unknown". Note: in environments without a trusted proxy
+ * the header is spoofable — acceptable here because it feeds a best-effort limiter,
+ * not strong security decisions.
  */
 export function getClientIp(event: H3Event<EventHandlerRequest>): string {
     const fwd = event.node.req.headers["x-forwarded-for"];

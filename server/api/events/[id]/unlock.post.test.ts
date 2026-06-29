@@ -1,18 +1,18 @@
 /**
- * Test per il route POST /api/events/:id/unlock (fix 7.5b).
+ * Tests for the POST /api/events/:id/unlock route (fix 7.5b).
  *
- * Stubbano gli auto-import Nitro prima che il modulo venga caricato:
- * - defineEventHandler: in vi.hoisted() (eseguito prima del parsing del modulo)
+ * Stubs Nitro auto-imports before the module is loaded:
+ * - defineEventHandler: in vi.hoisted() (executed before module parsing)
  * - getRouterParam / createError / requireAuth: via globalThis
  *
- * createError è già polyfillato da test/setup.ts.
+ * createError is already polyfilled in test/setup.ts.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Import dopo i mock
+// Import after mocks
 import handler from "./unlock.post";
 
-// --- vi.hoisted: inizializzato PRIMA che vi.mock hoisti le factory ---
+// --- vi.hoisted: initialized BEFORE vi.mock hoists the factories ---
 const mocks = vi.hoisted(() => {
     (globalThis as Record<string, unknown>).defineEventHandler = (fn: unknown) => fn;
 
@@ -44,7 +44,7 @@ describe("events/[id]/unlock.post", () => {
     beforeEach(() => {
         vi.resetAllMocks();
 
-        // requireAuth e getRouterParam sono auto-import Nitro; mock globalThis
+        // requireAuth and getRouterParam are Nitro auto-imports; mock globalThis
         (globalThis as Record<string, unknown>).requireAuth = mocks.requireAuth;
         (globalThis as Record<string, unknown>).getRouterParam = (
             _event: unknown,
@@ -59,7 +59,7 @@ describe("events/[id]/unlock.post", () => {
         mocks.createCelebrationCheckout.mockResolvedValue({ url: "https://checkout.example.com/pay" });
     });
 
-    it("(a) happy path → delega a createCelebrationCheckout e ritorna { url }", async () => {
+    it("(a) happy path → delegates to createCelebrationCheckout and returns { url }", async () => {
         const checkoutUrl = "https://checkout.example.com/pay";
         mocks.createCelebrationCheckout.mockResolvedValue({ url: checkoutUrl });
 
@@ -72,7 +72,7 @@ describe("events/[id]/unlock.post", () => {
         expect(result).toEqual({ url: checkoutUrl });
     });
 
-    it("(b) id mancante → 400 e service NON chiamato", async () => {
+    it("(b) missing id → 400 and service NOT called", async () => {
         const event = fakeEvent({});
 
         await expect(handler(event)).rejects.toMatchObject({

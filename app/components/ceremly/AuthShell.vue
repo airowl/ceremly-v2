@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Port di AuthShell (docs/ui/project/screens/auth.jsx): layout split con
-// pannello editoriale ink a sinistra (cerchi decorativi, brand, titolo serif,
-// quote card) e colonna form a destra (max-width 420).
-// Sotto i 900px il pannello sinistro è nascosto e il form è centrato.
+// Port of AuthShell (docs/ui/project/screens/auth.jsx): split layout with
+// editorial ink panel on the left (decorative circles, brand, serif title,
+// quote card) and form column on the right (max-width 420).
+// Below 900px the left panel is hidden and the form is centered.
 export interface AuthShellQuote {
     text: string;
     av?: string;
@@ -20,9 +20,9 @@ defineProps<{
 
 <template>
     <div class="cer auth-shell">
-        <!-- PANNELLO EDITORIALE -->
+        <!-- EDITORIAL PANEL -->
         <div class="auth-side">
-            <!-- decoro -->
+            <!-- decoration -->
             <div
                 style="position: absolute; right: -110px; top: -90px; width: 320px; height: 320px; border-radius: 50%; background: var(--purple-bright); opacity: 0.7;"
             />
@@ -67,7 +67,7 @@ defineProps<{
             </div>
         </div>
 
-        <!-- FORM -->
+        <!-- FORM COLUMN -->
         <div class="auth-form-wrap">
             <div style="width: 100%; max-width: 420px;">
                 <slot />

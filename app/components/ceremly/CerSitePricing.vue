@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Sezione prezzi condivisa (landing #prezzi + pagina /pricing). Estratta da
-// index.vue per evitare duplicazione: il mockup PrezziPage rende <LandingPricing/>.
+// Shared pricing section (landing #prezzi + /pricing page). Extracted from
+// index.vue to avoid duplication: the PrezziPage mockup renders <LandingPricing/>.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 
 const { t } = useI18n()

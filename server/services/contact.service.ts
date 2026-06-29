@@ -44,18 +44,18 @@ export async function sendContactMessage(
     const db = getDB();
     const config = useRuntimeConfig();
 
-    // --- Anti-spam (#8): endpoint pubblico non autenticato che invia email ---
-    // 1. Honeypot: campo nascosto compilato = bot → finto successo (non tippare il bot).
+    // --- Anti-spam (#8): unauthenticated public endpoint that sends email ---
+    // 1. Honeypot: hidden field filled in = bot → fake success (don't tip off the bot).
     if (isHoneypotTriggered(website)) {
         return { success: true, message: 'Contact form submitted successfully' };
     }
-    // 2. Timing: form inviato in meno di 3s dal render = bot → finto successo.
+    // 2. Timing: form submitted in less than 3s from render = bot → fake success.
     if (isSubmittedTooFast(_t)) {
         return { success: true, message: 'Contact form submitted successfully' };
     }
-    // 3. Rate limit per-IP (Redis condiviso): il limite per-email sotto è
-    //    aggirabile variando l'email → senza questo, email-bombing dell'inbox
-    //    admin e burn di quota/reputazione Resend illimitati.
+    // 3. Per-IP rate limit (shared Redis): the per-email limit below is
+    //    bypassable by rotating the email → without this, unlimited admin inbox
+    //    email-bombing and Resend quota/reputation burn.
     const clientIP = getClientIp(event);
     if (await isEndpointRateLimited(clientIP, 'contact', 5, 60 * 60 * 1000)) {
         throw createError({
@@ -65,7 +65,7 @@ export async function sendContactMessage(
                 : 'Too many requests. Please try again later.',
         });
     }
-    // 4. Email usa-e-getta.
+    // 4. Disposable email.
     if (isDisposableEmail(email.toLowerCase())) {
         throw createError({
             statusCode: 400,
@@ -109,12 +109,12 @@ export async function sendContactMessage(
         language: language || 'it',
     });
 
-    // Admin email: nessun fallback hardcoded. Se manca la env, la notifica admin
-    // viene saltata con log rumoroso (il messaggio è già persistito in DB sopra),
-    // invece di inviare silenziosamente a un placeholder example.com.
+    // Admin email: no hardcoded fallback. If the env var is missing, the admin
+    // notification is skipped with a noisy log (the message is already persisted in DB above),
+    // instead of silently sending to an example.com placeholder.
     const adminEmail = (config.contactAdminEmail as string) || '';
     if (!adminEmail) {
-        console.error('[contact.service] NUXT_CONTACT_ADMIN_EMAIL non configurata: notifica admin saltata (messaggio comunque salvato in DB)');
+        console.error('[contact.service] NUXT_CONTACT_ADMIN_EMAIL not configured: admin notification skipped (message still saved in DB)');
     }
     const siteUrl = (config.public?.baseURL as string) || '';
     const lang = (language === 'en' ? 'en' : 'it') as SupportedLanguage;
@@ -143,7 +143,7 @@ export async function sendContactMessage(
         }),
     ]);
 
-    // Send emails in parallel (notifica admin solo se l'email è configurata)
+    // Send emails in parallel (admin notification only if email is configured)
     await Promise.all([
         // Confirmation email to user
         sendEmail({

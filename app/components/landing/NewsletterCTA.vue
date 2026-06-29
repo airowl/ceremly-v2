@@ -21,8 +21,8 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     try {
-        // TODO: Implementare chiamata API per l'iscrizione alla newsletter
-        // Esempio: await $fetch('/api/newsletter/subscribe', { method: 'POST', body: event.data })
+        // TODO: Implement API call for newsletter subscription
+        // Example: await $fetch('/api/newsletter/subscribe', { method: 'POST', body: event.data })
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         submitted.value = true

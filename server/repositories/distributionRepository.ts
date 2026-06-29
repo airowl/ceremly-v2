@@ -1,20 +1,20 @@
 /**
- * Distribution Repository — query Drizzle per l'invio inviti/reminder
+ * Distribution Repository — Drizzle queries for invite/reminder delivery
  * (SPEC §6 "Distribuzione", owner B3).
  *
- * Le query lato organizzatore sono org-scoped BY-CONSTRUCTION (SPEC §8).
- * Le query lato job handler (findGuestForEmail / findReminderById) NON sono
- * org-scoped per design: il job QStash arriva con il solo guestId/reminderId,
- * e quegli id provengono ESCLUSIVAMENTE da payload accodati dal nostro server
- * dopo i guard RBAC (mai da input utente).
+ * Organizer-side queries are org-scoped BY-CONSTRUCTION (SPEC §8).
+ * Job handler queries (findGuestForEmail / findReminderById) are NOT
+ * org-scoped by design: the QStash job arrives with only guestId/reminderId,
+ * and those ids come EXCLUSIVELY from payloads enqueued by our server
+ * after RBAC guards (never from user input).
  */
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 
 /**
- * Ospiti selezionati per un invio: org+event scoped, SOLO attivi (non removed).
- * GuestId fuori scope (altra org/evento) o removed vengono semplicemente omessi.
+ * Guests selected for a send: org+event scoped, ONLY active (not removed).
+ * GuestIds out of scope (other org/event) or removed are simply omitted.
  */
 export async function findGuestsForSend(
     organizationId: string,
@@ -37,8 +37,8 @@ export async function findGuestsForSend(
 }
 
 /**
- * Marca l'invio: sentAt SOLO se ancora null (è il "primo invio" per contratto),
- * sentChannel sempre aggiornato all'ultimo canale usato.
+ * Marks the send: sentAt ONLY if still null (it is the "first send" by contract),
+ * sentChannel always updated to the last channel used.
  */
 export async function markSent(
     organizationId: string,
@@ -63,8 +63,8 @@ export async function markSent(
 }
 
 /**
- * Guest + event (INNER JOIN) + eventuale responseId (LEFT JOIN) per i job
- * handler email. NON org-scoped: vedi nota in testa al file.
+ * Guest + event (INNER JOIN) + optional responseId (LEFT JOIN) for email job
+ * handlers. NOT org-scoped: see note at the top of the file.
  */
 export async function findGuestForEmail(guestId: string) {
     const db = getDB();
@@ -83,8 +83,8 @@ export async function findGuestForEmail(guestId: string) {
 }
 
 /**
- * Reminder by id per il job handler 'send-reminder-email'.
- * NON org-scoped: stessa motivazione di findGuestForEmail.
+ * Reminder by id for the 'send-reminder-email' job handler.
+ * NOT org-scoped: same rationale as findGuestForEmail.
  */
 export async function findReminderById(reminderId: string) {
     const db = getDB();
@@ -96,7 +96,7 @@ export async function findReminderById(reminderId: string) {
     return rows[0];
 }
 
-/** Valori per l'insert bulk di attività ospite legate alla distribuzione. */
+/** Values for the bulk insert of guest activities related to distribution. */
 export interface GuestActivityValues {
     organizationId: string;
     eventId: string;
@@ -105,7 +105,7 @@ export interface GuestActivityValues {
     meta: Record<string, unknown>;
 }
 
-/** Insert bulk append-only su guest_activities (timeline ospite). */
+/** Append-only bulk insert on guest_activities (guest timeline). */
 export async function insertActivities(values: GuestActivityValues[]): Promise<void> {
     const db = getDB();
     if (values.length === 0) return;
@@ -113,10 +113,10 @@ export async function insertActivities(values: GuestActivityValues[]): Promise<v
 }
 
 /**
- * True se esiste già un'attività 'reminder_sent' per (guest, reminder).
- * Guardia di idempotenza per i retry QStash dell'email di reminder: l'handler
- * scrive 'reminder_sent' SOLO a invio riuscito, quindi questa presenza significa
- * "già inviato a questo ospite per questo reminder".
+ * True if a 'reminder_sent' activity already exists for (guest, reminder).
+ * Idempotency guard for QStash retries of the reminder email: the handler
+ * writes 'reminder_sent' ONLY on successful delivery, so its presence means
+ * "already sent to this guest for this reminder".
  */
 export async function hasReminderActivity(guestId: string, reminderId: string): Promise<boolean> {
     const db = getDB();

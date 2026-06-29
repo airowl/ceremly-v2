@@ -1,9 +1,9 @@
 /**
- * Organization Service (FASE 1c).
+ * Organization Service (PHASE 1c).
  *
- * Le MUTAZIONI org delegano al plugin Better Auth (auth.api.*): il plugin possiede
- * la creazione della member-row owner, lo slug, l'org attiva e l'authz role-based
- * sull'org identificata dal path-id. Le LETTURE usano i repository. Audit su ogni scrittura.
+ * Org MUTATIONS delegate to the Better Auth plugin (auth.api.*): the plugin owns
+ * creation of the owner member-row, the slug, the active org, and role-based authz
+ * on the org identified by path-id. READS use the repositories. Audit on every write.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type {
@@ -17,13 +17,13 @@ import { findPendingInvitations } from "../repositories/invitationRepository";
 import { generateUniqueOrgSlug } from "./org.service";
 import { logAudit } from "../utils/audit";
 
-/** Lista le org di cui l'utente è membro (con ruolo). */
+/** Lists the orgs the user is a member of (with role). */
 export async function listOrganizations(userId: string) {
     const organizations = await findOrganizationsForUser(userId);
     return { organizations };
 }
 
-/** Crea un'org (plugin Better Auth) + audit. */
+/** Creates an org (Better Auth plugin) + audit. */
 export async function createOrganization(
     event: H3Event<EventHandlerRequest>,
     userId: string,
@@ -33,8 +33,8 @@ export async function createOrganization(
     const created = await auth.api.createOrganization({
         body: {
             name: data.name,
-            // Slug esplicito dell'utente in passthrough (409 gestito su conflitto);
-            // se omesso, slug univoco-per-costruzione (no collisione con UNIQUE).
+            // Explicit user-supplied slug passed through (409 handled on conflict);
+            // if omitted, by-construction unique slug (no collision with UNIQUE).
             slug: data.slug ?? generateUniqueOrgSlug(data.name),
             ...(data.logo ? { logo: data.logo } : {}),
         },
@@ -50,7 +50,7 @@ export async function createOrganization(
     return { organization: created };
 }
 
-/** Dettaglio org (path-id) via plugin (authz role-based del caller in quell'org). */
+/** Org detail (path-id) via plugin (role-based authz of the caller in that org). */
 export async function getOrganization(
     event: H3Event<EventHandlerRequest>,
     organizationId: string,
@@ -66,7 +66,7 @@ export async function getOrganization(
     return { organization };
 }
 
-/** Update org (path-id) via plugin + audit. */
+/** Updates an org (path-id) via plugin + audit. */
 export async function updateOrganization(
     event: H3Event<EventHandlerRequest>,
     userId: string,
@@ -95,7 +95,7 @@ export async function updateOrganization(
     return { organization };
 }
 
-/** Delete org (path-id) via plugin + audit. */
+/** Deletes an org (path-id) via plugin + audit. */
 export async function deleteOrganization(
     event: H3Event<EventHandlerRequest>,
     userId: string,
@@ -116,7 +116,7 @@ export async function deleteOrganization(
     return { success: true };
 }
 
-/** Lista membri + inviti pending di un'org (path-id). Authz nella route via getOrgRole. */
+/** Lists members + pending invitations of an org (path-id). Authz in the route via getOrgRole. */
 export async function listOrganizationMembers(organizationId: string) {
     const [members, pendingInvitations] = await Promise.all([
         findMembers(organizationId),

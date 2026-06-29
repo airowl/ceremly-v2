@@ -14,18 +14,18 @@ import {
 } from '~~/server/services/distribution.service'
 
 /**
- * Invia l'email di reminder RSVP a UN ospite (accodato dal cron B4, SPEC §6).
- * Re-fetch guest+event+reminder dal DB. Skip SILENZIOSO se l'ospite ha già
- * risposto, è stato rimosso, ha i reminder disattivati o è senza email
- * (lo stato può cambiare tra enqueue e delivery). Subject/message arrivano
- * dal reminder, con {nome}/{link} sostituiti qui. L'attività reminder_sent
- * la scrive QUESTO handler (meta { reminderId }), solo a invio riuscito.
- * Su invio fallito lancia → QStash ritenta.
+ * Sends the RSVP reminder email to ONE guest (enqueued by cron B4, SPEC §6).
+ * Re-fetches guest+event+reminder from the DB. SILENT skip if the guest has already
+ * responded, has been removed, has reminders disabled, or has no email
+ * (state can change between enqueue and delivery). Subject/message come
+ * from the reminder, with {nome}/{link} substituted here. The reminder_sent
+ * activity is written by THIS handler (meta { reminderId }), only on successful send.
+ * On send failure, throws → QStash retries.
  */
 export async function handleSendReminderEmail(payload: JobPayload<'send-reminder-email'>): Promise<void> {
   const row = await findGuestForEmail(payload.guestId)
   if (!row) {
-    console.warn(`[job:send-reminder-email] guest ${payload.guestId} non trovato, skip`)
+    console.warn(`[job:send-reminder-email] guest ${payload.guestId} not found, skip`)
     return
   }
   const { guest, event, responseId } = row
@@ -34,14 +34,14 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
   }
 
   const reminder = await findReminderById(payload.reminderId)
-  // Guardia difensiva: il reminder deve esistere ed appartenere allo stesso evento.
+  // Defensive guard: the reminder must exist and belong to the same event.
   if (!reminder || reminder.eventId !== guest.eventId) {
-    console.warn(`[job:send-reminder-email] reminder ${payload.reminderId} non valido per guest ${payload.guestId}, skip`)
+    console.warn(`[job:send-reminder-email] reminder ${payload.reminderId} not valid for guest ${payload.guestId}, skip`)
     return
   }
 
-  // Idempotenza (difesa in profondità sul path più visibile): se questo reminder
-  // è già stato inviato all'ospite, non re-inviare su un retry QStash.
+  // Idempotency (defense in depth on the most visible path): if this reminder
+  // has already been sent to the guest, do not re-send on a QStash retry.
   if (await hasReminderActivity(guest.id, reminder.id)) {
     return
   }
@@ -61,7 +61,7 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
 
   const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
   if (!result.success) {
-    throw new Error(`[job:send-reminder-email] invio fallito per guest ${guest.id}: ${result.error}`)
+    throw new Error(`[job:send-reminder-email] send failed for guest ${guest.id}: ${result.error}`)
   }
 
   await insertActivities([{

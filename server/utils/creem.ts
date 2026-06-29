@@ -14,10 +14,10 @@ import type { CeremlyTier } from "~~/shared/constants/pricing";
 import { unlockEvent, relockEventByOrder } from "../repositories/eventRepository";
 
 /**
- * Mappa un product ID Creem al tier interno. Atelier è l'unico prodotto a
- * subscription ricorrente → unico mappato qui. Celebrazione è one-time
- * per-evento (sblocco gestito via metadata.eventId nel webhook, Fase 3) e NON
- * ha un tier-org. Ritorna null se il product ID è sconosciuto.
+ * Maps a Creem product ID to the internal tier. Atelier is the only recurring
+ * subscription product → the only one mapped here. Celebration is one-time
+ * per-event (unlock handled via metadata.eventId in the webhook, Phase 3) and does NOT
+ * have an org-tier. Returns null if the product ID is unknown.
  */
 export function getPlanFromProductId(productId: string): CeremlyTier | null {
     if (productId && productId === runtimeConfig.creemProductIdAtelier) return "atelier";
@@ -25,10 +25,10 @@ export function getPlanFromProductId(productId: string): CeremlyTier | null {
 }
 
 /**
- * Webhook checkout.completed — sblocco one-time (SPEC §6.3).
- * PATTERN-DEPARTURE: i callback Creem sono SOLO-audit (persistSubscriptions fa il
- * resto). Per i one-time non c'è macchina del plugin che persista lo stato, quindi
- * lo sblocco DEVE avvenire qui. Idempotente via predicato tier='free' in unlockEvent.
+ * Webhook checkout.completed — one-time unlock (SPEC §6.3).
+ * PATTERN-DEPARTURE: Creem callbacks are AUDIT-ONLY (persistSubscriptions does
+ * the rest). For one-time purchases there is no plugin state machine, so the
+ * unlock MUST happen here. Idempotent via the tier='free' predicate in unlockEvent.
  */
 export async function handleCheckoutCompleted(data: FlatCheckoutCompleted): Promise<void> {
     await logAudit(null, "checkout.completed", {
@@ -59,7 +59,7 @@ export async function handleCheckoutCompleted(data: FlatCheckoutCompleted): Prom
     }
 }
 
-/** Estrae il creemOrderId da refund/dispute (order/checkout come oggetto o stringa). */
+/** Extracts the creemOrderId from a refund/dispute (order/checkout as object or string). */
 function extractCreemOrderId(data: FlatRefundCreated | FlatDisputeCreated): string | undefined {
     if (typeof data.order === "string") return data.order;
     if (data.order?.id) return data.order.id;
@@ -69,7 +69,7 @@ function extractCreemOrderId(data: FlatRefundCreated | FlatDisputeCreated): stri
 
 /**
  * Webhook refund.created / dispute.created — re-lock (SPEC §6.4).
- * Senza questo un evento rimborsato resterebbe sbloccato gratis.
+ * Without this, a refunded event would remain unlocked for free.
  */
 export async function handleRefundCreated(data: FlatRefundCreated | FlatDisputeCreated): Promise<void> {
     const creemOrderId = extractCreemOrderId(data);

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Form RSVP builder — port fedele di docs/ui/project/screens/rsvp-builder.jsx.
-// Sinistra: lista domande (drag + frecce, attendance fissa a indice 0).
-// Destra: inspector (label/tipo/status, opzioni, logica condizionale, anteprima).
-// Salvataggio: PUT /api/events/:id { rsvpConfig } con validazione client.
+// RSVP form builder — faithful port of docs/ui/project/screens/rsvp-builder.jsx.
+// Left: question list (drag + arrows, attendance locked at index 0).
+// Right: inspector (label/type/status, options, conditional logic, preview).
+// Save: PUT /api/events/:id { rsvpConfig } with client-side validation.
 import draggable from "vuedraggable";
 import type {
     CeremlyEvent,
@@ -40,7 +40,7 @@ const ATTENDANCE_FALLBACK_LABELS = computed(() => [
     t("ceremly.event.rsvp.attendanceMaybe"),
 ]);
 
-// ─── Stato pagina ────────────────────────────────────────────────────
+// ─── Page state ──────────────────────────────────────────────────────
 const loading = ref(true);
 const loadError = ref<string | null>(null);
 const saveBtn = useButtonSuccess();
@@ -50,13 +50,13 @@ const savedSnapshot = ref("[]");
 const selectedId = ref<string>("attendance");
 const saveErrors = ref<string[]>([]);
 
-// Breadcrumbs + contesto evento condivisi col layout ceremly
+// Breadcrumbs + event context shared with the ceremly layout
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 const eventCtx = useState<{ id: string, title: string, type: string } | null>("ceremly-event-ctx", () => null);
 
 const dirty = computed(() => JSON.stringify(config.value) !== savedSnapshot.value);
 
-/** Estrae il messaggio (statusMessage del server o message) da un errore $fetch. */
+/** Extracts the message (statusMessage from the server or message) from a $fetch error. */
 function errorMessage(e: unknown): string | undefined {
     const err = e as { data?: { statusMessage?: string }, message?: string } | null;
     return err?.data?.statusMessage || err?.message;
@@ -88,7 +88,7 @@ async function load() {
 
 onMounted(load);
 
-// Le modifiche invalidano gli errori dell'ultimo tentativo di salvataggio
+// Changes invalidate errors from the last save attempt
 watch(config, () => {
     saveErrors.value = [];
 }, { deep: true });
@@ -107,7 +107,7 @@ onBeforeRouteLeave(() => {
     }
 });
 
-// ─── Helpers domande ─────────────────────────────────────────────────
+// ─── Question helpers ─────────────────────────────────────────────────
 function pad2(n: number): string {
     return String(n).padStart(2, "0");
 }
@@ -116,7 +116,7 @@ function questionTypeLabel(q: RsvpQuestion): string {
     return QUESTION_TYPE_LABELS.value[q.type] ?? q.type;
 }
 
-/** Label umana del valore di una condition (per attendance/boolean mappa il canonico). */
+/** Human-readable label for a condition value (for attendance/boolean maps the canonical value). */
 function conditionValueLabel(c: RsvpCondition, ref: RsvpQuestion | undefined): string {
     if (ref?.id === "attendance") {
         const idx = ATTENDANCE_CANONICAL.indexOf(c.value as typeof ATTENDANCE_CANONICAL[number]);
@@ -133,7 +133,7 @@ function conditionTagText(q: RsvpQuestion): string | null {
     return t("ceremly.event.rsvp.conditionTag", { ref: refLabel, op: OP_SYMBOLS[q.condition.op], val: conditionValueLabel(q.condition, ref) });
 }
 
-/** Condition che (dopo un riordino o una delete) puntano a domande successive o inesistenti. */
+/** Conditions that (after a reorder or delete) point to subsequent or non-existent questions. */
 const conditionIssues = computed(() => {
     const issues: { id: string, label: string, refLabel: string | null }[] = [];
     config.value.forEach((q, i) => {
@@ -159,7 +159,7 @@ const bannerErrors = computed(() => [
     ...saveErrors.value,
 ]);
 
-// ─── Selezione + riordino ────────────────────────────────────────────
+// ─── Selection + reordering ──────────────────────────────────────────
 function selectQuestion(id: string) {
     selectedId.value = id;
 }
@@ -174,14 +174,14 @@ function moveQuestion(index: number, delta: number) {
     config.value = list;
 }
 
-/** Guard drag: attendance non si sposta e nessuno può prendere l'indice 0. */
+/** Drag guard: attendance cannot move and nothing can take index 0. */
 function onDragMove(evt: { draggedContext?: { element?: RsvpQuestion, futureIndex?: number } }): boolean {
     const ctx = evt?.draggedContext;
     if (!ctx?.element || ctx.element.locked) return false;
     return (ctx.futureIndex ?? 0) > 0;
 }
 
-// ─── Aggiunta / eliminazione ─────────────────────────────────────────
+// ─── Add / delete ─────────────────────────────────────────────────────
 function randomQuestionId(): string {
     return `q_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -223,7 +223,7 @@ function confirmDeleteQuestion() {
     deleteTarget.value = null;
 }
 
-// ─── Tipo + opzioni (righe con chiave stabile per il drag) ───────────
+// ─── Type + options (rows with stable key for drag) ──────────────────
 let optionKeySeq = 0;
 const optionRows = ref<{ k: number, text: string }[]>([]);
 
@@ -275,7 +275,7 @@ watch(selectedId, () => {
     resetDemo();
 });
 
-// ─── Logica condizionale ─────────────────────────────────────────────
+// ─── Conditional logic ───────────────────────────────────────────────
 const precedingQuestions = computed(() =>
     selectedIndex.value > 0 ? config.value.slice(0, selectedIndex.value) : []);
 
@@ -338,13 +338,13 @@ function onCondOpChange() {
         c.value = Number.isFinite(n) ? n : 0;
         return;
     }
-    // tornando a è/non è da > il valore numerico va ri-mappato sul dominio del ref
+    // switching back to eq/neq from > the numeric value must be remapped to the ref's domain
     if (typeof c.value === "number" && condRef.value?.type !== "number") {
         c.value = defaultConditionValue(condRef.value, c.op);
     }
 }
 
-// ─── Anteprima inline (card destra) ──────────────────────────────────
+// ─── Inline preview (right card) ─────────────────────────────────────
 const demoNumber = ref<number | null>(null);
 const demoBool = ref<boolean | null>(null);
 const demoSingle = ref<string | null>(null);
@@ -374,7 +374,7 @@ const demoNumberRange = computed<number[]>(() => {
     return Array.from({ length: max - min + 1 }, (_, i) => min + i);
 });
 
-// ─── Deadline (tag cliccabile → input date inline) ───────────────────
+// ─── Deadline (clickable tag → inline date input) ────────────────────
 const editingDeadline = ref(false);
 const deadlineDraft = ref("");
 const deadlineInputEl = ref<HTMLInputElement | null>(null);
@@ -424,7 +424,7 @@ async function commitDeadline() {
     }
 }
 
-// ─── Anteprima ospite (modale con RsvpFormRenderer) ──────────────────
+// ─── Guest preview (modal with RsvpFormRenderer) ─────────────────────
 const previewOpen = ref(false);
 const previewDone = ref(false);
 
@@ -437,13 +437,13 @@ function closePreview() {
     previewOpen.value = false;
 }
 
-// ─── Salvataggio ─────────────────────────────────────────────────────
+// ─── Save ─────────────────────────────────────────────────────────────
 function toIntOr(value: unknown, fallback: number): number {
     const n = Number(value);
     return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
-/** Sanifica una copia della config e raccoglie gli errori bloccanti (italiano). */
+/** Sanitizes a copy of the config and collects blocking validation errors (in Italian). */
 function buildPayload(): { payload: RsvpQuestion[], errors: string[] } {
     const errors: string[] = [];
     const payload = (JSON.parse(JSON.stringify(config.value)) as RsvpQuestion[]).map((q, i) => {
@@ -602,7 +602,7 @@ async function save() {
                 >
             </div>
 
-            <!-- Warning inline (condition fuori ordine + errori di salvataggio) -->
+            <!-- Inline warning (out-of-order condition + save errors) -->
             <div
                 v-if="bannerErrors.length > 0"
                 class="cer-card"
@@ -617,7 +617,7 @@ async function save() {
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; margin-top: 24px;">
-                <!-- ── Lista domande ──────────────────────────────── -->
+                <!-- ── Question list ──────────────────────────────── -->
                 <div class="col" style="gap: 8px;">
                     <draggable
                         v-model="config"
@@ -774,7 +774,7 @@ async function save() {
                             </div>
                         </div>
 
-                        <!-- Opzioni (single/multiple) -->
+                        <!-- Options (single/multiple) -->
                         <div v-if="selected.type === 'single' || selected.type === 'multiple'" class="col" style="margin-top: 16px; gap: 6px;">
                             <label class="mono" style="font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.rsvp.labelOptions') }}</label>
 
@@ -827,7 +827,7 @@ async function save() {
                         </div>
                     </div>
 
-                    <!-- Logica condizionale -->
+                    <!-- Conditional logic -->
                     <div class="cer-card" style="padding: 20px;">
                         <div class="row" style="justify-content: space-between; align-items: center;">
                             <div>
@@ -902,7 +902,7 @@ async function save() {
                         </div>
                     </div>
 
-                    <!-- Anteprima ospite (inline) -->
+                    <!-- Guest preview (inline) -->
                     <div class="cer-card" style="padding: 20px; background: var(--bone-100);">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
                             {{ $t('ceremly.event.rsvp.previewGuest') }}
@@ -910,7 +910,7 @@ async function save() {
                         <div style="margin-top: 14px;">
                             <div class="serif" style="font-size: 22px;">{{ selected.label || $t('ceremly.event.rsvp.questionUntitled') }}</div>
 
-                            <!-- number → quadrati -->
+                            <!-- number → squares -->
                             <div v-if="selected.type === 'number' && demoNumberRange.length > 0" class="row" style="margin-top: 12px; gap: 4px; flex-wrap: wrap;">
                                 <button
                                     v-for="n in demoNumberRange"
@@ -1002,7 +1002,7 @@ async function save() {
             </div>
         </template>
 
-        <!-- ── Modale anteprima ospite (frame mobile 390px) ─────────── -->
+        <!-- ── Guest preview modal (mobile frame 390px) ─────────── -->
         <div
             v-if="previewOpen && eventData"
             style="position: fixed; inset: 0; z-index: 60; background: rgba(63, 54, 34, 0.45); display: flex; align-items: center; justify-content: center; padding: 24px;"
@@ -1037,7 +1037,7 @@ async function save() {
             </div>
         </div>
 
-        <!-- ── Conferma eliminazione domanda ────────────────────────── -->
+        <!-- ── Confirm question deletion ────────────────────────── -->
         <div
             v-if="deleteTarget"
             class="cer"

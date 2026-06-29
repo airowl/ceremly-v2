@@ -1,6 +1,6 @@
 /**
  * POST /api/projects
- * Crea un project nell'org attiva (RBAC: requireWrite).
+ * Creates a project in the active org (RBAC: requireWrite).
  */
 import { createProjectSchema } from "~~/shared/schemas/project";
 import { parseBody } from "~~/server/utils/validateBody";

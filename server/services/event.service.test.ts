@@ -16,11 +16,11 @@ vi.mock("~~/server/repositories/eventRepository", () => ({
 vi.mock("~~/server/utils/audit", () => ({ logAudit: vi.fn() }));
 
 const fakeEvent = { context: { organization: { id: "org_test" } } } as never;
-// Coppia type/templateKey reale: "coriandoli" è un template compleanno esistente.
+// Real type/templateKey pair: "coriandoli" is an existing birthday template.
 const input = { type: "compleanno", templateKey: "coriandoli", title: "Festa" } as never;
 
 function expectStatus(p: Promise<unknown>, code: number) {
-    return p.then(() => { throw new Error(`atteso throw ${code}`); }, (e: { statusCode?: number }) => expect(e.statusCode).toBe(code));
+    return p.then(() => { throw new Error(`expected throw ${code}`); }, (e: { statusCode?: number }) => expect(e.statusCode).toBe(code));
 }
 
 describe("createEvent enforcement", () => {
@@ -30,15 +30,15 @@ describe("createEvent enforcement", () => {
         createEventRow.mockResolvedValue({ id: "e_new", tier: "free" });
     });
 
-    it("evento #2 su org free -> 402", async () => {
+    it("2nd event on free org -> 402", async () => {
         isOrgAtelier.mockResolvedValue(false);
-        countActiveEventsByOrg.mockResolvedValue(1); // già 1 free attivo -> il 2° supera
+        countActiveEventsByOrg.mockResolvedValue(1); // already 1 active free -> 2nd exceeds limit
         const { createEvent } = await import("~~/server/services/event.service");
         await expectStatus(createEvent(fakeEvent, input), 402);
         expect(createEventRow).not.toHaveBeenCalled();
     });
 
-    it("org atelier -> nessun limite eventi (countActiveEventsByOrg non chiamato)", async () => {
+    it("atelier org -> no event limit (countActiveEventsByOrg not called)", async () => {
         isOrgAtelier.mockResolvedValue(true);
         countActiveEventsByOrg.mockResolvedValue(99);
         const { createEvent } = await import("~~/server/services/event.service");

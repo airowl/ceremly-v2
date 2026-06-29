@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Home eventi — port di docs/ui/project/screens/events-home.jsx (F4).
-// KPI aggregate client-side dai counts di GET /api/events, sezioni
-// Attivi / Bozze / Conclusi, empty state per zero eventi.
+// Events home — faithful port of docs/ui/project/screens/events-home.jsx (F4).
+// Client-side aggregate KPIs from GET /api/events counts, sections
+// Active / Drafts / Closed, empty state for zero events.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import EventCard from "~/components/ceremly/EventCard.vue";
 import KpiCard from "~/components/ceremly/KpiCard.vue";
@@ -20,7 +20,7 @@ useHead({ title: t("ceremly.dashboard.pageTitle") });
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 crumbs.value = [t("ceremly.dashboard.breadcrumb")];
 
-// ─── Dati reali ──────────────────────────────────────────────────────
+// ─── Real data ──────────────────────────────────────────────────────
 const { listEvents } = useEvents();
 const events = ref<EventWithCounts[]>([]);
 const pending = ref(true);
@@ -40,12 +40,12 @@ async function load() {
 
 onMounted(load);
 
-// ─── Sezioni ─────────────────────────────────────────────────────────
+// ─── Sections ─────────────────────────────────────────────────────────
 const activeEvents = computed(() =>
     events.value
         .filter((e) => e.status === "active")
         .sort((a, b) => {
-            // Ordina per data evento crescente, date mancanti in coda
+            // Sort by event date ascending, missing dates at the end
             if (!a.eventDate && !b.eventDate) return 0;
             if (!a.eventDate) return 1;
             if (!b.eventDate) return -1;
@@ -69,7 +69,7 @@ const subLine = computed(() => {
     return parts.join(" · ") || t("ceremly.dashboard.subLineNoActive");
 });
 
-// ─── KPI client-side dai counts (eventi non conclusi) ────────────────
+// ─── Client-side KPIs from counts (non-closed events) ────────────────
 const statsEvents = computed(() => events.value.filter((e) => e.status !== "closed"));
 
 function sumCounts(key: "guests" | "confirmed" | "declined" | "maybe" | "pending" | "opened" | "sent") {
@@ -100,7 +100,7 @@ const openRateSub = computed(() =>
     totalSent.value > 0 ? t("ceremly.dashboard.openRateSubGoal") : t("ceremly.dashboard.openRateSubNone"),
 );
 
-// ─── Helpers presentazione ───────────────────────────────────────────
+// ─── Presentation helpers ───────────────────────────────────────────
 function typeMeta(type: string) {
     return EVENT_TYPES.find((t) => t.key === type) ?? { key: type, label: type, icon: "events", desc: "" };
 }
@@ -127,7 +127,7 @@ function newEvent() {
 
 <template>
     <div>
-        <!-- Azione topbar -->
+        <!-- Topbar action -->
         <ClientOnly>
             <Teleport defer to="#ceremly-topbar-actions">
                 <button class="cer-btn" type="button" @click="newEvent">
@@ -139,7 +139,7 @@ function newEvent() {
         <h1>{{ $t('ceremly.dashboard.title') }}</h1>
         <div class="h-sub">{{ subLine }}</div>
 
-        <!-- Loading: skeleton sobri -->
+        <!-- Loading: minimal skeletons -->
         <template v-if="pending">
             <div class="kpi-row" style="margin-top: 24px;">
                 <div v-for="i in 4" :key="i" class="kpi static">
@@ -160,7 +160,7 @@ function newEvent() {
             </div>
         </template>
 
-        <!-- Errore caricamento -->
+        <!-- Load error -->
         <div
             v-else-if="loadError"
             class="cer-card"
@@ -175,7 +175,7 @@ function newEvent() {
             </button>
         </div>
 
-        <!-- Empty state: zero eventi -->
+        <!-- Empty state: zero events -->
         <div
             v-else-if="events.length === 0"
             class="cer-card"
@@ -198,7 +198,7 @@ function newEvent() {
             </div>
         </div>
 
-        <!-- Contenuto -->
+        <!-- Content -->
         <template v-else>
             <!-- Quick stats -->
             <div class="kpi-row" style="margin-top: 24px;">
@@ -217,7 +217,7 @@ function newEvent() {
             </div>
 
             <div style="margin-top: 32px;">
-                <!-- Attivi -->
+                <!-- Active -->
                 <template v-if="activeEvents.length > 0">
                     <div class="row" style="justify-content: space-between;">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.dashboard.sectionActive') }}</div>
@@ -233,7 +233,7 @@ function newEvent() {
                     </div>
                 </template>
 
-                <!-- Bozze + crea nuovo -->
+                <!-- Drafts + create new -->
                 <div
                     class="mono"
                     :style="{
@@ -277,7 +277,7 @@ function newEvent() {
                     </div>
                 </div>
 
-                <!-- Conclusi -->
+                <!-- Closed -->
                 <template v-if="closedEvents.length > 0">
                     <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500); margin-top: 28px;">
                         {{ $t('ceremly.dashboard.sectionClosed') }}
@@ -297,7 +297,7 @@ function newEvent() {
 </template>
 
 <style scoped>
-/* Skeleton shimmer sobrio per gli stati di caricamento */
+/* Subtle skeleton shimmer for loading states */
 .cer-skel {
     background: linear-gradient(90deg, var(--bone-100) 25%, var(--bone-200) 50%, var(--bone-100) 75%);
     background-size: 200% 100%;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Editor invito — port fedele di docs/ui/project/screens/editor.jsx (EditorScreen).
-// Grid 220 / 1fr / 280 a piena altezza: libreria blocchi · anteprima live
-// (InviteRenderer interactive) · inspector del blocco selezionato.
+// Invite editor — faithful port of docs/ui/project/screens/editor.jsx (EditorScreen).
+// Full-height 220 / 1fr / 280 grid: block library · live preview
+// (InviteRenderer interactive) · selected block inspector.
 import type {
     BlockType,
     CeremlyEvent,
@@ -26,29 +26,29 @@ const route = useRoute();
 const toast = useToast();
 const eventId = computed(() => String(route.params.id ?? ""));
 
-// ─── Stato ───────────────────────────────────────────────────────────
+// ─── State ───────────────────────────────────────────────────────────
 const eventData = ref<CeremlyEvent | null>(null);
 const blocks = ref<InviteBlock[]>([]);
-/** Deadline RSVP locale (YYYY-MM-DD), salvata su event.rsvpDeadline col PUT. */
+/** Local RSVP deadline (YYYY-MM-DD), saved to event.rsvpDeadline via PUT. */
 const rsvpDeadline = ref("");
 const pending = ref(true);
 const loadError = ref<string | null>(null);
 
 const activeBlockId = ref<string | null>(null);
-// Tema invito (palette + carattere), a livello evento. null ⇒ look globale (.cer).
+// Invite theme (palette + font), at event level. null ⇒ global look (.cer).
 const theme = ref<InviteTheme | null>(null);
 const fontFamily = ref<string | null>(null);
 const fontSearch = ref("");
 const hoverFont = ref<string | null>(null);
-// L'inspector mostra il pannello "Tema & colori" invece del blocco selezionato.
+// The inspector shows the "Theme & colors" panel instead of the selected block.
 const appearance = ref(false);
 const device = ref<"desktop" | "mobile">("desktop");
 const saveBtn = useButtonSuccess();
 const previewOpen = ref(false);
 const confirmDeleteId = ref<string | null>(null);
-/** Path di destinazione in attesa di conferma uscita (modal modifiche non salvate). */
+/** Destination path awaiting exit confirmation (unsaved changes modal). */
 const pendingLeavePath = ref<string | null>(null);
-/** Bypassa la guard quando l'utente ha già confermato l'uscita dal modal. */
+/** Bypasses the guard once the user has confirmed exit via the modal. */
 const bypassLeaveGuard = ref(false);
 const uploadingGallery = ref(false);
 const galleryInput = ref<HTMLInputElement | null>(null);
@@ -60,12 +60,12 @@ function snapshot(): string {
 }
 const isDirty = computed(() => savedSnapshot.value !== "" && snapshot() !== savedSnapshot.value);
 
-// ─── Breadcrumbs + contesto evento sidebar ───────────────────────────
+// ─── Breadcrumbs + event context sidebar ─────────────────────────────
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 crumbs.value = [t("ceremly.event.editor.breadcrumb.events"), t("ceremly.event.editor.breadcrumb.event"), t("ceremly.event.editor.breadcrumb.invite")];
 
-// ─── Libreria blocchi (label e icone come blockLib del mockup) ───────
+// ─── Block library (labels and icons matching blockLib in the mockup) ─
 const BLOCK_LIB: { type: BlockType; label: string; icon: string; locked?: boolean }[] = [
     { type: "header", label: t("ceremly.event.editor.library.header"), icon: "ring" },
     { type: "message", label: t("ceremly.event.editor.library.message"), icon: "edit" },
@@ -90,7 +90,7 @@ const INSPECTOR_TITLES: Record<BlockType, string> = {
     rsvp: t("ceremly.event.editor.inspector.rsvp"),
 };
 
-// ─── Blocchi: factory placeholder ────────────────────────────────────
+// ─── Blocks: placeholder factory ─────────────────────────────────────
 function newBlockId(): string {
     return `b_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -119,7 +119,7 @@ function makeBlock(type: BlockType): InviteBlock {
     }
 }
 
-/** Garantisce le invarianti del PUT: header presente e primo, rsvp presente e ultimo. */
+/** Enforces PUT invariants: header present and first, rsvp present and last. */
 function normalizeBlocks(list: InviteBlock[]): InviteBlock[] {
     const headers = list.filter((b) => b.type === "header");
     const rsvps = list.filter((b) => b.type === "rsvp");
@@ -127,7 +127,7 @@ function normalizeBlocks(list: InviteBlock[]): InviteBlock[] {
     return [headers[0] ?? makeBlock("header"), ...middle, rsvps[0] ?? makeBlock("rsvp")];
 }
 
-// ─── Fetch evento ────────────────────────────────────────────────────
+// ─── Fetch event ─────────────────────────────────────────────────────
 async function loadEvent() {
     pending.value = true;
     loadError.value = null;
@@ -157,7 +157,7 @@ const templateName = computed(() => {
     return getTemplate(key)?.name ?? key;
 });
 
-// ─── Selezione e accessor tipizzati ──────────────────────────────────
+// ─── Selection and typed accessors ───────────────────────────────────
 const activeBlock = computed<InviteBlock | null>(
     () => blocks.value.find((b) => b.id === activeBlockId.value) ?? null,
 );
@@ -178,7 +178,7 @@ const isRemovable = computed(
     () => !!activeBlock.value && activeBlock.value.type !== "header" && activeBlock.value.type !== "rsvp",
 );
 
-// ─── Libreria: dot / click / blocco custom ───────────────────────────
+// ─── Library: dot / click / custom block ─────────────────────────────
 function isOnPage(type: BlockType): boolean {
     return blocks.value.some((b) => b.type === type);
 }
@@ -207,18 +207,18 @@ function addCustomBlock() {
     insertBeforeRsvp(blk);
 }
 
-// ─── Aspetto: tema (colori + carattere) ──────────────────────────────
+// ─── Appearance: theme (colors + font) ───────────────────────────────
 function openAppearance() {
     appearance.value = true;
-    activeBlockId.value = null; // niente outline nel preview mentre si edita il tema
+    activeBlockId.value = null; // no outline in preview while editing the theme
 }
 function selectBlock(id: string) {
     appearance.value = false;
     activeBlockId.value = id;
 }
-/** Pallino nella libreria: accento del tema scelto o, se null, del template. */
+/** Dot in the library: accent of the chosen theme or, if null, of the template. */
 const currentAccent = computed(() => theme.value?.accent ?? getTemplate(eventData.value?.templateKey ?? "")?.accent ?? "#d4a373");
-/** Anteprima carattere: i nomi reali della coppia se presenti, altrimenti sample. */
+/** Font preview: the couple's real names if present, otherwise a sample. */
 const fontSampleNames = computed(() => {
     const header = blocks.value.find((b) => b.type === "header");
     if (header?.type === "header") {
@@ -228,7 +228,7 @@ const fontSampleNames = computed(() => {
     return t("ceremly.event.editor.appearance.fontSample");
 });
 
-/** I 4 ruoli colore mostrati come picker. */
+/** The 4 color roles exposed as pickers. */
 const COLOR_ROLES = [
     { key: "paper", label: () => t("ceremly.event.editor.appearance.colorPaper") },
     { key: "accent", label: () => t("ceremly.event.editor.appearance.colorAccent") },
@@ -237,17 +237,17 @@ const COLOR_ROLES = [
 ] as const;
 
 /**
- * Look effettivo dell'invito senza tema custom: i token globali `.cer` ma con
- * l'accento del TEMPLATE corrente (è ciò che l'utente vede a schermo). È la base
- * dei picker e della prima modifica, così toccare un colore non fa scattare gli
- * altri 3 ai default toscana (≠ look del template).
+ * Effective look of the invite without a custom theme: the global `.cer` tokens
+ * but with the current TEMPLATE accent (what the user sees on screen). This is the
+ * base for pickers and the first edit, so touching one color does not snap
+ * the other 3 to Tuscany defaults (≠ template look).
  */
 const effectiveTheme = computed<InviteTheme>(() => ({
     ...DEFAULT_THEME,
     accent: getTemplate(eventData.value?.templateKey ?? "")?.accent ?? DEFAULT_THEME.accent,
 }));
 
-/** Lettura/scrittura di un singolo colore: inizializza dal look effettivo se null. */
+/** Read/write a single color role: initializes from the effective look when null. */
 function colorValue(role: keyof InviteTheme): string {
     return theme.value?.[role] ?? effectiveTheme.value[role];
 }
@@ -257,9 +257,9 @@ function setColor(role: keyof InviteTheme, value: string) {
     theme.value = { ...base, [role]: value };
 }
 /**
- * Blur del campo hex testuale: applica solo un `#rrggbb` valido; se l'input è
- * invalido ripristina il valore corrente (l'input one-way non si re-sincronizza
- * da solo, altrimenti resterebbe mostrato un valore mai applicato).
+ * Blur of the hex text field: applies only a valid `#rrggbb`; if the input is
+ * invalid, restores the current value (the one-way input does not re-sync
+ * on its own, otherwise it would keep showing a value that was never applied).
  */
 function onHexBlur(role: keyof InviteTheme, e: Event) {
     const el = e.target as HTMLInputElement;
@@ -268,40 +268,40 @@ function onHexBlur(role: keyof InviteTheme, e: Event) {
     else el.value = colorValue(role);
 }
 
-/** Applica un preset (riempie i 4 picker). */
+/** Applies a preset (fills all 4 pickers). */
 function applyPreset(p: InviteTheme) {
     theme.value = { paper: p.paper, accent: p.accent, deep: p.deep, onAccent: p.onAccent };
 }
 
-/** Reset al look globale. */
+/** Resets to the global look. */
 function resetTheme() {
     theme.value = null;
     fontFamily.value = null;
 }
 
-/** Catalogo filtrato dalla ricerca. */
+/** Font catalog filtered by the search query. */
 const filteredFonts = computed(() => {
     const q = fontSearch.value.trim().toLowerCase();
     if (!q) return INVITE_FONT_CATALOG;
     return INVITE_FONT_CATALOG.filter((f) => f.family.toLowerCase().includes(q));
 });
 
-/** Avvisi di contrasto (non bloccanti) sulle 3 coppie critiche. */
+/** Non-blocking contrast warnings for the 3 critical color pairs. */
 const contrastWarnings = computed<string[]>(() => {
     const t0 = theme.value;
     if (!t0) return [];
     const w: string[] = [];
     if (!isReadable(t0.onAccent, t0.accent)) w.push(t("ceremly.event.editor.appearance.warnButton"));
-    // Corpo testo: l'inchiostro è derivato dal paper (deriveInk). Campiona il tono
-    // più CHIARO effettivamente renderizzato (ink500, usato per testi secondari):
-    // è quello a contrasto peggiore, così l'avviso non resta muto mentre i testi
-    // secondari scendono sotto l'AA su paper mid-tone.
+    // Body text: ink is derived from paper (deriveInk). Samples the LIGHTEST
+    // tone actually rendered (ink500, used for secondary text): it has the
+    // worst contrast, so the warning does not stay silent while secondary
+    // text drops below AA on a mid-tone paper.
     if (!isReadable(deriveInk(t0.paper).ink500, t0.paper)) w.push(t("ceremly.event.editor.appearance.warnBody"));
     if (!isReadable(t0.deep, t0.paper, true)) w.push(t("ceremly.event.editor.appearance.warnTitle"));
     return w;
 });
 
-// ─── Riordino (header fisso primo, rsvp fisso ultimo) ────────────────
+// ─── Reordering (header fixed first, rsvp fixed last) ────────────────
 const canMoveUp = computed(() => isRemovable.value && activeIndex.value > 1);
 const canMoveDown = computed(() => isRemovable.value && activeIndex.value < blocks.value.length - 2);
 
@@ -319,7 +319,7 @@ function moveActive(dir: -1 | 1) {
     blocks.value = arr;
 }
 
-// ─── Eliminazione blocco (con conferma) ──────────────────────────────
+// ─── Block deletion (with confirmation) ──────────────────────────────
 const confirmDeleteLabel = computed(() => {
     const blk = blocks.value.find((b) => b.id === confirmDeleteId.value);
     return blk ? INSPECTOR_TITLES[blk.type] : "";
@@ -341,7 +341,7 @@ function confirmDelete() {
     }
 }
 
-// ─── Campi inspector: header / program / gallery ─────────────────────
+// ─── Inspector fields: header / program / gallery ────────────────────
 function addName() {
     const d = headerD.value;
     if (d && d.names.length < 2) d.names.push("");
@@ -398,7 +398,7 @@ async function onGalleryFile(e: Event) {
     }
 }
 
-// ─── Salvataggio ─────────────────────────────────────────────────────
+// ─── Save ─────────────────────────────────────────────────────────────
 async function save(): Promise<boolean> {
     if (!eventData.value || saveBtn.busy) return false;
     const rsvpBlock = blocks.value.find((b) => b.type === "rsvp");
@@ -440,7 +440,7 @@ async function saveAndContinue() {
     if (ok) await navigateTo(`/dashboard/events/${eventId.value}/guests`);
 }
 
-// ─── Warning uscita con modifiche non salvate ────────────────────────
+// ─── Unsaved changes exit warning ────────────────────────────────────
 function onBeforeUnload(e: BeforeUnloadEvent) {
     if (!isDirty.value) return;
     e.preventDefault();
@@ -449,9 +449,9 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
 onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
 
-// Navigazione interna SPA: blocca e mostra il modal custom invece di window.confirm.
-// Il `beforeunload` (chiusura tab/refresh) resta il dialog nativo: i browser non
-// permettono UI custom in quell'evento.
+// SPA internal navigation: blocks and shows the custom modal instead of window.confirm.
+// The `beforeunload` (tab close/refresh) keeps the native dialog: browsers do not
+// allow custom UI in that event.
 onBeforeRouteLeave((to) => {
     if (bypassLeaveGuard.value) return true;
     if (isDirty.value) {
@@ -472,7 +472,7 @@ async function discardAndLeave() {
 }
 async function saveAndLeave() {
     const ok = await save();
-    if (!ok) return; // save() mostra già il toast d'errore; il modal resta aperto.
+    if (!ok) return; // save() already shows the error toast; the modal stays open.
     const path = pendingLeavePath.value;
     pendingLeavePath.value = null;
     bypassLeaveGuard.value = true;
@@ -482,7 +482,7 @@ async function saveAndLeave() {
 
 <template>
     <div class="cer" style="height: 100%;">
-        <!-- Loading: skeleton 3 colonne -->
+        <!-- Loading: 3-column skeleton -->
         <div
             v-if="pending"
             style="display: grid; grid-template-columns: 220px 1fr 280px; gap: 16px; height: 100%;"
@@ -508,7 +508,7 @@ async function saveAndLeave() {
             v-else-if="eventData"
             style="display: grid; grid-template-columns: 220px 1fr 280px; gap: 16px; height: 100%;"
         >
-            <!-- Libreria blocchi -->
+            <!-- Block library -->
             <div class="col" style="gap: 14px; min-height: 0; overflow-y: auto;">
                 <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
                     {{ $t('ceremly.event.editor.sidebar.blocksHeading') }}
@@ -614,7 +614,7 @@ async function saveAndLeave() {
 
             <!-- Inspector -->
             <div class="col cer-card scroll" style="padding: 16px; gap: 14px; min-height: 0; overflow-y: auto;">
-                <!-- Pannello Aspetto: color picker + ricerca font + preset + contrasto -->
+                <!-- Appearance panel: color picker + font search + presets + contrast -->
                 <template v-if="appearance">
                     <div>
                         <div class="mono" style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">
@@ -623,7 +623,7 @@ async function saveAndLeave() {
                         <div class="serif" style="font-size: 22px; margin-top: 2px;">{{ $t('ceremly.event.editor.appearance.themeColors') }}</div>
                     </div>
 
-                    <!-- Preset scorciatoie -->
+                    <!-- Preset shortcuts -->
                     <div class="col" style="gap: 6px;">
                         <label class="ins-label">{{ $t('ceremly.event.editor.appearance.presets') }}</label>
                         <div class="row" style="gap: 6px; flex-wrap: wrap;">
@@ -641,7 +641,7 @@ async function saveAndLeave() {
                         </div>
                     </div>
 
-                    <!-- Color picker (4 ruoli) -->
+                    <!-- Color picker (4 roles) -->
                     <div class="col" style="gap: 8px;">
                         <label class="ins-label">{{ $t('ceremly.event.editor.appearance.colors') }}</label>
                         <div v-for="role in COLOR_ROLES" :key="role.key" class="row" style="gap: 8px; align-items: center;">
@@ -669,7 +669,7 @@ async function saveAndLeave() {
 
                     <div class="divider" />
 
-                    <!-- Font con ricerca -->
+                    <!-- Font with search -->
                     <div class="col" style="gap: 8px;">
                         <label class="ins-label">{{ $t('ceremly.event.editor.appearance.font') }}</label>
                         <input v-model="fontSearch" class="cer-input" :placeholder="$t('ceremly.event.editor.appearance.fontSearch')">
@@ -972,7 +972,7 @@ async function saveAndLeave() {
             </div>
         </div>
 
-        <!-- Azioni topbar -->
+        <!-- Topbar actions -->
         <ClientOnly>
             <Teleport defer to="#ceremly-topbar-actions">
                 <div class="row" style="gap: 8px;">
@@ -1012,7 +1012,7 @@ async function saveAndLeave() {
             </Teleport>
         </ClientOnly>
 
-        <!-- Modale anteprima ospite (mobile 390px) -->
+        <!-- Guest preview modal (mobile 390px) -->
         <div v-if="previewOpen && eventData" class="cer-overlay" @click.self="previewOpen = false">
             <div style="width: 390px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 10px;">
                 <div class="row" style="justify-content: space-between;">
@@ -1036,7 +1036,7 @@ async function saveAndLeave() {
             </div>
         </div>
 
-        <!-- Conferma rimozione blocco -->
+        <!-- Block removal confirmation -->
         <div v-if="confirmDeleteId" class="cer-overlay" @click.self="confirmDeleteId = null">
             <div class="cer-card col" style="width: 380px; max-width: calc(100vw - 32px); padding: 22px; gap: 10px;">
                 <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.editor.deleteModal.title') }}</div>
@@ -1057,7 +1057,7 @@ async function saveAndLeave() {
             </div>
         </div>
 
-        <!-- Conferma uscita con modifiche non salvate (navigazione interna) -->
+        <!-- Exit confirmation with unsaved changes (internal navigation) -->
         <div v-if="pendingLeavePath" class="cer-overlay" @click.self="cancelLeave">
             <div class="cer-card col" style="width: 400px; max-width: calc(100vw - 32px); padding: 22px; gap: 10px;">
                 <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.editor.unsavedModal.title') }}</div>

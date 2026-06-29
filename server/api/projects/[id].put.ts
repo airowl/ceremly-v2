@@ -1,6 +1,6 @@
 /**
  * PUT /api/projects/:id
- * Aggiorna un project (RBAC: requireWrite + assertOwnership nel service).
+ * Updates a project (RBAC: requireWrite + assertOwnership in the service).
  */
 import { updateProjectSchema } from "~~/shared/schemas/project";
 import { parseBody } from "~~/server/utils/validateBody";

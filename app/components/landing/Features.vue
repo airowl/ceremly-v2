@@ -28,13 +28,13 @@ const features = computed(() => [
     },
 ])
 
-// Stato per gestire le animazioni delle card
+// State to manage card animations
 const cardRefs = ref<any[]>([])
 const isVisible = ref<boolean[]>(new Array(4).fill(false))
 const mouseHandlers = new Map<HTMLElement, (e: Event) => void>()
 let observer: IntersectionObserver | null = null
 
-// Effetto spotlight che segue il mouse
+// Spotlight effect that follows the mouse
 const handleMouseMove = (event: Event, card: HTMLElement) => {
     if (!(event instanceof MouseEvent)) return
     const rect = card.getBoundingClientRect()
@@ -105,24 +105,24 @@ v-for="(feature, index) in features" :key="index" :ref="(el) => { if (el) cardRe
                 :icon="feature.icon" class="feature-card relative overflow-hidden group cursor-default" :class="{
                     'is-visible': isVisible[index]
                 }">
-                <!-- Sfondo gradiente animato -->
+                <!-- Animated gradient background -->
                 <div
 class="absolute inset-0 bg-linear-to-br from-primary-500/5 via-transparent to-primary-600/5
                            opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <!-- Effetto luce che segue il mouse -->
+                <!-- Mouse-tracking light effect -->
                 <div
 class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style="background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--color-primary-500), 0.1), transparent 40%)" />
 
                 <template #icon>
                     <div class="relative">
-                        <!-- Icona con animazione pulse al hover -->
+                        <!-- Icon with pulse animation on hover -->
                         <UIcon
 :name="feature.icon" class="w-8 h-8 transition-all duration-300
                                    group-hover:scale-110 group-hover:rotate-3
                                    text-primary-500 dark:text-primary-400" />
-                        <!-- Ring animato dietro l'icona -->
+                        <!-- Animated ring behind the icon -->
                         <div
 class="absolute inset-0 -z-10 rounded-full bg-primary-500/20
                                    scale-0 group-hover:scale-150 opacity-0 group-hover:opacity-100
@@ -156,7 +156,7 @@ class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line
                     </div>
                 </template>
 
-                <!-- Decorazione angolo -->
+                <!-- Corner decoration -->
                 <div
 class="absolute top-0 right-0 w-20 h-20 transform translate-x-10 -translate-y-10
                             bg-linear-to-br from-primary-400/20 to-transparent rounded-full
@@ -186,7 +186,7 @@ class="absolute top-0 right-0 w-20 h-20 transform translate-x-10 -translate-y-10
     box-shadow: 0 25px 50px -12px rgba(212, 163, 115, 0.25);
 }
 
-/* Animazione gradiente di sfondo */
+/* Background gradient animation */
 .feature-card :deep(.absolute.bg-linear-to-br) {
     transition: opacity 0.5s ease-out;
 }

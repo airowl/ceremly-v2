@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Stepper — port dello stepper di docs/ui/project/screens/onboarding.jsx:
-// cerchi numerati 22px, check sui completati, linee di raccordo.
+// Stepper — port of the stepper from docs/ui/project/screens/onboarding.jsx:
+// numbered circles 22px, checkmark on completed steps, connecting lines.
 import CerIcon from "./CerIcon.vue";
 
 defineProps<{

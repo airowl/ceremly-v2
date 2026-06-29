@@ -1,7 +1,7 @@
 /**
  * GET /api/events/:id/export
- * CSV ospiti (UTF-8 BOM, RFC 4180, colonne dinamiche da rsvpConfig).
- * RBAC: requireMember + assertOwnership nel service.
+ * Guest CSV (UTF-8 BOM, RFC 4180, dynamic columns from rsvpConfig).
+ * RBAC: requireMember + assertOwnership in the service.
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { exportGuestsCsv } from "~~/server/services/guest.service";

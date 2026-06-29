@@ -1,7 +1,7 @@
 /**
- * useEventGuests — wrapper $fetch tipizzati per ospiti + distribuzione
- * (pattern useProjects). Shape verificate su guest.service.ts e
- * distribution.service.ts (fonte di verità: il codice server).
+ * useEventGuests — typed $fetch wrappers for guests + distribution
+ * (useProjects pattern). Shapes verified against guest.service.ts and
+ * distribution.service.ts (source of truth: server code).
  */
 import type {
     CeremlyGuest,
@@ -16,13 +16,13 @@ import type {
     UpdateGuestInput,
 } from "~~/shared/schemas/ceremly";
 
-/** Summary di GET /api/events/:id/guests (solo ospiti attivi). */
+/** Summary from GET /api/events/:id/guests (active guests only). */
 export interface GuestListSummary {
     total: number;
     confirmed: number;
     declined: number;
     maybe: number;
-    /** opened + not_opened (i 'maybe' hanno risposto: non sono pending). */
+    /** opened + not_opened ('maybe' guests have replied: they are not pending). */
     pending: number;
     opened: number;
     removed: number;
@@ -33,14 +33,14 @@ export interface GuestListResult {
     summary: GuestListSummary;
 }
 
-/** Dettaglio di GET /api/events/:id/guests/:guestId. */
+/** Detail from GET /api/events/:id/guests/:guestId. */
 export interface GuestDetailResult {
     guest: CeremlyGuest;
     response: RsvpResponseData | null;
     activities: GuestActivity[];
 }
 
-/** Riga problematica dell'import (indice 1-based su `rows`). */
+/** Problematic row in the import (1-based index on `rows`). */
 export interface GuestImportIssue {
     row: number;
     reason: string;
@@ -55,15 +55,15 @@ export interface GuestImportResult {
 export interface SendInvitesResult {
     queued: number;
     skippedNoEmail: number;
-    /** Ospiti con email il cui accodamento è fallito (non marcati "Inviato"). */
+    /** Guests with email whose queuing failed (not marked "Sent"). */
     failed: number;
 }
 
 export function useEventGuests() {
     const { isLoading, error, run: runApi } = useApi();
 
-    // Adapter sulla vecchia firma run(fn, fallback) → useApi senza toast
-    // (le pagine ospiti gestiscono i propri toast).
+    // Adapter for the old run(fn, fallback) signature → useApi without toast
+    // (guest pages manage their own toasts).
     function run<T>(fn: () => Promise<T>, fallback: string): Promise<T> {
         return runApi(fn, { fallback, errorToast: false });
     }

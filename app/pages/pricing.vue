@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Sito pubblico → Prodotto → Prezzi. Port di PrezziPage (site-product.jsx).
-// Niente hero: parte dai prezzi (CerSitePricing) → tabella confronto → FAQ → CTA.
+// Public site → Product → Pricing. Port of PrezziPage (site-product.jsx).
+// No hero: starts with pricing (CerSitePricing) → comparison table → FAQ → CTA.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteH2 from '~/components/ceremly/CerSiteH2.vue'
@@ -27,7 +27,7 @@ useSeoMeta({
     ogType: 'website',
 })
 
-// Righe della tabella confronto: ogni cella è "yes" / "no" / testo libero.
+// Comparison table rows: each cell is "yes" / "no" / free text.
 interface Row { l: string, free: string, celeb: string, atelier: string }
 const rows = computed(() => (tm('ceremly.site.prezzi.rows') as Row[]).map(x => ({
     l: rt(x.l),
@@ -53,7 +53,7 @@ const faq = computed(() => (tm('ceremly.site.prezzi.faq') as Faq[]).map(x => ({ 
             <CerSitePricing />
         </div>
 
-        <!-- tabella confronto -->
+        <!-- comparison table -->
         <div class="cer-site-wrap" style="padding-top: 24px; padding-bottom: 72px;">
             <CerSiteH2 :tag="t('ceremly.site.prezzi.tableTag')" :title="t('ceremly.site.prezzi.tableTitle')" />
             <div class="cer-card cer-pz-table-wrap">

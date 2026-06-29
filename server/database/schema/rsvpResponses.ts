@@ -7,9 +7,9 @@ import { events } from "./events";
 import { guests } from "./guests";
 
 /**
- * Risposte RSVP (SPEC §2) — una sola risposta per ospite (guestId UNIQUE, upsert):
- * la riga rappresenta sempre l'ultima versione. answers è jsonb tipizzato
- * RsvpAnswers (SPEC §3.3), chiave = question.id.
+ * RSVP responses (SPEC §2) — one response per guest (guestId UNIQUE, upsert):
+ * the row always represents the latest version. answers is typed jsonb
+ * RsvpAnswers (SPEC §3.3), keyed by question.id.
  */
 export const rsvpResponses = pgTable(
     "rsvp_responses",
@@ -28,8 +28,8 @@ export const rsvpResponses = pgTable(
         attending: text("attending").notNull(), // yes | no | maybe
         companionsCount: integer("companions_count").default(0).notNull(),
         answers: jsonb("answers").$type<RsvpAnswers>().default({}).notNull(),
-        declineMessage: text("decline_message"), // messaggio opzionale se `no`
-        submittedAt: timestamp("submitted_at").defaultNow().notNull(), // prima compilazione
+        declineMessage: text("decline_message"), // optional message when `no`
+        submittedAt: timestamp("submitted_at").defaultNow().notNull(), // first submission
         updatedAt: timestamp("updated_at")
             .defaultNow()
             .$onUpdate(() => new Date())

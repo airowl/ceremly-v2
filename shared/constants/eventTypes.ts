@@ -1,6 +1,6 @@
 /**
- * Tipi di evento supportati da Ceremly (SPEC §4).
- * `icon` è la chiave di CerIcon.vue; `desc` compare nel wizard di creazione.
+ * Event types supported by Ceremly (SPEC §4).
+ * `icon` is the key for CerIcon.vue; `desc` appears in the creation wizard.
  */
 import type { EventTypeKey } from "../types/ceremly";
 
@@ -20,7 +20,7 @@ export const EVENT_TYPES = [
     { key: "compleanno", label: "Compleanno", icon: "cake", desc: "Festa, dress code, regali" },
 ] as const satisfies readonly EventTypeDef[];
 
-/** Label umana di un tipo evento (fallback: la key stessa). */
+/** Human-readable label for an event type (fallback: the key itself). */
 export function getEventTypeLabel(key: EventTypeKey): string {
     return EVENT_TYPES.find((t) => t.key === key)?.label ?? key;
 }

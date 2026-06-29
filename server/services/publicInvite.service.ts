@@ -1,14 +1,14 @@
 /**
- * Public Invite Service — logica di business delle route pubbliche ospite
- * (SPEC §6 "Pubblico ospite" + §6.2 + §8, owner B2).
+ * Public Invite Service — business logic for public guest routes
+ * (SPEC §6 "Public guest" + §6.2 + §8, owner B2).
  *
- * Regole chiave:
- *  - NESSUNA auth: l'ospite accede via token opaco. 404 GENERICO e indistinguibile
- *    ("Invito non disponibile") per token inesistente / ospite rimosso / evento
- *    draft → nessuna enumeration (SPEC §8.2).
- *  - Il payload pubblico §6.2 è costruito CAMPO PER CAMPO, mai con spread della
- *    riga DB: vietato esporre organizationId, email/phone/notes, token, id interni.
- *  - Le azioni ospite NON sono audit-logged (nessun userId): solo guest_activities.
+ * Key rules:
+ *  - NO auth: the guest accesses via an opaque token. GENERIC and indistinguishable
+ *    404 ("Invito non disponibile") for non-existent token / removed guest / draft
+ *    event → no enumeration (SPEC §8.2).
+ *  - The public payload §6.2 is built FIELD BY FIELD, never with a spread of the
+ *    DB row: exposing organizationId, email/phone/notes, token, or internal ids is forbidden.
+ *  - Guest actions are NOT audit-logged (no userId): only guest_activities.
  */
 import type { PublicRsvpInput } from "~~/shared/schemas/ceremly";
 import type {
@@ -29,17 +29,17 @@ import { clearEventCleanupWarned, findEventBySlug } from "../repositories/eventR
 import { verifyPreviewToken } from "../utils/previewToken";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./event.service";
 
-/** Nome ospite d'esempio per l'anteprima firmata (allineato all'email di test). */
+/** Example guest name for the signed preview (aligned with the test email). */
 const PREVIEW_GUEST_NAME = "Anna";
 
-/** 404 generico §8.2: stessa risposta per ogni causa (no enumeration). */
+/** Generic 404 §8.2: same response for every cause (no enumeration). */
 function inviteNotFound() {
     return createError({ statusCode: 404, statusMessage: "Invito non disponibile" });
 }
 
 /**
- * Lookup by token + gate di visibilità: l'invito esiste per l'ospite solo se
- * il token matcha, l'ospite non è rimosso e l'evento non è in bozza.
+ * Lookup by token + visibility gate: the invite exists for the guest only if
+ * the token matches, the guest is not removed, and the event is not in draft.
  */
 async function findActiveInviteByToken(token: string) {
     const row = await findGuestWithEventByToken(token);
@@ -49,17 +49,17 @@ async function findActiveInviteByToken(token: string) {
     return row;
 }
 
-/** true se la deadline RSVP esiste ed è passata. */
+/** true if the RSVP deadline exists and has passed. */
 function isDeadlinePassed(rsvpDeadline: Date | null, now: Date): boolean {
     return rsvpDeadline !== null && now > rsvpDeadline;
 }
 
-/** Riga evento per il payload pubblico (sia token-ospite sia anteprima firmata). */
+/** Event row for the public payload (both guest-token and signed preview paths). */
 type InviteEventRow = NonNullable<Awaited<ReturnType<typeof findEventBySlug>>>;
 
 /**
- * Mapping §6.2 del campo `event` — campo per campo, MAI spread della riga DB.
- * Builder unico così invito ospite e anteprima non divergono al variare dei campi.
+ * §6.2 mapping of the `event` field — field by field, NEVER spread of the DB row.
+ * Single builder so the guest invite and the preview never diverge as fields change.
  */
 function buildInviteEventPayload(eventRow: InviteEventRow): PublicInvitePayload["event"] {
     return {
@@ -80,8 +80,8 @@ function buildInviteEventPayload(eventRow: InviteEventRow): PublicInvitePayload[
 
 /**
  * GET /api/public/invite/:token (SPEC §6.2).
- * Side-effect di tracking: openCount+1, firstOpenedAt al primo accesso,
- * activity `link_opened` con meta { nth } (numero progressivo di apertura).
+ * Tracking side-effect: openCount+1, firstOpenedAt on first access,
+ * activity `link_opened` with meta { nth } (progressive open count).
  */
 export async function getPublicInvite(token: string): Promise<PublicInvitePayload> {
     const { guest, event: eventRow, response } = await findActiveInviteByToken(token);
@@ -93,12 +93,12 @@ export async function getPublicInvite(token: string): Promise<PublicInvitePayloa
         insertActivity(guest.organizationId, guest.eventId, guest.id, "link_opened", { nth }),
     ]);
 
-    // Evento 'closed': l'invito resta visibile (più cortese di un 404) ma il
-    // form RSVP è chiuso, esattamente come a deadline passata.
+    // Event 'closed': the invite remains visible (more courteous than a 404) but
+    // the RSVP form is closed, exactly as when the deadline has passed.
     const deadlinePassed = eventRow.status === "closed"
         || isDeadlinePassed(eventRow.rsvpDeadline, new Date());
 
-    // Payload §6.2 campo per campo — MAI spread della riga DB.
+    // Payload §6.2 field by field — NEVER spread of the DB row.
     return {
         event: buildInviteEventPayload(eventRow),
         guest: {
@@ -119,12 +119,12 @@ export async function getPublicInvite(token: string): Promise<PublicInvitePayloa
 }
 
 /**
- * GET /api/public/preview?slug=&sig= — anteprima firmata dell'invito (link
- * dell'email di test). `sig` deve essere un HMAC valido per lo slug, altrimenti
- * 404 generico (stessa risposta di un invito inesistente: niente enumeration).
- * Renderizza l'invito con ospite-esempio e SENZA side-effect di tracking; il
- * flag `preview: true` mette il form RSVP in sola lettura lato client.
- * A differenza degli ospiti, l'evento in bozza è visibile (è il senso dell'anteprima).
+ * GET /api/public/preview?slug=&sig= — signed invite preview (link from the
+ * test email). `sig` must be a valid HMAC for the slug, otherwise generic 404
+ * (same response as a non-existent invite: no enumeration).
+ * Renders the invite with the example guest and WITHOUT tracking side-effects; the
+ * `preview: true` flag puts the RSVP form in read-only mode on the client.
+ * Unlike for guests, draft events are visible (that is the point of the preview).
  */
 export async function getInvitePreview(slug: string, sig: string): Promise<PublicInvitePayload> {
     if (!verifyPreviewToken(slug, sig)) throw inviteNotFound();
@@ -132,8 +132,8 @@ export async function getInvitePreview(slug: string, sig: string): Promise<Publi
     const eventRow = await findEventBySlug(slug);
     if (!eventRow) throw inviteNotFound();
 
-    // Stesso calcolo del path ospite: l'anteprima riflette lo stato reale
-    // (chiuso/deadline passata), così il planner vede ciò che vedono gli ospiti.
+    // Same calculation as the guest path: the preview reflects the real state
+    // (closed/deadline passed) so the planner sees what guests see.
     const deadlinePassed = eventRow.status === "closed"
         || isDeadlinePassed(eventRow.rsvpDeadline, new Date());
 
@@ -148,14 +148,14 @@ export async function getInvitePreview(slug: string, sig: string): Promise<Publi
 
 /**
  * POST /api/public/invite/:token/rsvp (SPEC §6).
- *  - stessi check 404 del GET;
- *  - 410 con rsvpClosedMessage se la deadline è passata o l'evento è 'closed';
- *  - validateRsvpSubmission (autoritativa, §3.4) → 422 con errors;
- *  - SANIFICA answers: persiste SOLO le chiavi delle domande VISIBILI secondo
- *    la logica condizionale (§8.4 — il validator scarta le chiavi estranee solo
- *    per la valutazione, non sanifica il payload: lo facciamo qui prima di
- *    scrivere), esclusa 'attendance' (ridondante col campo `attending`);
- *  - upsert (guestId UNIQUE) + activity rsvp_submitted (prima volta) / rsvp_updated.
+ *  - same 404 checks as GET;
+ *  - 410 with rsvpClosedMessage if the deadline has passed or the event is 'closed';
+ *  - validateRsvpSubmission (authoritative, §3.4) → 422 with errors;
+ *  - SANITISES answers: persists ONLY keys of VISIBLE questions according to
+ *    conditional logic (§8.4 — the validator discards unknown keys only for
+ *    evaluation, not for sanitising the payload: we do that here before writing),
+ *    excluding 'attendance' (redundant with the `attending` field);
+ *  - upsert (guestId UNIQUE) + activity rsvp_submitted (first time) / rsvp_updated.
  */
 export async function submitRsvp(token: string, payload: PublicRsvpInput) {
     const { guest, event: eventRow } = await findActiveInviteByToken(token);
@@ -171,8 +171,8 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
 
     const config = eventRow.rsvpConfig ?? [];
 
-    // Il body zod tipizza answers come Record<string, unknown>: il type-check
-    // puntuale dei valori è compito di validateRsvpSubmission.
+    // The zod body types answers as Record<string, unknown>: precise value
+    // type-checking is the responsibility of validateRsvpSubmission.
     const candidate = payload.answers as RsvpAnswers;
     const result = validateRsvpSubmission(config, {
         attending: payload.attending,
@@ -187,11 +187,11 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
         });
     }
 
-    // Sanificazione: persisti SOLO le risposte delle domande VISIBILI per la
-    // logica condizionale (no answer injection, no risposte "orfane" di rami
-    // nascosti). La visibilità è valutata con gli stessi valori autoritativi
-    // iniettati da validateRsvpSubmission. 'attendance' è esclusa: è già il
-    // campo `attending` della response.
+    // Sanitisation: persist ONLY answers for VISIBLE questions according to
+    // conditional logic (no answer injection, no "orphan" answers from hidden
+    // branches). Visibility is evaluated with the same authoritative values
+    // injected by validateRsvpSubmission. 'attendance' is excluded: it is
+    // already the `attending` field of the response.
     const knownIds = new Set(config.map((q) => q.id));
     const evaluation: RsvpAnswers = {};
     for (const [key, value] of Object.entries(candidate)) {
@@ -208,7 +208,7 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
         if (value !== undefined) answers[q.id] = value;
     }
 
-    // declineMessage ha senso solo per attending='no' (SPEC §2); normalizzato a null.
+    // declineMessage only makes sense for attending='no' (SPEC §2); normalised to null.
     const trimmedDecline = payload.declineMessage?.trim();
     const declineMessage = payload.attending === "no" && trimmedDecline ? trimmedDecline : null;
 
@@ -238,7 +238,7 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
         clearEventCleanupWarned(guest.organizationId, guest.eventId),
     ]);
 
-    // Shape pubblica §6.2 (stessa del GET) — campo per campo.
+    // Public shape §6.2 (same as GET) — field by field.
     return {
         response: {
             attending: saved.attending as AttendingStatus,
@@ -251,10 +251,10 @@ export async function submitRsvp(token: string, payload: PublicRsvpInput) {
 }
 
 /**
- * Pixel email (GET /api/public/pixel/:token.gif): set emailOpenedAt se null,
- * activity `email_opened` SOLO alla prima apertura (idempotente, niente flood
- * a ogni re-render dell'email). Token invalido / ospite rimosso → no-op:
- * il pixel risponde comunque 200 dalla route.
+ * Email pixel (GET /api/public/pixel/:token.gif): sets emailOpenedAt if null,
+ * activity `email_opened` ONLY on the first open (idempotent, no flood on
+ * every email re-render). Invalid token / removed guest → no-op:
+ * the pixel still responds 200 from the route.
  */
 export async function trackEmailOpen(token: string): Promise<void> {
     const row = await findGuestWithEventByToken(token);

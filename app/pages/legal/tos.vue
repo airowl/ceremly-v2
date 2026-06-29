@@ -5,7 +5,7 @@ definePageMeta({
 
 const { t } = useI18n()
 
-// Email brand: env-driven (fuori da i18n per il carattere '@')
+// Brand email: env-driven (outside i18n due to the '@' character)
 const legalEmail = useRuntimeConfig().public.legalEmail
 </script>
 
@@ -28,7 +28,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
                     <div class="prose prose-neutral dark:prose-invert max-w-none">
                         <UDivider class="my-8" />
 
-                        <!-- 1) Panoramica -->
+                        <!-- 1) Overview -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.overview.number') }}. {{ t('tos.sections.overview.title') }}
@@ -61,7 +61,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 3) Prova gratuita e Abbonamenti -->
+                        <!-- 3) Free trial and Subscriptions -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.trial.number') }}. {{ t('tos.sections.trial.title') }}
@@ -86,7 +86,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 4) Piani e prezzi -->
+                        <!-- 4) Plans and pricing -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.pricing.number') }}. {{ t('tos.sections.pricing.title') }}
@@ -116,7 +116,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 5) Dati, ruoli e GDPR -->
+                        <!-- 5) Data, roles and GDPR -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.gdpr.number') }}. {{ t('tos.sections.gdpr.title') }}
@@ -137,7 +137,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 6) Uso consentito -->
+                        <!-- 6) Permitted use -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.usage.number') }}. {{ t('tos.sections.usage.title') }}
@@ -150,7 +150,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 7) Servizi di terze parti -->
+                        <!-- 7) Third-party services -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.thirdParty.number') }}. {{ t('tos.sections.thirdParty.title') }}
@@ -163,7 +163,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 8) Garanzie e responsabilità -->
+                        <!-- 8) Warranties and liability -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.liability.number') }}. {{ t('tos.sections.liability.title') }}
@@ -183,7 +183,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 9) Sospensione e cessazione -->
+                        <!-- 9) Suspension and termination -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.termination.number') }}. {{ t('tos.sections.termination.title') }}
@@ -210,7 +210,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 10) Aggiornamenti dei Termini -->
+                        <!-- 10) Terms updates -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.updates.number') }}. {{ t('tos.sections.updates.title') }}
@@ -223,7 +223,7 @@ const legalEmail = useRuntimeConfig().public.legalEmail
 
                         <UDivider class="my-8" />
 
-                        <!-- 11) Legge applicabile e foro -->
+                        <!-- 11) Governing law and jurisdiction -->
                         <section class="mb-12">
                             <h2 class="text-3xl font-bold text-highlighted mb-6">
                                 {{ t('tos.sections.law.number') }}. {{ t('tos.sections.law.title') }}

@@ -1,12 +1,12 @@
 /**
  * POST /api/admin/site-mode
- * Imposta l'override runtime del site mode (kill-switch senza redeploy).
+ * Sets the runtime override for site mode (kill-switch without redeploy).
  * Body: { mode: "active" | "waitinglist" | "maintenance" }
  * Admin API key authentication.
  *
- * Nota: la propagazione è best-effort entro il TTL della cache per-istanza
- * (~10s), non istantanea/atomica. Il client SPA già caricato vede il valore
- * inlined finché non ricarica; la difesa autorevole è server-side.
+ * Note: propagation is best-effort within the per-instance cache TTL (~10s),
+ * not instant/atomic. An already-loaded SPA client sees the inlined value
+ * until it reloads; the authoritative guard is server-side.
  */
 import { requireAdminApiKey } from "~~/server/utils/requireAdminApiKey";
 import { parseBody } from "~~/server/utils/validateBody";

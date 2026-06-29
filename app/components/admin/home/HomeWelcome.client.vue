@@ -24,7 +24,7 @@ const orgName = computed(() => {
     return orgStore.currentOrganization?.name || 'Organization'
 })
 
-// Plan info (modello Ceremly: Free / Atelier — Celebration è per-evento, non un piano utente)
+// Plan info (Ceremly model: Free / Atelier — Celebration is per-event, not a user plan)
 const { currentTier, isAtelier } = useSubscription()
 const planName = computed(() => currentTier.value === 'atelier' ? 'Atelier' : 'Free')
 const planColor = computed(() => isAtelier.value ? 'primary' : 'neutral')

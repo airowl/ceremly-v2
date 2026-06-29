@@ -1,21 +1,21 @@
 /**
- * Server middleware: enforcement dei site mode waitinglist/maintenance.
+ * Server middleware: enforcement of waitinglist/maintenance site modes.
  *
- * È la difesa REALE (il middleware client è solo UX). Modalità autorevole letta
- * via getServerSiteMode() — stessa authority del catch-all auth, così un toggle
- * runtime aggiorna entrambi in modo coerente.
+ * This is the REAL defense (the client middleware is UX only). The authoritative mode
+ * is read via getServerSiteMode() — same authority as the catch-all auth, so a
+ * runtime toggle updates both consistently.
  *
- * Approccio blocklist mirato: il server vede OGNI request (asset, _nuxt, payload,
- * API, jobs, cron), quindi blocca solo ciò che va bloccato e lascia passare il
- * resto. Le regole locale-agnostiche vivono in shared/constants/siteMode.
+ * Targeted blocklist approach: the server sees EVERY request (assets, _nuxt, payload,
+ * API, jobs, cron), so it blocks only what needs blocking and lets the rest through.
+ * Locale-agnostic rules live in shared/constants/siteMode.
  *
  * WAITINGLIST:
- *   - API: tutte 503 tranne /api/waiting-list/** (+ jobs/cron/public sempre liberi)
- *   - Pagine: /dashboard, /login, /signup, /logout, /auth, /invite, /contact
- *     (in ogni locale) → redirect "/"
+ *   - API: all 503 except /api/waiting-list/** (+ jobs/cron/public always free)
+ *   - Pages: /dashboard, /login, /signup, /logout, /auth, /invite, /contact
+ *     (in every locale) → redirect "/"
  * MAINTENANCE:
- *   - API: tutte 503 (tranne jobs/cron/public)
- *   - Pagine: tutte → /maintenance (che risponde 503 dal proprio setup)
+ *   - API: all 503 (except jobs/cron/public)
+ *   - Pages: all → /maintenance (which responds 503 from its own setup)
  */
 import {
     isMaintenancePage,
@@ -24,43 +24,43 @@ import {
 import { getServerSiteMode } from "../utils/siteMode";
 
 export default defineEventHandler(async (event) => {
-    // In fase di prerender (build) non c'è enforcement né Redis: le pagine
-    // statiche vanno catturate sempre nello stato "active".
+    // During prerender (build) there is no enforcement or Redis: static pages
+    // must always be captured in the "active" state.
     if (import.meta.prerender) return;
 
     const path = event.path || "/";
 
-    // Background jobs (QStash) e cron (Vercel): liberi a prescindere dal mode.
+    // Background jobs (QStash) and cron (Vercel): always free regardless of mode.
     if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
 
-    // API pubbliche ospite (invito/RSVP/pixel email): liberi a prescindere dal
-    // mode. I token degli inviti sono già stati recapitati agli ospiti: bloccarli
-    // in waitinglist/maintenance romperebbe RSVP già in circolazione e il pixel
-    // di apertura nelle email inviate.
+    // Public guest APIs (invite/RSVP/email pixel): always free regardless of
+    // mode. Invite tokens have already been delivered to guests: blocking them
+    // in waitinglist/maintenance would break RSVPs already in circulation and the
+    // open pixel in sent emails.
     if (path.startsWith("/api/public/")) return;
 
-    // Endpoint admin (protetti da admin API key): restano operabili anche in
-    // waitinglist/maintenance. Critico: il toggle stesso (/api/admin/site-mode)
-    // deve poter riaccendere il sito, altrimenti la maintenance è irreversibile via API.
+    // Admin endpoints (protected by admin API key): remain operable even in
+    // waitinglist/maintenance. Critical: the toggle itself (/api/admin/site-mode)
+    // must be able to turn the site back on, otherwise maintenance is irreversible via API.
     if (path.startsWith("/api/admin/")) return;
 
-    // Webhook Creem (billing): mai gate. Con persistSubscriptions il webhook è la
-    // source-of-truth della tabella creem_subscription e Creem ritenta solo per
-    // una finestra limitata: un 503 in waitinglist/maintenance può perdere eventi
-    // di pagamento (pagante mostrato come non-pagante, o accesso non revocato).
+    // Creem webhook (billing): never gated. With persistSubscriptions the webhook is the
+    // source-of-truth for the creem_subscription table and Creem retries only within
+    // a limited window: a 503 in waitinglist/maintenance can lose payment events
+    // (payer shown as non-payer, or access not revoked).
     if (path.startsWith("/api/auth/creem/webhook")) return;
-    // Webhook Resend: mai gate (eventi delivery/bounce, Resend ritenta a finestra limitata).
+    // Resend webhook: never gated (delivery/bounce events, Resend retries within a limited window).
     if (path.startsWith("/api/webhooks/resend")) return;
 
-    // Risorse interne di Nuxt / payload prerenderizzati: mai gate
-    // (evita anche un round-trip Redis inutile sugli asset).
+    // Nuxt internal resources / prerendered payloads: never gated
+    // (also avoids a pointless Redis round-trip on assets).
     if (path.startsWith("/_")) return;
 
     const siteMode = await getServerSiteMode();
     if (siteMode === "active") {
-        // La pagina /maintenance risponde 503 in SSR: fuori da maintenance non
-        // va servita. Specchia il client e la redirige a "/" (evita 503 spuri,
-        // es. un crawler che ritorna dopo Retry-After con il sito già attivo).
+        // The /maintenance page responds 503 in SSR: outside of maintenance it
+        // must not be served. Mirrors the client and redirects to "/" (avoids spurious 503s,
+        // e.g. a crawler returning after Retry-After with the site already active).
         if (isMaintenancePage(path)) return sendRedirect(event, "/", 302);
         return;
     }
@@ -90,7 +90,7 @@ export default defineEventHandler(async (event) => {
                 statusMessage: "Service Unavailable",
             });
         }
-        // La pagina di manutenzione stessa (anche localizzata) passa e risponde 503.
+        // The maintenance page itself (including localised variants) passes through and responds 503.
         if (isMaintenancePage(path)) return;
         return sendRedirect(event, "/maintenance", 302);
     }

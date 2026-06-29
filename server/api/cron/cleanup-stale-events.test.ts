@@ -1,21 +1,21 @@
 /**
- * Test per il cron route cleanup-stale-events.get.ts (task 4.6, TDD).
+ * Tests for the cron route cleanup-stale-events.get.ts (task 4.6, TDD).
  *
- * Stubbano gli auto-import Nitro prima che il modulo venga caricato:
- * - defineEventHandler: in vi.hoisted() (eseguito prima del parsing del modulo)
- * - getHeader / useRuntimeConfig / createError: in beforeEach (invocazione)
+ * Stubs for Nitro auto-imports are set up before the module is loaded:
+ * - defineEventHandler: in vi.hoisted() (executed before the module is parsed)
+ * - getHeader / useRuntimeConfig / createError: in beforeEach (invocation)
  *
- * createError è già polyfillato da test/setup.ts.
+ * createError is already polyfilled by test/setup.ts.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Import dopo i mock
 import handler from "./cleanup-stale-events.get";
 
-// --- vi.hoisted: inizializzato PRIMA che vi.mock hoisti le factory ---
+// --- vi.hoisted: initialized BEFORE vi.mock hoists the factories ---
 const mocks = vi.hoisted(() => {
-    // defineEventHandler deve esistere su globalThis PRIMA dell'import del modulo.
-    // Lo trasformiamo in identity così il default export del route = la handler fn.
+    // defineEventHandler must exist on globalThis BEFORE the module is imported.
+    // We transform it to an identity so the route's default export = the handler fn.
     (globalThis as Record<string, unknown>).defineEventHandler = (fn: unknown) => fn;
 
     return {
@@ -34,14 +34,14 @@ vi.mock("~~/server/utils/requireAdminApiKey", () => ({
     requireAdminApiKey: mocks.requireAdminApiKey,
 }));
 
-// Salva i valori originali dei globali che mutiamo in beforeEach
+// Save original values of globals we mutate in beforeEach
 const originalGetHeader = (globalThis as Record<string, unknown>).getHeader;
 const originalUseRuntimeConfig = (globalThis as Record<string, unknown>).useRuntimeConfig;
 
 describe("cron/cleanup-stale-events", () => {
     const CRON_SECRET = "test-secret-xyz";
 
-    // Factory per creare un fake H3Event con headers configurabili
+    // Factory for creating a fake H3Event with configurable headers
     function fakeEvent(headers: Record<string, string | undefined> = {}) {
         return {
             _headers: headers,
@@ -51,19 +51,19 @@ describe("cron/cleanup-stale-events", () => {
     beforeEach(() => {
         vi.resetAllMocks();
 
-        // Default: warn e delete ritornano valori validi
+        // Default: warn and delete return valid values
         mocks.warn.mockResolvedValue({ warned: 0, skipped: 0 });
         mocks.del.mockResolvedValue({ deleted: 0, skipped: 0 });
         mocks.requireAdminApiKey.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
-        // Ripristina i globali per non leakare in altri test file
+        // Restore globals to avoid leaking into other test files
         (globalThis as Record<string, unknown>).getHeader = originalGetHeader;
         (globalThis as Record<string, unknown>).useRuntimeConfig = originalUseRuntimeConfig;
     });
 
-    it("(a) x-vercel-cron presente → warn poi delete, requireAdminApiKey NON chiamato", async () => {
+    it("(a) x-vercel-cron present → warn then delete, requireAdminApiKey NOT called", async () => {
         (globalThis as Record<string, unknown>).getHeader = (
             _event: unknown,
             name: string
@@ -76,7 +76,7 @@ describe("cron/cleanup-stale-events", () => {
         const event = fakeEvent();
         const result = await handler(event);
 
-        // warn deve essere chiamato PRIMA di delete (ordine di invocazione)
+        // warn must be called BEFORE delete (invocation order)
         const warnOrder = mocks.warn.mock.invocationCallOrder[0];
         const delOrder = mocks.del.mock.invocationCallOrder[0];
         expect(warnOrder).toBeDefined();
@@ -87,7 +87,7 @@ describe("cron/cleanup-stale-events", () => {
         expect(result).toEqual({ warn: { warned: 0, skipped: 0 }, delete: { deleted: 0, skipped: 0 } });
     });
 
-    it("(b) Authorization: Bearer cronSecret → requireAdminApiKey NON chiamato", async () => {
+    it("(b) Authorization: Bearer cronSecret → requireAdminApiKey NOT called", async () => {
         (globalThis as Record<string, unknown>).getHeader = (
             _event: unknown,
             name: string
@@ -109,7 +109,7 @@ describe("cron/cleanup-stale-events", () => {
         expect(mocks.del).toHaveBeenCalledOnce();
     });
 
-    it("(c) nessuna auth cron → requireAdminApiKey chiamato una volta", async () => {
+    it("(c) no cron auth → requireAdminApiKey called once", async () => {
         (globalThis as Record<string, unknown>).getHeader = (
             _event: unknown,
             _name: string

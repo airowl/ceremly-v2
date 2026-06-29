@@ -1,7 +1,7 @@
 /**
- * usePricing — modello Ceremly a 3 tier (Free / Celebrazione / Atelier).
- * Le label/feature vivono in i18n (ceremly.home.pricing.*); i numeri di limite
- * arrivano da CEREMLY_TIER_LIMITS. Niente toggle mensile/annuale.
+ * usePricing — Ceremly 3-tier model (Free / Celebration / Atelier).
+ * Labels/features live in i18n (ceremly.home.pricing.*); limit numbers
+ * come from CEREMLY_TIER_LIMITS. No monthly/annual toggle.
  */
 import {
     CEREMLY_TIER_LIMITS,
@@ -12,9 +12,9 @@ import {
 
 export interface CeremlyTierView {
     id: CeremlyTier;
-    /** Prezzo in centesimi EUR; 0 per Free. */
+    /** Price in EUR cents; 0 for Free. */
     priceCents: number;
-    /** 'free' | 'once' (Celebrazione) | 'month' (Atelier). */
+    /** 'free' | 'once' (Celebration) | 'month' (Atelier). */
     billing: "free" | "once" | "month";
     maxGuestsPerEvent: number;
     maxActiveEvents: number;
@@ -34,9 +34,9 @@ export const usePricing = () => {
     return { tiers, getTier };
 };
 
-/** True se un limite è illimitato (-1). */
+/** True if a limit is unlimited (-1). */
 export const isUnlimited = (value: number): boolean => value === -1;
 
-/** Formatta un limite per display (-1 → testo "illimitati"). */
+/** Formats a limit for display (-1 → "unlimited" text). */
 export const formatLimit = (value: number, unlimitedText = "Illimitati"): string =>
     isUnlimited(value) ? unlimitedText : value.toString();

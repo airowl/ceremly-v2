@@ -12,8 +12,8 @@ const props = defineProps<{
         cover?: string
         coverAlt?: string
         tags?: string[]
-        // BlogCollectionItem.body è un MarkdownRoot: accettiamo qualsiasi shape
-        // e leggiamo rawText (presente solo se esposto dalla query) via cast.
+        // BlogCollectionItem.body is a MarkdownRoot: we accept any shape
+        // and read rawText (present only if exposed by the query) via cast.
         body?: unknown
     }
 }>()

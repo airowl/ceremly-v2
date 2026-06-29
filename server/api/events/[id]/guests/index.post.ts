@@ -1,7 +1,7 @@
 /**
  * POST /api/events/:id/guests
- * Crea un ospite con token personale (RBAC: requireWrite).
- * 402 se il piano Free ha raggiunto i 30 ospiti.
+ * Creates a guest with a personal token (RBAC: requireWrite).
+ * 402 if the Free plan has reached the 30-guest limit.
  */
 import { createGuestSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

@@ -1,7 +1,7 @@
 /**
  * GET /api/events/:id/guests/:guestId
- * Dettaglio ospite: guest + response completa + attività ordinate desc
- * (RBAC: requireMember + assertOwnership nel service).
+ * Guest detail: guest + full response + activities ordered desc
+ * (RBAC: requireMember + assertOwnership in the service).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { getGuest } from "~~/server/services/guest.service";

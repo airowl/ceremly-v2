@@ -1,7 +1,7 @@
 /**
  * POST /api/events/:id/guests/import
- * Import bulk (righe JSON già parsate dal client): valida, importa fino al
- * limite del piano, segnala skipped/warnings (RBAC: requireWrite).
+ * Bulk import (JSON rows already parsed by the client): validates, imports up to
+ * the plan limit, reports skipped/warnings (RBAC: requireWrite).
  */
 import { importGuestsSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Sito pubblico → Prodotto → Esempi. Galleria di inviti d'esempio, uno per
-// tipo di evento. Niente clienti reali: sono modelli di prodotto.
+// Public site → Product → Examples. Gallery of sample invites, one per
+// event type. No real clients: these are product showcases.
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerMiniInvite from '~/components/ceremly/CerMiniInvite.vue'
 import CerSiteHero from '~/components/ceremly/CerSiteHero.vue'
@@ -25,7 +25,7 @@ useSeoMeta({
     ogType: 'website',
 })
 
-// Sfondo invito per tipo evento — coerente con le pagine "Per chi".
+// Invite background per event type — consistent with the "For whom" pages.
 const sampleBg = ['var(--bone-300)', 'var(--purple)', 'var(--bone-200)', 'var(--orange-soft)']
 
 interface Sample { occ: string, names1: string, names2: string, italic: string, date: string, sub: string, caption: string }

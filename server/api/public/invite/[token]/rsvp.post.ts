@@ -1,8 +1,8 @@
 /**
  * POST /api/public/invite/:token/rsvp
- * Submission RSVP ospite (SPEC §6) — NESSUNA auth: lookup SOLO by token (§8.2).
- * 404 generico, 410 (rsvpClosedMessage) a deadline passata, 422 con errors dalla
- * validazione autoritativa §3.4. Upsert: la risposta è sempre l'ultima versione.
+ * Guest RSVP submission (SPEC §6) — NO auth: lookup by token ONLY (§8.2).
+ * Generic 404, 410 (rsvpClosedMessage) when deadline has passed, 422 with errors from
+ * authoritative validation §3.4. Upsert: the response is always the latest version.
  */
 import { publicRsvpSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";
@@ -16,9 +16,9 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 404, statusMessage: "Invito non disponibile" });
     }
 
-    // Rate limit per-IP (Redis): difesa contro RSVP forgiati/flood sull'endpoint
-    // pubblico non autenticato. Limite generoso (30/min) per non bloccare più
-    // ospiti dietro lo stesso IP (NAT/CGNAT/WiFi evento); letale per gli script.
+    // Per-IP rate limit (Redis): defense against forged/flooded RSVPs on the
+    // unauthenticated public endpoint. Generous limit (30/min) to avoid blocking
+    // multiple guests behind the same IP (NAT/CGNAT/event WiFi); lethal for scripts.
     if (await isEndpointRateLimited(getClientIp(event), "public-rsvp", 30, 60 * 1000)) {
         throw createError({ statusCode: 429, statusMessage: "Troppe richieste. Riprova tra poco." });
     }

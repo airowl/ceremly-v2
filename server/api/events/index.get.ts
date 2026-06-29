@@ -1,6 +1,6 @@
 /**
  * GET /api/events
- * Lista eventi dell'org attiva con counts aggregati (RBAC: requireMember).
+ * Lists events of the active org with aggregated counts (RBAC: requireMember).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { listEvents } from "~~/server/services/event.service";

@@ -1,6 +1,6 @@
 /**
  * POST /api/organizations
- * Crea un'organizzazione (gate plan-limit + plugin). RBAC: utente autenticato.
+ * Creates an organization (plan-limit gate + plugin). RBAC: authenticated user.
  */
 import { createOrganizationSchema } from "~~/shared/schemas/organization";
 import { parseBody } from "~~/server/utils/validateBody";

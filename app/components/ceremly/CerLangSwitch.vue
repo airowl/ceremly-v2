@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Switcher lingua riutilizzabile (IT/EN) per le superfici Ceremly senza
-// header del boilerplate — in primis la guest page pubblica /e/:slug/:token,
-// dove atterrano ospiti potenzialmente internazionali.
-// Pattern allineato ad AppHeader/AppFooter: setLocale gestisce cookie +
-// navigazione (strategy prefix_except_default → /en come prefisso, IT default).
+// Reusable language switcher (IT/EN) for Ceremly surfaces that lack the
+// boilerplate header — primarily the public guest page /e/:slug/:token,
+// where potentially international guests land.
+// Pattern aligned with AppHeader/AppFooter: setLocale manages cookies +
+// navigation (strategy prefix_except_default → /en as prefix, IT default).
 const { locale, setLocale } = useI18n();
 
 function onChange(event: Event) {

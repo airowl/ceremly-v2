@@ -1,7 +1,7 @@
 /**
  * GET /api/events/:id/guests
- * Tutti gli ospiti (anche removed) con stato derivato + summary
- * (RBAC: requireMember + assertOwnership nel service).
+ * All guests (including removed) with derived status + summary
+ * (RBAC: requireMember + assertOwnership in the service).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { listGuests } from "~~/server/services/guest.service";

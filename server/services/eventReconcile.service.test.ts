@@ -31,7 +31,7 @@ vi.mock("~~/server/utils/runtimeConfig", () => ({
     runtimeConfig: {
         creemApiKey: "test_api_key",
         public: {
-            // Scenario Vercel Preview: NODE_ENV=production ma deployment non-prod.
+            // Vercel Preview scenario: NODE_ENV=production but non-prod deployment.
             appEnv: "production",
             isProdDeployment: false,
         },
@@ -228,8 +228,8 @@ describe("reconcileEventUnlock", () => {
     });
 
     it("org defense-in-depth: metadata.organizationId mismatch → NO unlock, reconciled: false", async () => {
-        // La funzione è chiamata con ORG_ID ma il checkout ha metadata di un'org diversa.
-        // Un checkoutId corrotto/straniero non deve poter sbloccare l'evento.
+        // The function is called with ORG_ID but the checkout has metadata from a different org.
+        // A corrupted/foreign checkoutId must not be able to unlock the event.
         getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
         rawRetrieveCheckout.mockResolvedValue(
             makePaidCheckout({ metadata: { eventId: EVENT_ID, organizationId: "org_FOREIGN" } }),
@@ -244,8 +244,8 @@ describe("reconcileEventUnlock", () => {
         expect(result).toEqual({ reconciled: false });
     });
 
-    it("unlockEvent throws → outer catch gestisce, returns reconciled: false (non rethrow)", async () => {
-        // Se unlockEvent fallisce (es. DB error), la funzione non deve propagare l'eccezione.
+    it("unlockEvent throws → outer catch handles it, returns reconciled: false (no rethrow)", async () => {
+        // If unlockEvent fails (e.g. DB error), the function must not propagate the exception.
         getEventCheckoutInfo.mockResolvedValue({ tier: "free", creemCheckoutId: CHECKOUT_ID });
         rawRetrieveCheckout.mockResolvedValue(makePaidCheckout());
         unlockEvent.mockRejectedValue(new Error("DB write error"));
@@ -254,7 +254,7 @@ describe("reconcileEventUnlock", () => {
             "~~/server/services/eventReconcile.service"
         );
 
-        // Deve restituire false, non rethrowando
+        // Must return false, not rethrowing
         const result = await reconcileEventUnlock(EVENT_ID, ORG_ID);
 
         expect(result).toEqual({ reconciled: false });

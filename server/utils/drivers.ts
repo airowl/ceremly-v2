@@ -96,20 +96,20 @@ export const cacheClient = {
     },
 
     /**
-     * Contatore atomico a finestra fissa per rate limiting CONDIVISO tra istanze
-     * serverless: Upstash INCR + EXPIRE (la finestra si auto-estende sotto
-     * martellamento continuo — comportamento desiderabile per un limiter).
-     * Ritorna il conteggio corrente nella finestra. Fallback in-memory
-     * best-effort (per-istanza) se Redis non è configurato/raggiungibile.
+     * Atomic fixed-window counter for rate limiting SHARED across serverless
+     * instances: Upstash INCR + EXPIRE (the window auto-extends under sustained
+     * hammering — desirable behaviour for a limiter).
+     * Returns the current count in the window. In-memory best-effort fallback
+     * (per-instance) if Redis is not configured or reachable.
      */
     increment: async (key: string, windowSeconds: number): Promise<number> => {
         const client = getUpstashClient();
         if (client) {
             try {
                 const count = await client.incr(key);
-                // Expire incondizionato: evita la chiave orfana senza TTL se il
-                // processo muore tra incr ed expire (la prima volta è equivalente,
-                // le volte successive ri-arma la finestra — accettabile).
+                // Unconditional expire: avoids an orphan key without TTL if the
+                // process dies between incr and expire (equivalent on the first call,
+                // subsequent calls re-arm the window — acceptable).
                 await client.expire(key, windowSeconds);
                 return count;
             } catch {
@@ -125,7 +125,7 @@ export const cacheClient = {
             return 1;
         }
         const next = (Number.parseInt(entry.value, 10) || 0) + 1;
-        // Mantiene la scadenza originale della finestra (fixed-window).
+        // Preserves the original window expiry (fixed-window).
         memoryCache.set(key, { value: String(next), expires: entry.expires });
         return next;
     },

@@ -1,10 +1,10 @@
 /**
- * Middleware org (FASE 1c) — sostituisce lo stub 2.events.ts.
+ * Org middleware (PHASE 1c) — replaces the 2.events.ts stub.
  *
- * Precarica NON-BLOCCANTE l'org attiva in event.context.organization per le rotte
- * /api/organizations/*. È una convenienza: l'ENFORCEMENT (401/403) avviene nei guard
- * RBAC (requireMember/requireWrite/requireOwner) chiamati esplicitamente dalle route,
- * così il pattern funziona anche su /api/projects/* (nessun middleware path-matched).
+ * Non-blocking preload of the active org into event.context.organization for
+ * /api/organizations/* routes. This is a convenience: ENFORCEMENT (401/403) happens
+ * in the RBAC guards (requireMember/requireWrite/requireOwner) called explicitly by
+ * routes, so the pattern also works on /api/projects/* (no path-matched middleware).
  */
 import { loadActiveOrganization } from "~~/server/utils/permissions";
 
@@ -16,6 +16,6 @@ export default defineEventHandler(async (event) => {
     try {
         await loadActiveOrganization(event);
     } catch {
-        // Non-bloccante: i guard nelle route gestiscono i requisiti di accesso.
+        // Non-blocking: guards in the routes handle access requirements.
     }
 });

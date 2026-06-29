@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Login Ceremly — port di LoginScreen (docs/ui/project/screens/auth.jsx).
-// La logica Better Auth (signIn email/password + Google, error handling,
-// redirect post-login) è identica alla pagina precedente: cambia solo la pelle.
+// Ceremly login — port of LoginScreen (docs/ui/project/screens/auth.jsx).
+// The Better Auth logic (signIn email/password + Google, error handling,
+// post-login redirect) is identical to the previous page: only the skin changes.
 import * as z from 'zod'
 
 definePageMeta({
@@ -21,9 +21,9 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 
-// Redirect post-login SOLO se same-origin relativo (deve iniziare con un singolo
-// '/'): blocca l'open-redirect `?redirect=//evil.com` o `?redirect=https://…`
-// (phishing post-auth). Altrimenti fallback a /dashboard.
+// Post-login redirect ONLY if same-origin relative (must start with a single
+// '/'): blocks open-redirect `?redirect=//evil.com` or `?redirect=https://…`
+// (post-auth phishing). Otherwise falls back to /dashboard.
 function safeRedirect(): string {
     const raw = route.query.redirect
     const path = typeof raw === 'string' ? raw : ''
@@ -113,7 +113,7 @@ async function onSubmit() {
         </p>
 
         <div style="margin-top: 32px;">
-            <!-- Social: SOLO Google (Apple non configurato) -->
+            <!-- Social: Google ONLY (Apple not configured) -->
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
                 <button
                     type="button"

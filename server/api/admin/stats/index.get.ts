@@ -43,7 +43,7 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
         .from(schema.user)
         .where(eq(schema.user.banned, true));
 
-    // Organization stats (FASE 1c — sostituisce gli stub event di 1a)
+    // Organization stats (phase 1c — replaces the event stubs from 1a)
     const [totalOrganizations] = await db.select({ count: count() }).from(schema.organization);
     const [newOrganizations] = await db.select({ count: count() })
         .from(schema.organization)
@@ -64,15 +64,15 @@ export default defineEventHandler(async (event): Promise<AdminStats> => {
         .from(schema.creem_subscription)
         .where(sql`${schema.creem_subscription.status} IN ('active', 'trialing')`);
 
-    // Breakdown per tier Ceremly: solo Atelier è ricorrente (Celebration è
-    // one-time per-evento e non genera subscription).
+    // Breakdown by Ceremly tier: only Atelier is recurring (Celebration is
+    // one-time per-event and does not generate a subscription).
     const byPlan: Record<string, number> = {};
     for (const sub of activeSubsList) {
         const plan = getPlanFromProductId(sub.productId) ?? "unknown";
         byPlan[plan] = (byPlan[plan] || 0) + 1;
     }
 
-    // MRR = subscription Atelier attive × prezzo mensile Atelier.
+    // MRR = active Atelier subscriptions × monthly Atelier price.
     const atelierCount = byPlan.atelier ?? 0;
     const mrr = atelierCount * (ATELIER_PRICE_CENTS / 100);
 

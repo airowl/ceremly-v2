@@ -15,7 +15,7 @@ import { isOwnDomain, handleResendEvent } from "./emailWebhook.service";
 beforeEach(() => vi.clearAllMocks());
 
 describe("emailWebhook.service", () => {
-    it("isOwnDomain riconosce dominio e sottodominio dell'ambiente", () => {
+    it("isOwnDomain recognizes domain and subdomain of the environment", () => {
         expect(isOwnDomain("Ceremly <noreply@airowlgasga.dev>")).toBe(true);
         expect(isOwnDomain("X <inviti@events.airowlgasga.dev>")).toBe(true);
         expect(isOwnDomain("X <a@altrodominio.com>")).toBe(false);
@@ -28,14 +28,14 @@ describe("emailWebhook.service", () => {
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
 
-    it("opened con guest → recordGuestOpen", async () => {
+    it("opened with guest → recordGuestOpen", async () => {
         await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",
             data: { email_id: "m1", from: "inviti@events.airowlgasga.dev", to: ["g@x.com"] } });
         expect(recordGuestOpen).toHaveBeenCalledWith("g1", expect.any(Date));
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
 
-    it("opened senza guestId → NO recordGuestOpen, solo insertEmailEvent", async () => {
+    it("opened without guestId → NO recordGuestOpen, only insertEmailEvent", async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         findSeedContext.mockResolvedValueOnce({ organizationId: "o1", guestId: null, eventId: null, emailType: "verification" } as any);
         await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",

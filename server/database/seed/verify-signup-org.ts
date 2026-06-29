@@ -7,14 +7,14 @@ import { findOrganizationsForUser } from "../../repositories/organizationReposit
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
- * Gate FASE 1b (CRITICO): il signup ha prodotto org personale + member owner.
- * Uso: npx tsx server/database/seed/verify-signup-org.ts <email>
- * Esegui DOPO un signup reale (smoke Task 11). Richiede Postgres vivo.
+ * Gate PHASE 1b (CRITICAL): signup produced a personal org + owner member.
+ * Usage: npx tsx server/database/seed/verify-signup-org.ts <email>
+ * Run AFTER a real signup (smoke Task 11). Requires live Postgres.
  */
 async function main() {
     const email = process.argv[2];
     if (!email) {
-        console.error("Uso: npx tsx server/database/seed/verify-signup-org.ts <email>");
+        console.error("Usage: npx tsx server/database/seed/verify-signup-org.ts <email>");
         process.exit(1);
     }
 
@@ -26,7 +26,7 @@ async function main() {
         .limit(1);
     const user = users[0];
     if (!user) {
-        console.error(`[FAIL] nessun utente con email ${email} — il signup non è andato a buon fine`);
+        console.error(`[FAIL] no user with email ${email} — signup did not complete successfully`);
         process.exit(1);
     }
 
@@ -34,7 +34,7 @@ async function main() {
 
     const orgs = await findOrganizationsForUser(user.id);
     if (orgs.length === 0) {
-        console.error(`[FAIL] utente ${email} NON ha organizzazioni — signup→org NON ha funzionato (utente orfano!)`);
+        console.error(`[FAIL] user ${email} has NO organizations — signup→org did NOT work (orphaned user!)`);
         failed = true;
     }
 
@@ -44,21 +44,21 @@ async function main() {
         .where(eq(schema.member.userId, user.id));
     const ownerRow = ownerMemberships.find((m) => m.role === "owner");
     if (!ownerRow) {
-        console.error(`[FAIL] utente ${email} NON è owner di alcuna org — riga member owner mancante`);
+        console.error(`[FAIL] user ${email} is NOT owner of any org — owner member row missing`);
         failed = true;
     }
 
     if (failed) {
-        console.error("[verify-signup-org] SIGNUP→ORG VIOLATO");
+        console.error("[verify-signup-org] SIGNUP→ORG VIOLATED");
         process.exit(1);
     }
     console.log(
-        `[verify-signup-org] OK — ${email} ha ${orgs.length} org, owner di org=${ownerRow!.organizationId}`,
+        `[verify-signup-org] OK — ${email} has ${orgs.length} org, owner of org=${ownerRow!.organizationId}`,
     );
     process.exit(0);
 }
 
 main().catch((e) => {
-    console.error("[verify-signup-org] errore", e);
+    console.error("[verify-signup-org] error", e);
     process.exit(1);
 });

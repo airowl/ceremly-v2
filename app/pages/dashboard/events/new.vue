@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Wizard nuovo evento — port di docs/ui/project/screens/onboarding.jsx (F4).
-// Fase "choose" = tipo evento + template (come il mockup, un'unica schermata),
-// fase "details" = dettagli; POST /api/events → redirect editor.
-// Gli step Ospiti/Invio sono nello stepper ma completati nelle pagine dedicate.
+// New event wizard — port of docs/ui/project/screens/onboarding.jsx (F4).
+// "choose" phase = event type + template (as in the mockup, a single screen),
+// "details" phase = details; POST /api/events → redirect to editor.
+// The Guests/Send steps are in the stepper but completed in their dedicated pages.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import Stepper from "~/components/ceremly/Stepper.vue";
 import { EVENT_TYPES, type EventTypeKey } from "~~/shared/constants/eventTypes";
@@ -30,7 +30,7 @@ const STEPS = computed(() => [
 ]);
 const ONBOARDING_TYPE_KEY = "ceremly:onboarding-type";
 
-// ─── Stato wizard ────────────────────────────────────────────────────
+// ─── Wizard state ────────────────────────────────────────────────────
 const phase = ref<"choose" | "details">("choose");
 const stepperCurrent = computed(() => (phase.value === "choose" ? 1 : 2));
 
@@ -48,7 +48,7 @@ const creating = ref(false);
 const createError = ref<string | null>(null);
 const planLimitMessage = ref<string | null>(null);
 
-// Pre-selezione tipo dal signup (localStorage, mai backend)
+// Type pre-selection from signup (localStorage, never backend)
 onMounted(() => {
     const saved = localStorage.getItem(ONBOARDING_TYPE_KEY);
     if (saved && EVENT_TYPES.some((et) => et.key === saved)) {
@@ -63,10 +63,10 @@ function selectType(key: EventTypeKey) {
     }
 }
 
-// ─── Template del tipo selezionato ───────────────────────────────────
+// ─── Templates for the selected type ───────────────────────────────────
 const templates = computed(() => getTemplatesByType(eventType.value));
 
-// Al cambio tipo si pre-seleziona il primo template (come il mockup)
+// On type change, the first template is pre-selected (as in the mockup)
 watch(
     eventType,
     () => {
@@ -85,7 +85,7 @@ const typeLabel = computed(
         : eventType.value,
 );
 
-// Mini-invito di anteprima: testi presi dai defaultBlocks del template stesso
+// Mini invite preview: text taken from the template's own defaultBlocks
 type HeaderBlock = Extract<InviteBlock, { type: "header" }>;
 type LocationBlock = Extract<InviteBlock, { type: "location" }>;
 
@@ -116,13 +116,13 @@ const templateCards = computed(() =>
     }),
 );
 
-// ─── Dettagli: hint titolo per tipo ──────────────────────────────────
+// ─── Details: title hint per type ──────────────────────────────────
 const titleHint = computed(() => ({
     placeholder: t(`ceremly.event.new.titleHint.${eventType.value}.placeholder`),
     hint: t(`ceremly.event.new.titleHint.${eventType.value}.hint`),
 }));
 
-// ─── Navigazione fasi ────────────────────────────────────────────────
+// ─── Phase navigation ────────────────────────────────────────────────
 function scrollPageTop() {
     if (import.meta.client) {
         document.querySelector(".cer-page")?.scrollTo({ top: 0 });
@@ -144,7 +144,7 @@ function goToDetails() {
     scrollPageTop();
 }
 
-// ─── Creazione ───────────────────────────────────────────────────────
+// ─── Creation ───────────────────────────────────────────────────────
 const canCreate = computed(
     () => title.value.trim().length > 0 && !!selectedTemplate.value && !creating.value,
 );
@@ -196,7 +196,7 @@ async function submit() {
             <Stepper :steps="STEPS" :current="stepperCurrent" />
         </div>
 
-        <!-- ─── Fase 1+2: tipo evento + template (come il mockup) ─── -->
+        <!-- ─── Phase 1+2: event type + template (as in the mockup) ─── -->
         <template v-if="phase === 'choose'">
             <h1>{{ $t('ceremly.event.new.chooseTypeHeading') }}</h1>
             <p class="h-sub" style="max-width: 560px;">
@@ -254,7 +254,7 @@ async function submit() {
                     }"
                     @click="templateKey = c.key"
                 >
-                    <!-- preview: mini-invito coi testi del template -->
+                    <!-- preview: mini-invite with the template's text -->
                     <div
                         :style="{
                             aspectRatio: '3 / 4',
@@ -314,7 +314,7 @@ async function submit() {
             </div>
         </template>
 
-        <!-- ─── Fase 3: dettagli ─── -->
+        <!-- ─── Phase 3: details ─── -->
         <template v-else>
             <div class="row" style="justify-content: space-between;">
                 <div>
@@ -350,7 +350,7 @@ async function submit() {
                 </label>
             </form>
 
-            <!-- 402: limite piano Free -->
+            <!-- 402: Free plan limit -->
             <div
                 v-if="planLimitMessage"
                 class="cer-card"
@@ -368,7 +368,7 @@ async function submit() {
                 </div>
             </div>
 
-            <!-- Errore generico -->
+            <!-- Generic error -->
             <p v-if="createError" class="small" style="color: var(--decline); margin: 16px 0 0; max-width: 560px;">
                 {{ createError }}
             </p>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// Landing page Ceremly — port fedele di docs/ui/project/screens/landing.jsx
-// (design "Soft Meadow", classi .cer + inline style 1:1 dal mockup).
-// Site-mode (waitinglist/maintenance) è enforced dal middleware globale
-// 0.site-mode.global.ts (client) + server/middleware/0.site-mode.ts: qui
-// isActiveMode gata link auth + tutti i CTA /signup (nav, hero, pricing,
-// sezione CTA); in waitinglist mode i CTA puntano al form lista d'attesa
-// (#waiting-list) che chiama /api/waiting-list/subscribe.
+// Ceremly landing page — faithful port of docs/ui/project/screens/landing.jsx
+// (design "Soft Meadow", .cer classes + inline styles 1:1 from the mockup).
+// Site-mode (waitinglist/maintenance) is enforced by the global middleware
+// 0.site-mode.global.ts (client) + server/middleware/0.site-mode.ts: here
+// isActiveMode gates auth links + all /signup CTAs (nav, hero, pricing,
+// CTA section); in waitinglist mode CTAs point to the waiting-list form
+// (#waiting-list) which calls /api/waiting-list/subscribe.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerSitePricing from '~/components/ceremly/CerSitePricing.vue'
 import CerSiteFooter from '~/components/ceremly/CerSiteFooter.vue'
@@ -55,21 +55,21 @@ useSchemaOrg([
 
 useScrollReveal()
 
-// Smooth scroll alle ancore (la nav è sticky: scroll-margin-top in CSS)
+// Smooth scroll to anchors (nav is sticky: scroll-margin-top in CSS)
 function scrollToId(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// Logout dalla nav: utente loggato resta sulla home (da guest)
+// Nav logout: logged-in user stays on home (as guest)
 async function logout() {
     await signOut({ redirectTo: '/' })
 }
 
-// ── Waiting list (solo waitinglist mode) ──
-// Form on-brand (.cer) che chiama /api/waiting-list/subscribe con gli stessi
-// anti-spam del vecchio WaitingListCTA: honeypot + timing + UTM/referrer.
+// ── Waiting list (waitinglist mode only) ──
+// On-brand form (.cer) that calls /api/waiting-list/subscribe with the same
+// anti-spam as the old WaitingListCTA: honeypot + timing + UTM/referrer.
 const wlEmail = ref('')
-const wlWebsite = ref('') // honeypot — nascosto agli utenti, i bot lo riempiono
+const wlWebsite = ref('') // honeypot — hidden from users, bots fill it in
 const wlLoading = ref(false)
 const wlSubmitted = ref(false)
 const wlAlreadySubscribed = ref(false)
@@ -117,7 +117,7 @@ async function submitWaitingList() {
     }
 }
 
-// In waitinglist mode i CTA "iscriviti" scrollano al form invece di /signup
+// In waitinglist mode the "sign up" CTAs scroll to the form instead of /signup
 function onSignupCta(e: Event) {
     if (!isActiveMode.value) {
         e.preventDefault()
@@ -132,7 +132,7 @@ const navAnchors = [
     { id: 'examples', label: t('ceremly.home.nav.examples') },
 ]
 
-// ── Dati sezioni (1:1 dal mockup) ──
+// ── Section data (1:1 from the mockup) ──
 interface Pain { k: string, t: string, d: string }
 const pains: Pain[] = [
     { k: '01', t: t('ceremly.home.pains.whatsapp.title'), d: t('ceremly.home.pains.whatsapp.desc') },
@@ -209,7 +209,7 @@ const feats: Feat[] = [
                         <CerIcon name="sparkle" :s="14" /> {{ $t('ceremly.home.hero.ctaPrimary') }}
                     </NuxtLink>
                 </div>
-                <!-- Waiting list mode: form di iscrizione al posto del CTA /signup -->
+                <!-- Waiting list mode: subscription form instead of the /signup CTA -->
                 <div v-else id="waiting-list" class="l-target" style="margin-top: 32px;">
                     <form v-if="!wlSubmitted" class="row" style="gap: 12px; flex-wrap: wrap;" @submit.prevent="submitWaitingList">
                         <div class="l-wl-hp" aria-hidden="true">
@@ -253,7 +253,7 @@ const feats: Feat[] = [
 
             <!-- Hero visual -->
             <div class="l-hero-visual" aria-hidden="true">
-                <!-- invito card — blocco viola -->
+                <!-- invite card — purple block -->
                 <div style="position: absolute; left: 30px; top: 0; width: 360px; height: 510px; background: var(--purple); border-radius: 18px; border: 2px solid var(--ink); box-shadow: 10px 10px 0 var(--ink); color: var(--ink); padding: 40px 32px; transform: rotate(-3deg); display: flex; flex-direction: column; justify-content: space-between;">
                     <span class="mono" style="position: absolute; top: 14px; left: 20px; background: var(--bone-50); color: var(--ink); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1.5px solid var(--ink);">{{ $t('ceremly.home.heroVisual.previewBadge') }}</span>
                     <div>
@@ -428,8 +428,8 @@ const feats: Feat[] = [
 </template>
 
 <style scoped>
-/* Il mockup è un artboard 1400px fisso: qui il canvas è full-width con
-   contenuto max-width 1400 centrato e padding orizzontale fluido. */
+/* The mockup is a fixed 1400px artboard: here the canvas is full-width with
+   max-width 1400 centered content and fluid horizontal padding. */
 .cer-landing {
     --pad-x: clamp(20px, 5vw, 72px);
     min-height: 100vh;
@@ -441,7 +441,7 @@ const feats: Feat[] = [
     margin: 0 auto;
 }
 
-/* Link senza sottolineatura, colori ereditati dal design system */
+/* Links without underline, colors inherited from the design system */
 .l-anchor,
 .cer-landing a.cer-btn,
 .l-footer-link {
@@ -462,12 +462,12 @@ const feats: Feat[] = [
     color: var(--ink);
 }
 
-/* Ancore: compensa la nav sticky */
+/* Anchors: compensate for the sticky nav */
 .l-target {
     scroll-margin-top: 84px;
 }
 
-/* Honeypot waiting list: invisibile agli utenti, visibile ai bot */
+/* Waiting list honeypot: invisible to users, visible to bots */
 .l-wl-hp {
     position: absolute;
     left: -9999px;
@@ -479,7 +479,7 @@ const feats: Feat[] = [
     pointer-events: none;
 }
 
-/* Mark — evidenziatore dietro al testo (helper Mark del mockup) */
+/* Mark — highlighter behind text (Mark helper from the mockup) */
 .l-mark {
     color: var(--ink);
     padding: 0 8px;
@@ -506,7 +506,7 @@ const feats: Feat[] = [
     justify-content: space-between;
 }
 
-/* ── Sezioni: padding verticali dal mockup, orizzontali fluidi ── */
+/* ── Sections: vertical padding from the mockup, horizontal fluid ── */
 .l-hero { padding: 88px var(--pad-x) 100px; }
 .l-problem { padding: 96px var(--pad-x); }
 .l-how { padding: 96px var(--pad-x); }
@@ -516,7 +516,7 @@ const feats: Feat[] = [
 .l-cta { padding: 116px var(--pad-x); }
 .l-footer { padding: 64px var(--pad-x) 40px; }
 
-/* ── Griglie (valori desktop 1:1 dal mockup) ── */
+/* ── Grids (desktop values 1:1 from the mockup) ── */
 .l-hero-grid {
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
@@ -583,7 +583,7 @@ const feats: Feat[] = [
     gap: 48px;
 }
 
-/* ── Typography (desktop = px del mockup) ── */
+/* ── Typography (desktop = px from the mockup) ── */
 .l-h1 { font-size: 92px; }
 .l-h2 { font-size: 56px; }
 .l-h2-cta { font-size: 76px; }

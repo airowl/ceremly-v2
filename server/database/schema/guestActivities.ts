@@ -6,8 +6,8 @@ import { events } from "./events";
 import { guests } from "./guests";
 
 /**
- * Timeline attività ospite (SPEC §2) — traccia le azioni dell'ospite senza account
- * (le scritture organizzatore vanno invece in audit_log). Append-only: solo createdAt.
+ * Guest activity timeline (SPEC §2) — tracks actions of the guest who has no account
+ * (organizer writes go to audit_log instead). Append-only: createdAt only.
  */
 export const guestActivities = pgTable(
     "guest_activities",
@@ -24,7 +24,7 @@ export const guestActivities = pgTable(
             .references(() => guests.id, { onDelete: "cascade" }),
         // invite_sent | link_opened | email_opened | rsvp_submitted | rsvp_updated | reminder_sent
         type: text("type").notNull(),
-        meta: jsonb("meta").$type<Record<string, unknown>>().default({}), // es. { channel: 'email' }, { reminderId }
+        meta: jsonb("meta").$type<Record<string, unknown>>().default({}), // e.g. { channel: 'email' }, { reminderId }
         createdAt: timestamp("created_at").defaultNow().notNull(),
     },
     (table) => [

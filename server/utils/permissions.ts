@@ -1,35 +1,35 @@
 /**
- * RBAC org-scoped (FASE 1c).
+ * Org-scoped RBAC (PHASE 1c).
  *
- * DUE percorsi di authorization, tenuti distinti:
- *  1) APP-RESOURCE (projects, risorse di dominio future): requireMember/requireWrite/
- *     requireOwner risolvono l'ORG ATTIVA dalla sessione e popolano event.context.organization.
- *     Il client non passa mai orgId. È il pattern che ogni risorsa futura clona (vedi FASE 4).
- *  2) ORG-MANAGEMENT (/api/organizations/[id]): l'org è identificata dal PATH-ID, NON è l'org
- *     attiva → NON usare queste guard lì. L'authz è delegata al plugin (auth.api.*) o a un check
- *     esplicito getOrgRole(userId, params.id). Vedi server/api/organizations/[id].*.ts.
+ * TWO authorization paths, kept distinct:
+ *  1) APP-RESOURCE (projects, future domain resources): requireMember/requireWrite/
+ *     requireOwner resolve the ACTIVE ORG from the session and populate event.context.organization.
+ *     The client never passes orgId. This is the pattern every future resource clones (see PHASE 4).
+ *  2) ORG-MANAGEMENT (/api/organizations/[id]): the org is identified by the PATH-ID, NOT the active
+ *     org → do NOT use these guards there. Authz is delegated to the plugin (auth.api.*) or to an
+ *     explicit getOrgRole(userId, params.id) check. See server/api/organizations/[id].*.ts.
  *
- * Ruoli (default plugin Better Auth): owner > admin > member. Nessun viewer.
- *  - write risorse = owner | admin | member (tutti scrivono)
+ * Roles (Better Auth plugin defaults): owner > admin > member. No viewer.
+ *  - write resources = owner | admin | member (all can write)
  *  - owner-only = owner
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import { requireAuth, getAuthSession  } from "./auth";
 import { findMemberRole } from "../repositories/memberRepository";
 
-/** Ruoli che possono scrivere risorse di dominio. Pure → testabile senza sessione. */
+/** Roles that can write domain resources. Pure → testable without a session. */
 export function roleCanWrite(role: string | null | undefined): boolean {
     return role === "owner" || role === "admin" || role === "member";
 }
 
-/** Solo owner. Pure → testabile senza sessione. */
+/** Owner only. Pure → testable without a session. */
 export function roleIsOwner(role: string | null | undefined): boolean {
     return role === "owner";
 }
 
 /**
- * Ruolo dell'utente in una specifica org (dalla tabella member).
- * null se l'utente NON è membro di quell'org (anche cross-org → null).
+ * The user's role in a specific org (from the member table).
+ * null if the user is NOT a member of that org (including cross-org → null).
  */
 export async function getOrgRole(
     userId: string,
@@ -39,9 +39,9 @@ export async function getOrgRole(
 }
 
 /**
- * Risolve l'org ATTIVA dalla sessione e popola event.context.organization.
- * Idempotente: no-op se già popolato (evita doppio lavoro middleware+guard).
- * Ritorna null se: non autenticato, nessuna org attiva, o utente non più membro.
+ * Resolves the ACTIVE org from the session and populates event.context.organization.
+ * Idempotent: no-op if already populated (avoids duplicate work from middleware+guard).
+ * Returns null if: not authenticated, no active org, or user is no longer a member.
  */
 export async function loadActiveOrganization(
     event: H3Event<EventHandlerRequest>,
@@ -64,8 +64,8 @@ export async function loadActiveOrganization(
 }
 
 /**
- * Guard APP-RESOURCE: utente autenticato + membro dell'org attiva.
- * Popola+ritorna event.context.organization. 401 senza auth, 403 se non membro/no org attiva.
+ * APP-RESOURCE guard: authenticated user + member of the active org.
+ * Populates and returns event.context.organization. 401 without auth, 403 if not a member / no active org.
  */
 export async function requireMember(
     event: H3Event<EventHandlerRequest>,
@@ -82,8 +82,8 @@ export async function requireMember(
 }
 
 /**
- * Guard APP-RESOURCE: richiede ruolo con permesso write.
- * Con i ruoli default coincide con requireMember; mantenuto separato per chiarezza/futuro.
+ * APP-RESOURCE guard: requires a role with write permission.
+ * With default roles this is equivalent to requireMember; kept separate for clarity/future use.
  */
 export async function requireWrite(
     event: H3Event<EventHandlerRequest>,
@@ -95,7 +95,7 @@ export async function requireWrite(
     return org;
 }
 
-/** Guard APP-RESOURCE owner-only. */
+/** APP-RESOURCE guard: owner only. */
 export async function requireOwner(
     event: H3Event<EventHandlerRequest>,
 ): Promise<{ id: string; role: string }> {
@@ -107,8 +107,8 @@ export async function requireOwner(
 }
 
 /**
- * 2° guard sui by-id: una risorsa con organizationId è accessibile solo a quell'org.
- * null/undefined OPPURE mismatch → 403 (no leak esistenza). Altrimenti ritorna la risorsa.
+ * Second guard for by-id lookups: a resource with organizationId is accessible only to that org.
+ * null/undefined OR mismatch → 403 (no existence leak). Otherwise returns the resource.
  */
 export function assertOwnership<T extends { organizationId: string }>(
     resource: T | null | undefined,

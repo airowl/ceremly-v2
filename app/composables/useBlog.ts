@@ -2,7 +2,7 @@ import type { BlogTag } from '~~/shared/utils/blog'
 
 export function useBlog() {
   /**
-   * Calcola il tempo di lettura stimato (media 200 wpm per l'italiano)
+   * Calculates the estimated reading time (average 200 wpm for Italian)
    */
   function calculateReadingTime(text: string): number {
     const words = text.trim().split(/\s+/).length
@@ -10,7 +10,7 @@ export function useBlog() {
   }
 
   /**
-   * Formatta la data dell'articolo con Intl.DateTimeFormat
+   * Formats the article date using Intl.DateTimeFormat
    */
   function formatArticleDate(dateString: string, locale: string): string {
     const date = new Date(dateString)
@@ -23,7 +23,7 @@ export function useBlog() {
   }
 
   /**
-   * Estrai tag unici con conteggio da un array di articoli
+   * Extracts unique tags with count from an array of articles
    */
   function extractTags(articles: Array<{ tags?: string[] }>): BlogTag[] {
     const tagMap = new Map<string, number>()

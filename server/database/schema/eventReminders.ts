@@ -5,9 +5,9 @@ import { organization } from "./auth";
 import { events } from "./events";
 
 /**
- * Reminder programmati per evento (SPEC §2) — max 3 per evento (enforcement nel service).
- * daysBefore = giorni prima della rsvpDeadline; sentAt null finché non inviato
- * (idempotenza del cron giornaliero).
+ * Scheduled reminders for an event (SPEC §2) — max 3 per event (enforced in the service).
+ * daysBefore = days before rsvpDeadline; sentAt null until sent
+ * (idempotency of the daily cron).
  */
 export const eventReminders = pgTable(
     "event_reminders",
@@ -33,9 +33,9 @@ export const eventReminders = pgTable(
     (table) => [
         index("event_reminders_organization_id_idx").on(table.organizationId),
         index("event_reminders_event_id_idx").on(table.eventId),
-        // Hot-path del cron giornaliero findDueReminders: trova i reminder
-        // abilitati e non ancora inviati. Indice PARZIALE → niente seq scan
-        // cross-org. Indicizza eventId per agganciare il join con events.
+        // Hot path for the daily cron findDueReminders: finds reminders
+        // that are enabled and not yet sent. PARTIAL index → no seq scan
+        // cross-org. Indexes eventId to join with events.
         index("event_reminders_due_idx")
             .on(table.eventId)
             .where(sql`${table.enabled} = true AND ${table.sentAt} IS NULL`),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Per chi → Battesimi. Pagina sottile: SEO + corpo condiviso.
+// Public site → For whom → Baptisms. Thin page: SEO + shared body.
 import CerUseCase from '~/components/ceremly/CerUseCase.vue'
 
 definePageMeta({ layout: 'public-site', auth: false })

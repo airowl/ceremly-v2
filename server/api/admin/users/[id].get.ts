@@ -71,7 +71,7 @@ export default defineEventHandler(async (event): Promise<AdminUserDetail> => {
         .from(schema.creem_subscription)
         .where(eq(schema.creem_subscription.referenceId, userId));
 
-    // Org membership (FASE 1c — sostituisce lo stub event di 1a)
+    // Org membership (PHASE 1c — replaces the stub event from 1a)
     const organizations = await db
         .select({
             id: schema.organization.id,

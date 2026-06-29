@@ -51,10 +51,10 @@ export async function getUserProfile(userId: string) {
     })
   }
 
-  // Provider di accesso: Better Auth usa 'credential' per email/password.
-  // Se l'utente ha un account 'credential' può gestire email/password localmente
-  // ('email'); altrimenti è OAuth-only (es. 'google') → il cambio email/password
-  // va fatto dal provider, quindi la UI disabilita quei campi.
+  // Access provider: Better Auth uses 'credential' for email/password.
+  // If the user has a 'credential' account they can manage email/password locally
+  // ('email'); otherwise they are OAuth-only (e.g. 'google') → email/password
+  // changes must go through the provider, so the UI disables those fields.
   const accounts = await db
     .select({ providerId: account.providerId })
     .from(account)
@@ -218,12 +218,12 @@ export async function deleteAccount(
   try {
     const db = getDB()
 
-    // Cancellazione con GRACE WINDOW (diritto all'oblio): l'account viene
-    // bloccato e PROGRAMMATO per la cancellazione definitiva. Il ban è
-    // PERMANENTE durante la grace (banExpires = null, così Better Auth non lo
-    // sblocca mai e l'utente non può rientrare); la data di purge è codificata
-    // nel banReason. Un cron giornaliero (gdpr.service.purgeDueDeletedAccounts)
-    // esegue l'hard-delete (PII + dati, R2 inclusi) dopo la scadenza.
+    // Deletion with GRACE WINDOW (right to erasure): the account is banned
+    // and SCHEDULED for permanent deletion. The ban is PERMANENT during the
+    // grace period (banExpires = null, so Better Auth never un-bans and the
+    // user cannot log back in); the purge date is encoded in banReason.
+    // A daily cron (gdpr.service.purgeDueDeletedAccounts) performs the
+    // hard-delete (PII + data, R2 included) after expiry.
     const purgeAt = new Date(Date.now() + ACCOUNT_DELETION_GRACE_DAYS * 24 * 60 * 60 * 1000)
     await db
       .update(user)
@@ -235,14 +235,14 @@ export async function deleteAccount(
       })
       .where(eq(user.id, userId))
 
-    // Revoca SUBITO le sessioni (Redis secondaryStorage): senza questo l'account
-    // "cancellato" resterebbe loggato fino alla scadenza della sessione cachata.
-    // Stesso meccanismo dell'admin ban (internalAdapter.deleteSessions by userId).
+    // Immediately revoke sessions (Redis secondaryStorage): without this the
+    // "deleted" account would stay logged in until the cached session expires.
+    // Same mechanism as the admin ban (internalAdapter.deleteSessions by userId).
     try {
       const ctx = await useServerAuth().$context
       await ctx.internalAdapter.deleteSessions(userId)
     } catch (err) {
-      console.error('[user.service] deleteAccount: revoca sessioni fallita:', err)
+      console.error('[user.service] deleteAccount: session revocation failed:', err)
     }
 
     await logAudit(h3Event, 'user.account_deleted', {

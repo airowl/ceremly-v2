@@ -1,6 +1,6 @@
 /**
  * GET /api/projects
- * Lista i projects dell'org attiva (RBAC: requireMember).
+ * Lists the projects of the active org (RBAC: requireMember).
  */
 import { requireMember } from "~~/server/utils/permissions";
 import { listProjects } from "~~/server/services/project.service";

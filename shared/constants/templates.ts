@@ -1,35 +1,35 @@
 /**
- * Template invito Ceremly (SPEC §4): 13 template (4 matrimonio, 3 per gli altri tipi).
+ * Ceremly invite templates (SPEC §4): 13 templates (4 matrimonio, 3 for other types).
  *
- * I `defaultBlocks` sono contenuto di prodotto: testi placeholder italiani
- * completi e calibrati per tipo (elegante matrimonio, orgoglioso laurea,
- * formale battesimo, giocoso compleanno). Vengono deep-clonati alla creazione
- * evento (names/title/date sostituiti se forniti): gli id statici 'b_*' sono
- * voluti e restano stabili dopo il clone.
+ * `defaultBlocks` are product content: complete Italian placeholder texts
+ * calibrated per type (elegant matrimonio, proud laurea, formal battesimo,
+ * playful compleanno). They are deep-cloned on event creation (names/title/date
+ * replaced when provided): the static 'b_*' ids are intentional and remain
+ * stable after cloning.
  */
 import type { EventDistribution, EventTypeKey, InviteBlock } from "../types/ceremly";
 
 export interface InviteTemplate {
-    /** es. 'toscana' */
+    /** e.g. 'toscana' */
     key: string;
     eventType: EventTypeKey;
-    /** es. 'Toscana' */
+    /** e.g. 'Toscana' */
     name: string;
-    /** es. 'romantico · floreale' */
+    /** e.g. 'romantico · floreale' */
     tone: string;
-    /** Colore accento CSS (es. '#9D4E3C'). */
+    /** CSS accent color (e.g. '#9D4E3C'). */
     accent: string;
-    /** Tinta chiara dell'accento per sfondi. */
+    /** Light tint of the accent for backgrounds. */
     accentSoft: string;
-    /** Contenuto placeholder COMPLETO, tono calibrato al tipo (PRD 5.1). */
+    /** COMPLETE placeholder content, tone calibrated to the type (PRD 5.1). */
     defaultBlocks: InviteBlock[];
-    /** Preset domande RSVP (RSVP_PRESETS). */
+    /** RSVP question preset (RSVP_PRESETS). */
     rsvpPresetKey: EventTypeKey;
 }
 
 export const INVITE_TEMPLATES: InviteTemplate[] = [
     // ------------------------------------------------------------------ //
-    // Matrimonio
+    // Wedding (Matrimonio)
     // ------------------------------------------------------------------ //
     {
         key: "toscana",
@@ -285,7 +285,7 @@ export const INVITE_TEMPLATES: InviteTemplate[] = [
     },
 
     // ------------------------------------------------------------------ //
-    // Laurea
+    // Graduation (Laurea)
     // ------------------------------------------------------------------ //
     {
         key: "alloro",
@@ -448,7 +448,7 @@ export const INVITE_TEMPLATES: InviteTemplate[] = [
     },
 
     // ------------------------------------------------------------------ //
-    // Battesimo
+    // Christening (Battesimo)
     // ------------------------------------------------------------------ //
     {
         key: "celeste",
@@ -608,7 +608,7 @@ export const INVITE_TEMPLATES: InviteTemplate[] = [
     },
 
     // ------------------------------------------------------------------ //
-    // Compleanno
+    // Birthday (Compleanno)
     // ------------------------------------------------------------------ //
     {
         key: "coriandoli",
@@ -798,20 +798,20 @@ export const INVITE_TEMPLATES: InviteTemplate[] = [
     },
 ];
 
-/** Template disponibili per un tipo evento. */
+/** Available templates for a given event type. */
 export function getTemplatesByType(type: EventTypeKey): InviteTemplate[] {
     return INVITE_TEMPLATES.filter((t) => t.eventType === type);
 }
 
-/** Lookup per key (es. 'toscana'). */
+/** Lookup by key (e.g. 'toscana'). */
 export function getTemplate(key: string): InviteTemplate | undefined {
     return INVITE_TEMPLATES.find((t) => t.key === key);
 }
 
 /**
- * Distribution di default per tipo evento, con i placeholder `{nome}` e
- * `{link}` sostituiti per-ospite al momento dell'invio (cfr. mockup
- * distribution.jsx). `title` è il titolo evento (es. "Giulia & Tommaso").
+ * Default distribution for an event type, with `{nome}` and `{link}`
+ * placeholders replaced per-guest at send time (cf. distribution.jsx mockup).
+ * `title` is the event title (e.g. "Giulia & Tommaso").
  */
 export function getDefaultDistribution(type: EventTypeKey, title: string): EventDistribution {
     switch (type) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Distribuzione inviti — port fedele di docs/ui/project/screens/distribution.jsx:
-// composer email con anteprima inbox, copia&incolla WhatsApp, colonna destinatari.
+// Invite distribution — faithful port of docs/ui/project/screens/distribution.jsx:
+// email composer with inbox preview, WhatsApp copy-paste, recipients column.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import type { CeremlyEvent, GuestWithStatus } from "~~/shared/types/ceremly";
 import type { GuestListSummary } from "~/composables/useEventGuests";
@@ -16,7 +16,7 @@ const eventId = computed(() => String(route.params.id ?? ""));
 const { listGuests, sendInvites, sendTest, markWhatsappSent } = useEventGuests();
 const { withRefetch } = useRefetching();
 
-// ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
+// ─── Event context (sidebar) + breadcrumbs ───────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
@@ -35,7 +35,7 @@ watchEffect(() => {
     crumbs.value = [t("ceremly.event.distribution.crumbEvents"), label, t("ceremly.event.distribution.crumbDistribution")];
 });
 
-// ─── Errori $fetch (shape minima, niente any) ────────────────────────
+// ─── $fetch errors (minimal shape, no any) ───────────────────────────
 interface FetchErrorLike {
     statusCode?: number;
     data?: { statusMessage?: string; message?: string };
@@ -46,7 +46,7 @@ function errOf(e: unknown): FetchErrorLike {
     return (e ?? {}) as FetchErrorLike;
 }
 
-// ─── Dati ────────────────────────────────────────────────────────────
+// ─── Data ────────────────────────────────────────────────────────────
 const guests = ref<GuestWithStatus[]>([]);
 const summary = ref<GuestListSummary | null>(null);
 const loading = ref(true);
@@ -90,13 +90,13 @@ async function refreshGuests() {
         guests.value = res.guests;
         summary.value = res.summary;
     } catch {
-        // refresh silenzioso: i dati visibili restano validi
+        // silent refresh: visible data remains valid
     }
 }
 
 onMounted(loadAll);
 
-// ─── Selezione da ?guests= (action bar pagina ospiti) ────────────────
+// ─── Selection from ?guests= (guest page action bar) ─────────────────
 const preselectedIds = computed<Set<string>>(() => {
     const raw = route.query.guests;
     const val = Array.isArray(raw) ? raw[0] : raw;
@@ -106,10 +106,10 @@ const preselectedIds = computed<Set<string>>(() => {
 
 const hasSelection = computed(() => preselectedIds.value.size > 0);
 
-// ─── Target per canale ───────────────────────────────────────────────
+// ─── Targets by channel ──────────────────────────────────────────────
 const activeGuests = computed(() => guests.value.filter(g => !g.removedAt));
 
-/** Email: selezione da ?guests= (con email) oppure tutti i non ancora inviati con email. */
+/** Email: selection from ?guests= (with email) or all not-yet-sent guests with an email. */
 const emailTargets = computed(() => {
     if (hasSelection.value) {
         return activeGuests.value.filter(g => preselectedIds.value.has(g.id) && !!g.email);
@@ -117,7 +117,7 @@ const emailTargets = computed(() => {
     return activeGuests.value.filter(g => !!g.email && g.sentAt === null);
 });
 
-/** WhatsApp: ospiti senza email (sempre tutti: il copia&incolla è ripetibile). */
+/** WhatsApp: guests without email (always all: copy-paste is repeatable). */
 const waTargets = computed(() => activeGuests.value.filter(g => !g.email));
 
 const channel = ref<"email" | "whatsapp">("email");
@@ -130,7 +130,7 @@ const headerSub = computed(() => {
     return t("ceremly.event.distribution.headerSub", { notSent: notSentCount.value, pending: summary.value.pending });
 });
 
-// ─── Helpers di formattazione ────────────────────────────────────────
+// ─── Formatting helpers ───────────────────────────────────────────────
 function initials(g: { firstName: string; lastName: string }): string {
     return `${g.firstName[0] ?? ""}${g.lastName[0] ?? ""}`.toUpperCase();
 }
@@ -166,7 +166,7 @@ function waSnippet(g: GuestWithStatus): string {
     return tpl.length > 90 ? `${tpl.slice(0, 90)}…` : tpl;
 }
 
-// ─── Mittente + anteprima inbox ──────────────────────────────────────
+// ─── Sender + inbox preview ──────────────────────────────────────────
 const senderName = computed(() => eventData.value?.distribution?.senderName || eventData.value?.title || "");
 
 const senderLine = computed(() => {
@@ -209,28 +209,28 @@ const previewMeta = computed(() => {
     return parts.join(" · ");
 });
 
-// ─── Invio email (overlay a fasi: idle → sending → done) ─────────────
-// L'invio è proporzionale al numero di ospiti (1 dispatch QStash per ospite,
-// sequenziale lato server), quindi è un'operazione lunga e non interrompibile
-// → overlay bloccante con avanzamento reale (pattern C della guida UI).
+// ─── Email send (phased overlay: idle → sending → done) ──────────────
+// Send time is proportional to guest count (1 QStash dispatch per guest,
+// sequential on the server), so it is a long, non-interruptible operation
+// → blocking overlay with real progress (pattern C of the UI guide).
 const confirmSendOpen = ref(false);
 const sendPhase = ref<"idle" | "sending" | "done">("idle");
 const testBtn = useButtonSuccess();
 
-// Stato avanzamento invio
-const sentN = ref(0); // ospiti accodati finora
-const sendTotal = ref(0); // ospiti da accodare in questo invio
-const sentQueued = ref(0); // job effettivamente accodati (esito)
-const sentSkipped = ref(0); // ospiti senza email saltati (esito)
-const sentFailedCount = ref(0); // ospiti con email il cui accodamento è fallito
-const sendFailed = ref(false); // l'invio si è interrotto a metà
+// Send progress state
+const sentN = ref(0); // guests enqueued so far
+const sendTotal = ref(0); // guests to enqueue in this send
+const sentQueued = ref(0); // jobs actually enqueued (result)
+const sentSkipped = ref(0); // guests without email skipped (result)
+const sentFailedCount = ref(0); // guests with email whose enqueue failed
+const sendFailed = ref(false); // send was interrupted mid-way
 const sendErrMsg = ref<string | null>(null);
-const sendEta = ref<number | null>(null); // secondi rimanenti stimati
+const sendEta = ref<number | null>(null); // estimated seconds remaining
 
-// Chunk ridotto (schema accetta max 200): più risposte intermedie reali →
-// la barra avanza per step realmente completati e l'ETA è onesta. 50 è il
-// compromesso tra granularità della barra e numero di entry audit/scritture
-// DB (1 logAudit 'invite.sent' + updateEvent per chunk, lato server).
+// Small chunk (schema accepts max 200): more real intermediate responses →
+// progress bar advances by actually completed steps and ETA is honest. 50 is the
+// trade-off between bar granularity and number of audit entries/DB writes
+// (1 logAudit 'invite.sent' + updateEvent per chunk, server-side).
 const SEND_CHUNK = 50;
 
 const sendPct = computed(() => sendTotal.value > 0 ? Math.round((sentN.value / sendTotal.value) * 100) : 0);
@@ -246,7 +246,7 @@ function openConfirmSend() {
 }
 
 function closeSend() {
-    // Chiudibile solo a riposo o a invio concluso (mai durante l'invio).
+    // Can only be closed at rest or after send completes (never during send).
     if (sendPhase.value === "sending") return;
     confirmSendOpen.value = false;
     sendPhase.value = "idle";
@@ -280,7 +280,7 @@ async function doSend() {
             sentFailedCount.value += res.failed;
             sentN.value = Math.min(ids.length, i + slice.length);
 
-            // ETA onesta: tempo medio per ospite finora × ospiti rimanenti.
+            // Honest ETA: average time per guest so far × remaining guests.
             const elapsed = Date.now() - startedAt;
             if (sentN.value > 0 && sentN.value < ids.length) {
                 const perGuest = elapsed / sentN.value;
@@ -290,7 +290,7 @@ async function doSend() {
             }
         }
     } catch (e) {
-        // Interruzione a metà: i chunk già completati restano accodati.
+        // Mid-run interruption: already completed chunks remain enqueued.
         sendFailed.value = true;
         sendErrMsg.value = errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastSendFailDesc");
     } finally {
@@ -314,7 +314,7 @@ async function doSendTest() {
     }
 }
 
-// ─── WhatsApp: template + copia ──────────────────────────────────────
+// ─── WhatsApp: template + copy ───────────────────────────────────────
 const waExpanded = ref(false);
 const waVisible = computed(() => waExpanded.value ? waTargets.value : waTargets.value.slice(0, 4));
 const waBtn = useButtonSuccess();
@@ -374,7 +374,7 @@ async function copyAll() {
         const all = waTargets.value.map(g => buildWaMessage(g)).join("\n\n");
         const ok = await copyToClipboard(all);
         if (!ok) return;
-        // markSentSchema accetta max 500 guestIds per chiamata: chunking.
+        // markSentSchema accepts max 500 guestIds per call: chunking.
         const ids = waTargets.value.map(g => g.id);
         for (let i = 0; i < ids.length; i += 500) {
             await markWhatsappSent(eventId.value, ids.slice(i, i + 500));
@@ -392,7 +392,7 @@ function openQr(g: GuestWithStatus) {
     window.open(`/api/events/${eventId.value}/guests/${g.id}/qr`, "_blank");
 }
 
-// ─── Colonna destra: breakdown + cronologia ──────────────────────────
+// ─── Right column: breakdown + history ───────────────────────────────
 const GROUP_DOTS = ["var(--wine)", "var(--sage)", "var(--ink-500)", "var(--orange-deep)", "var(--bone-300)"];
 
 const groupBreakdown = computed(() => {
@@ -442,13 +442,13 @@ const sendHistory = computed<HistoryEntry[]>(() => {
 
 <template>
     <div>
-        <!-- Stato errore -->
+        <!-- Error state -->
         <div v-if="loadError" class="cer-card" style="padding: 22px;">
             <div style="color: var(--decline); font-size: 14px;">{{ loadError }}</div>
             <button class="cer-btn ghost small" type="button" style="margin-top: 12px;" @click="loadAll">{{ $t('common.retry') }}</button>
         </div>
 
-        <!-- Stato loading -->
+        <!-- Loading state -->
         <template v-else-if="loading">
             <div class="cer-skeleton" style="height: 40px; width: 360px;" />
             <div class="cer-skeleton" style="height: 16px; width: 480px; margin-top: 10px;" />
@@ -514,7 +514,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
 
                     <div style="height: 1px; background: var(--bone-200); margin: 20px 0;" />
 
-                    <!-- Anteprima inbox -->
+                    <!-- Inbox preview -->
                     <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.inboxPreview') }}</div>
                     <div style="margin-top: 12px; padding: 18px; background: var(--bone-100); border-radius: 12px; border: 1px solid var(--bone-200);">
                         <div class="row" style="gap: 10px;">
@@ -585,7 +585,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                         </button>
                     </div>
 
-                    <!-- Modello editabile -->
+                    <!-- Editable template -->
                     <div class="col" style="gap: 4px; margin-top: 18px;">
                         <label class="cer-flabel row" style="justify-content: space-between;">
                             <span>{{ $t('ceremly.event.distribution.labelWaTemplate') }}</span>
@@ -643,7 +643,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     </div>
                 </div>
 
-                <!-- ─── COLONNA DESTRA ──────────────────────────────── -->
+                <!-- ─── RIGHT COLUMN ───────────────────────────────── -->
                 <div class="col" style="gap: 16px; align-items: stretch;">
                     <div class="cer-card" style="padding: 20px;">
                         <div class="mono" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-500);">{{ $t('ceremly.event.distribution.recipientsEyebrow') }}</div>
@@ -691,11 +691,11 @@ const sendHistory = computed<HistoryEntry[]>(() => {
             </div>
         </template>
 
-        <!-- ─── Overlay invio email (idle → sending → done) ─────────── -->
+        <!-- ─── Email send overlay (idle → sending → done) ─────────── -->
         <div v-if="confirmSendOpen" class="cer-overlay" @click.self="closeSend">
             <div class="cer-modal" style="max-width: 460px;">
 
-                <!-- Fase 1 · conferma -->
+                <!-- Phase 1 · confirm -->
                 <template v-if="sendPhase === 'idle'">
                     <div class="serif" style="font-size: 20px;">{{ $t('ceremly.event.distribution.confirmTitle') }}</div>
                     <div class="muted" style="font-size: 14px; margin-top: 10px; line-height: 1.5;">
@@ -709,7 +709,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     </div>
                 </template>
 
-                <!-- Fase 2 · invio in corso (non interrompibile) -->
+                <!-- Phase 2 · send in progress (non-interruptible) -->
                 <template v-else-if="sendPhase === 'sending'">
                     <div class="row" style="gap: 10px; align-items: center;">
                         <span class="cer-spinner" style="width: 18px; height: 18px;" />
@@ -725,7 +725,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
                     </p>
                 </template>
 
-                <!-- Fase 3 · esito (riepilogo, anche parziale su errore) -->
+                <!-- Phase 3 · result (summary, also partial on error) -->
                 <template v-else>
                     <div class="row" style="gap: 10px; align-items: center;">
                         <span
@@ -758,7 +758,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
 </template>
 
 <style scoped>
-/* Overlay e modale custom .cer (stesso stile della pagina ospiti) */
+/* Custom .cer overlay and modal (same style as the guests page) */
 .cer-overlay {
     position: fixed;
     inset: 0;
@@ -781,7 +781,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
     box-shadow: var(--hard);
 }
 
-/* Label form mono (stile inline del mockup) */
+/* Mono form label (inline style from the mockup) */
 .cer-flabel {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -790,7 +790,7 @@ const sendHistory = computed<HistoryEntry[]>(() => {
     color: var(--ink-500);
 }
 
-/* Skeleton sobrio */
+/* Subtle skeleton */
 .cer-skeleton {
     background: var(--bone-100);
     border-radius: 12px;

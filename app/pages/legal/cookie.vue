@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// Sito pubblico → Ceremly → Cookie policy. Port di CookiePage/LegalPage (site-company.jsx).
-// Nav e footer vengono dal layout public-site.
+// Public site → Ceremly → Cookie policy. Port of CookiePage/LegalPage (site-company.jsx).
+// Nav and footer come from the public-site layout.
 definePageMeta({ layout: 'public-site', auth: false })
 
 const { t, tm, rt } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
-// Email brand: env-driven (fuori da i18n per il carattere '@')
+// Brand email: env-driven (outside i18n due to the '@' character)
 const privacyEmail = runtimeConfig.public.privacyEmail
 
 const seoTitle = t('ceremly.site.cookie.seoTitle')
@@ -47,7 +47,7 @@ const pad = (i: number) => String(i + 1).padStart(2, '0')
             </div>
         </section>
 
-        <!-- body: indice + sezioni -->
+        <!-- body: index + sections -->
         <div class="cer-site-wrap cer-legal-grid" style="padding: 56px 0 80px;">
             <aside class="cer-card cer-legal-index" style="padding: 22px;">
                 <div class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-400); margin-bottom: 14px;">{{ t('ceremly.site.cookie.indexLabel') }}</div>
@@ -65,7 +65,7 @@ const pad = (i: number) => String(i + 1).padStart(2, '0')
                     </h2>
                     <p v-for="(p, pi) in s.ps" :key="pi" style="font-size: 14px; line-height: 1.7; color: var(--ink-700); margin: 0 0 12px;">{{ p }}</p>
 
-                    <!-- tabella cookie nella sezione 2 -->
+                    <!-- cookie table in section 2 -->
                     <div v-if="i === 1" class="cer-card" style="overflow: hidden; margin-top: 6px;">
                         <table class="cer-table">
                             <thead>
@@ -87,7 +87,7 @@ const pad = (i: number) => String(i + 1).padStart(2, '0')
                         </table>
                     </div>
 
-                    <!-- email contatto nell'ultima sezione -->
+                    <!-- contact email in the last section -->
                     <p v-if="i === sections.length - 1" style="font-size: 14px; line-height: 1.7; color: var(--ink-700); margin: 0;">
                         {{ t('ceremly.site.cookie.contactPrefix') }} <a :href="`mailto:${privacyEmail}`" style="color: var(--purple-bright); font-weight: 600;">{{ privacyEmail }}</a>
                     </p>

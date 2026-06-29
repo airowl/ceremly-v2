@@ -1,15 +1,15 @@
 /**
- * Distribution Service — invio inviti via email/WhatsApp (SPEC §6 "Distribuzione", owner B3).
+ * Distribution Service — invite sending via email/WhatsApp (SPEC §6 "Distribution", owner B3).
  *
  * Pattern project.service:
- *   1. organizationId SEMPRE da event.context.organization (guard RBAC), mai da body.
- *   2. Query repository org-scoped by-construction (distributionRepository).
- *   3. assertOwnership come 2° guard sull'evento.
- *   4. logAudit su ogni scrittura organizzatore.
+ *   1. organizationId ALWAYS from event.context.organization (RBAC guard), never from body.
+ *   2. Repository queries org-scoped by-construction (distributionRepository).
+ *   3. assertOwnership as 2nd guard on the event.
+ *   4. logAudit on every organizer write.
  *
- * L'invio email è 1 job QStash per ospite ('send-invite-email'): il service
- * accoda, marca sentAt/sentChannel e scrive l'attività; il rendering/invio
- * vero avviene nel job handler (server/queue/handlers).
+ * Email sending is 1 QStash job per guest ('send-invite-email'): the service
+ * enqueues, marks sentAt/sentChannel and writes the activity; the actual rendering/sending
+ * happens in the job handler (server/queue/handlers).
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type { MarkSentInput, SendInvitesInput, SendTestInput } from "~~/shared/schemas/ceremly";
@@ -27,24 +27,24 @@ import { emailSubjects, renderGuestInviteEmail } from "../emailTemplates";
 import { dispatch } from "../queue";
 import { signPreviewToken } from "../utils/previewToken";
 
-/** Concorrenza massima dei dispatch QStash per invio (#6: evita timeout su liste grandi). */
+/** Maximum QStash dispatch concurrency per send (#6: avoids timeout on large lists). */
 const DISPATCH_CONCURRENCY = 10;
 
-/** Token fittizio per il link/pixel dell'email di test (il 404 pubblico è cortese). */
+/** Dummy token for the test email link/pixel (the public 404 is graceful). */
 const TEST_TOKEN = "preview";
 
-/** Nome ospite d'esempio per l'email di test (SPEC §6 send-test). */
+/** Example guest name for the test email (SPEC §6 send-test). */
 const TEST_GUEST_NAME = "Anna";
 
-/** Corpo di fallback se l'organizzatore non ha ancora scritto un messaggio. */
+/** Fallback body if the organizer has not yet written a message. */
 const FALLBACK_INVITE_BODY
     = "Ciao {nome},\n\nc'è un invito che ti aspetta. Apri il link per scoprire tutti i dettagli e confermare la tua presenza:\n{link}";
 
 // ---------------------------------------------------------------------------
-// Helpers puri/condivisi (usati anche dai job handler della queue)
+// Pure/shared helpers (also used by the queue job handlers)
 // ---------------------------------------------------------------------------
 
-/** Sostituisce i placeholder {nome} e {link} in subject/body. */
+/** Replaces the {nome} and {link} placeholders in subject/body. */
 export function applyInvitePlaceholders(
     text: string,
     values: { nome: string; link: string },
@@ -52,27 +52,27 @@ export function applyInvitePlaceholders(
     return text.split("{nome}").join(values.nome).split("{link}").join(values.link);
 }
 
-/** baseURL pubblico senza trailing slash (stessa costruzione di guest.service). */
+/** Public baseURL without trailing slash (same construction as guest.service). */
 export function getPublicBaseUrl(): string {
     const config = useRuntimeConfig();
     return String(config.public.baseURL ?? "").replace(/\/+$/, "");
 }
 
-/** Link personale dell'ospite: `{baseURL}/e/{slug}/{token}`. */
+/** Personal guest link: `{baseURL}/e/{slug}/{token}`. */
 export function buildGuestInviteLink(slug: string, token: string): string {
     return `${getPublicBaseUrl()}/e/${slug}/${token}`;
 }
 
-/** Pixel tracking apertura email: `{baseURL}/api/public/pixel/{token}.gif`. */
+/** Email open tracking pixel: `{baseURL}/api/public/pixel/{token}.gif`. */
 export function buildGuestPixelUrl(token: string): string {
     return `${getPublicBaseUrl()}/api/public/pixel/${token}.gif`;
 }
 
 /**
- * Link di anteprima firmato per l'email di test: `{baseURL}/e/{slug}/preview?sig=...`.
- * La firma HMAC autorizza la modalità anteprima sulla pagina pubblica (invito
- * renderizzato, ospite-esempio, RSVP sola lettura) senza esporre dati ospite né
- * permettere enumeration: `/e/{slug}/preview` digitato a mano (senza sig) resta 404.
+ * Signed preview link for the test email: `{baseURL}/e/{slug}/preview?sig=...`.
+ * The HMAC signature authorizes preview mode on the public page (rendered invite,
+ * example guest, read-only RSVP) without exposing guest data or allowing
+ * enumeration: `/e/{slug}/preview` typed manually (without sig) remains 404.
  */
 export function buildPreviewLink(slug: string): string {
     const sig = signPreviewToken(slug);
@@ -83,7 +83,7 @@ export function buildPreviewLink(slug: string): string {
 // Guard comuni
 // ---------------------------------------------------------------------------
 
-/** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
+/** Reads the active org from context. 401 if missing (RBAC guard not executed). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
     if (!orgId) {
@@ -95,7 +95,7 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
     return orgId;
 }
 
-/** Evento scoped + assertOwnership (guard comune alle route nested). */
+/** Scoped event + assertOwnership (common guard for nested routes). */
 async function requireEventScoped(
     event: H3Event<EventHandlerRequest>,
     eventId: string,
@@ -105,7 +105,7 @@ async function requireEventScoped(
     return { organizationId, eventRow: assertOwnership(eventRow, organizationId) };
 }
 
-/** 422 se l'evento è chiuso: nessun nuovo invio finché non viene riaperto. */
+/** 422 if the event is closed: no new sends until it is reopened. */
 function assertEventNotClosed(eventRow: { status: string }): void {
     if (eventRow.status === "closed") {
         throw createError({
@@ -116,18 +116,18 @@ function assertEventNotClosed(eventRow: { status: string }): void {
 }
 
 // ---------------------------------------------------------------------------
-// Invio inviti email (SPEC §6 POST /api/events/:id/send)
+// Email invite sending (SPEC §6 POST /api/events/:id/send)
 // ---------------------------------------------------------------------------
 
 /**
- * Accoda l'invio dell'invito agli ospiti selezionati:
- * - evento 'closed' → 422; evento 'draft' → attivazione automatica (il primo
- *   invio attiva l'evento, altrimenti i link inviati risponderebbero 404);
- * - risolve i guestIds org+event scoped, SOLO attivi (i fuori scope sono omessi);
- * - salva subject/body in event.distribution (merge) PRIMA del dispatch
- *   (il job handler legge da lì; in dev il job gira in-process subito);
- * - per gli ospiti CON email: markSent 'email' + activity invite_sent + job;
- * - ritorna { queued, skippedNoEmail }.
+ * Enqueues invite sending to the selected guests:
+ * - event 'closed' → 422; event 'draft' → automatic activation (the first
+ *   send activates the event, otherwise sent links would respond 404);
+ * - resolves guestIds org+event scoped, ONLY active ones (out-of-scope are omitted);
+ * - saves subject/body in event.distribution (merge) BEFORE dispatch
+ *   (the job handler reads from there; in dev the job runs in-process immediately);
+ * - for guests WITH email: markSent 'email' + activity invite_sent + job;
+ * - returns { queued, skippedNoEmail }.
  */
 export async function sendInvites(
     event: H3Event<EventHandlerRequest>,
@@ -141,9 +141,9 @@ export async function sendInvites(
     const withEmail = guests.filter((g) => !!g.email);
     const skippedNoEmail = guests.length - withEmail.length;
 
-    // Merge (non sostituzione) della distribution: subject/body aggiornati,
-    // whatsappTemplate/senderName conservati. Primo invio su bozza → l'evento
-    // diventa 'active' nello stesso update (la distribuzione attiva l'evento).
+    // Merge (not replacement) of the distribution: subject/body updated,
+    // whatsappTemplate/senderName preserved. First send on draft → the event
+    // becomes 'active' in the same update (distribution activates the event).
     const distribution: EventDistribution = {
         ...eventRow.distribution,
         emailSubject: data.subject,
@@ -154,15 +154,15 @@ export async function sendInvites(
         ...(eventRow.status === "draft" ? { status: "active" } : {}),
     });
 
-    // 1 job per ospite. Dispatch PRIMA, poi si marcano "inviato" + activity SOLO
-    // gli ospiti effettivamente accodati: un enqueue fallito non deve apparire
-    // come "Inviato" in dashboard (l'organizzatore può ritentare). L'idempotenza
-    // lato consumer (upstash-message-id) evita doppioni sui retry QStash.
+    // 1 job per guest. Dispatch FIRST, then mark "sent" + activity ONLY for
+    // guests actually enqueued: a failed enqueue must not appear as "Sent" in
+    // the dashboard (the organizer can retry). Consumer-side idempotency
+    // (upstash-message-id) prevents duplicates on QStash retries.
     //
-    // Dispatch concorrente a chunk (#6): N round-trip QStash seriali rischiano il
-    // timeout della function serverless su liste grandi (import bulk → centinaia).
-    // I chunk riducono il wall-clock ~DISPATCH_CONCURRENCY× mantenendo
-    // l'isolamento per-ospite (un fallimento non blocca gli altri).
+    // Chunked concurrent dispatch (#6): N serial QStash round-trips risk a
+    // serverless function timeout on large lists (bulk import → hundreds).
+    // Chunks reduce wall-clock by ~DISPATCH_CONCURRENCY× while maintaining
+    // per-guest isolation (one failure does not block others).
     const enqueued: typeof withEmail = [];
     const failedIds: string[] = [];
     for (let i = 0; i < withEmail.length; i += DISPATCH_CONCURRENCY) {
@@ -176,7 +176,7 @@ export async function sendInvites(
                 enqueued.push(guest);
             } else {
                 failedIds.push(guest.id);
-                console.error(`[distribution] dispatch send-invite-email fallito per guest ${guest.id}:`, res.reason);
+                console.error(`[distribution] dispatch send-invite-email failed for guest ${guest.id}:`, res.reason);
             }
         });
     }
@@ -210,9 +210,9 @@ export async function sendInvites(
 // ---------------------------------------------------------------------------
 
 /**
- * Invia subito (NO queue) l'email d'invito all'utente corrente, con ospite
- * d'esempio "Anna" e link/pixel fittizi. Override opzionale di subject/body
- * per provare il testo prima di salvarlo. Nessuna scrittura su tabelle Ceremly.
+ * Sends immediately (NO queue) the invite email to the current user, with
+ * example guest "Anna" and dummy link/pixel. Optional override of subject/body
+ * to preview the text before saving. No writes to Ceremly tables.
  */
 export async function sendTest(
     event: H3Event<EventHandlerRequest>,
@@ -265,9 +265,9 @@ export async function sendTest(
 // ---------------------------------------------------------------------------
 
 /**
- * Marca come inviati via WhatsApp gli ospiti selezionati (bottone "Copia"):
+ * Marks selected guests as sent via WhatsApp ("Copy" button):
  * markSent 'whatsapp' + activity invite_sent { channel: 'whatsapp' } + audit.
- * Evento 'closed' → 422; evento 'draft' → attivazione automatica (come send).
+ * Event 'closed' → 422; event 'draft' → automatic activation (same as send).
  */
 export async function markWhatsappSent(
     event: H3Event<EventHandlerRequest>,
@@ -277,7 +277,7 @@ export async function markWhatsappSent(
     const { organizationId, eventRow } = await requireEventScoped(event, eventId);
     assertEventNotClosed(eventRow);
     if (eventRow.status === "draft") {
-        // Primo invio (mark-sent WhatsApp) su bozza → l'evento diventa 'active'.
+        // First send (mark-sent WhatsApp) on draft → the event becomes 'active'.
         await updateEventScoped(organizationId, eventId, { status: "active" });
     }
 

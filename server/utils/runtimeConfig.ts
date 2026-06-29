@@ -41,9 +41,9 @@ export const generateRuntimeConfig = () => {
         qstashToken: process.env.NUXT_QSTASH_TOKEN,
         qstashCurrentSigningKey: process.env.NUXT_QSTASH_CURRENT_SIGNING_KEY,
         qstashNextSigningKey: process.env.NUXT_QSTASH_NEXT_SIGNING_KEY,
-        // Dev locale: redirige il publish al QStash dev server (npx) invece del
-        // cloud — il cloud non può fare callback a localhost. Vuoto in prod →
-        // default cloud, comportamento invariato.
+        // Local dev: redirects publish to the QStash dev server (npx) instead of
+        // the cloud — the cloud cannot callback to localhost. Empty in prod →
+        // cloud default, behaviour unchanged.
         qstashUrl: process.env.NUXT_QSTASH_URL,
         // Vercel Cron
         cronSecret: process.env.NUXT_CRON_SECRET,
@@ -61,11 +61,11 @@ export const generateRuntimeConfig = () => {
                 bucketName: process.env.NUXT_CF_R2_BUCKET_NAME!,
                 publicUrl: process.env.NUXT_CF_R2_PUBLIC_URL!,
             },
-            // Senza questi due campi le guard in upload/presign erano sempre
-            // saltate: un utente autenticato poteva caricare content-type
-            // arbitrari (text/html, octet-stream...). Allowlist raster sicura
-            // (NO image/svg+xml → vettore XSS) — copre ciò che l'app carica
-            // (profilo + editor evento). 5MB allineato al cap di nuxt-security.
+            // Without these two fields the guards in upload/presign were always
+            // skipped: an authenticated user could upload arbitrary content-types
+            // (text/html, octet-stream...). Safe raster allowlist
+            // (NO image/svg+xml → XSS vector) — covers what the app uploads
+            // (profile + event editor). 5MB aligned with the nuxt-security cap.
             maxFileSize: 5 * 1024 * 1024,
             allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
             uploadRateLimit: {
@@ -78,18 +78,18 @@ export const generateRuntimeConfig = () => {
             appName: process.env.NUXT_PUBLIC_APP_NAME,
             twitterHandle: process.env.NUXT_PUBLIC_TWITTER_HANDLE,
             appEnv: process.env.NODE_ENV,
-            // true SOLO sul deploy Production di Vercel. VERCEL_ENV è auto-iniettato
-            // (production|preview); NODE_ENV invece è "production" anche in Preview,
-            // quindi non distingue gli ambienti. Pilota il testMode di Creem.
+            // true ONLY on a Vercel Production deploy. VERCEL_ENV is auto-injected
+            // (production|preview); NODE_ENV is "production" even in Preview,
+            // so it cannot distinguish environments. Drives Creem's testMode.
             isProdDeployment: process.env.VERCEL_ENV === "production",
             appNotifyEmail: process.env.NUXT_PUBLIC_APP_NOTIFY_EMAIL,
-            // Sottodominio tracciato (open+click) per inviti/reminder eventi.
+            // Tracked subdomain (open+click) for event invite/reminder emails.
             appEventsNotifyEmail: process.env.NUXT_PUBLIC_APP_EVENTS_NOTIFY_EMAIL,
             appContactEmail: process.env.NUXT_PUBLIC_APP_CONTACT_EMAIL,
-            // Email legali (pagine privacy/tos/dpa/cookie). Env-driven: prod @ceremly.com, dev/test @airowlgasga.dev.
+            // Legal email addresses (privacy/tos/dpa/cookie pages). Env-driven: prod @ceremly.com, dev/test @airowlgasga.dev.
             privacyEmail: process.env.NUXT_PUBLIC_PRIVACY_EMAIL || "privacy@ceremly.com",
             legalEmail: process.env.NUXT_PUBLIC_LEGAL_EMAIL || "legal@ceremly.com",
-            // Sentry (error tracking). DSN pubblico per design; vuoto = Sentry off.
+            // Sentry (error tracking). DSN is public by design; empty = Sentry off.
             sentry: { dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || "" },
             creemProductIdCelebration: process.env.NUXT_CREEM_PRODUCT_ID_CELEBRATION,
             creemProductIdAtelier: process.env.NUXT_CREEM_PRODUCT_ID_ATELIER,

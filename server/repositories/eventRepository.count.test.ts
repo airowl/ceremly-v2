@@ -26,7 +26,7 @@ afterEach(async () => {
 });
 
 describe("countActiveEventsByOrg", () => {
-    it("conta solo eventi tier='free' non chiusi; celebration non consuma slot", async () => {
+    it("counts only tier='free' non-closed events; celebration does not consume a slot", async () => {
         orgId = await makeOrg();
         await db.insert(schema.events).values(eventValues(orgId, "draft", "free"));
         await db.insert(schema.events).values(eventValues(orgId, "draft", "celebration"));

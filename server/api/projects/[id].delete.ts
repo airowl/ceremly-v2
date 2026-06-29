@@ -1,6 +1,6 @@
 /**
  * DELETE /api/projects/:id
- * Elimina un project (RBAC: requireWrite + assertOwnership nel service).
+ * Deletes a project (RBAC: requireWrite + assertOwnership in the service).
  */
 import { requireWrite } from "~~/server/utils/permissions";
 import { deleteProject } from "~~/server/services/project.service";

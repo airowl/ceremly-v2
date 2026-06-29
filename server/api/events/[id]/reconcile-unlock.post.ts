@@ -1,10 +1,10 @@
 /**
  * POST /api/events/:id/reconcile-unlock
- * Riconcilia l'unlock Celebrazione dopo il ritorno dal checkout Creem.
- * Usato dal client quando ?unlocked=true è presente nella URL (fire-and-forget
- * del webhook potrebbe aver perso l'unlock).
+ * Reconciles the Celebration unlock after returning from the Creem checkout.
+ * Used by the client when ?unlocked=true is present in the URL (fire-and-forget
+ * webhook delivery may have missed the unlock).
  *
- * Route thin: auth + RBAC write, poi delega al service. Ritorna { reconciled }.
+ * Thin route: auth + RBAC write, then delegates to the service. Returns { reconciled }.
  */
 import { requireWrite } from "~~/server/utils/permissions";
 import { reconcileEventUnlock } from "~~/server/services/eventReconcile.service";

@@ -1,19 +1,19 @@
 /**
- * Generatore OpenAPI 3.1 → docs/openapi.json (importabile in Postman).
+ * OpenAPI 3.1 generator → docs/openapi.json (importable in Postman).
  *
- * Sorgente unica di verità: gli Zod schema in `shared/schemas/`, convertiti
- * via `z.toJSONSchema` (Zod 4). Le route sono registrate manualmente nella
- * tabella ROUTES sotto, ricavata da `server/api/` (escludendo cron/jobs/auth
- * catch-all, che sono interni QStash/Vercel/Better Auth).
+ * Single source of truth: Zod schemas in `shared/schemas/`, converted
+ * via `z.toJSONSchema` (Zod 4). Routes are registered manually in the
+ * ROUTES table below, derived from `server/api/` (excluding cron/jobs/auth
+ * catch-all, which are internal QStash/Vercel/Better Auth).
  *
- * Uso:  pnpm openapi:generate
+ * Usage:  pnpm openapi:generate
  */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import * as Barrel from "../shared/schemas/index";
-// siteMode.ts non è ri-esportato dal barrel: lo aggiungiamo a mano.
+// siteMode.ts is not re-exported from the barrel: add it manually.
 import * as SiteMode from "../shared/schemas/siteMode";
 const S = { ...Barrel, ...SiteMode };
 
@@ -21,11 +21,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 
 // ---------------------------------------------------------------------------
-// Conversione Zod → JSON Schema, con hoisting dei $defs in components.schemas
+// Zod → JSON Schema conversion, hoisting $defs into components.schemas
 // ---------------------------------------------------------------------------
 const components: Record<string, unknown> = {};
 
-/** Riscrive ricorsivamente i $ref "#/$defs/X" → "#/components/schemas/X". */
+/** Recursively rewrites $ref "#/$defs/X" → "#/components/schemas/X". */
 function rewriteRefs(node: unknown): unknown {
     if (Array.isArray(node)) return node.map(rewriteRefs);
     if (node && typeof node === "object") {
@@ -44,13 +44,13 @@ function rewriteRefs(node: unknown): unknown {
     return node;
 }
 
-/** Converte uno Zod schema in JSON Schema pulito (senza $defs/$schema locali). */
+/** Converts a Zod schema to a clean JSON Schema (without local $defs/$schema). */
 function toSchema(schema: z.ZodType): Record<string, unknown> {
     const js = z.toJSONSchema(schema, {
         target: "draft-2020-12",
         io: "input",
         reused: "inline",
-        // z.date()/z.file() non hanno mapping JSON Schema diretto: non bloccare.
+        // z.date()/z.file() have no direct JSON Schema mapping: don't block.
         unrepresentable: "any",
         override: (ctx) => {
             const t = (ctx.zodSchema as { _zod?: { def?: { type?: string } } })
@@ -81,18 +81,18 @@ function schemaByName(name: string): z.ZodType {
 }
 
 // ---------------------------------------------------------------------------
-// Registro route — derivato da server/api/ (no cron/jobs/auth)
+// Route registry — derived from server/api/ (no cron/jobs/auth)
 // ---------------------------------------------------------------------------
 type Auth = "session" | "admin" | "public";
 interface Route {
     method: "get" | "post" | "put" | "patch" | "delete";
-    path: string; // formato OpenAPI con {param}
+    path: string; // OpenAPI format with {param}
     tag: string;
     summary: string;
     auth: Auth;
-    body?: string; // nome schema in shared/schemas
-    query?: string; // nome schema (z.object) → parametri query
-    multipart?: boolean; // upload file
+    body?: string; // schema name in shared/schemas
+    query?: string; // schema name (z.object) → query parameters
+    multipart?: boolean; // file upload
 }
 
 const ROUTES: Route[] = [
@@ -110,7 +110,7 @@ const ROUTES: Route[] = [
     { method: "delete", path: "/api/organizations/{id}", tag: "Organizations", summary: "Elimina organizzazione", auth: "session" },
     { method: "get", path: "/api/organizations/{id}/members", tag: "Organizations", summary: "Lista membri dell'organizzazione", auth: "session" },
 
-    // Projects (entità esempio canonica)
+    // Projects (canonical example entity)
     { method: "get", path: "/api/projects", tag: "Projects", summary: "Lista progetti (org-scoped)", auth: "session" },
     { method: "post", path: "/api/projects", tag: "Projects", summary: "Crea progetto", auth: "session", body: "createProjectSchema" },
     { method: "get", path: "/api/projects/{id}", tag: "Projects", summary: "Dettaglio progetto", auth: "session" },
@@ -178,7 +178,7 @@ const ROUTES: Route[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Costruzione documento OpenAPI
+// OpenAPI document construction
 // ---------------------------------------------------------------------------
 function pathParams(path: string) {
     const names = [...path.matchAll(/\{([^}]+)\}/g)].map((m) => m[1]);
@@ -205,7 +205,7 @@ function queryParams(schemaName: string) {
 const securityFor: Record<Auth, unknown[]> = {
     session: [{ sessionCookie: [] }],
     admin: [{ adminApiKey: [] }],
-    public: [], // [] esplicito = endpoint pubblico, nessuna auth richiesta
+    public: [], // explicit [] = public endpoint, no auth required
 };
 
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -312,5 +312,5 @@ const outFile = resolve(outDir, "openapi.json");
 writeFileSync(outFile, JSON.stringify(doc, null, 2) + "\n");
 
 console.log(
-    `✅ OpenAPI generato: ${outFile}\n   ${ROUTES.length} route · ${Object.keys(components).length} schema condivisi`,
+    `✅ OpenAPI generated: ${outFile}\n   ${ROUTES.length} routes · ${Object.keys(components).length} shared schemas`,
 );

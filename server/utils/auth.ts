@@ -24,10 +24,10 @@ if (import.meta.dev) {
 export const createBetterAuth = () =>
     betterAuth({
         baseURL: runtimeConfig.public.baseURL,
-        // In produzione solo il baseURL è trusted. localhost e il tunnel
-        // Cloudflare (effimero e riassegnabile → superficie CSRF/open-redirect se
-        // rivendicato) restano SOLO in dev, dietro import.meta.dev (tree-shaked
-        // a false nel build di produzione).
+        // In production only the baseURL is trusted. localhost and the Cloudflare
+        // tunnel (ephemeral and reassignable → CSRF/open-redirect surface if
+        // claimed) are ONLY included in dev, behind import.meta.dev (tree-shaken
+        // to false in the production build).
         trustedOrigins: [
             runtimeConfig.public.baseURL,
             ...(import.meta.dev
@@ -65,9 +65,9 @@ export const createBetterAuth = () =>
             },
             changeEmail: {
                 enabled: true,
-                // Step 1: la conferma è inviata all'indirizzo CORRENTE (titolare account).
-                // Solo dopo il click Better Auth invia la verifica al NUOVO indirizzo
-                // riusando emailVerification.sendVerificationEmail (vedi sotto).
+                // Step 1: the confirmation is sent to the CURRENT address (account holder).
+                // Only after the click does Better Auth send verification to the NEW address,
+                // reusing emailVerification.sendVerificationEmail (see below).
                 sendChangeEmailVerification: async ({ user, newEmail, url }) => {
                     const language = ((user as { locale?: string }).locale as SupportedLanguage) || 'it';
                     const result = await sendEmail({
@@ -101,8 +101,8 @@ export const createBetterAuth = () =>
                         };
                     },
                     after: async (user) => {
-                        // signup→org: crea l'organization personale (owner) per il nuovo utente.
-                        // Senza headers/request: createOrganization usa body.userId (no sessione).
+                        // signup→org: creates the personal organization (owner) for the new user.
+                        // Without headers/request: createOrganization uses body.userId (no session).
                         const name = deriveOrgNameFromUser({ name: user.name, email: user.email });
                         const slug = generateUniqueOrgSlug(name);
                         try {
@@ -111,12 +111,12 @@ export const createBetterAuth = () =>
                                 body: { name, slug, userId: user.id },
                             });
                         } catch (err) {
-                            // Best-effort: NON rilanciare. Better Auth committa l'INSERT user PRIMA
-                            // di questo hook e (sul path email/password) SENZA transazione → un throw
-                            // qui produrrebbe un 500 con l'account già creato (utente orfano comunque).
-                            // La garanzia "ogni utente ha un'org" è data dal self-heal in
-                            // databaseHooks.session.create.before (crea l'org al primo login se manca).
-                            console.error(`[signup→org] createOrganization fallita per user ${user.id} (self-heal al primo login):`, err);
+                            // Best-effort: do NOT rethrow. Better Auth commits the user INSERT BEFORE
+                            // this hook and (on the email/password path) WITHOUT a transaction → a throw
+                            // here would produce a 500 with the account already created (orphan user anyway).
+                            // The "every user has an org" guarantee is provided by the self-heal in
+                            // databaseHooks.session.create.before (creates the org on first login if missing).
+                            console.error(`[signup→org] createOrganization failed for user ${user.id} (self-heal on first login):`, err);
                         }
                     },
                 },
@@ -124,7 +124,7 @@ export const createBetterAuth = () =>
             session: {
                 create: {
                     before: async (session) => {
-                        // Org attiva iniziale: prima membership (createdAt asc) dell'utente.
+                        // Initial active org: the user's first membership (createdAt asc).
                         const db = getDB();
                         const findFirstOrg = async () =>
                             db
@@ -136,9 +136,9 @@ export const createBetterAuth = () =>
 
                         let rows = await findFirstOrg();
 
-                        // Self-heal: se l'utente non ha org (signup→org fallito, o utente legacy
-                        // pre-1b), creane una personale ORA. È la garanzia robusta di "no utente
-                        // orfano", indipendente dall'atomicità del hook user.create.after.
+                        // Self-heal: if the user has no org (signup→org failed, or legacy user
+                        // pre-1b), create a personal one NOW. This is the robust guarantee of "no orphan
+                        // user", independent of the atomicity of the user.create.after hook.
                         if (!rows[0]) {
                             try {
                                 const users = await db
@@ -156,14 +156,14 @@ export const createBetterAuth = () =>
                                     rows = await findFirstOrg();
                                 }
                             } catch (err) {
-                                // Non bloccare il login: senza org attiva, l'app gestisce il fallback.
-                                console.error(`[session→org self-heal] createOrganization fallita per user ${session.userId}:`, err);
+                                // Do not block login: without an active org, the app handles the fallback.
+                                console.error(`[session→org self-heal] createOrganization failed for user ${session.userId}:`, err);
                             }
                         }
 
                         const activeOrganizationId = rows[0]?.organizationId;
                         if (!activeOrganizationId) {
-                            return; // nessuna org (stato anomalo) → nessun override
+                            return; // no org (anomalous state) → no override
                         }
                         return {
                             data: {
@@ -176,13 +176,13 @@ export const createBetterAuth = () =>
             },
         },
         secondaryStorage: cacheClient,
-        // Rate limiting CONDIVISO tra istanze serverless: storage su
-        // secondary-storage (Upstash via cacheClient) invece del default
-        // in-memory (per-istanza, resettato a ogni cold start su Vercel).
-        // enabled è il default di Better Auth (attivo in produzione); i
-        // customRules stringono i path sensibili al brute-force. NB: i path key
-        // sono gli endpoint REALI di Better Auth 1.4.x (request-password-reset,
-        // non forget-password) — verificati nei sorgenti.
+        // Rate limiting SHARED across serverless instances: storage on
+        // secondary-storage (Upstash via cacheClient) instead of the default
+        // in-memory (per-instance, reset on every Vercel cold start).
+        // enabled is Better Auth's default (active in production); the
+        // customRules tighten brute-force-sensitive paths. NB: path keys
+        // are the REAL Better Auth 1.4.x endpoints (request-password-reset,
+        // not forget-password) — verified in the source.
         rateLimit: {
             storage: "secondary-storage",
             window: 60,
@@ -230,15 +230,15 @@ export const createBetterAuth = () =>
                 });
 
                 if (!result.success) {
-                    // Invio come side-effect (sign-up, sign-in con email non verificata):
-                    // l'utente è GIÀ committato in DB prima di questo callback → un throw
-                    // produrrebbe un 500 con account creato ("email già registrata" al retry).
-                    // Non bloccare il flusso: log + reinvio self-service.
-                    // Solo sull'endpoint esplicito /send-verification-email (dove l'invio È
-                    // l'operazione richiesta) il fallimento deve diventare un errore HTTP.
+                    // Send as a side-effect (sign-up, sign-in with unverified email):
+                    // the user is ALREADY committed to DB before this callback → a throw
+                    // would produce a 500 with the account created ("email already registered" on retry).
+                    // Do not block the flow: log + self-service resend.
+                    // Only on the explicit /send-verification-email endpoint (where sending IS
+                    // the requested operation) should failure become an HTTP error.
                     const path = request ? new URL(request.url).pathname : "";
                     if (!path.endsWith("/send-verification-email")) {
-                        console.error(`[Email] Verification email non inviata a ${user.email} (flusso non bloccato, reinvio possibile): ${result.error}`);
+                        console.error(`[Email] Verification email not sent to ${user.email} (flow not blocked, resend possible): ${result.error}`);
                         return;
                     }
                     throw createError({
@@ -370,7 +370,7 @@ export const createBetterAuth = () =>
                     });
                     if (!result.success) {
                         console.error(
-                            `[org.sendInvitationEmail] invio fallito a ${data.email}: ${result.error}`,
+                            `[org.sendInvitationEmail] send failed to ${data.email}: ${result.error}`,
                         );
                     }
                 },

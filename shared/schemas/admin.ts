@@ -22,9 +22,9 @@ export const adminCleanupFilesSchema = z.object({
 });
 export type AdminCleanupFilesInput = z.infer<typeof adminCleanupFilesSchema>;
 
-// --- Query delle liste admin (paginazione + filtri) ---
-// page/limit: coercizione + clamping (stesso comportamento del vecchio
-// getQuery+parseInt, ma via parseQueryParams: niente più cast manuali).
+// --- Admin list queries (pagination + filters) ---
+// page/limit: coercion + clamping (same behaviour as the old
+// getQuery+parseInt, but via parseQueryParams: no more manual casts).
 const adminPageField = z.coerce.number().int().catch(1).transform((n) => Math.max(1, n));
 const adminLimitField = (def: number) =>
     z.coerce.number().int().catch(def).transform((n) => Math.min(100, Math.max(1, n)));

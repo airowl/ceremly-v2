@@ -1,19 +1,19 @@
 /**
- * Preset domande RSVP per tipo evento (SPEC §4, da PRD 5.8).
+ * RSVP question presets per event type (SPEC §4, from PRD 5.8).
  *
- * Id riservati: 'attendance' (sempre indice 0, locked), 'companions_count'
- * (alimenta companionsCount e la replica perPerson), 'companion_names'
- * (perPerson scope 'companions'). Le condition su 'attendance' usano i valori
- * canonici 'yes'|'no'|'maybe' (mapping posizionale, NON le label).
+ * Reserved ids: 'attendance' (always index 0, locked), 'companions_count'
+ * (feeds companionsCount and the perPerson replica), 'companion_names'
+ * (perPerson scope 'companions'). Conditions on 'attendance' use the canonical
+ * values 'yes'|'no'|'maybe' (positional mapping, NOT the labels).
  *
- * I preset vengono deep-clonati alla creazione evento: gli id statici
- * leggibili (q_*) sono voluti, le condition li referenziano.
+ * Presets are deep-cloned on event creation: the readable static ids (q_*)
+ * are intentional, conditions reference them.
  */
 import type { EventTypeKey, RsvpCondition, RsvpQuestion } from "../types/ceremly";
 
 const ifAttending = (): RsvpCondition => ({ questionId: "attendance", op: "eq", value: "yes" });
 
-/** Domanda base fissa (indice 0 di ogni config): non eliminabile, tipo fisso. */
+/** Fixed base question (index 0 of every config): not deletable, fixed type. */
 function attendance(): RsvpQuestion {
     return {
         id: "attendance",

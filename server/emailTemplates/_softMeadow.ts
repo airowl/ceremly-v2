@@ -1,13 +1,13 @@
-// Design system "Soft Meadow" condiviso dai template email Ceremly.
-// Token (colors/fonts) + stili inline + helper di rendering, così tutti i
-// template restano coerenti da un'unica fonte. Uses React.createElement (no JSX).
+// Shared "Soft Meadow" design system for Ceremly email templates.
+// Token (colors/fonts) + inline styles + rendering helpers, so all
+// templates stay consistent from a single source. Uses React.createElement (no JSX).
 
 import * as React from 'react';
 import { Hr, Link, Text } from '@react-email/components';
 
 export type SoftMeadowLang = 'it' | 'en';
 
-// Palette Soft Meadow (SPEC §1) — fonte unica dei token cromatici.
+// Soft Meadow palette (SPEC §1) — single source of colour tokens.
 export const colors = {
     bone: '#fefae0',
     card: '#ffffff',
@@ -18,8 +18,8 @@ export const colors = {
     muted: '#a89e7e',
 };
 
-// Stack font email-safe: i font brand (Bricolage/Be Vietnam/Space Mono) non
-// caricano in modo affidabile nei client → i fallback sono ciò che si vede.
+// Email-safe font stack: the brand fonts (Bricolage/Be Vietnam/Space Mono) do not
+// load reliably in email clients → the fallbacks are what users actually see.
 export const fonts = {
     sans: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
@@ -140,14 +140,14 @@ export interface LegalLinks {
     dpa: string;
 }
 
-/** Renderizza il testo rispettando i newline con <br> (no white-space CSS: Outlook). */
+/** Renders the text preserving newlines as <br> (white-space CSS unsupported in Outlook). */
 export function renderMessageLines(message: string): React.ReactNode[] {
     return message
         .split('\n')
         .flatMap((line, i) => (i === 0 ? [line] : [h('br', { key: `br-${i}` }), line]));
 }
 
-/** Footer: separatore + brand/tagline + (opzionale) link legali. */
+/** Footer: separator + brand/tagline + (optional) legal links. */
 export function renderFooter(opts: {
     appName: string;
     lang: SoftMeadowLang;
@@ -174,7 +174,7 @@ export function renderFooter(opts: {
     return els;
 }
 
-/** Blocco "se il pulsante non funziona, copia il link". */
+/** "If the button doesn't work, copy the link" fallback block. */
 export function renderFallback(label: string, url: string): React.ReactNode[] {
     return [
         h(Text, { key: 'fbl', style: styles.fbl }, label),

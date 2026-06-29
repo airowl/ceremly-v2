@@ -3,7 +3,7 @@ import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 import type { CreateProjectInput, UpdateProjectInput } from "~~/shared/schemas/project";
 
-/** Lista projects di un'org (scoped by-construction). */
+/** Lists projects for an org (scoped by-construction). */
 export async function findProjectsByOrg(organizationId: string) {
     const db = getDB();
     return db
@@ -12,7 +12,7 @@ export async function findProjectsByOrg(organizationId: string) {
         .where(eq(schema.projects.organizationId, organizationId));
 }
 
-/** Fetch singolo project scoped: undefined se di un'altra org (no leak). */
+/** Single scoped project fetch: undefined if it belongs to another org (no leak). */
 export async function findProjectByIdScoped(organizationId: string, id: string) {
     const db = getDB();
     const rows = await db
@@ -28,7 +28,7 @@ export async function findProjectByIdScoped(organizationId: string, id: string) 
     return rows[0];
 }
 
-/** Crea un project nell'org indicata. */
+/** Creates a project in the given org. */
 export async function createProject(
     organizationId: string,
     data: CreateProjectInput,
@@ -46,7 +46,7 @@ export async function createProject(
     return rows[0];
 }
 
-/** Update scoped: aggiorna solo se il project appartiene all'org. Undefined altrimenti. */
+/** Scoped update: updates only if the project belongs to the org. Undefined otherwise. */
 export async function updateProjectScoped(
     organizationId: string,
     id: string,
@@ -57,8 +57,8 @@ export async function updateProjectScoped(
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description ?? null;
     if (data.status !== undefined) patch.status = data.status;
-    // Nessun campo da aggiornare: no-op idempotente. Evita `.set({})` che lancia
-    // "No values to set" (drizzle) → 500. Ritorna la riga corrente (scoped).
+    // No fields to update: idempotent no-op. Avoids `.set({})` which throws
+    // "No values to set" (drizzle) → 500. Returns the current row (scoped).
     if (Object.keys(patch).length === 0) {
         return findProjectByIdScoped(organizationId, id);
     }
@@ -75,7 +75,7 @@ export async function updateProjectScoped(
     return rows[0];
 }
 
-/** Delete scoped: elimina solo se il project appartiene all'org. Undefined altrimenti. */
+/** Scoped delete: deletes only if the project belongs to the org. Undefined otherwise. */
 export async function deleteProjectScoped(organizationId: string, id: string) {
     const db = getDB();
     const rows = await db

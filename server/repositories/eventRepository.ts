@@ -1,16 +1,16 @@
 /**
- * Event Repository — query Drizzle per gli eventi Ceremly (SPEC §6, owner B1).
+ * Event Repository — Drizzle queries for Ceremly events (SPEC §6, owner B1).
  *
- * Tutte le query sono org-scoped BY-CONSTRUCTION (WHERE organizationId),
- * pattern projectRepository: mai una query che possa restituire dati di
- * un'altra organization.
+ * All queries are org-scoped BY-CONSTRUCTION (WHERE organizationId),
+ * following the projectRepository pattern: no query can ever return data from
+ * another organization.
  */
 import { and, desc, eq, isNotNull, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 import type { EventDistribution, InviteBlock, RsvpQuestion } from "~~/shared/types/ceremly";
 
-/** Valori completi per l'insert di un evento (preparati dal service). */
+/** Full values for inserting an event (prepared by the service). */
 export interface CreateEventValues {
     type: string;
     templateKey: string;
@@ -27,7 +27,7 @@ export interface CreateEventValues {
     distribution: EventDistribution;
 }
 
-/** Conteggi grezzi aggregati per evento (il service deriva `pending`). */
+/** Raw aggregated counts per event (the service derives `pending`). */
 export interface EventRawCounts {
     guests: number;
     confirmed: number;
@@ -39,10 +39,10 @@ export interface EventRawCounts {
 }
 
 /**
- * Lista eventi dell'org con conteggi aggregati in UNA SOLA query:
- * LEFT JOIN guests (esclusi i removed) + rsvp_responses, aggregati con
- * `count(...) filter (where ...)`. Ogni guest ha al più 1 response
- * (guestId UNIQUE) → nessuna moltiplicazione di righe per ospite.
+ * Lists org events with aggregated counts in ONE query:
+ * LEFT JOIN guests (excluding removed) + rsvp_responses, aggregated with
+ * `count(...) filter (where ...)`. Each guest has at most 1 response
+ * (guestId UNIQUE) → no row multiplication per guest.
  */
 export async function findEventsByOrgWithCounts(organizationId: string) {
     const db = getDB();
@@ -68,7 +68,7 @@ export async function findEventsByOrgWithCounts(organizationId: string) {
         .orderBy(desc(schema.events.createdAt));
 }
 
-/** Fetch singolo evento scoped: undefined se di un'altra org (no leak). */
+/** Single scoped event fetch: undefined if it belongs to another org (no leak). */
 export async function findEventByIdScoped(organizationId: string, id: string) {
     const db = getDB();
     const rows = await db
@@ -85,9 +85,9 @@ export async function findEventByIdScoped(organizationId: string, id: string) {
 }
 
 /**
- * Fetch pubblico per slug (NO org scope): usato SOLO dall'anteprima firmata
- * (`/api/public/preview`, autorizzata da HMAC). Le route ospite restano
- * token-only. undefined se lo slug non esiste.
+ * Public fetch by slug (NO org scope): used ONLY by the signed preview
+ * (`/api/public/preview`, authorized by HMAC). Guest routes remain
+ * token-only. undefined if the slug does not exist.
  */
 export async function findEventBySlug(slug: string) {
     const db = getDB();
@@ -99,7 +99,7 @@ export async function findEventBySlug(slug: string) {
     return rows[0];
 }
 
-/** Crea un evento nell'org indicata. Lancia 23505 su collisione slug (retry nel service). */
+/** Creates an event in the given org. Throws 23505 on slug collision (retry in the service). */
 export async function createEventRow(organizationId: string, values: CreateEventValues) {
     const db = getDB();
     const rows = await db
@@ -109,13 +109,13 @@ export async function createEventRow(organizationId: string, values: CreateEvent
     return rows[0];
 }
 
-/** Update scoped: aggiorna solo se l'evento appartiene all'org.
+/** Scoped update: updates only if the event belongs to the org.
  *
- * FIX 7.4 — Activity reset: ogni update dell'organizzatore azzerà cleanupWarnedAt
- * a NULL. Così, se l'evento diventa stale di nuovo dopo l'attività, il cron di
- * cleanup lo warn-erà con un nuovo avviso di 7 giorni invece di eliminarlo senza
- * preavviso (regressione: cleanupWarnedAt non veniva mai resettato dopo il primo warn).
- * Il no-op guard (patch vuoto) è preservato: nessuna scrittura senza modifiche reali.
+ * FIX 7.4 — Activity reset: every organizer update will reset cleanupWarnedAt
+ * to NULL. This way, if the event becomes stale again after activity, the cleanup
+ * cron will warn it with a fresh 7-day notice instead of deleting it without
+ * warning (regression: cleanupWarnedAt was never reset after the first warn).
+ * The no-op guard (empty patch) is preserved: no write without real changes.
  */
 export async function updateEventScoped(
     organizationId: string,
@@ -124,7 +124,7 @@ export async function updateEventScoped(
 ) {
     const db = getDB();
     if (Object.keys(patch).length === 0) {
-        // No-op idempotente: evita `.set({})` (drizzle "No values to set" → 500).
+        // Idempotent no-op: avoids `.set({})` (drizzle "No values to set" → 500).
         return findEventByIdScoped(organizationId, id);
     }
     const rows = await db
@@ -141,10 +141,10 @@ export async function updateEventScoped(
 }
 
 /**
- * Azzera cleanupWarnedAt → NULL quando un ospite invia/aggiorna il proprio RSVP.
- * Org-scoped (guard: organizationId + eventId). Il reset garantisce che l'evento,
- * se dovesse tornare stale, riceva un NUOVO avviso di 7gg anziché venire
- * eliminato immediatamente (FIX 7.4 — RSVP activity path).
+ * Resets cleanupWarnedAt → NULL when a guest submits/updates their RSVP.
+ * Org-scoped (guard: organizationId + eventId). The reset ensures that the event,
+ * if it becomes stale again, receives a NEW 7-day warning instead of being
+ * deleted immediately (FIX 7.4 — RSVP activity path).
  */
 export async function clearEventCleanupWarned(
     organizationId: string,
@@ -162,7 +162,7 @@ export async function clearEventCleanupWarned(
         );
 }
 
-/** Hard delete scoped (cascade su guests/responses/activities/reminders). */
+/** Scoped hard delete (cascades to guests/responses/activities/reminders). */
 export async function deleteEventScoped(organizationId: string, id: string) {
     const db = getDB();
     const rows = await db
@@ -178,10 +178,10 @@ export async function deleteEventScoped(organizationId: string, id: string) {
 }
 
 /**
- * Conta gli eventi "attivi" dell'org per il limite Free: status != 'closed'
- * AND tier = 'free'. Gli eventi sbloccati (tier='celebration') NON consumano lo
- * slot Free (design §2.2): dopo aver pagato un evento, l'utente Free può crearne
- * un altro di prova.
+ * Counts the org's "active" events for the Free plan limit: status != 'closed'
+ * AND tier = 'free'. Unlocked events (tier='celebration') do NOT consume the
+ * Free slot (design §2.2): after paying for an event, a Free user can create
+ * another trial one.
  */
 export async function countActiveEventsByOrg(organizationId: string): Promise<number> {
     const db = getDB();
@@ -202,7 +202,7 @@ export async function countActiveEventsByOrg(organizationId: string): Promise<nu
 // Stats (SPEC §6.1)
 // ---------------------------------------------------------------------------
 
-/** Aggregato KPI in una query: ospiti attivi LEFT JOIN responses. */
+/** KPI aggregate in one query: active guests LEFT JOIN responses. */
 export async function getEventKpiAggregates(organizationId: string, eventId: string) {
     const db = getDB();
     const rows = await db
@@ -230,9 +230,9 @@ export async function getEventKpiAggregates(organizationId: string, eventId: str
 }
 
 /**
- * Tutte le response dell'evento (solo ospiti attivi) per le aggregazioni in
- * TypeScript nel service: timeline 28gg, menuBreakdown, allergies (SPEC §6.1).
- * L'aggregazione delle `answers` jsonb è fatta in TS, non in SQL.
+ * All responses for the event (active guests only) for TypeScript aggregations
+ * in the service: 28-day timeline, menuBreakdown, allergies (SPEC §6.1).
+ * The `answers` jsonb aggregation is done in TS, not in SQL.
  */
 export async function findResponsesForStats(organizationId: string, eventId: string) {
     const db = getDB();
@@ -256,13 +256,13 @@ export async function findResponsesForStats(organizationId: string, eventId: str
 }
 
 // ---------------------------------------------------------------------------
-// Checkout id persistence (SPEC §6.2 / fix 7.2) — per reconciliation
+// Checkout id persistence (SPEC §6.2 / fix 7.2) — for reconciliation
 // ---------------------------------------------------------------------------
 
 /**
- * Persiste il checkoutId Creem sull'evento al momento della creazione del checkout.
- * Idempotente: la UPDATE senza WHERE tier limita l'effetto a eventi esistenti dell'org.
- * Il checkoutId è poi usato da reconcileEventUnlock per la recovery via retrieveCheckout.
+ * Persists the Creem checkoutId on the event at checkout creation time.
+ * Idempotent: the UPDATE without a WHERE on tier limits the effect to existing org events.
+ * The checkoutId is then used by reconcileEventUnlock for recovery via retrieveCheckout.
  */
 export async function setEventCheckoutId(
     eventId: string,
@@ -282,8 +282,8 @@ export async function setEventCheckoutId(
 }
 
 /**
- * Legge tier e creemCheckoutId per la reconciliation.
- * Undefined se l'evento non appartiene all'org (org-scoped, no leak).
+ * Reads tier and creemCheckoutId for reconciliation.
+ * Undefined if the event does not belong to the org (org-scoped, no leak).
  */
 export async function getEventCheckoutInfo(
     eventId: string,
@@ -304,13 +304,13 @@ export async function getEventCheckoutInfo(
 }
 
 // ---------------------------------------------------------------------------
-// Sblocco / re-lock one-time (Celebrazione) — SPEC §6.3/§6.4
+// One-time unlock / re-lock (Celebration) — SPEC §6.3/§6.4
 // ---------------------------------------------------------------------------
 
 /**
- * Sblocca un evento Free → 'celebration' (pagamento one-time Creem completato).
- * Idempotente by-construction: il predicato `tier='free'` evita doppie scritture.
- * Org-scoped: l'org dev'essere quella dell'evento (dal metadata del checkout).
+ * Unlocks a Free event → 'celebration' (Creem one-time payment completed).
+ * Idempotent by-construction: the `tier='free'` predicate prevents double writes.
+ * Org-scoped: the org must be the one owning the event (from checkout metadata).
  */
 export async function unlockEvent(
     eventId: string,
@@ -331,9 +331,9 @@ export async function unlockEvent(
 }
 
 /**
- * Re-locka l'evento collegato a un order Creem rimborsato/contestato → 'free'.
- * Match per `creem_order_id` (univoco lato Creem). Senza, un evento rimborsato
- * resterebbe sbloccato gratis (SPEC §6.4). No-op se nessun match.
+ * Re-locks the event linked to a refunded/disputed Creem order → 'free'.
+ * Matched by `creem_order_id` (unique on the Creem side). Without this, a refunded
+ * event would remain unlocked for free (SPEC §6.4). No-op if no match.
  */
 export async function relockEventByOrder(creemOrderId: string): Promise<void> {
     const db = getDB();
@@ -344,8 +344,8 @@ export async function relockEventByOrder(creemOrderId: string): Promise<void> {
 }
 
 /**
- * Ospiti "da contattare": hanno aperto il link prima di `openedBefore`
- * (> 7 giorni fa) ma non hanno mai risposto. Max `limit`, i più vecchi prima.
+ * Guests "to follow up": opened the link before `openedBefore`
+ * (> 7 days ago) but have never responded. Max `limit`, oldest first.
  */
 export async function findNeedsAttentionGuests(
     organizationId: string,
@@ -379,21 +379,21 @@ export async function findNeedsAttentionGuests(
 }
 
 // ---------------------------------------------------------------------------
-// Cleanup eventi conclusi+inattivi (SPEC §9)
+// Cleanup of concluded+inactive events (SPEC §9)
 // ---------------------------------------------------------------------------
 
 const STALE_DAYS_FREE = 30;
 const STALE_DAYS_CELEBRATION = 90;
 
 /**
- * Predicato "concluso AND inattivo" valutato a `ref` (warn: now+7gg, delete: now).
- * Tier-aware sulle soglie; edge eventDate NULL → solo status='closed' + 30gg.
- * Esclusione Atelier NON qui: il service la applica via isOrgAtelier (le subscription
- * sono fuori scope di questo repository, che è org-agnostic sulle sub).
+ * "Concluded AND inactive" predicate evaluated at `ref` (warn: now+7d, delete: now).
+ * Tier-aware on thresholds; edge eventDate NULL → only status='closed' + 30d.
+ * Atelier exclusion NOT here: the service applies it via isOrgAtelier (subscriptions
+ * are out of scope for this repository, which is org-agnostic on subs).
  *
- * SICUREZZA CRITICA: `freeStale` richiede `eventDate < ref` per evitare di eliminare
- * eventi futuri con rsvpDeadline già passata (es. matrimonio tra 15gg con RSVP chiuse
- * da 5gg → `concluded` via rsvpDeadline-branch, ma eventDate è ancora nel futuro).
+ * CRITICAL SAFETY: `freeStale` requires `eventDate < ref` to avoid deleting
+ * future events whose rsvpDeadline has already passed (e.g. wedding in 15d with RSVP
+ * closed 5d ago → `concluded` via rsvpDeadline-branch, but eventDate is still in the future).
  */
 function stalePredicate(ref: Date) {
     const refMs = ref.getTime();
@@ -406,16 +406,16 @@ function stalePredicate(ref: Date) {
         and(isNotNull(schema.events.rsvpDeadline), lt(schema.events.rsvpDeadline, ref)),
     );
 
-    // Nessuna guest_activity nelle ultime STALE_DAYS_FREE (30gg) dalla ref.
-    // Gli RSVP degli ospiti scrivono su guest_activities, non su events.updatedAt,
-    // per cui controllare solo updatedAt lascerebbe passare eventi ancora attivi.
+    // No guest_activity in the last STALE_DAYS_FREE (30d) from ref.
+    // Guest RSVPs write to guest_activities, not to events.updatedAt,
+    // so checking only updatedAt would let still-active events through.
     const noRecentActivity = sql`not exists (
         select 1 from ${schema.guestActivities}
         where ${schema.guestActivities.eventId} = ${schema.events.id}
           and ${schema.guestActivities.createdAt} >= ${freeCutoff}
     )`;
 
-    // Celebration: soglia 90gg dopo eventDate. Richiede eventDate nel passato.
+    // Celebration: 90d threshold after eventDate. Requires eventDate in the past.
     const celebrationStale = and(
         eq(schema.events.tier, "celebration"),
         isNotNull(schema.events.eventDate),
@@ -424,8 +424,8 @@ function stalePredicate(ref: Date) {
         noRecentActivity,
     );
 
-    // Edge case: eventDate IS NULL → eliminabile solo se status='closed' e inattivo 30gg.
-    // Non si elimina mai una bozza con data ignota (potenzialmente futura).
+    // Edge case: eventDate IS NULL → deletable only if status='closed' and inactive for 30d.
+    // A draft with an unknown date (potentially future) is never deleted.
     const nullDateStale = and(
         isNull(schema.events.eventDate),
         eq(schema.events.status, "closed"),
@@ -433,13 +433,13 @@ function stalePredicate(ref: Date) {
         noRecentActivity,
     );
 
-    // Free (e tier ignoti): soglia 30gg. RICHIEDE eventDate < ref per sicurezza:
-    // un evento futuro con rsvpDeadline passata soddisferebbe `concluded` via
-    // rsvpDeadline-branch, ma non deve mai essere candidato alla cancellazione.
+    // Free (and unknown tiers): 30d threshold. REQUIRES eventDate < ref for safety:
+    // a future event with a passed rsvpDeadline would satisfy `concluded` via the
+    // rsvpDeadline-branch, but must never be a deletion candidate.
     const freeStale = and(
         ne(schema.events.tier, "celebration"),
         isNotNull(schema.events.eventDate),
-        lt(schema.events.eventDate, ref), // guard: eventDate deve essere nel passato
+        lt(schema.events.eventDate, ref), // guard: eventDate must be in the past
         lt(schema.events.updatedAt, freeCutoff),
         noRecentActivity,
     );
@@ -447,7 +447,7 @@ function stalePredicate(ref: Date) {
     return and(concluded, or(celebrationStale, nullDateStale, freeStale));
 }
 
-/** Eventi che soddisferanno il predicato stale entro ~7 giorni e non hanno ancora un avviso. */
+/** Events that will satisfy the stale predicate within ~7 days and have not yet been warned. */
 export async function findStaleEventsToWarn(
     now: Date,
 ): Promise<Array<{ id: string; organizationId: string }>> {
@@ -459,7 +459,7 @@ export async function findStaleEventsToWarn(
         .where(and(stalePredicate(ref), isNull(schema.events.cleanupWarnedAt)));
 }
 
-/** Eventi che soddisfano il predicato stale ora e sono stati avvisati ≥7 giorni fa. */
+/** Events that satisfy the stale predicate now and were warned ≥7 days ago. */
 export async function findStaleEventsToDelete(
     now: Date,
 ): Promise<Array<{ id: string; organizationId: string }>> {
@@ -477,7 +477,7 @@ export async function findStaleEventsToDelete(
         );
 }
 
-/** Marca un evento come avvisato (cleanupWarnedAt=now) — org-scoped. */
+/** Marks an event as warned (cleanupWarnedAt=now) — org-scoped. */
 export async function markEventCleanupWarned(
     organizationId: string,
     eventId: string,
@@ -490,7 +490,7 @@ export async function markEventCleanupWarned(
         .where(and(eq(schema.events.id, eventId), eq(schema.events.organizationId, organizationId)));
 }
 
-/** Titolo evento + email/locale dell'owner dell'org (per l'avviso cleanup). */
+/** Event title + email/locale of the org owner (for the cleanup warning). */
 export async function findEventWarnTargetInfo(
     organizationId: string,
     eventId: string,

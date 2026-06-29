@@ -1,25 +1,25 @@
 /**
- * Test DB-backed — Fix 7.4: cleanupWarnedAt reset su attività significativa.
+ * DB-backed test — Fix 7.4: cleanupWarnedAt reset on significant activity.
  *
- * REGRESSIONE CORRETTA: `cleanupWarnedAt` non veniva mai resettato dopo il primo
- * warn. Sequenza di fallimento:
- *   1. Evento diventa stale → warned (cleanupWarnedAt = T).
- *   2. Organizzatore modifica l'evento o un ospite invia RSVP (attività reale).
- *   3. L'evento torna stale → findStaleEventsToDelete lo vede (cleanupWarnedAt = T,
- *      già > 7gg fa) e lo elimina SENZA un nuovo preavviso. Data loss senza notice.
+ * REGRESSION FIXED: `cleanupWarnedAt` was never reset after the first warn.
+ * Failure sequence:
+ *   1. Event becomes stale → warned (cleanupWarnedAt = T).
+ *   2. Organizer edits the event or a guest submits an RSVP (real activity).
+ *   3. Event becomes stale again → findStaleEventsToDelete sees it (cleanupWarnedAt = T,
+ *      already > 7d ago) and deletes it WITHOUT a new warning. Data loss without notice.
  *
- * FIX: ogni attività significativa resetta cleanupWarnedAt → NULL, garantendo
- * che il cron invii un nuovo avviso con finestra di 7gg prima di qualsiasi delete.
+ * FIX: every significant activity resets cleanupWarnedAt → NULL, ensuring
+ * the cron sends a new warning with a 7-day window before any delete.
  *
- * PERCORSI TESTATI:
- *   (A) updateEventScoped — edit organizzatore
- *   (B) clearEventCleanupWarned — submit RSVP ospite
+ * PATHS TESTED:
+ *   (A) updateEventScoped — organizer edit
+ *   (B) clearEventCleanupWarned — guest RSVP submit
  *
- * NOTA sul test end-to-end: non si testa "→ findStaleEventsToWarn lo vede di nuovo"
- * all'interno dello stesso test perché l'attività modifica updatedAt (A) o crea
- * una guest_activity recente (B), rendendo l'evento non-stale e la query confusa.
- * La prova discriminante è diretta: cleanupWarnedAt → NULL.
- * La catena "NULL → warn" è già coperta da eventRepository.stale.test.ts caso (b).
+ * NOTE on end-to-end test: we do not test "→ findStaleEventsToWarn sees it again"
+ * within the same test because the activity changes updatedAt (A) or creates
+ * a recent guest_activity (B), making the event non-stale and the query misleading.
+ * The discriminating proof is direct: cleanupWarnedAt → NULL.
+ * The "NULL → warn" chain is already covered by eventRepository.stale.test.ts case (b).
  */
 import { describe, it, expect, afterEach } from "vitest";
 import { randomUUID } from "node:crypto";
@@ -47,7 +47,7 @@ async function makeOrg(): Promise<string> {
     return id;
 }
 
-/** Inserisce un evento già avvisato (cleanupWarnedAt = daysAgo fa). */
+/** Inserts an already-warned event (cleanupWarnedAt = daysAgo ago). */
 async function insertWarnedEvent(orgId: string, warnedDaysAgo: number): Promise<string> {
     const id = `evt-fix74-${randomUUID()}`;
     const now = new Date();
@@ -60,8 +60,8 @@ async function insertWarnedEvent(orgId: string, warnedDaysAgo: number): Promise<
         slug: `slug-fix74-${randomUUID()}`,
         status: "closed",
         tier: "free",
-        eventDate: new Date(now.getTime() - 40 * DAY), // 40gg fa (nel passato → concluso)
-        updatedAt: new Date(now.getTime() - 35 * DAY),  // inattivo 35gg (> soglia 30gg)
+        eventDate: new Date(now.getTime() - 40 * DAY), // 40d ago (in the past → concluded)
+        updatedAt: new Date(now.getTime() - 35 * DAY),  // inactive 35d (> 30d threshold)
         cleanupWarnedAt: new Date(now.getTime() - warnedDaysAgo * DAY),
     });
     return id;
@@ -74,13 +74,13 @@ afterEach(async () => {
     cleanupOrgId = "";
 });
 
-describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
-    describe("(A) updateEventScoped — edit organizzatore", () => {
-        it("resetta cleanupWarnedAt a NULL dopo un update organizzatore", async () => {
+describe("Fix 7.4 — cleanupWarnedAt reset on significant activity", () => {
+    describe("(A) updateEventScoped — organizer edit", () => {
+        it("resets cleanupWarnedAt to NULL after an organizer update", async () => {
             cleanupOrgId = await makeOrg();
-            const eventId = await insertWarnedEvent(cleanupOrgId, 10); // avvisato 10gg fa
+            const eventId = await insertWarnedEvent(cleanupOrgId, 10); // warned 10d ago
 
-            // Verifica precondizione: cleanupWarnedAt è valorizzato
+            // Verify precondition: cleanupWarnedAt is set
             const before = await db
                 .select({ cleanupWarnedAt: schema.events.cleanupWarnedAt })
                 .from(schema.events)
@@ -88,10 +88,10 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
                 .limit(1);
             expect(before[0]?.cleanupWarnedAt).not.toBeNull();
 
-            // Azione: update organizzatore (es. modifica titolo)
+            // Action: organizer update (e.g. title change)
             await updateEventScoped(cleanupOrgId, eventId, { title: "Titolo Aggiornato" });
 
-            // Asserzione discriminante: cleanupWarnedAt deve essere NULL
+            // Discriminating assertion: cleanupWarnedAt must be NULL
             const after = await db
                 .select({ cleanupWarnedAt: schema.events.cleanupWarnedAt })
                 .from(schema.events)
@@ -100,11 +100,11 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
             expect(after[0]?.cleanupWarnedAt).toBeNull();
         });
 
-        it("è org-scoped: non resetta cleanupWarnedAt di eventi di altre org", async () => {
+        it("is org-scoped: does not reset cleanupWarnedAt for events from other orgs", async () => {
             cleanupOrgId = await makeOrg();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
-            // Tenta update con orgId sbagliato → nessun effetto
+            // Attempt update with wrong orgId → no effect
             await updateEventScoped("altra-org-xyz", eventId, { title: "Hacking" });
 
             const after = await db
@@ -112,15 +112,15 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
                 .from(schema.events)
                 .where(eq(schema.events.id, eventId))
                 .limit(1);
-            // Il valore deve restare non-null (non toccato dall'update a org errata)
+            // Value must remain non-null (not touched by the update with wrong org)
             expect(after[0]?.cleanupWarnedAt).not.toBeNull();
         });
 
-        it("non resetta cleanupWarnedAt sul no-op (patch vuoto)", async () => {
+        it("does not reset cleanupWarnedAt on no-op (empty patch)", async () => {
             cleanupOrgId = await makeOrg();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
-            // No-op: patch vuoto → nessuna scrittura effettiva
+            // No-op: empty patch → no actual write
             await updateEventScoped(cleanupOrgId, eventId, {});
 
             const after = await db
@@ -128,21 +128,21 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
                 .from(schema.events)
                 .where(eq(schema.events.id, eventId))
                 .limit(1);
-            // Il no-op non deve resettare cleanupWarnedAt (nessun update eseguito)
+            // The no-op must not reset cleanupWarnedAt (no update executed)
             expect(after[0]?.cleanupWarnedAt).not.toBeNull();
         });
 
-        it("dopo il reset, l'evento (reso stale di nuovo) riappare in findStaleEventsToWarn", async () => {
-            // Test fine-a-fine del ciclo di re-warn: seed avvisato → update (reset) →
-            // age manualmente updatedAt → l'evento è ora stale+noWarn → findStaleEventsToWarn lo include.
+        it("after the reset, the event (made stale again) reappears in findStaleEventsToWarn", async () => {
+            // End-to-end test of the re-warn cycle: warned seed → update (reset) →
+            // manually age updatedAt → event is now stale+noWarn → findStaleEventsToWarn includes it.
             cleanupOrgId = await makeOrg();
             const now = new Date();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
-            // Azione: update (resetta cleanupWarnedAt → NULL)
+            // Action: update (resets cleanupWarnedAt → NULL)
             await updateEventScoped(cleanupOrgId, eventId, { title: "Re-Warn Test" });
 
-            // Verifica che cleanupWarnedAt sia null
+            // Verify that cleanupWarnedAt is null
             const checkNull = await db
                 .select({ cleanupWarnedAt: schema.events.cleanupWarnedAt })
                 .from(schema.events)
@@ -150,26 +150,26 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
                 .limit(1);
             expect(checkNull[0]?.cleanupWarnedAt).toBeNull();
 
-            // Ripristina updatedAt a 35gg fa (l'update ha settato updatedAt=now,
-            // rendendo l'evento non-stale; dobbiamo invecchiarlo di nuovo per il test).
+            // Restore updatedAt to 35d ago (the update set updatedAt=now,
+            // making the event non-stale; we need to age it again for the test).
             await db
                 .update(schema.events)
                 .set({ updatedAt: new Date(now.getTime() - 35 * DAY) })
                 .where(eq(schema.events.id, eventId));
 
-            // findStaleEventsToWarn deve ora includere l'evento (cleanupWarnedAt=NULL + stale)
+            // findStaleEventsToWarn must now include the event (cleanupWarnedAt=NULL + stale)
             const warnList = await findStaleEventsToWarn(now);
             const ids = warnList.filter((r) => r.organizationId === cleanupOrgId).map((r) => r.id);
             expect(ids).toContain(eventId);
         });
     });
 
-    describe("(B) clearEventCleanupWarned — submit RSVP ospite", () => {
-        it("resetta cleanupWarnedAt a NULL dopo un RSVP ospite", async () => {
+    describe("(B) clearEventCleanupWarned — guest RSVP submit", () => {
+        it("resets cleanupWarnedAt to NULL after a guest RSVP", async () => {
             cleanupOrgId = await makeOrg();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
-            // Verifica precondizione
+            // Verify precondition
             const before = await db
                 .select({ cleanupWarnedAt: schema.events.cleanupWarnedAt })
                 .from(schema.events)
@@ -177,10 +177,10 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
                 .limit(1);
             expect(before[0]?.cleanupWarnedAt).not.toBeNull();
 
-            // Azione: reset via clearEventCleanupWarned (path RSVP submit)
+            // Action: reset via clearEventCleanupWarned (RSVP submit path)
             await clearEventCleanupWarned(cleanupOrgId, eventId);
 
-            // Asserzione discriminante: cleanupWarnedAt deve essere NULL
+            // Discriminating assertion: cleanupWarnedAt must be NULL
             const after = await db
                 .select({ cleanupWarnedAt: schema.events.cleanupWarnedAt })
                 .from(schema.events)
@@ -189,11 +189,11 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
             expect(after[0]?.cleanupWarnedAt).toBeNull();
         });
 
-        it("è org-scoped: non resetta cleanupWarnedAt di eventi di altre org", async () => {
+        it("is org-scoped: does not reset cleanupWarnedAt for events from other orgs", async () => {
             cleanupOrgId = await makeOrg();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
-            // Tenta clear con orgId sbagliato → nessun effetto
+            // Attempt clear with wrong orgId → no effect
             await clearEventCleanupWarned("altra-org-xyz", eventId);
 
             const after = await db
@@ -204,12 +204,12 @@ describe("Fix 7.4 — cleanupWarnedAt reset su attività significativa", () => {
             expect(after[0]?.cleanupWarnedAt).not.toBeNull();
         });
 
-        it("è idempotente: doppia chiamata non causa errori (già NULL rimane NULL)", async () => {
+        it("is idempotent: double call does not cause errors (already NULL stays NULL)", async () => {
             cleanupOrgId = await makeOrg();
             const eventId = await insertWarnedEvent(cleanupOrgId, 10);
 
             await clearEventCleanupWarned(cleanupOrgId, eventId);
-            // Seconda chiamata: no-op silenzioso (NULL → NULL)
+            // Second call: silent no-op (NULL → NULL)
             await expect(clearEventCleanupWarned(cleanupOrgId, eventId)).resolves.not.toThrow();
 
             const after = await db

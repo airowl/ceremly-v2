@@ -120,8 +120,8 @@ export async function collectUserData(userId: string): Promise<ExportData> {
         throw new Error('User not found');
     }
 
-    // Eventi delle org di cui l'utente è membro (portabilità dati GDPR): si
-    // risolvono le membership (ruolo) e si raccolgono gli eventi org-scoped.
+    // Events from orgs the user is a member of (GDPR data portability): memberships
+    // (role) are resolved and org-scoped events are collected.
     const memberships = await db
         .select({ organizationId: member.organizationId, role: member.role })
         .from(member)
@@ -318,8 +318,8 @@ export async function getExportHistory(userId: string, limit = 10) {
 export async function hasPendingExport(userId: string): Promise<boolean> {
     const db = getDB();
 
-    // Include 'processing': un export in lavorazione è ancora in volo, altrimenti
-    // l'utente potrebbe avviarne uno concorrente nella finestra pending→processing.
+    // Include 'processing': an export in progress is still in flight, otherwise
+    // the user could start a concurrent one within the pending→processing window.
     const pending = await db.query.dataExports.findFirst({
         where: and(
             eq(dataExports.userId, userId),

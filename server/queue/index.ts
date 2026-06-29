@@ -6,8 +6,8 @@ let qstashClient: Client | undefined
 
 function getQStashClient(token: string): Client {
   if (!qstashClient) {
-    // baseUrl vuoto → default cloud (qstash.upstash.io). NUXT_QSTASH_URL può
-    // sovrascrivere l'endpoint (es. un server QStash self-hosted) se serve.
+    // Empty baseUrl → default cloud (qstash.upstash.io). NUXT_QSTASH_URL can
+    // override the endpoint (e.g. a self-hosted QStash server) if needed.
     const baseUrl = runtimeConfig.qstashUrl as string | undefined
     qstashClient = new Client({ token, baseUrl: baseUrl || undefined })
   }

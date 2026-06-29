@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Pill di stato RSVP — port di StatusPill (docs/ui/project/screens/guests.jsx),
-// esteso agli stati derivati di GET /api/events/:id/guests.
+// RSVP status pill — port of StatusPill (docs/ui/project/screens/guests.jsx),
+// extended to derived states from GET /api/events/:id/guests.
 type CeremlyRsvpStatus = "confirmed" | "declined" | "maybe" | "opened" | "not_opened" | "pending";
 
 const props = defineProps<{
@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-// Solo la classe CSS è derivata dallo stato; la label arriva da i18n (ceremly.rsvpStatus.*)
+// Only the CSS class is derived from the status; the label comes from i18n (ceremly.rsvpStatus.*)
 const CLS: Record<CeremlyRsvpStatus, string> = {
     confirmed: "confirm",
     declined: "decline",

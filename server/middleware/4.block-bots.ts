@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
         return;
     }
 
-    // Lista blocco immediato
+    // Immediate block list
     const blockedPaths = [
         "wp-admin",
         "wp-login",
@@ -33,13 +33,13 @@ export default defineEventHandler((event) => {
         "jquery.js",
     ];
 
-    // Blocca IMMEDIATAMENTE
+    // Block IMMEDIATELY
     for (const blocked of blockedPaths) {
         if (path.includes(blocked)) {
-            // Log per debug (vedi nei log di NuxtHub)
+            // Debug log (see NuxtHub logs)
             console.log(`[BLOCKED] Bot attempt: ${path}`);
 
-            // Risposta immediata senza throw (più veloce)
+            // Immediate response without throw (faster)
             event.node.res.statusCode = 404;
             event.node.res.setHeader("Content-Type", "text/plain");
             event.node.res.end("Not Found");
@@ -47,7 +47,7 @@ export default defineEventHandler((event) => {
         }
     }
 
-    // Blocca user agent sospetti
+    // Block suspicious user agents
     const userAgent = getHeader(event, "user-agent")?.toLowerCase() || "";
     const badBots = [
         "sqlmap",
@@ -56,8 +56,8 @@ export default defineEventHandler((event) => {
         "nmap",
         "scanner",
         "zgrab",
-        "python-requests", // Molti bot usano questo
-        "curl", // Opzionale: blocca curl (ma attento, potrebbe bloccare tool legittimi)
+        "python-requests", // Many bots use this
+        "curl", // Optional: block curl (beware, this may block legitimate tools)
         "wget",
     ];
 

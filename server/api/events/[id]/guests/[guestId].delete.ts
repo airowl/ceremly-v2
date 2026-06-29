@@ -1,7 +1,7 @@
 /**
  * DELETE /api/events/:id/guests/:guestId
- * Soft-delete: set removedAt — link inattivo, risposta conservata
- * (RBAC: requireWrite + assertOwnership nel service).
+ * Soft-delete: sets removedAt — link inactive, response preserved
+ * (RBAC: requireWrite + assertOwnership in the service).
  */
 import { requireWrite } from "~~/server/utils/permissions";
 import { softDeleteGuest } from "~~/server/services/guest.service";

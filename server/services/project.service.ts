@@ -1,12 +1,12 @@
 /**
- * Project Service — entità-esempio multi-tenant org-scoped (FASE 4).
+ * Project Service — example multi-tenant org-scoped entity (PHASE 4).
  *
- * RICETTA riproducibile per ogni risorsa di dominio futura:
- *   1. organizationId SEMPRE da event.context.organization (popolata da requireMember/requireWrite),
- *      MAI da body/query.
- *   2. Query repository scoped by-construction (WHERE organizationId).
- *   3. assertOwnership come 2° guard sui by-id (null → 403, no leak esistenza).
- *   4. logAudit obbligatorio su ogni scrittura.
+ * Reproducible recipe for every future domain resource:
+ *   1. organizationId ALWAYS from event.context.organization (populated by requireMember/requireWrite),
+ *      NEVER from body/query.
+ *   2. Repository queries scoped by-construction (WHERE organizationId).
+ *   3. assertOwnership as 2nd guard on by-id lookups (null → 403, no existence leak).
+ *   4. logAudit mandatory on every write.
  */
 import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type {
@@ -23,7 +23,7 @@ import {
 import { assertOwnership } from "../utils/permissions";
 import { logAudit } from "../utils/audit";
 
-/** Legge l'org attiva dal context. 401 se assente (guard RBAC non eseguito). */
+/** Reads the active org from context. 401 if absent (RBAC guard not executed). */
 function getOrgId(event: H3Event<EventHandlerRequest>): string {
     const orgId = event.context.organization?.id;
     if (!orgId) {
@@ -35,14 +35,14 @@ function getOrgId(event: H3Event<EventHandlerRequest>): string {
     return orgId;
 }
 
-/** Lista i projects dell'org attiva. */
+/** Lists the projects of the active org. */
 export async function listProjects(event: H3Event<EventHandlerRequest>) {
     const organizationId = getOrgId(event);
     const projects = await findProjectsByOrg(organizationId);
     return { projects };
 }
 
-/** Singolo project by-id, scoped + assertOwnership (null → 403). */
+/** Single project by-id, scoped + assertOwnership (null → 403). */
 export async function getProject(
     event: H3Event<EventHandlerRequest>,
     id: string,
@@ -53,7 +53,7 @@ export async function getProject(
     return { project };
 }
 
-/** Crea un project nell'org attiva + audit. */
+/** Creates a project in the active org + audit. */
 export async function createProject(
     event: H3Event<EventHandlerRequest>,
     data: CreateProjectInput,
@@ -71,7 +71,7 @@ export async function createProject(
     return { project };
 }
 
-/** Aggiorna un project dell'org attiva (scoped) + assertOwnership + audit. */
+/** Updates a project of the active org (scoped) + assertOwnership + audit. */
 export async function updateProject(
     event: H3Event<EventHandlerRequest>,
     id: string,
@@ -89,7 +89,7 @@ export async function updateProject(
     return { project };
 }
 
-/** Elimina un project dell'org attiva (scoped) + assertOwnership + audit. */
+/** Deletes a project of the active org (scoped) + assertOwnership + audit. */
 export async function deleteProject(
     event: H3Event<EventHandlerRequest>,
     id: string,

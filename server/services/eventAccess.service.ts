@@ -1,13 +1,13 @@
 /**
- * Event Access Service — risoluzione del tier EFFETTIVO di un evento (design §4).
+ * Event Access Service — resolution of the EFFECTIVE tier of an event (design §4).
  *
- * Tre livelli, in ordine:
- *   1. org dell'owner su Atelier (subscription attiva) -> atelier (illimitato);
- *   2. altrimenti event.tier === 'celebration'          -> celebration (250);
- *   3. altrimenti                                        -> free (30).
+ * Three levels, in order:
+ *   1. owner's org on Atelier (active subscription) -> atelier (unlimited);
+ *   2. otherwise event.tier === 'celebration'        -> celebration (250);
+ *   3. otherwise                                     -> free (30).
  *
- * isOrgAtelier deriva il tier dalla SUBSCRIPTION dell'owner via
- * getPlanFromProductId (discriminante Ceremly). Mirror di isOrgFreePlan.
+ * isOrgAtelier derives the tier from the owner's SUBSCRIPTION via
+ * getPlanFromProductId (Ceremly discriminant). Mirror of isOrgFreePlan.
  */
 import type { CeremlyTier } from "~~/shared/constants/pricing";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
@@ -15,9 +15,9 @@ import { resolveOrgOwnerId, getUserPlanInfo } from "./planLimit.service";
 import { getPlanFromProductId } from "~~/server/utils/creem";
 
 /**
- * True se l'ORG è su Atelier: l'owner ha una subscription Creem la cui productId
- * mappa a 'atelier'. Org senza owner/subscription -> NON Atelier (fail-safe
- * verso i limiti Free, mai verso illimitato).
+ * True if the ORG is on Atelier: the owner has a Creem subscription whose productId
+ * maps to 'atelier'. Org without owner/subscription -> NOT Atelier (fail-safe
+ * towards Free limits, never towards unlimited).
  */
 export async function isOrgAtelier(organizationId: string): Promise<boolean> {
     const ownerId = await resolveOrgOwnerId(organizationId);
@@ -27,7 +27,7 @@ export async function isOrgAtelier(organizationId: string): Promise<boolean> {
     return getPlanFromProductId(subscription.productId) === "atelier";
 }
 
-/** Limiti per-evento risolti dal tier effettivo. -1 = illimitato (atelier). */
+/** Per-event limits resolved from the effective tier. -1 = unlimited (atelier). */
 export async function getEventLimits(event: {
     id: string;
     organizationId: string;

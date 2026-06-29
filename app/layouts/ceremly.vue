@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// App shell Ceremly — port di docs/ui/project/screens/app-shell.jsx.
-// Sidebar 240px + topbar con breadcrumbs (useState 'ceremly-crumbs') e
-// Teleport target '#ceremly-topbar-actions' per le azioni di pagina.
+// App shell Ceremly — ported from docs/ui/project/screens/app-shell.jsx.
+// Sidebar 240px + topbar with breadcrumbs (useState 'ceremly-crumbs') and
+// Teleport target '#ceremly-topbar-actions' for page actions.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 
 interface CeremlyEventCtx {
@@ -10,7 +10,7 @@ interface CeremlyEventCtx {
     type: string;
 }
 
-// Shape difensiva: GET /api/events/:id può rispondere { event } o l'evento diretto
+// Defensive shape: GET /api/events/:id may respond with { event } or the event directly
 interface EventLookupResponse {
     event?: { id?: string; title?: string; type?: string };
     id?: string;
@@ -24,15 +24,15 @@ const userStore = useUserStore();
 const { user } = useAuth();
 const { hasActiveSubscription, isAtelier, refreshSubscription } = useSubscription();
 
-// ─── Nav statica ─────────────────────────────────────────────────────
-// Nota: niente voce 'Home' — /dashboard È la lista eventi, una 'Home'
-// separata duplicherebbe 'I tuoi eventi' senza mai risultare attiva.
+// ─── Static nav ──────────────────────────────────────────────────────
+// Note: no 'Home' entry — /dashboard IS the event list; a separate 'Home'
+// would duplicate 'Your events' and never be active.
 const mainNav = computed(() => [
     { key: "events", label: t("ceremly.layout.navEvents"), icon: "events", to: "/dashboard" },
     { key: "templates", label: t("ceremly.layout.navTemplates"), icon: "sparkle", to: "/dashboard/events/new" },
 ]);
 
-// ─── Gruppo contestuale evento ───────────────────────────────────────
+// ─── Contextual event group ───────────────────────────────────────────
 const eventNav = computed(() => [
     { key: "invito", label: t("ceremly.layout.navInvitation"), icon: "edit", path: "editor" },
     { key: "ospiti", label: t("ceremly.layout.navGuests"), icon: "guests", path: "guests" },
@@ -54,7 +54,7 @@ const eventId = computed(() => {
     return typeof id === "string" && route.path.startsWith("/dashboard/events/") ? id : null;
 });
 
-// Cache leggera del contesto evento (titolo/tipo) condivisa con le pagine
+// Lightweight event context cache (title/type) shared with pages
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 
 watch(
@@ -94,13 +94,13 @@ function isMainActive(key: string) {
     return false;
 }
 
-// ─── Breadcrumbs (le pagine li impostano via useState) ───────────────
+// ─── Breadcrumbs (pages set them via useState) ───────────────────────
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 
-// Indicatore "aggiornamento" contestuale sui refetch silenziosi (pattern E)
+// Contextual "updating" indicator for silent refetches (pattern E)
 const { isRefetching } = useRefetching();
 
-// ─── Utente e piano ──────────────────────────────────────────────────
+// ─── User and plan ───────────────────────────────────────────────────
 const displayName = computed(() => user.value?.name || user.value?.email || "—");
 
 const initials = computed(() => {
@@ -159,7 +159,7 @@ onMounted(async () => {
                 <span>{{ $t('ceremly.layout.navSettings') }}</span>
             </NuxtLink>
 
-            <!-- Switch lingua IT/EN — raggiungibile da ogni pagina della dashboard -->
+            <!-- IT/EN language switch — reachable from every dashboard page -->
             <div
                 class="cer-nav-item"
                 style="cursor: default; gap: 8px;"
@@ -220,7 +220,7 @@ onMounted(async () => {
                         <CerIcon name="search" :s="14" /> {{ $t('ceremly.layout.search') }}
                         <span class="mono" style="color: var(--ink-400); margin-left: 6px; font-size: 11px;">⌘K</span>
                     </button>
-                    <!-- Teleport target: le pagine vi teletrasportano i bottoni azione -->
+                    <!-- Teleport target: pages teleport their action buttons here -->
                     <div id="ceremly-topbar-actions" class="row" style="gap: 10px;" />
                 </div>
             </header>

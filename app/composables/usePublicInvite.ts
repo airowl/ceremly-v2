@@ -1,12 +1,12 @@
 /**
- * usePublicInvite — pagina pubblica ospite (/e/:slug/:token).
+ * usePublicInvite — public guest page (/e/:slug/:token).
  *
- * Wrapper tipizzati stile useProjects per i contratti §6.2:
+ * Typed wrappers in useProjects style for contracts §6.2:
  * - GET  /api/public/invite/:token       → PublicInvitePayload (useFetch, SSR)
  * - POST /api/public/invite/:token/rsvp  → { response } | 410 | 422
  *
- * Nessuna auth: il token opaco è l'unica autorità. Il submit normalizza gli
- * errori HTTP in un esito discriminato così la pagina non parsa FetchError.
+ * No auth: the opaque token is the sole authority. The submit normalises
+ * HTTP errors into a discriminated result so the page doesn't parse FetchError.
  */
 import type {
     AttendingStatus,
@@ -23,19 +23,19 @@ export interface PublicRsvpPayload {
     declineMessage: string | null;
 }
 
-/** Esito normalizzato del submit RSVP (discriminato su `kind`). */
+/** Normalised RSVP submit result (discriminated on `kind`). */
 export type SubmitRsvpResult =
     | { ok: true; response: PublicRsvpResponse }
-    /** 410: deadline passata o evento chiuso — message = rsvpClosedMessage. */
+    /** 410: deadline passed or event closed — message = rsvpClosedMessage. */
     | { ok: false; kind: "closed"; message: string }
-    /** 422: errori di validazione (italiani, mostrabili all'ospite). */
+    /** 422: validation errors (Italian, displayable to the guest). */
     | { ok: false; kind: "validation"; errors: string[] }
     | { ok: false; kind: "error"; message: string };
 
 export function usePublicInvite() {
     const isSubmitting = ref(false);
 
-    /** Fetch SSR dell'invito: da chiamare con await nel setup della pagina. */
+    /** SSR fetch of the invite: call with await in the page setup. */
     function fetchInvite(token: string) {
         return useFetch<PublicInvitePayload>(
             `/api/public/invite/${encodeURIComponent(token)}`,
@@ -44,8 +44,8 @@ export function usePublicInvite() {
     }
 
     /**
-     * Fetch SSR dell'anteprima firmata (token "preview"): slug + sig dalla query.
-     * Stessa shape di fetchInvite, con `preview: true` nel payload.
+     * SSR fetch of the signed preview (token "preview"): slug + sig from the query.
+     * Same shape as fetchInvite, with `preview: true` in the payload.
      */
     function fetchPreview(slug: string, sig: string) {
         return useFetch<PublicInvitePayload>(
@@ -72,7 +72,7 @@ export function usePublicInvite() {
                 data?: { statusMessage?: string; data?: { rsvpClosedMessage?: string; errors?: unknown } };
             };
             const status = err.statusCode ?? err.status ?? 500;
-            // createError({ data }) arriva nel body come `data.data`.
+            // createError({ data }) arrives in the body as `data.data`.
             const detail = err.data?.data ?? {};
             if (status === 410) {
                 return {

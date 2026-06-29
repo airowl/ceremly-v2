@@ -1,9 +1,9 @@
 /**
- * Logica condizionale del form RSVP (§3.4) — PURE FUNCTIONS, zero dipendenze.
+ * RSVP form conditional logic (§3.4) — PURE FUNCTIONS, zero dependencies.
  *
- * Usata identica da:
- * - client (RsvpFormRenderer): visibilità domande durante la compilazione;
- * - server (publicInvite.service): validazione autoritativa della submission.
+ * Used identically by:
+ * - client (RsvpFormRenderer): question visibility during form filling;
+ * - server (publicInvite.service): authoritative submission validation.
  */
 import type {
   AttendingStatus,
@@ -14,7 +14,7 @@ import type {
   RsvpQuestion,
 } from '../types/ceremly'
 
-/** Mapping POSIZIONALE delle options di 'attendance' (le label sono personalizzabili). */
+/** POSITIONAL mapping of 'attendance' options (labels are customisable). */
 const ATTENDANCE_CANONICAL = ['yes', 'no', 'maybe'] as const
 
 function isPerPersonAnswer(value: unknown): value is RsvpPerPersonAnswer {
@@ -27,7 +27,7 @@ function isPerPersonAnswer(value: unknown): value is RsvpPerPersonAnswer {
   )
 }
 
-/** Vuoto = nessuna risposta. NB: `false` e `0` sono risposte valide, non vuote. */
+/** Empty = no answer. NB: `false` and `0` are valid answers, not empty. */
 function isEmptyValue(value: unknown): boolean {
   if (value === undefined || value === null) return true
   if (typeof value === 'string') return value.trim() === ''
@@ -36,10 +36,10 @@ function isEmptyValue(value: unknown): boolean {
 }
 
 /**
- * Ritorna il valore "canonico" di una risposta per la valutazione delle condition.
- * - Per 'attendance' mappa la label scelta su 'yes'|'no'|'maybe' (posizionale
- *   sulle options); accetta anche un valore già canonico (es. iniettato dal server).
- * - Per domande perPerson usa `self` (le condition non guardano gli accompagnatori).
+ * Returns the "canonical" value of a response for evaluating conditions.
+ * - For 'attendance' maps the chosen label to 'yes'|'no'|'maybe' (positional
+ *   on options); also accepts an already-canonical value (e.g. injected by server).
+ * - For perPerson questions uses `self` (conditions don't look at companions).
  */
 export function getCanonicalAnswer(
   q: RsvpQuestion,
@@ -65,10 +65,10 @@ function matchesCondition(
   if (value === null) return false
   switch (condition.op) {
     case 'gt':
-      // confronto numerico: array/string non numeriche → NaN → false
+      // numeric comparison: array/non-numeric string → NaN → false
       return Number(value) > Number(condition.value)
     case 'eq':
-      // per 'multiple' eq = include
+      // for 'multiple' eq = includes
       if (Array.isArray(value)) return value.includes(String(condition.value))
       return String(value) === String(condition.value)
     case 'neq':
@@ -86,22 +86,22 @@ function isVisibleWithVisited(
   visited: Set<string>,
 ): boolean {
   if (!q.condition) return true
-  // protezione dai cicli (q1 → q2 → q1): una catena circolare non è mai visibile
+  // cycle protection (q1 → q2 → q1): a circular chain is never visible
   if (visited.has(q.id)) return false
   visited.add(q.id)
 
   const ref = config.find(c => c.id === q.condition!.questionId)
-  // condition su domanda inesistente → nascosta (fail-closed)
+  // condition on a non-existent question → hidden (fail-closed)
   if (!ref) return false
-  // la domanda referenziata deve essere a sua volta visibile
+  // the referenced question must itself be visible
   if (!isVisibleWithVisited(ref, config, answers, visited)) return false
 
   return matchesCondition(getCanonicalAnswer(ref, answers), q.condition!)
 }
 
 /**
- * Una domanda è visibile se: senza condition → true; con condition → la domanda
- * referenziata è visibile E il suo valore canonico soddisfa op/value.
+ * A question is visible if: no condition → true; with condition → the referenced
+ * question is visible AND its canonical value satisfies op/value.
  */
 export function isQuestionVisible(
   q: RsvpQuestion,
@@ -111,7 +111,7 @@ export function isQuestionVisible(
   return isVisibleWithVisited(q, config, answers, new Set())
 }
 
-/** Filtra le domande visibili preservando l'ordine di config (ordine di rendering). */
+/** Filters visible questions preserving config order (rendering order). */
 export function getVisibleQuestions(
   config: RsvpQuestion[],
   answers: RsvpAnswers,
@@ -119,7 +119,7 @@ export function getVisibleQuestions(
   return config.filter(q => isQuestionVisible(q, config, answers))
 }
 
-/** Type-check di un singolo valore rispetto al tipo della domanda. Null = ok. */
+/** Type-check of a single value against the question's type. Null = ok. */
 function checkValueType(q: RsvpQuestion, value: RsvpAnswerValue): string | null {
   switch (q.type) {
     case 'text':
@@ -158,17 +158,17 @@ function checkValueType(q: RsvpQuestion, value: RsvpAnswerValue): string | null 
 }
 
 /**
- * Validazione (server-side autoritativa, riusabile client-side) della submission.
+ * Authoritative server-side (and reusable client-side) submission validation.
  *
- * Regole (§3.4):
- * - attendance presente e valida;
- * - le chiavi di `answers` non presenti in config sono SCARTATE (no injection);
- * - required verificato solo sulle domande VISIBILI;
- * - con attending='no' nessuna domanda è obbligatoria oltre attendance;
- * - perPerson: companions dimensionato a companionsCount;
- * - type-check dei valori e opzioni dentro options[].
+ * Rules (§3.4):
+ * - attendance present and valid;
+ * - keys in `answers` not present in config are DISCARDED (no injection);
+ * - required checked only on VISIBLE questions;
+ * - with attending='no' no question is mandatory beyond attendance;
+ * - perPerson: companions sized to companionsCount;
+ * - type-check of values and options inside options[].
  *
- * Errori in italiano, pensati per essere mostrati all'ospite.
+ * Error messages are in Italian, intended to be shown to the guest.
  */
 export function validateRsvpSubmission(
   config: RsvpQuestion[],
@@ -186,13 +186,13 @@ export function validateRsvpSubmission(
   const companionsCount = payload.companionsCount
   const knownIds = new Set(config.map(q => q.id))
 
-  // Scarta le chiavi non presenti in config e lavora su una copia.
+  // Discard keys not present in config and work on a copy.
   const answers: RsvpAnswers = {}
   for (const [key, value] of Object.entries(payload.answers ?? {})) {
     if (knownIds.has(key) && value !== undefined) answers[key] = value as RsvpAnswers[string]
   }
-  // Inietta i valori autoritativi del payload per la valutazione delle condition
-  // (getCanonicalAnswer accetta il valore canonico per 'attendance').
+  // Inject authoritative payload values for condition evaluation
+  // (getCanonicalAnswer accepts the canonical value for 'attendance').
   if (knownIds.has('attendance')) answers.attendance = payload.attending
   if (knownIds.has('companions_count') && answers.companions_count === undefined) {
     answers.companions_count = companionsCount
@@ -201,7 +201,7 @@ export function validateRsvpSubmission(
   const skipRequired = payload.attending === 'no'
 
   for (const q of getVisibleQuestions(config, answers)) {
-    if (q.id === 'attendance') continue // già validata via payload.attending
+    if (q.id === 'attendance') continue // already validated via payload.attending
     const raw = answers[q.id]
 
     if (q.perPerson) {
@@ -248,7 +248,7 @@ export function validateRsvpSubmission(
       continue
     }
 
-    // Domanda normale (valore piatto)
+    // Normal question (flat value)
     if (raw !== undefined && isPerPersonAnswer(raw)) {
       errors.push(`Formato della risposta non valido per «${q.label}».`)
       continue

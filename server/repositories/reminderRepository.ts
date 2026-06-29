@@ -1,17 +1,17 @@
 /**
- * Reminder Repository — query Drizzle per i reminder Ceremly (SPEC §6, owner B4).
+ * Reminder Repository — Drizzle queries for Ceremly reminders (SPEC §6, owner B4).
  *
- * Le query organizzatore sono org-scoped BY-CONSTRUCTION (WHERE organizationId),
- * pattern eventRepository. Le query del cron (`findDueReminders`) sono per natura
- * cross-org: girano in contesto di sistema (route protetta da CRON_SECRET), ma le
- * funzioni a valle (`findPendingGuestsForReminder`, `markReminderSent`) restano
- * comunque org-scoped: l'organizationId arriva dalla riga reminder stessa.
+ * Organizer queries are org-scoped BY-CONSTRUCTION (WHERE organizationId),
+ * following the eventRepository pattern. Cron queries (`findDueReminders`) are
+ * cross-org by nature: they run in a system context (route protected by CRON_SECRET),
+ * but the downstream functions (`findPendingGuestsForReminder`, `markReminderSent`)
+ * remain org-scoped: the organizationId comes from the reminder row itself.
  */
 import { and, desc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 
-/** Item del bulk upsert (validato da remindersSchema nel route layer). */
+/** Item for the bulk upsert (validated by remindersSchema in the route layer). */
 export interface ReminderUpsertItem {
     id?: string;
     daysBefore: number;
@@ -20,16 +20,16 @@ export interface ReminderUpsertItem {
     enabled: boolean;
 }
 
-/** Esito del bulk upsert (per audit details). */
+/** Result of the bulk upsert (for audit details). */
 export interface BulkUpsertRemindersResult {
     inserted: number;
     updated: number;
     deleted: number;
-    /** Item saltati silenziosamente: id già inviati (immutabili) o id fuori scope. */
+    /** Silently skipped items: ids already sent (immutable) or ids out of scope. */
     skipped: number;
 }
 
-/** Reminder di un evento, org-scoped, max 3, ordinati daysBefore desc (R1 = più lontano). */
+/** Reminders for an event, org-scoped, max 3, ordered by daysBefore desc (R1 = furthest). */
 export async function findRemindersByEvent(organizationId: string, eventId: string) {
     const db = getDB();
     return db
@@ -46,14 +46,14 @@ export async function findRemindersByEvent(organizationId: string, eventId: stri
 }
 
 /**
- * Bulk upsert dei reminder di un evento (SPEC §6 PUT /api/events/:id/reminders):
- *  - item con id presente → update SOLO se il reminder esiste nello scope e
- *    sentAt è null (i già inviati sono immutabili: skip silenzioso);
- *  - item senza id → insert;
- *  - reminder esistenti NON referenziati dalla lista → delete se sentAt null
- *    (i già inviati restano come storico).
- * Operazioni sequenziali senza transazione (driver Neon HTTP: niente
- * transazioni interattive); il volume è minimo (max 3 righe).
+ * Bulk upsert of an event's reminders (SPEC §6 PUT /api/events/:id/reminders):
+ *  - item with an id → update ONLY if the reminder exists in scope and
+ *    sentAt is null (already-sent ones are immutable: silent skip);
+ *  - item without id → insert;
+ *  - existing reminders NOT referenced by the list → delete if sentAt is null
+ *    (already-sent ones remain as history).
+ * Sequential operations without a transaction (Neon HTTP driver: no
+ * interactive transactions); volume is minimal (max 3 rows).
  */
 export async function bulkUpsertReminders(
     organizationId: string,
@@ -77,7 +77,7 @@ export async function bulkUpsertReminders(
 
     const result: BulkUpsertRemindersResult = { inserted: 0, updated: 0, deleted: 0, skipped: 0 };
 
-    // Delete: esistenti non in lista, mai inviati.
+    // Delete: existing ones not in the list, never sent.
     const idsToDelete = existing
         .filter((r) => !referencedIds.has(r.id) && r.sentAt === null)
         .map((r) => r.id);
@@ -98,8 +98,8 @@ export async function bulkUpsertReminders(
         if (item.id) {
             const current = existingById.get(item.id);
             if (!current || current.sentAt !== null) {
-                // Id sconosciuto nello scope (no insert con id client-provided)
-                // o reminder già inviato (immutabile): skip silenzioso.
+                // Unknown id in scope (no insert with client-provided id)
+                // or reminder already sent (immutable): silent skip.
                 result.skipped++;
                 continue;
             }
@@ -136,11 +136,11 @@ export async function bulkUpsertReminders(
 }
 
 /**
- * Reminder "dovuti" per il cron giornaliero (SPEC §6 GET /api/cron/send-reminders):
- * enabled, mai inviati, evento `active` con rsvpDeadline valorizzata e
- * now >= rsvpDeadline - daysBefore giorni (calcolo in SQL con interval).
- * Guard aggiuntivo: now <= rsvpDeadline (a deadline passata il form è chiuso,
- * un reminder sarebbe fuorviante). Query di sistema, cross-org by design.
+ * "Due" reminders for the daily cron (SPEC §6 GET /api/cron/send-reminders):
+ * enabled, never sent, `active` event with a set rsvpDeadline and
+ * now >= rsvpDeadline - daysBefore days (computed in SQL with interval).
+ * Additional guard: now <= rsvpDeadline (past deadline the form is closed,
+ * a reminder would be misleading). System query, cross-org by design.
  */
 export async function findDueReminders() {
     const db = getDB();
@@ -167,9 +167,9 @@ export async function findDueReminders() {
 }
 
 /**
- * Marca un reminder come inviato (idempotenza cron: WHERE sentAt IS NULL).
- * Org-scoped: l'organizationId arriva dalla riga trovata da findDueReminders.
- * Ritorna true se la riga è stata effettivamente marcata.
+ * Marks a reminder as sent (cron idempotency: WHERE sentAt IS NULL).
+ * Org-scoped: the organizationId comes from the row found by findDueReminders.
+ * Returns true if the row was actually marked.
  */
 export async function markReminderSent(organizationId: string, id: string): Promise<boolean> {
     const db = getDB();
@@ -188,9 +188,9 @@ export async function markReminderSent(organizationId: string, id: string): Prom
 }
 
 /**
- * Ospiti destinatari di un reminder (SPEC §6): con email, non removed,
- * remindersDisabled=false e SENZA risposta RSVP (LEFT JOIN su rsvp_responses).
- * Solo gli id: il job handler ri-fetcha i dati completi.
+ * Guests who are recipients of a reminder (SPEC §6): with email, not removed,
+ * remindersDisabled=false and WITHOUT an RSVP response (LEFT JOIN on rsvp_responses).
+ * Ids only: the job handler re-fetches the full data.
  */
 export async function findPendingGuestsForReminder(organizationId: string, eventId: string) {
     const db = getDB();

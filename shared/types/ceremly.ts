@@ -1,15 +1,15 @@
 /**
- * Ceremly — tipi condivisi client/server (SOLO type/interface, nessun runtime).
+ * Ceremly — shared client/server types (ONLY type/interface, no runtime).
  *
- * Shape contrattuali della SPEC (§3 + §6): blocchi invito, configurazione RSVP,
- * risposte ospite e payload API. Le date viaggiano come stringhe ISO perché i
- * payload sono serializzati via $fetch/useFetch.
+ * Contractual shapes from the SPEC (§3 + §6): invite blocks, RSVP configuration,
+ * guest responses and API payloads. Dates travel as ISO strings because
+ * payloads are serialised via $fetch/useFetch.
  */
 
 import type { InviteTheme } from '../constants/inviteTheme'
 
 // ---------------------------------------------------------------------------
-// Evento
+// Event
 // ---------------------------------------------------------------------------
 
 export type EventTypeKey = 'matrimonio' | 'laurea' | 'compleanno' | 'battesimo'
@@ -18,7 +18,7 @@ export type EventStatus = 'draft' | 'active' | 'closed'
 
 export type AttendingStatus = 'yes' | 'no' | 'maybe'
 
-/** Impostazioni di invio salvate sull'evento (jsonb `distribution`). */
+/** Send settings saved on the event (jsonb `distribution`). */
 export interface EventDistribution {
   emailSubject: string
   emailBody: string
@@ -27,7 +27,7 @@ export interface EventDistribution {
 }
 
 // ---------------------------------------------------------------------------
-// Blocchi invito (§3.1)
+// Invite blocks (§3.1)
 // ---------------------------------------------------------------------------
 
 export type BlockType =
@@ -83,22 +83,22 @@ export interface LogisticsBlockData {
   text: string
 }
 
-/** I giorni mancanti sono calcolati da `event.eventDate`. */
+/** Remaining days are calculated from `event.eventDate`. */
 export interface CountdownBlockData {
   title: string
 }
 
 export interface GalleryBlockData {
-  /** Max 5 immagini. */
+  /** Max 5 images. */
   images: { url: string, alt: string }[]
 }
 
-/** Blocco SEMPRE presente, SEMPRE ultimo, non rimovibile. */
+/** Block ALWAYS present, ALWAYS last, not removable. */
 export interface RsvpBlockData {
   buttonLabel: string
 }
 
-/** Mappa type → data, base della union discriminata. */
+/** Map type → data, base of the discriminated union. */
 export interface BlockDataMap {
   header: HeaderBlockData
   message: MessageBlockData
@@ -112,9 +112,9 @@ export interface BlockDataMap {
 }
 
 /**
- * Blocco dell'invito: union discriminata su `type`.
- * `id`: `b_` + suffisso (statico nei template, random per i blocchi creati in editor).
- * L'array `blocks` è ordinato: l'ordine è l'ordine di rendering.
+ * Invite block: discriminated union on `type`.
+ * `id`: `b_` + suffix (static in templates, random for blocks created in the editor).
+ * The `blocks` array is ordered: the order is the rendering order.
  */
 export type InviteBlock = {
   [K in BlockType]: { id: string, type: K, data: BlockDataMap[K] }
@@ -123,7 +123,7 @@ export type InviteBlock = {
 export type BlockData = InviteBlock['data']
 
 // ---------------------------------------------------------------------------
-// Configurazione RSVP (§3.2)
+// RSVP configuration (§3.2)
 // ---------------------------------------------------------------------------
 
 export type RsvpQuestionType = 'text' | 'single' | 'multiple' | 'number' | 'boolean'
@@ -131,10 +131,10 @@ export type RsvpQuestionType = 'text' | 'single' | 'multiple' | 'number' | 'bool
 export type RsvpConditionOp = 'eq' | 'neq' | 'gt'
 
 /**
- * Condizione di visibilità: la domanda è mostrata solo se la domanda
- * `questionId` è a sua volta visibile e il suo valore canonico soddisfa
- * op/value. Per condition su `attendance`, `value` usa i valori canonici
- * 'yes' | 'no' | 'maybe' (non le label personalizzabili).
+ * Visibility condition: the question is shown only if the question
+ * `questionId` is itself visible and its canonical value satisfies
+ * op/value. For conditions on `attendance`, `value` uses the canonical
+ * values 'yes' | 'no' | 'maybe' (not the customisable labels).
  */
 export interface RsvpCondition {
   questionId: string
@@ -143,57 +143,57 @@ export interface RsvpCondition {
 }
 
 export interface RsvpQuestion {
-  /** `q_` + suffisso; id riservati: 'attendance', 'companions_count', 'companion_names'. */
+  /** `q_` + suffix; reserved ids: 'attendance', 'companions_count', 'companion_names'. */
   id: string
   label: string
   description?: string
   type: RsvpQuestionType
-  /** Per single/multiple. */
+  /** For single/multiple. */
   options?: string[]
-  /** Per number (default 0). */
+  /** For number (default 0). */
   min?: number
-  /** Per number (default 4). */
+  /** For number (default 4). */
   max?: number
   required: boolean
-  /** Replica la domanda per ospite + accompagnatori. */
+  /** Replicates the question for guest + companions. */
   perPerson: boolean
-  /** Default 'all'; 'companions' per companion_names. */
+  /** Default 'all'; 'companions' for companion_names. */
   perPersonScope?: 'all' | 'companions'
   condition?: RsvpCondition | null
-  /** true solo per 'attendance' (non eliminabile, tipo fisso). */
+  /** true only for 'attendance' (not deletable, fixed type). */
   locked?: boolean
 }
 
 // ---------------------------------------------------------------------------
-// Risposte ospite (§3.3)
+// Guest responses (§3.3)
 // ---------------------------------------------------------------------------
 
 export type RsvpAnswerValue = string | number | boolean | string[]
 
-/** Risposta a domanda perPerson (scope 'companions' → `self` sempre null). */
+/** Response to a perPerson question (scope 'companions' → `self` always null). */
 export interface RsvpPerPersonAnswer {
   self: RsvpAnswerValue | null
   companions: RsvpAnswerValue[]
 }
 
-/** Chiave = question.id; valore piatto per domande normali, shape perPerson altrimenti. */
+/** Key = question.id; flat value for normal questions, perPerson shape otherwise. */
 export type RsvpAnswers = Record<string, RsvpAnswerValue | RsvpPerPersonAnswer>
 
 // ---------------------------------------------------------------------------
-// Payload API (dedotti dai contratti §6)
+// API payloads (inferred from the §6 contracts)
 // ---------------------------------------------------------------------------
 
 export type SentChannel = 'email' | 'whatsapp'
 
-/** Evento come serializzato dalle API organizzatore. */
+/** Event as serialised by the organiser APIs. */
 export interface CeremlyEvent {
   id: string
   organizationId: string
   type: EventTypeKey
   templateKey: string
-  /** Tema colori custom; null ⇒ token globali (look toscana). */
+  /** Custom colour theme; null ⇒ global tokens (toscana look). */
   theme: InviteTheme | null
-  /** Nome famiglia del catalogo font; null ⇒ --font-display globale. */
+  /** Font catalog family name; null ⇒ global --font-display. */
   inviteFont: string | null
   title: string
   slug: string
@@ -202,9 +202,9 @@ export interface CeremlyEvent {
   locationName: string | null
   locationAddress: string | null
   status: EventStatus
-  /** Piano richiesto per questo evento: 'free' = incluso, 'celebration' = sblocco Atelier. */
+  /** Plan required for this event: 'free' = included, 'celebration' = unlocked by Atelier. */
   tier: 'free' | 'celebration'
-  /** Timestamp ISO (null se ancora bloccato). */
+  /** ISO timestamp (null if still locked). */
   unlockedAt: string | null
   blocks: InviteBlock[]
   rsvpConfig: RsvpQuestion[]
@@ -215,26 +215,26 @@ export interface CeremlyEvent {
   updatedAt: string
 }
 
-/** Conteggi aggregati per card evento (escludono gli ospiti removed). */
+/** Aggregated counts for the event card (exclude removed guests). */
 export interface EventCounts {
   guests: number
   confirmed: number
   declined: number
   maybe: number
-  /** Ospiti SENZA risposta (i 'maybe' hanno risposto: non sono pending). */
+  /** Guests WITHOUT a response ('maybe' have responded: not pending). */
   pending: number
   opened: number
   sent: number
 }
 
-/** Item di `GET /api/events`. */
+/** Item of `GET /api/events`. */
 export interface EventWithCounts extends CeremlyEvent {
   counts: EventCounts
 }
 
 /**
- * Stato derivato dell'ospite: risposta → attending;
- * nessuna risposta → firstOpenedAt ? 'opened' : 'not_opened'.
+ * Derived guest state: responded → attending;
+ * no response → firstOpenedAt ? 'opened' : 'not_opened'.
  */
 export type GuestRsvpStatus = 'confirmed' | 'declined' | 'maybe' | 'opened' | 'not_opened'
 
@@ -259,15 +259,15 @@ export interface CeremlyGuest {
   updatedAt: string
 }
 
-/** Item di `GET /api/events/:id/guests`. */
+/** Item of `GET /api/events/:id/guests`. */
 export interface GuestWithStatus extends CeremlyGuest {
   rsvpStatus: GuestRsvpStatus
   respondedAt: string | null
-  /** 1 + companionsCount se confirmed, altrimenti 0. */
+  /** 1 + companionsCount if confirmed, otherwise 0. */
   totalPeople: number
 }
 
-/** Ultima versione della risposta RSVP (upsert per guest). */
+/** Latest version of the RSVP response (upsert per guest). */
 export interface RsvpResponseData {
   attending: AttendingStatus
   companionsCount: number
@@ -304,16 +304,16 @@ export interface EventStats {
     declined: number
     maybe: number
     pending: number
-    /** Confermati + accompagnatori. */
+    /** Confirmed + companions. */
     totalPeople: number
   }
-  /** Cumulativo per giorno, ultimi 28 giorni. */
+  /** Cumulative per day, last 28 days. */
   timeline: { date: string, confirmed: number, declined: number, maybe: number }[]
   menuBreakdown: { label: string, count: number }[]
   allergies: { value: string, count: number }[]
-  /** Aperto >7gg fa senza risposta, max 10. */
+  /** Opened >7 days ago without a response, max 10. */
   needsAttention: { guestId: string, name: string, contact: string | null, openedDaysAgo: number }[]
-  /** Senza email e senza risposta (per reminder WhatsApp manuali). */
+  /** No email and no response (for manual WhatsApp reminders). */
   noEmailPending: number
 }
 
@@ -326,7 +326,7 @@ export interface EventReminderData {
   sentAt: string | null
 }
 
-/** Payload di `GET /api/public/invite/:token` (§6.2) — mai dati di altri ospiti. */
+/** Payload of `GET /api/public/invite/:token` (§6.2) — never data from other guests. */
 export interface PublicInvitePayload {
   event: Pick<
     CeremlyEvent,
@@ -339,6 +339,6 @@ export interface PublicInvitePayload {
     'attending' | 'companionsCount' | 'answers' | 'declineMessage' | 'updatedAt'
   > | null
   deadlinePassed: boolean
-  /** true SOLO per l'anteprima firmata (`/api/public/preview`): RSVP in sola lettura. */
+  /** true ONLY for the signed preview (`/api/public/preview`): RSVP read-only. */
   preview?: boolean
 }

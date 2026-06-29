@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Nav delle sotto-pagine del sito pubblico. A differenza della nav della landing
-// (ancore in-pagina + form lista d'attesa), qui i link puntano alle pagine
-// dedicate. Login/Registrati gated dal site-mode come sulla landing.
-// Sotto 1023px i link collassano in un menu hamburger.
+// Nav for public site sub-pages. Unlike the landing nav
+// (in-page anchors + waiting list form), links here point to dedicated pages.
+// Login/Sign up gated by site-mode as on the landing.
+// Below 1023px the links collapse into a hamburger menu.
 const { t } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
@@ -17,7 +17,7 @@ const links = computed(() => [
 
 const mobileOpen = ref(false)
 
-// Chiudi il menu a ogni navigazione
+// Close the menu on every navigation
 watch(() => route.fullPath, () => { mobileOpen.value = false })
 </script>
 
@@ -38,7 +38,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
                 <NuxtLink :to="localePath('/signup')" class="cer-btn small">{{ t('common.signUp') }}</NuxtLink>
             </div>
 
-            <!-- Toggle hamburger (solo mobile) -->
+            <!-- Hamburger toggle (mobile only) -->
             <button
                 type="button"
                 class="cer-site-burger"
@@ -56,7 +56,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             </button>
         </div>
 
-        <!-- Pannello mobile -->
+        <!-- Mobile panel -->
         <nav
             v-show="mobileOpen"
             id="cer-site-mobile-menu"

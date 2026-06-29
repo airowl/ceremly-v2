@@ -3,8 +3,8 @@ import { storeToRefs } from 'pinia';
 import { useOrganizationStore } from '~/stores/organizationStore';
 
 /**
- * Org-attiva + ruolo + helper di gating UI.
- * Write = owner|admin. `member` = read-only (no Invita / Rimuovi / Crea).
+ * Active org + role + UI gating helpers.
+ * Write = owner|admin. `member` = read-only (no Invite / Remove / Create).
  */
 export function useOrganization() {
     const store = useOrganizationStore();

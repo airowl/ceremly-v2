@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Showcase del design system "Soft Meadow" — port di brand.jsx.
-// Pagina di reference interna (non marketing): testo letterale, niente i18n.
+// "Soft Meadow" design system showcase — port of brand.jsx.
+// Internal reference page (not marketing): literal text, no i18n.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 
 definePageMeta({ auth: false, layout: false })
@@ -26,7 +26,7 @@ const categories = [
 <template>
     <div class="cer brand-page">
         <div class="brand-head">
-            <!-- colonna sinistra -->
+            <!-- left column -->
             <div style="flex: 1; min-width: 0;">
                 <span class="mono" style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange);">Soft Meadow</span>
                 <div class="serif brand-display" style="font-weight: 800; line-height: 0.95; margin-top: 12px; letter-spacing: -0.045em;">
@@ -60,7 +60,7 @@ const categories = [
                 </div>
             </div>
 
-            <!-- colonna destra -->
+            <!-- right column -->
             <div class="brand-rail">
                 <!-- palette -->
                 <div class="cer-card" style="padding: 20px;">
@@ -75,7 +75,7 @@ const categories = [
                     </div>
                 </div>
 
-                <!-- componenti -->
+                <!-- components -->
                 <div class="cer-card" style="padding: 20px;">
                     <div class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Componenti</div>
                     <div class="row" style="gap: 8px; margin-top: 14px; flex-wrap: wrap;">
@@ -92,7 +92,7 @@ const categories = [
                     <input class="cer-input" placeholder="Campo con focus hard-shadow" style="margin-top: 14px;">
                 </div>
 
-                <!-- categorie -->
+                <!-- event categories -->
                 <div class="cer-card" style="padding: 20px;">
                     <div class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-500);">Categorie evento</div>
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;">

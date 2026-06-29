@@ -1,41 +1,41 @@
 /**
- * useApi — wrapper unico per le chiamate $fetch lato client.
+ * useApi — single wrapper for client-side $fetch calls.
  *
- * Centralizza il pattern ripetuto in ogni composable (isLoading + error +
- * try/finally + estrazione messaggio) e aggiunge toast opzionali, così le
- * pagine non devono più scrivere a mano try/catch/toast per ogni azione.
+ * Centralises the repeated pattern across every composable (isLoading + error +
+ * try/finally + message extraction) and adds optional toasts, so pages no
+ * longer need to hand-write try/catch/toast for every action.
  *
  *   const { isLoading, error, run } = useApi()
  *
- *   // load (solo stato + error, nessun toast)
+ *   // load (state + error only, no toast)
  *   const items = await run(() => $fetch('/api/items'), { fallback: 'Errore' })
  *
- *   // mutation (toast automatici success/error)
+ *   // mutation (automatic success/error toasts)
  *   await run(() => $fetch('/api/items', { method: 'POST', body }), {
  *     fallback: t('items.createError'),
  *     successToast: t('items.createSuccess'),
  *   })
  */
 
-/** Shape minima degli errori $fetch (ofetch FetchError). */
+/** Minimal shape of $fetch errors (ofetch FetchError). */
 interface FetchErrorLike {
     statusCode?: number;
     data?: { statusMessage?: string; message?: string };
     message?: string;
 }
 
-/** Estrae il messaggio più specifico da un errore $fetch. */
+/** Extracts the most specific message from a $fetch error. */
 export function extractErrorMessage(e: unknown, fallback: string): string {
     const err = (e ?? {}) as FetchErrorLike;
     return err.data?.statusMessage || err.data?.message || err.message || fallback;
 }
 
 export interface RunOptions {
-    /** Messaggio usato se l'errore non ne espone uno. */
+    /** Message used when the error doesn't expose one. */
     fallback?: string;
-    /** Se valorizzato, mostra un toast di successo con questo titolo. */
+    /** If set, shows a success toast with this title. */
     successToast?: string;
-    /** Mostra un toast di errore (default: true). Il titolo è il messaggio estratto. */
+    /** Shows an error toast (default: true). The title is the extracted message. */
     errorToast?: boolean;
 }
 

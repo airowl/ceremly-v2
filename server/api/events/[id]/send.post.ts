@@ -1,7 +1,7 @@
 /**
  * POST /api/events/:id/send
- * Accoda l'invio email dell'invito agli ospiti selezionati (RBAC: requireWrite).
- * Salva subject/body in event.distribution. Ritorna { queued, skippedNoEmail }.
+ * Queues the invite email dispatch to the selected guests (RBAC: requireWrite).
+ * Saves subject/body to event.distribution. Returns { queued, skippedNoEmail }.
  */
 import { sendInvitesSchema } from "~~/shared/schemas/ceremly";
 import { parseBody } from "~~/server/utils/validateBody";

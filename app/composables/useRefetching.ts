@@ -1,15 +1,15 @@
 /**
- * useRefetching — indicatore "aggiornamento" contestuale (pattern E della
- * guida UI). I refetch silenziosi (ricariche dati senza navigazione, es.
- * polling stats o reload ospiti dopo un'azione) non attivano la barra di
- * navigazione globale: questo counter condiviso fa apparire un badge
- * discreto nella topbar mentre almeno un refetch è in corso.
+ * useRefetching — contextual "updating" indicator (UI guide pattern E).
+ * Silent refetches (data reloads without navigation, e.g.
+ * stats polling or guest reload after an action) do not trigger the global
+ * navigation bar: this shared counter shows a subtle badge
+ * in the topbar while at least one refetch is in progress.
  *
  *   const { withRefetch } = useRefetching()
  *   await withRefetch(() => listGuests(eventId))
  *
- * Counter (non boolean) per gestire refetch concorrenti senza spegnere
- * l'indicatore troppo presto.
+ * Counter (not boolean) to handle concurrent refetches without turning off
+ * the indicator too early.
  */
 export function useRefetching() {
     const count = useState<number>("ceremly-refetching", () => 0);

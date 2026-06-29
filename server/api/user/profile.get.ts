@@ -1,6 +1,6 @@
 /**
  * GET /api/user/profile
- * Recupera il profilo dell'utente corrente.
+ * Retrieves the profile of the current user.
  */
 import { getUserProfile } from "~~/server/services/user.service";
 

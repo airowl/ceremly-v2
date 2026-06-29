@@ -2,9 +2,9 @@ import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
 // Load environment-specific config.
-// override:true è obbligatorio: drizzle-kit auto-carica .env (dev) PRIMA di questo config,
-// e dotenv con override:false di default lascerebbe vincere .env → `db:migrate:prod`
-// finirebbe per migrare il branch DEV invece di prod. Vedi memoria ceremly-db-migrate-prod-gotcha.
+// override:true is required: drizzle-kit auto-loads .env (dev) BEFORE this config,
+// and dotenv with override:false (default) would let .env win → `db:migrate:prod`
+// would end up migrating the DEV branch instead of prod. See memory ceremly-db-migrate-prod-gotcha.
 const envFile = process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env";
 config({ path: envFile, override: true });
 

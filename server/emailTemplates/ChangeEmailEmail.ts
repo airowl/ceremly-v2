@@ -1,6 +1,6 @@
-// React Email template — conferma cambio email (inviata all'indirizzo ATTUALE).
-// Design "Soft Meadow" (token/stili condivisi da ./_softMeadow).
-// Uses React.createElement to avoid JSX/Vue conflicts. Lingue: it/en.
+// React Email template — email-change confirmation (sent to the CURRENT address).
+// "Soft Meadow" design (shared tokens/styles from ./_softMeadow).
+// Uses React.createElement to avoid JSX/Vue conflicts. Languages: it/en.
 
 import * as React from 'react';
 import { Html, Head, Preview, Body, Container, Section, Text, Button } from '@react-email/components';

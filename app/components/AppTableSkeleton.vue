@@ -1,15 +1,15 @@
 <script setup lang="ts">
 /**
- * Skeleton placeholder per liste/tabelle in caricamento.
- * Riproduce la "forma" del contenuto in arrivo (chrome bordata + header +
- * righe) invece di uno spinner generico → migliore percezione di velocità.
+ * Skeleton placeholder for loading lists/tables.
+ * Reproduces the "shape" of the incoming content (bordered chrome + header +
+ * rows) instead of a generic spinner → better perceived performance.
  */
 withDefaults(defineProps<{
-    /** Numero di righe placeholder. */
+    /** Number of placeholder rows. */
     rows?: number;
-    /** Numero di colonne. */
+    /** Number of columns. */
     columns?: number;
-    /** Mostra un avatar circolare nella prima cella (liste di persone). */
+    /** Show a circular avatar in the first cell (people lists). */
     avatar?: boolean;
 }>(), {
     rows: 5,
@@ -30,14 +30,14 @@ withDefaults(defineProps<{
             />
         </div>
 
-        <!-- Righe -->
+        <!-- Rows -->
         <div
             v-for="r in rows"
             :key="`r-${r}`"
             class="flex items-center gap-4 px-4 py-4 border-b border-default last:border-b-0"
         >
             <template v-for="c in columns" :key="`c-${r}-${c}`">
-                <!-- Prima cella: avatar opzionale + due righe di testo -->
+                <!-- First cell: optional avatar + two text lines -->
                 <div v-if="c === 1" class="flex items-center gap-3 flex-1">
                     <USkeleton v-if="avatar" class="size-9 rounded-full shrink-0" />
                     <div class="space-y-1.5 w-full max-w-48">
@@ -45,11 +45,11 @@ withDefaults(defineProps<{
                         <USkeleton v-if="avatar" class="h-3 w-1/2 rounded" />
                     </div>
                 </div>
-                <!-- Ultima cella: azioni allineate a destra -->
+                <!-- Last cell: right-aligned actions -->
                 <div v-else-if="c === columns" class="ml-auto flex gap-2">
                     <USkeleton class="size-7 rounded-md" />
                 </div>
-                <!-- Celle intermedie -->
+                <!-- Middle cells -->
                 <USkeleton v-else class="h-3.5 w-20 rounded" />
             </template>
         </div>

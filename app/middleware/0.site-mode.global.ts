@@ -1,13 +1,13 @@
 /**
- * Middleware globale client per i tre site mode (priorità 0, prima di auth.global).
+ * Global client middleware for the three site modes (priority 0, before auth.global).
  *
- * È solo UX (redirect lato client): la difesa reale è il middleware server. Le
- * regole sono condivise con il server via shared/constants/siteMode, così client
- * e server non divergono e nessuna locale è hardcodata.
+ * UX only (client-side redirect): the real defence is the server middleware. Rules
+ * are shared with the server via shared/constants/siteMode, so client and server
+ * don't diverge and no locale is hardcoded.
  *
- * - maintenance: tutto → /maintenance (priorità assoluta)
- * - waitinglist: allowlist (landing/legal/blog in ogni locale), il resto → "/"
- * - active: nessuna restrizione
+ * - maintenance: everything → /maintenance (absolute priority)
+ * - waitinglist: allowlist (landing/legal/blog in every locale), rest → "/"
+ * - active: no restrictions
  */
 import {
     isMaintenancePage,
@@ -15,12 +15,12 @@ import {
 } from "~~/shared/constants/siteMode";
 
 export default defineNuxtRouteMiddleware((to) => {
-    // Solo client: evita errori SSR (e il server ha già il suo enforcement).
+    // Client-only: avoids SSR errors (the server already has its own enforcement).
     if (import.meta.server) return;
 
     const { isMaintenanceMode, isWaitingListMode } = useSiteMode();
 
-    // === MANUTENZIONE — priorità assoluta ===
+    // === MAINTENANCE — absolute priority ===
     if (isMaintenanceMode.value) {
         if (!isMaintenancePage(to.path)) {
             return navigateTo("/maintenance");
@@ -28,7 +28,7 @@ export default defineNuxtRouteMiddleware((to) => {
         return;
     }
 
-    // Fuori da maintenance, /maintenance non deve essere raggiungibile.
+    // Outside maintenance, /maintenance must not be reachable.
     if (isMaintenancePage(to.path)) {
         return navigateTo("/");
     }
@@ -38,5 +38,5 @@ export default defineNuxtRouteMiddleware((to) => {
         return navigateTo("/");
     }
 
-    // === ACTIVE — nessuna restrizione (gestisce auth.global) ===
+    // === ACTIVE — no restrictions (auth.global handles those) ===
 });

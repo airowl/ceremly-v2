@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Risorse → API per partner. Port di APIPartnerPage (site-resources.jsx).
+// Public site → Resources → Partner API. Port of APIPartnerPage (site-resources.jsx).
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteH2 from '~/components/ceremly/CerSiteH2.vue'
@@ -26,7 +26,7 @@ useSeoMeta({
 
 const bullets = computed(() => (tm('ceremly.site.api.bullets') as string[]).map(x => rt(x)))
 
-// Metodi/path letterali; solo la descrizione viene dall'i18n (zip per indice).
+// Literal methods/paths; only the description comes from i18n (zipped by index).
 const endpointMeta = [
     { m: 'GET', p: '/v1/events' },
     { m: 'GET', p: '/v1/events/:id/rsvps' },
@@ -45,7 +45,7 @@ const endpoints = computed(() => (tm('ceremly.site.api.endpoints') as Endpoint[]
     return { m, p: endpointMeta[i]?.p || '', d: rt(x.d), bg, fg }
 }))
 
-// Blocco codice letterale (sample request/response), come da spec.
+// Literal code block (sample request/response), as per spec.
 const codeSample = `GET /v1/events/evt_8h2k/rsvps
 
 {
@@ -65,7 +65,7 @@ const codeSample = `GET /v1/events/evt_8h2k/rsvps
 
 <template>
     <div>
-        <!-- Hero custom 2 colonne -->
+        <!-- Custom 2-column hero -->
         <section style="border-bottom: 1px solid var(--line);">
             <div class="cer-site-wrap cer-api-hero">
                 <div>

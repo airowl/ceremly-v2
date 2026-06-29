@@ -35,14 +35,14 @@ describe("saveReminders limit tier-aware", () => {
         bulkUpsertReminders.mockResolvedValue({ inserted: 0, updated: 0, deleted: 0 });
     });
 
-    it("free: 4 reminder nuovi (limite 3) -> 422", async () => {
+    it("free: 4 new reminders (limit 3) -> 422", async () => {
         getEventLimits.mockResolvedValue({ tier: "free", maxGuestsPerEvent: 30, maxReminders: 3 });
         const reminders = Array.from({ length: 4 }, (_, i) => ({ daysBefore: i + 1, enabled: true }));
         const { saveReminders } = await import("~~/server/services/reminder.service");
         await expectStatus(saveReminders(fakeEvent, "e1", { reminders } as never), 422);
     });
 
-    it("atelier (-1): 4 reminder -> nessun limite, ok", async () => {
+    it("atelier (-1): 4 reminders -> no limit, ok", async () => {
         getEventLimits.mockResolvedValue({ tier: "atelier", maxGuestsPerEvent: -1, maxReminders: -1 });
         const reminders = Array.from({ length: 4 }, (_, i) => ({ daysBefore: i + 1, enabled: true }));
         const { saveReminders } = await import("~~/server/services/reminder.service");

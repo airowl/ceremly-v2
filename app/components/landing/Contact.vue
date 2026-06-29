@@ -24,7 +24,7 @@ const submitted = ref(false)
 const isLoading = ref(false)
 const toast = useToast()
 
-// Anti-spam (#8): honeypot (deve restare vuoto) + timestamp di rendering del form.
+// Anti-spam (#8): honeypot (must stay empty) + form rendering timestamp.
 const website = ref('')
 const loadedAt = ref(0)
 onMounted(() => { loadedAt.value = Date.now() })
@@ -126,7 +126,7 @@ class="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto an
                         class="space-y-4"
                         @submit="onSubmit"
                     >
-                        <!-- Honeypot anti-spam (#8): nascosto agli umani, i bot lo compilano. -->
+                        <!-- Anti-spam honeypot (#8): hidden from humans, bots fill it in. -->
                         <input
                             v-model="website"
                             type="text"

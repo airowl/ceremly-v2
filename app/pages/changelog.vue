@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Sito pubblico → Risorse → Changelog. Port di ChangelogPage (site-resources.jsx).
+// Public site → Resources → Changelog. Port of ChangelogPage (site-resources.jsx).
 import CerMark from '~/components/ceremly/CerMark.vue'
 import CerSiteHero from '~/components/ceremly/CerSiteHero.vue'
 
@@ -21,10 +21,10 @@ useSeoMeta({
     ogType: 'website',
 })
 
-// CRITICO: nessun '@' nelle stringhe i18n. Placeholder con '@' tenuto qui, letterale.
+// CRITICAL: no '@' in i18n strings. Placeholder with '@' kept here as a literal.
 const newsletterPlaceholder = 'la-tua@email.it'
 
-// Versioni/date illustrative: letterali nel .vue, frasi in i18n.
+// Illustrative versions/dates: literals in the .vue, phrases in i18n.
 const releaseMeta = [
     { v: 'v0.4', d: '28 maggio 2026' },
     { v: 'v0.3', d: '30 aprile 2026' },
@@ -32,7 +32,7 @@ const releaseMeta = [
     { v: 'v0.1', d: '5 marzo 2026' },
 ]
 
-// Mappa colore badge per tipo di voce (chiave = label tradotta).
+// Badge color map by entry type (key = translated label).
 const tagColors: Record<string, [string, string]> = {
     Nuovo: ['var(--bone-200)', 'var(--blue-deep)'],
     Migliorato: ['var(--wine-soft)', 'var(--purple-ink)'],

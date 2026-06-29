@@ -37,9 +37,9 @@ export async function requireAdminApiKey(event: H3Event<EventHandlerRequest>): P
 }
 
 /**
- * Confronto constant-time anti-timing. Si confrontano gli HASH SHA-256 (lunghezza
- * fissa) invece delle stringhe grezze: timingSafeEqual richiede buffer di pari
- * lunghezza e così non si rivela la lunghezza della chiave tramite l'early-return.
+ * Constant-time anti-timing comparison. SHA-256 HASHES (fixed length) are compared
+ * instead of raw strings: timingSafeEqual requires equal-length buffers, so the key
+ * length is not revealed via early-return.
  */
 function secureCompare(a: string, b: string): boolean {
     const ha = createHash("sha256").update(a).digest();

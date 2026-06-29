@@ -1,12 +1,12 @@
 /**
- * Public RSVP Repository — query Drizzle per le route pubbliche ospite (SPEC §6, owner B2).
+ * Public RSVP Repository — Drizzle queries for public guest routes (SPEC §6, owner B2).
  *
- * ECCEZIONE CONSAPEVOLE alla regola org-scoped (SPEC §8 punto 2): l'ospite NON ha
- * account né organization; il lookup avviene SOLO per token opaco (unique index).
- * Il token è crypto-random (10 char base62) e funge da capability: chi lo possiede
- * è il destinatario. Le scritture derivate (trackOpen, upsertResponse, activity)
- * usano gli id (guestId/eventId/organizationId) della riga trovata via token,
- * mai input del client.
+ * DELIBERATE EXCEPTION to the org-scoped rule (SPEC §8 point 2): the guest has NO
+ * account or organization; lookup happens ONLY by opaque token (unique index).
+ * The token is crypto-random (10 char base62) and acts as a capability: whoever
+ * holds it is the recipient. Derived writes (trackOpen, upsertResponse, activity)
+ * use the ids (guestId/eventId/organizationId) from the row found via token,
+ * never client input.
  */
 import { and, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 import type { GuestActivityType, RsvpAnswers } from "~~/shared/types/ceremly";
@@ -14,9 +14,9 @@ import { getDB } from "../utils/db";
 import * as schema from "../database/schema";
 
 /**
- * Lookup ospite by token con evento joinato in UNA SOLA query.
- * LEFT JOIN sulla response (al più una: guestId UNIQUE) perché il payload
- * pubblico §6.2 la include. undefined se il token non esiste.
+ * Guest lookup by token with event joined in ONE query.
+ * LEFT JOIN on the response (at most one: guestId UNIQUE) because the
+ * public payload §6.2 includes it. undefined if the token does not exist.
  */
 export async function findGuestWithEventByToken(token: string) {
     const db = getDB();
@@ -35,8 +35,8 @@ export async function findGuestWithEventByToken(token: string) {
 }
 
 /**
- * Tracking apertura link: openCount+1 e, al primo accesso, firstOpenedAt.
- * coalesce() preserva il primo timestamp anche con aperture concorrenti.
+ * Link open tracking: openCount+1 and, on first access, firstOpenedAt.
+ * coalesce() preserves the first timestamp even with concurrent opens.
  */
 export async function trackOpen(guestId: string, isFirst: boolean): Promise<void> {
     const db = getDB();
@@ -51,7 +51,7 @@ export async function trackOpen(guestId: string, isFirst: boolean): Promise<void
         .where(eq(schema.guests.id, guestId));
 }
 
-/** Valori per l'upsert della risposta (id presi dalla riga trovata via token). */
+/** Values for the response upsert (ids taken from the row found via token). */
 export interface UpsertResponseValues {
     organizationId: string;
     eventId: string;
@@ -63,12 +63,12 @@ export interface UpsertResponseValues {
 }
 
 /**
- * Upsert atomico su rsvp_responses (guestId UNIQUE): insert, on conflict update
- * di attending/companionsCount/answers/declineMessage. submittedAt resta quello
- * della prima compilazione; updatedAt è settato esplicitamente nel branch update
- * ($onUpdate di drizzle non scatta dentro onConflictDoUpdate).
- * `wasInsert` (xmax = 0, trick Postgres standard) dice se la riga è nuova,
- * senza query aggiuntive né race: serve per activity rsvp_submitted vs rsvp_updated.
+ * Atomic upsert on rsvp_responses (guestId UNIQUE): insert, on conflict update
+ * attending/companionsCount/answers/declineMessage. submittedAt stays as the
+ * first submission's value; updatedAt is set explicitly in the update branch
+ * (drizzle's $onUpdate does not fire inside onConflictDoUpdate).
+ * `wasInsert` (xmax = 0, standard Postgres trick) tells if the row is new,
+ * without extra queries or races: used for activity rsvp_submitted vs rsvp_updated.
  */
 export async function upsertResponse(values: UpsertResponseValues) {
     const db = getDB();
@@ -93,8 +93,8 @@ export async function upsertResponse(values: UpsertResponseValues) {
 }
 
 /**
- * Pixel email: set emailOpenedAt SOLO se ancora null (WHERE is null → idempotente
- * e race-safe). Ritorna true solo alla prima apertura (per l'activity una tantum).
+ * Email pixel: sets emailOpenedAt ONLY if still null (WHERE is null → idempotent
+ * and race-safe). Returns true only on the first open (for the one-time activity).
  */
 export async function markEmailOpened(guestId: string): Promise<boolean> {
     const db = getDB();
@@ -111,7 +111,7 @@ export async function markEmailOpened(guestId: string): Promise<boolean> {
     return rows.length > 0;
 }
 
-/** Append su guest_activities (le azioni ospite NON vanno in audit_log — SPEC §8.5). */
+/** Append to guest_activities (guest actions do NOT go into audit_log — SPEC §8.5). */
 export async function insertActivity(
     organizationId: string,
     eventId: string,

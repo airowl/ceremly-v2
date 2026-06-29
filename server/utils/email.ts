@@ -38,7 +38,7 @@ export interface BaseEmailOptions {
     to: string;
     language?: SupportedLanguage;
     userId?: string;
-    /** Contesto per correlare i webhook (open/click) all'ospite/evento. */
+    /** Context to correlate webhooks (open/click) with the guest/event. */
     context?: EmailContext;
 }
 
@@ -105,12 +105,12 @@ export function getDefaultSender(): string {
     return `${runtimeConfig.public.appName} <${runtimeConfig.public.appNotifyEmail}>`;
 }
 
-/** From per evento-correlate (sottodominio tracciato, open+click ON). */
+/** From address for event-correlated emails (tracked subdomain, open+click ON). */
 function getEventsSender(): string {
     return `${runtimeConfig.public.appName} <${runtimeConfig.public.appEventsNotifyEmail}>`;
 }
 
-/** Sceglie il from: sottodominio tracciato se il send è event-related. */
+/** Picks the from address: tracked subdomain if the send is event-related. */
 export function getSender(options: EmailOptions): string {
     if (options.context?.eventId) return getEventsSender();
     return getDefaultSender();
@@ -224,7 +224,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
         const { subject, html, text } = await buildEmailContent(options);
 
-        // Enforcement suppression list (hard bounce / complaint): non inviare.
+        // Enforce suppression list (hard bounce / complaint): do not send.
         if (await isEmailSuppressed(options.to)) {
             await logAudit(null, 'email.failed', {
                 userId: options.userId,
@@ -266,7 +266,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
             `[Email] Successfully sent ${options.type} email to ${options.to}`
         );
 
-        // Correlazione webhook → entità: riga seed solo se c'è contesto.
+        // Webhook → entity correlation: seed row only if there is context.
         if (options.context && response.data?.id) {
             await insertEmailSeed({
                 messageId: response.data.id,

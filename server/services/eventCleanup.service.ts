@@ -1,12 +1,12 @@
 /**
- * Event Cleanup Service (SPEC §9) — contesto di sistema (Vercel Cron, no utente).
- * Due fasi idempotenti: warn (email all'owner + cleanupWarnedAt) e delete (cascade
- * FK). L'esclusione org Atelier è QUI via isOrgAtelier (non nel SQL: richiede la
- * subscription per-org). Nessun lavoro pesante: lavora su liste già filtrate.
+ * Event Cleanup Service (SPEC §9) — system context (Vercel Cron, no user).
+ * Two idempotent phases: warn (email to owner + cleanupWarnedAt) and delete (FK
+ * cascade). Atelier org exclusion is HERE via isOrgAtelier (not in SQL: requires
+ * the per-org subscription). No heavy work: operates on pre-filtered lists.
  *
- * ⚠️ SICUREZZA: la guardia isOrgAtelier() è la prima operazione per ogni candidato
- * — se vero, skip immediato. Questo previene warn/delete di eventi di org Atelier
- * (clienti paganti) che appaiono nella lista per tier free/celebration.
+ * ⚠️ SECURITY: the isOrgAtelier() guard is the first operation for each candidate
+ * — if true, immediate skip. This prevents warn/delete of Atelier org events
+ * (paying customers) that appear in the list due to free/celebration tier.
  */
 import {
     findStaleEventsToWarn,
@@ -36,7 +36,7 @@ export async function processStaleEventsWarn(): Promise<{ warned: number; skippe
     let skipped = 0;
 
     for (const { id, organizationId } of candidates) {
-        // ⚠️ CRITICAL: esclusione Atelier prima di qualsiasi altra operazione
+        // ⚠️ CRITICAL: Atelier exclusion before any other operation
         if (await isOrgAtelier(organizationId)) {
             skipped++;
             continue;
@@ -94,7 +94,7 @@ export async function processStaleEventsDelete(): Promise<{ deleted: number; ski
     let skipped = 0;
 
     for (const { id, organizationId } of candidates) {
-        // ⚠️ CRITICAL: esclusione Atelier prima di qualsiasi altra operazione
+        // ⚠️ CRITICAL: Atelier exclusion before any other operation
         if (await isOrgAtelier(organizationId)) {
             skipped++;
             continue;

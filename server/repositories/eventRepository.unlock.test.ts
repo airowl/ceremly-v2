@@ -11,7 +11,7 @@ const OTHER_ORG_ID = "test-org-unlock-3-1-other";
 const EVT_ID = "test-evt-unlock-3-1";
 
 beforeAll(async () => {
-    // Crea le due org sintetiche
+    // Create the two synthetic orgs
     await db
         .insert(schema.organization)
         .values({ id: ORG_ID, name: "Test Unlock Org", slug: ORG_ID, createdAt: new Date() });
@@ -19,7 +19,7 @@ beforeAll(async () => {
         .insert(schema.organization)
         .values({ id: OTHER_ORG_ID, name: "Test Unlock Other Org", slug: OTHER_ORG_ID, createdAt: new Date() });
 
-    // Crea l'evento free
+    // Create the free event
     await db.insert(schema.events).values({
         id: EVT_ID,
         organizationId: ORG_ID,
@@ -39,7 +39,7 @@ afterAll(async () => {
 });
 
 describe("unlockEvent", () => {
-    it("(a) sblocca un evento free → tier='celebration' con orderId e unlockedAt", async () => {
+    it("(a) unlocks a free event → tier='celebration' with orderId and unlockedAt", async () => {
         await unlockEvent(EVT_ID, ORG_ID, "order_A");
 
         const rows = await db
@@ -54,8 +54,8 @@ describe("unlockEvent", () => {
         expect(evt.unlockedAt).toBeInstanceOf(Date);
     });
 
-    it("(b) idempotente: secondo unlock con order diverso NON sovrascrive (tier non è più 'free')", async () => {
-        // Secondo unlock con order_B — il WHERE tier='free' lo blocca
+    it("(b) idempotent: second unlock with different order does NOT overwrite (tier is no longer 'free')", async () => {
+        // Second unlock with order_B — the WHERE tier='free' blocks it
         await unlockEvent(EVT_ID, ORG_ID, "order_B");
 
         const rows = await db
@@ -64,19 +64,19 @@ describe("unlockEvent", () => {
             .where(eq(schema.events.id, EVT_ID));
         const evt = rows[0];
 
-        // Deve ancora avere order_A, NON order_B
+        // Must still have order_A, NOT order_B
         expect(evt.creemOrderId).toBe("order_A");
         expect(evt.tier).toBe("celebration");
     });
 
-    it("(c) org-scope: unlock con org diversa NON sblocca l'evento", async () => {
-        // Reset del tier a 'free' per testare lo scope org
+    it("(c) org-scope: unlock with different org does NOT unlock the event", async () => {
+        // Reset tier to 'free' to test org scope
         await db
             .update(schema.events)
             .set({ tier: "free", creemOrderId: null, unlockedAt: null })
             .where(eq(schema.events.id, EVT_ID));
 
-        // Tentativo di unlock con org sbagliata
+        // Attempt unlock with wrong org
         await unlockEvent(EVT_ID, OTHER_ORG_ID, "order_C");
 
         const rows = await db
@@ -85,7 +85,7 @@ describe("unlockEvent", () => {
             .where(eq(schema.events.id, EVT_ID));
         const evt = rows[0];
 
-        // L'evento deve essere ancora free
+        // The event must still be free
         expect(evt.tier).toBe("free");
         expect(evt.creemOrderId).toBeNull();
     });

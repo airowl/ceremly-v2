@@ -111,9 +111,9 @@ useSchemaOrg([
             name: article.value?.author || '',
         })),
         'image': computed(() => article.value?.cover ? `${baseUrl}${article.value.cover}` : undefined),
-        // Valori piani: i tipi di defineArticle non accettano getter/computed
-        // per questi campi; article è già risolto al setup (useAsyncData await)
-        // e ogni slug monta una nuova istanza della pagina.
+        // Plain values: defineArticle types do not accept getters/computed
+        // for these fields; article is already resolved at setup (useAsyncData await)
+        // and each slug mounts a new page instance.
         'keywords': article.value?.tags || [],
         'inLanguage': article.value?.locale === 'en' ? 'en-US' : 'it-IT',
     }),

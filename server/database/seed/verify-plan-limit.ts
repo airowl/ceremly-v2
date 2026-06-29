@@ -7,28 +7,28 @@ import { isOrgFreePlan, resolveOrgOwnerId } from "../../services/planLimit.servi
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
 /**
- * Gate FIX #1: il piano è risolto dall'OWNER dell'org, non dal richiedente.
+ * Gate FIX #1: the plan is resolved from the org OWNER, not the requester.
  *
- * Bug originale: isFreePlan leggeva il piano dall'utente corrente; un teammate
- * (admin/member) di un'org pagante non ha subscription personale → trattato
- * come Free → 402 "passa a Celebrazione" pur essendo l'org a pagamento.
+ * Original bug: isFreePlan read the plan from the current user; a teammate
+ * (admin/member) of a paying org has no personal subscription → treated
+ * as Free → 402 "passa a Celebrazione" even though the org is paying.
  *
- * INVARIANTE provata (toggle sull'abbonamento dell'OWNER):
- *  1. owner SENZA subscription attiva → isOrgFreePlan === true.
- *  2. inserita una subscription ATTIVA per l'OWNER → isOrgFreePlan === false.
- *  3. rimossa → torna true.
- * isOrgFreePlan(orgId) non riceve affatto il richiedente: che a creare risorse
- * sia l'owner o un teammate non-owner, il risultato dipende SOLO dall'owner →
- * la classe di bug è strutturalmente eliminata.
+ * PROVEN INVARIANT (toggle on the OWNER's subscription):
+ *  1. owner WITHOUT an active subscription → isOrgFreePlan === true.
+ *  2. an ACTIVE subscription inserted for the OWNER → isOrgFreePlan === false.
+ *  3. removed → back to true.
+ * isOrgFreePlan(orgId) does not receive the requester at all: whether resources
+ * are created by the owner or a non-owner teammate, the result depends ONLY on the owner →
+ * the bug class is structurally eliminated.
  *
- * Self-contained: sceglie un'org reale, usa una subscription temporanea keyed
- * sull'owner e la rimuove sempre (finally). Richiede un Postgres vivo.
+ * Self-contained: picks a real org, uses a temporary subscription keyed on
+ * the owner and always removes it (finally). Requires a live Postgres.
  */
 async function main() {
     const db = getDB();
 
-    // Org con più membri (per una dimostrazione più forte se esiste un teammate),
-    // altrimenti la prima org con un owner risolvibile.
+    // Org with more members (for a stronger demonstration if a teammate exists),
+    // otherwise the first org with a resolvable owner.
     const orgRows = await db
         .select({
             id: schema.organization.id,
@@ -49,20 +49,20 @@ async function main() {
         .filter(([, o]) => o.members.some((m) => m.role === "owner"))
         .sort((a, b) => b[1].members.length - a[1].members.length);
     if (candidates.length === 0) {
-        throw new Error("nessuna org con owner nel DB: esegui `pnpm db:seed` o crea un account");
+        throw new Error("no org with owner in DB: run `pnpm db:seed` or create an account");
     }
     const [orgId, org] = candidates[0]!;
     const owner = org.members.find((m) => m.role === "owner")!;
     const nonOwner = org.members.find((m) => m.role !== "owner");
 
-    // Sanity: la risoluzione owner combacia con il membro role=owner.
+    // Sanity: owner resolution matches the member with role=owner.
     const resolvedOwner = await resolveOrgOwnerId(orgId);
     if (resolvedOwner !== owner.userId) {
-        console.error(`[FAIL] resolveOrgOwnerId atteso ${owner.userId}, è ${resolvedOwner}`);
+        console.error(`[FAIL] resolveOrgOwnerId expected ${owner.userId}, got ${resolvedOwner}`);
         process.exit(1);
     }
 
-    // Baseline: il toggle richiede che l'owner NON abbia già una sub attiva.
+    // Baseline: the toggle requires the owner to NOT already have an active sub.
     const existingActive = await db
         .select({ id: schema.creem_subscription.id })
         .from(schema.creem_subscription)
@@ -72,7 +72,7 @@ async function main() {
         ))
         .limit(1);
     if (existingActive.length > 0) {
-        console.error(`[SKIP] l'owner ${owner.userId.slice(0, 8)} ha già una subscription attiva: impossibile testare il toggle senza toccare dati reali.`);
+        console.error(`[SKIP] owner ${owner.userId.slice(0, 8)} already has an active subscription: cannot test the toggle without touching real data.`);
         process.exit(0);
     }
 
@@ -80,14 +80,14 @@ async function main() {
     const TEST_SUB_ID = `verify-plan-limit-${owner.userId}`;
 
     try {
-        // 1. Owner senza subscription → org Free.
+        // 1. Owner without subscription → org Free.
         const freeBefore = await isOrgFreePlan(orgId);
         if (freeBefore !== true) {
-            console.error(`[FAIL] owner senza subscription: isOrgFreePlan atteso true, è ${freeBefore}`);
+            console.error(`[FAIL] owner without subscription: isOrgFreePlan expected true, got ${freeBefore}`);
             failed = true;
         }
 
-        // 2. Subscription ATTIVA per l'OWNER → org NON Free.
+        // 2. ACTIVE subscription for the OWNER → org NOT Free.
         await db.delete(schema.creem_subscription).where(eq(schema.creem_subscription.id, TEST_SUB_ID));
         await db.insert(schema.creem_subscription).values({
             id: TEST_SUB_ID,
@@ -98,35 +98,35 @@ async function main() {
 
         const freeAfter = await isOrgFreePlan(orgId);
         if (freeAfter !== false) {
-            console.error(`[FAIL] owner con subscription attiva: isOrgFreePlan atteso false (org pagante), è ${freeAfter}`);
-            console.error("       → un teammate non-owner verrebbe ancora bloccato come Free: BUG #1 NON risolto.");
+            console.error(`[FAIL] owner with active subscription: isOrgFreePlan expected false (paying org), got ${freeAfter}`);
+            console.error("       → a non-owner teammate would still be blocked as Free: BUG #1 NOT resolved.");
             failed = true;
         }
     } finally {
-        // Cleanup: rimuove SEMPRE la subscription di test (anche su failure).
+        // Cleanup: ALWAYS removes the test subscription (even on failure).
         await db.delete(schema.creem_subscription).where(eq(schema.creem_subscription.id, TEST_SUB_ID));
     }
 
-    // 3. Tornati allo stato iniziale (nessuna sub) → di nuovo Free.
+    // 3. Back to initial state (no sub) → Free again.
     const freeRestored = await isOrgFreePlan(orgId);
     if (freeRestored !== true) {
-        console.error(`[FAIL] dopo cleanup: isOrgFreePlan atteso true, è ${freeRestored}`);
+        console.error(`[FAIL] after cleanup: isOrgFreePlan expected true, got ${freeRestored}`);
         failed = true;
     }
 
     if (failed) {
-        console.error("[verify-plan-limit] PIANO NON RISOLTO DALL'OWNER — fix #1 incompleto");
+        console.error("[verify-plan-limit] PLAN NOT RESOLVED FROM OWNER — fix #1 incomplete");
         process.exit(1);
     }
     console.log(
         `[verify-plan-limit] OK — org=${org.slug} owner=${owner.userId.slice(0, 8)}: `
-        + `no-sub → free=true, sub-attiva → free=false, cleanup → free=true. `
-        + `Il piano dipende SOLO dall'owner${nonOwner ? ` (ignora il teammate ${nonOwner.userId.slice(0, 8)})` : " (firma senza richiedente)"}.`,
+        + `no-sub → free=true, active-sub → free=false, cleanup → free=true. `
+        + `Plan depends ONLY on the owner${nonOwner ? ` (ignores teammate ${nonOwner.userId.slice(0, 8)})` : " (signature without requester)"}.`,
     );
     process.exit(0);
 }
 
 main().catch((e) => {
-    console.error("[verify-plan-limit] errore", e);
+    console.error("[verify-plan-limit] error", e);
     process.exit(1);
 });

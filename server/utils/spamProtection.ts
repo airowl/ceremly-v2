@@ -1,10 +1,10 @@
 /**
  * Anti-spam utilities for public forms (waiting list, contact, RSVP, etc.).
  *
- * Il rate limiter è backed da Upstash Redis (cacheClient) così il conteggio è
- * CONDIVISO tra le istanze serverless Vercel (una Map in-process si resetta a
- * ogni cold start e non è condivisa → inefficace). Fallback in-memory
- * best-effort quando Redis non è configurato (dev / self-host).
+ * The rate limiter is backed by Upstash Redis (cacheClient) so the count is
+ * SHARED across Vercel serverless instances (an in-process Map resets on each
+ * cold start and is not shared → ineffective). In-memory best-effort fallback
+ * when Redis is not configured (dev / self-host).
  */
 import { cacheClient } from "./drivers";
 
@@ -67,8 +67,8 @@ export function isDisposableEmail(email: string): boolean {
 
 /**
  * Check if an IP has exceeded the rate limit for a specific endpoint.
- * Returns true if the request should be blocked (count oltre maxRequests nella
- * finestra). Conteggio condiviso via Upstash (cacheClient.increment).
+ * Returns true if the request should be blocked (count exceeds maxRequests within
+ * the window). Count shared via Upstash (cacheClient.increment).
  */
 export async function isEndpointRateLimited(
     ip: string,

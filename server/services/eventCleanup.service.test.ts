@@ -1,20 +1,20 @@
 /**
- * Test unit per eventCleanup.service.ts (task 4.5).
+ * Unit tests for eventCleanup.service.ts (task 4.5).
  *
- * Test con mock — provano la logica del service: gate Atelier (CRITICAL),
- * email, mark, audit — senza toccare il DB. I test DB-backed per i helper
- * task 4.3 (markEventCleanupWarned, findEventWarnTargetInfo) si trovano in
+ * Mock-based tests — exercise the service logic: Atelier gate (CRITICAL),
+ * email, mark, audit — without touching the DB. DB-backed tests for the helpers
+ * in task 4.3 (markEventCleanupWarned, findEventWarnTargetInfo) are in
  * server/repositories/eventRepository.cleanup.test.ts.
  *
- * Usano vi.hoisted() per rispettare il hoisting di vi.mock (le factory di
- * vi.mock non possono referenziare variabili let/const normali).
+ * Use vi.hoisted() to respect vi.mock hoisting (vi.mock factories cannot
+ * reference normal let/const variables).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { processStaleEventsWarn, processStaleEventsDelete } from "./eventCleanup.service";
 
-// vi.hoisted: le variabili mock devono essere inizializzate PRIMA che vi.mock
-// elabori le factory (che vengono hoistate in cima al file da Vitest).
+// vi.hoisted: mock variables must be initialized BEFORE vi.mock processes
+// the factories (which are hoisted to the top of the file by Vitest).
 const mocks = vi.hoisted(() => ({
     repo: {
         findStaleEventsToWarn: vi.fn(),
@@ -66,7 +66,7 @@ beforeEach(() => {
 });
 
 describe("processStaleEventsWarn", () => {
-    it("avvisa eventi non-atelier: email + mark + audit", async () => {
+    it("warns non-atelier events: email + mark + audit", async () => {
         mocks.repo.findStaleEventsToWarn.mockResolvedValue([{ id: "e1", organizationId: "o1" }]);
         mocks.access.isOrgAtelier.mockResolvedValue(false);
 
@@ -86,7 +86,7 @@ describe("processStaleEventsWarn", () => {
         );
     });
 
-    it("salta le org atelier (mai warn, mai mark) — CRITICAL GATE", async () => {
+    it("skips atelier orgs (never warn, never mark) — CRITICAL GATE", async () => {
         mocks.repo.findStaleEventsToWarn.mockResolvedValue([{ id: "e1", organizationId: "o1" }]);
         mocks.access.isOrgAtelier.mockResolvedValue(true);
 
@@ -98,7 +98,7 @@ describe("processStaleEventsWarn", () => {
         expect(mocks.audit.logAudit).not.toHaveBeenCalled();
     });
 
-    it("salta (no email, no mark) se owner non trovato", async () => {
+    it("skips (no email, no mark) if owner not found", async () => {
         mocks.repo.findStaleEventsToWarn.mockResolvedValue([{ id: "e1", organizationId: "o1" }]);
         mocks.access.isOrgAtelier.mockResolvedValue(false);
         mocks.plan.resolveOrgOwnerId.mockResolvedValue(null);
@@ -109,7 +109,7 @@ describe("processStaleEventsWarn", () => {
         expect(mocks.email.sendEmail).not.toHaveBeenCalled();
     });
 
-    it("lista vuota → warned:0 skipped:0", async () => {
+    it("empty list → warned:0 skipped:0", async () => {
         mocks.repo.findStaleEventsToWarn.mockResolvedValue([]);
 
         const res = await processStaleEventsWarn();
@@ -118,7 +118,7 @@ describe("processStaleEventsWarn", () => {
         expect(mocks.email.sendEmail).not.toHaveBeenCalled();
     });
 
-    it("mix: atelier skippato, non-atelier avvisato", async () => {
+    it("mix: atelier skipped, non-atelier warned", async () => {
         mocks.repo.findStaleEventsToWarn.mockResolvedValue([
             { id: "e1", organizationId: "atelier_org" },
             { id: "e2", organizationId: "free_org" },
@@ -135,7 +135,7 @@ describe("processStaleEventsWarn", () => {
 });
 
 describe("processStaleEventsDelete", () => {
-    it("elimina eventi warned non-atelier + audit event.deleted", async () => {
+    it("deletes warned non-atelier events + audit event.deleted", async () => {
         mocks.repo.findStaleEventsToDelete.mockResolvedValue([
             { id: "e1", organizationId: "o1" },
         ]);
@@ -153,7 +153,7 @@ describe("processStaleEventsDelete", () => {
         );
     });
 
-    it("salta le org atelier (mai delete) — CRITICAL GATE", async () => {
+    it("skips atelier orgs (never delete) — CRITICAL GATE", async () => {
         mocks.repo.findStaleEventsToDelete.mockResolvedValue([
             { id: "e1", organizationId: "o1" },
         ]);
@@ -166,7 +166,7 @@ describe("processStaleEventsDelete", () => {
         expect(mocks.audit.logAudit).not.toHaveBeenCalled();
     });
 
-    it("salta (skipped) se deleteEventScoped restituisce undefined/null", async () => {
+    it("skips (skipped) if deleteEventScoped returns undefined/null", async () => {
         mocks.repo.findStaleEventsToDelete.mockResolvedValue([
             { id: "e1", organizationId: "o1" },
         ]);
@@ -179,7 +179,7 @@ describe("processStaleEventsDelete", () => {
         expect(mocks.audit.logAudit).not.toHaveBeenCalled();
     });
 
-    it("lista vuota → deleted:0 skipped:0", async () => {
+    it("empty list → deleted:0 skipped:0", async () => {
         mocks.repo.findStaleEventsToDelete.mockResolvedValue([]);
 
         const res = await processStaleEventsDelete();
@@ -188,7 +188,7 @@ describe("processStaleEventsDelete", () => {
         expect(mocks.repo.deleteEventScoped).not.toHaveBeenCalled();
     });
 
-    it("mix: atelier skippato, non-atelier eliminato", async () => {
+    it("mix: atelier skipped, non-atelier deleted", async () => {
         mocks.repo.findStaleEventsToDelete.mockResolvedValue([
             { id: "e1", organizationId: "atelier_org" },
             { id: "e2", organizationId: "free_org" },

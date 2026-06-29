@@ -1,8 +1,8 @@
 /**
  * GET /api/organizations/:id/members
- * Lista membri + inviti pending dell'org (path-id).
- * Risolve il vecchio /api/team/*: membership sotto /api/organizations/[id]/members.
- * Authz: il caller deve essere membro DI QUELL'org (getOrgRole != null).
+ * Lists members + pending invites of the org (path-id).
+ * Supersedes the old /api/team/*: membership now under /api/organizations/[id]/members.
+ * Authz: the caller must be a member OF THAT org (getOrgRole != null).
  */
 import { getOrgRole } from "~~/server/utils/permissions";
 import { listOrganizationMembers } from "~~/server/services/organization.service";
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: "Missing organization id" });
     }
 
-    // Authz path-id: membro di QUESTA org (non dell'org attiva).
+    // Authz path-id: member of THIS org (not the active org).
     const role = await getOrgRole(user.id, id);
     if (!role) {
         throw createError({ statusCode: 403, statusMessage: "Accesso negato" });

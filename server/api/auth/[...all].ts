@@ -11,8 +11,8 @@ export default defineEventHandler(async (event) => {
         console.log(`[Creem Webhook] Received request at ${path}`);
     }
 
-    // Auth disabilitata fuori da "active". Stessa authority del middleware
-    // (Redis override → env): un toggle runtime chiude/riapre auth coerentemente.
+    // Auth disabled outside "active". Same authority as the middleware
+    // (Redis override → env): a runtime toggle consistently opens/closes auth.
     if (!isWebhook && (await getServerSiteMode()) !== "active") {
         return;
     }

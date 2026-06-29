@@ -1,28 +1,28 @@
 /**
- * Ceremly — tema invito personalizzabile (colori liberi + catalogo font).
+ * Ceremly — customizable invite theme (free colors + font catalog).
  *
- * Il tema è una proprietà dell'evento: `event.theme` (4 colori hex) e
- * `event.inviteFont` (nome famiglia del catalogo). NULL ⇒ token globali `.cer`.
- * Le 6 palette restano come SCORCIATOIE UI (riempiono i picker), non sono più
- * persistite come key. I font del catalogo sono self-hostati via @nuxt/fonts.
+ * The theme is a property of the event: `event.theme` (4 hex colors) and
+ * `event.inviteFont` (catalog family name). NULL ⇒ global `.cer` tokens.
+ * The 6 palettes remain as UI SHORTCUTS (fill the pickers), no longer
+ * persisted as keys. Catalog fonts are self-hosted via @nuxt/fonts.
  */
 
 export interface InviteTheme {
-    /** Sfondo carta → `--bone-50`. */
+    /** Card background → `--bone-50`. */
     paper: string;
-    /** Accento (mono titoli, pin, bottone RSVP) → `--tpl-accent` + `--wine`. */
+    /** Accent (mono titles, pin, RSVP button) → `--tpl-accent` + `--wine`. */
     accent: string;
-    /** Tinta profonda (nomi header, orari) → `--wine-deep`. */
+    /** Deep tint (header names, times) → `--wine-deep`. */
     deep: string;
-    /** Testo leggibile sopra l'accento (label bottone RSVP) → `--rsvp-on-accent`. */
+    /** Readable text on top of accent (RSVP button label) → `--rsvp-on-accent`. */
     onAccent: string;
 }
 
 /**
- * Default impliciti = token globali `.cer` (paper #FFFFFF = `--bone-50`,
+ * Implicit defaults = global `.cer` tokens (paper #FFFFFF = `--bone-50`,
  * accent/deep/onAccent = `--wine`/`--wine-deep`/`--rsvp-on-accent`).
- * Distinto dalla scorciatoia "Toscana" (paper #FFFDF6): qui paper è il bianco
- * puro effettivamente renderizzato quando l'evento non ha tema custom.
+ * Distinct from the "Toscana" shortcut (paper #FFFDF6): here paper is the
+ * pure white actually rendered when the event has no custom theme.
  */
 export const DEFAULT_THEME: InviteTheme = {
     paper: "#FFFFFF",
@@ -31,7 +31,7 @@ export const DEFAULT_THEME: InviteTheme = {
     onAccent: "#3F3622",
 };
 
-/** Scorciatoie curate: applicate, riempiono i 4 picker (non persistite). */
+/** Curated shortcuts: when applied, fill the 4 pickers (not persisted). */
 export const INVITE_PALETTES: readonly (InviteTheme & { key: string; label: string })[] = [
     { key: "toscana", label: "Toscana", paper: "#FFFDF6", accent: "#d4a373", deep: "#5E4426", onAccent: "#3F3622" },
     { key: "bordeaux", label: "Bordeaux", paper: "#FBF6F4", accent: "#8C3B4A", deep: "#4A2230", onAccent: "#FBF6F4" },
@@ -43,12 +43,12 @@ export const INVITE_PALETTES: readonly (InviteTheme & { key: string; label: stri
 
 export type FontCategory = "serif" | "sans" | "display" | "handwriting";
 export interface CatalogFont {
-    /** Nome famiglia Google esatto (persistito in `event.inviteFont`). */
+    /** Exact Google family name (persisted in `event.inviteFont`). */
     family: string;
     category: FontCategory;
 }
 
-/** Catalogo curato di famiglie Google adatte agli inviti, self-hostate. */
+/** Curated catalog of Google families suitable for invitations, self-hosted. */
 export const INVITE_FONT_CATALOG: readonly CatalogFont[] = [
     // Serif
     { family: "Playfair Display", category: "serif" },
@@ -77,7 +77,7 @@ export const INVITE_FONT_CATALOG: readonly CatalogFont[] = [
     { family: "Tenor Sans", category: "sans" },
     { family: "Sorts Mill Goudy", category: "serif" },
     { family: "Petrona", category: "serif" },
-    // Sans
+    // Sans-serif
     { family: "Manrope", category: "sans" },
     { family: "Montserrat", category: "sans" },
     { family: "Be Vietnam Pro", category: "sans" },
@@ -117,7 +117,7 @@ export const INVITE_FONT_CATALOG: readonly CatalogFont[] = [
     { family: "Marck Script", category: "handwriting" },
 ] as const;
 
-/** Slug CSS-safe per la classe `.inv-font-<slug>`. */
+/** CSS-safe slug for the `.inv-font-<slug>` class. */
 export function fontSlug(family: string): string {
     return family.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }

@@ -7,8 +7,8 @@ export const contactSchema = z.object({
     subject: nonEmptyString,
     message: nonEmptyString,
     language: languageFieldOptional,
-    // Anti-spam (#8): honeypot (campo nascosto, deve restare vuoto) + timestamp
-    // di rendering del form (submit troppo rapido = bot). Opzionali.
+    // Anti-spam (#8): honeypot (hidden field, must remain empty) + form render
+    // timestamp (submit too fast = bot). Both optional.
     website: z.string().optional(),
     _t: z.number().optional(),
 });

@@ -1,10 +1,10 @@
 /**
- * Modello pricing Ceremly — Free / Celebrazione / Atelier.
- * Usato sia dal frontend (usePricing) sia dal backend (eventAccess.service).
+ * Ceremly pricing model — Free / Celebrazione / Atelier.
+ * Used by both the frontend (usePricing) and the backend (eventAccess.service).
  *
- * - Free / Celebration sono stati PER-EVENTO (campo events.tier).
- * - Atelier è una proprietà dell'org/owner (subscription ricorrente attiva),
- *   risolta a runtime da isOrgAtelier via getPlanFromProductId.
+ * - Free / Celebration are PER-EVENT states (events.tier field).
+ * - Atelier is a property of the org/owner (active recurring subscription),
+ *   resolved at runtime by isOrgAtelier via getPlanFromProductId.
  */
 
 /** Check if a limit value means unlimited (sentinella -1, model-agnostic). */
@@ -19,22 +19,22 @@ export function exceedsLimit(usage: number, limit: number): boolean {
 }
 
 /**
- * I tre tier di Ceremly.
- * - 'free'/'celebration' sono stati PER-EVENTO (campo events.tier).
- * - 'atelier' NON è un valore di events.tier: è una proprietà dell'org/owner
- *   (subscription ricorrente attiva), risolta a runtime.
+ * The three Ceremly tiers.
+ * - 'free'/'celebration' are PER-EVENT states (events.tier field).
+ * - 'atelier' is NOT a value of events.tier: it is a property of the org/owner
+ *   (active recurring subscription), resolved at runtime.
  */
 export type CeremlyTier = 'free' | 'celebration' | 'atelier';
 
 /**
- * Limiti per tier. `-1` = illimitato.
+ * Limits per tier. `-1` = unlimited.
  *
- * SCOPE MISTO: `maxGuestsPerEvent`/`maxReminders` sono PER-EVENTO (dipendono dal
- * tier dell'evento). `maxActiveEvents` è PER-ORG e ha senso solo per i tier che
- * descrivono un'organizzazione: Free (1) e Atelier (∞). 'celebration' NON è un
- * tier org — è lo stato di un singolo evento — quindi il suo `maxActiveEvents`
- * (-1) è un PLACEHOLDER non usato dall'enforcement: il conteggio eventi guarda
- * se l'ORG è Free o Atelier (vedi countActiveEventsByOrg + isOrgAtelier).
+ * MIXED SCOPE: `maxGuestsPerEvent`/`maxReminders` are PER-EVENT (depend on the
+ * event tier). `maxActiveEvents` is PER-ORG and only meaningful for tiers that
+ * describe an organization: Free (1) and Atelier (∞). 'celebration' is NOT an
+ * org tier — it is the state of a single event — so its `maxActiveEvents`
+ * (-1) is a PLACEHOLDER not used by enforcement: the event count checks whether
+ * the ORG is Free or Atelier (see countActiveEventsByOrg + isOrgAtelier).
  */
 export const CEREMLY_TIER_LIMITS: Record<
     CeremlyTier,
@@ -45,7 +45,7 @@ export const CEREMLY_TIER_LIMITS: Record<
     atelier: { maxGuestsPerEvent: -1, maxActiveEvents: -1, maxReminders: -1, unlimited: true },
 };
 
-/** Prezzo Celebrazione (one-time, centesimi EUR). */
+/** Celebrazione price (one-time, EUR cents). */
 export const CELEBRATION_PRICE_CENTS = 3900;
-/** Prezzo Atelier (recurring mensile, centesimi EUR). */
+/** Atelier price (monthly recurring, EUR cents). */
 export const ATELIER_PRICE_CENTS = 2400;

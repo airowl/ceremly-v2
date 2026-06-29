@@ -27,7 +27,7 @@ export interface RenderedEmail {
 // Brand name from env (env-driven, fallback empty string)
 const appName = (): string => runtimeConfig.public.appName || '';
 
-// Host pubblico (es. "ceremly.app") derivato da baseURL, per i footer Ceremly
+// Public host (e.g. "ceremly.app") derived from baseURL, used in Ceremly email footers
 const appHost = (): string => {
     const base = runtimeConfig.public.baseURL as string | undefined;
     if (!base) return '';
@@ -38,17 +38,17 @@ const appHost = (): string => {
     }
 };
 
-// Base URL del sito (senza trailing slash) per link assoluti nelle email.
+// Site base URL (without trailing slash) for absolute links in emails.
 const baseUrl = (): string => ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '');
 
-// Link alle pagine legali reali (non-prefissati: stesso documento per ogni lingua).
+// Links to the actual legal pages (not locale-prefixed: same document for every language).
 const legalLinks = (): { privacy: string; tos: string; dpa: string } => ({
     privacy: `${baseUrl()}/legal/privacy`,
     tos: `${baseUrl()}/legal/tos`,
     dpa: `${baseUrl()}/legal/dpa`,
 });
 
-// Render sia HTML sia testo da un singolo React element (React Email plainText).
+// Renders both HTML and plain text from a single React element (React Email plainText).
 async function renderBoth(element: React.ReactElement): Promise<RenderedEmail> {
     return {
         html: await render(element),
@@ -205,7 +205,7 @@ export async function renderOrgInviteEmail(options: {
 
 /**
  * Render guest invite email (Ceremly, SPEC §6 — owner B3) — HTML + text.
- * `message` arriva con i placeholder {nome}/{link} già sostituiti.
+ * `message` arrives with the {name}/{link} placeholders already substituted.
  */
 export async function renderGuestInviteEmail(options: {
     eventTitle: string;
@@ -228,7 +228,7 @@ export async function renderGuestInviteEmail(options: {
 
 /**
  * Render guest reminder email (Ceremly, SPEC §6 — owner B3) — HTML + text.
- * `message` arriva con i placeholder {nome}/{link} già sostituiti.
+ * `message` arrives with the {name}/{link} placeholders already substituted.
  */
 export async function renderGuestReminderEmail(options: {
     eventTitle: string;
@@ -249,7 +249,7 @@ export async function renderGuestReminderEmail(options: {
     return renderBoth(element);
 }
 
-/** Render avviso cleanup evento (SPEC §9.2) — HTML + text, i18n IT/EN. */
+/** Renders event archival warning email (SPEC §9.2) — HTML + text, i18n IT/EN. */
 export async function renderEventCleanupWarningEmail(options: {
     language?: SupportedLanguage;
     eventTitle: string;
@@ -294,8 +294,8 @@ export const emailSubjects = {
         it: `Ti hanno invitato nel team — ${orgName}`,
         en: `You're invited to the team — ${orgName}`,
     }),
-    // Ceremly (solo italiano, SPEC §0): fallback quando l'organizzatore non ha
-    // definito un oggetto in event.distribution / nel reminder.
+    // Ceremly (Italian only, SPEC §0): fallback when the organiser has not
+    // defined a subject in event.distribution / in the reminder.
     guestInvite: (eventTitle: string) => `Sei invitato: ${eventTitle}`,
     guestReminder: (eventTitle: string) => `Promemoria — ${eventTitle}`,
     eventCleanupWarning: (eventTitle: string) => ({

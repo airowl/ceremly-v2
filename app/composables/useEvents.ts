@@ -1,10 +1,10 @@
 /**
- * useEvents — wrapper $fetch tipizzati per le API eventi Ceremly (SPEC §6).
- * Pattern di useProjects.ts: isLoading/error condivisi + funzioni per verbo.
+ * useEvents — typed $fetch wrappers for the Ceremly event API (SPEC §6).
+ * useProjects.ts pattern: shared isLoading/error + per-verb functions.
  *
- * Le date viaggiano come stringhe ISO (i payload sono JSON): i tipi di input
- * sono quindi definiti qui con date string, lato server `z.coerce.date`
- * (createEventSchema/updateEventSchema) le converte.
+ * Dates travel as ISO strings (payloads are JSON): the input types
+ * are therefore defined here with date strings; on the server `z.coerce.date`
+ * (createEventSchema/updateEventSchema) converts them.
  */
 import type {
     CeremlyEvent,
@@ -16,7 +16,7 @@ import type {
     EventDistribution,
 } from "~~/shared/types/ceremly";
 
-/** Body di POST /api/events (createEventSchema, date come stringhe). */
+/** Body for POST /api/events (createEventSchema, dates as strings). */
 export interface CreateEventPayload {
     type: EventTypeKey;
     templateKey: string;
@@ -27,7 +27,7 @@ export interface CreateEventPayload {
     locationAddress?: string;
 }
 
-/** Body di PUT /api/events/:id (updateEventSchema, parziale). */
+/** Body for PUT /api/events/:id (updateEventSchema, partial). */
 export interface UpdateEventPayload {
     title?: string;
     eventDate?: string | null;
@@ -42,7 +42,7 @@ export interface UpdateEventPayload {
     distribution?: EventDistribution;
 }
 
-/** Messaggio leggibile da un errore $fetch (statusMessage h3 → message → fallback). */
+/** Human-readable message from a $fetch error (statusMessage h3 → message → fallback). */
 function extractErrorMessage(e: unknown, fallback: string): string {
     const err = e as {
         data?: { statusMessage?: string, message?: string };
@@ -55,7 +55,7 @@ export function useEvents() {
     const isLoading = ref(false);
     const error = ref<string | null>(null);
 
-    /** GET /api/events — lista eventi org con counts aggregati. */
+    /** GET /api/events — lists org events with aggregated counts. */
     async function listEvents(): Promise<EventWithCounts[]> {
         if (import.meta.server) return [];
         isLoading.value = true;
@@ -71,7 +71,7 @@ export function useEvents() {
         }
     }
 
-    /** GET /api/events/:id — evento completo. */
+    /** GET /api/events/:id — full event. */
     async function getEvent(id: string): Promise<CeremlyEvent> {
         isLoading.value = true;
         error.value = null;
@@ -86,7 +86,7 @@ export function useEvents() {
         }
     }
 
-    /** POST /api/events — crea da template (402 = limite piano Free). */
+    /** POST /api/events — creates from template (402 = Free plan limit). */
     async function createEvent(data: CreateEventPayload): Promise<CeremlyEvent> {
         isLoading.value = true;
         error.value = null;
@@ -104,7 +104,7 @@ export function useEvents() {
         }
     }
 
-    /** PUT /api/events/:id — update parziale (422 = invarianti blocks/rsvpConfig). */
+    /** PUT /api/events/:id — partial update (422 = blocks/rsvpConfig invariants). */
     async function updateEvent(id: string, data: UpdateEventPayload): Promise<CeremlyEvent> {
         isLoading.value = true;
         error.value = null;
@@ -122,7 +122,7 @@ export function useEvents() {
         }
     }
 
-    /** DELETE /api/events/:id — hard delete con cascade. */
+    /** DELETE /api/events/:id — hard delete with cascade. */
     async function deleteEvent(id: string): Promise<void> {
         isLoading.value = true;
         error.value = null;

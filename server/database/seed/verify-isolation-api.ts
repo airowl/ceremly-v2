@@ -11,23 +11,23 @@ import {
 } from "../../services/project.service";
 config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
-// Shim: createError è auto-importato da Nitro a runtime nell'app, ma in uno script
-// tsx standalone non è globale. Il service (via assertOwnership/getOrgId) lo usa senza
-// import esplicito → lo forniamo da h3 come global. Import dinamico per evitare TS2305/2352. Solo test.
+// Shim: createError is auto-imported by Nitro at runtime in the app, but in a standalone
+// tsx script it is not global. The service (via assertOwnership/getOrgId) uses it without
+// an explicit import → we provide it from h3 as a global. Dynamic import to avoid TS2305/2352. Test only.
 const h3mod = (await import("h3")) as unknown as { createError: unknown };
 (globalThis as { createError?: unknown }).createError = h3mod.createError;
 
 /**
- * Gate di sicurezza FASE 4: isolamento tenant a LIVELLO SERVICE (oltre il repository).
- * INVARIANTI:
- *   1. listProjects con org A non restituisce mai projects di org B.
- *   2. getProject/updateProject/deleteProject su un project di org B → 403 (assertOwnership).
+ * Security gate PHASE 4: tenant isolation at the SERVICE level (beyond the repository).
+ * INVARIANTS:
+ *   1. listProjects for org A never returns projects belonging to org B.
+ *   2. getProject/updateProject/deleteProject on a project of org B → 403 (assertOwnership).
  *
- * Costruisce un H3Event-mock con context.organization (ciò che 1c popola via requireMember).
- * Esegui dopo `pnpm db:seed`. Richiede 1c landed (assertOwnership) + Postgres vivo.
+ * Builds an H3Event mock with context.organization (what 1c populates via requireMember).
+ * Run after `pnpm db:seed`. Requires 1c landed (assertOwnership) + live Postgres.
  */
 
-/** Mock minimale di H3Event: solo i campi che il service legge. */
+/** Minimal H3Event mock: only the fields the service reads. */
 function mockEvent(organizationId: string, userId: string): any {
     return {
         context: {
@@ -42,13 +42,13 @@ function mockEvent(organizationId: string, userId: string): any {
 async function expect403(label: string, fn: () => Promise<unknown>): Promise<boolean> {
     try {
         await fn();
-        console.error(`[FAIL] ${label}: atteso 403, nessun errore lanciato`);
+        console.error(`[FAIL] ${label}: expected 403, no error thrown`);
         return false;
     } catch (e: any) {
         if (e?.statusCode === 403) {
             return true;
         }
-        console.error(`[FAIL] ${label}: atteso statusCode 403, ricevuto`, e?.statusCode, e?.message);
+        console.error(`[FAIL] ${label}: expected statusCode 403, got`, e?.statusCode, e?.message);
         return false;
     }
 }
@@ -62,70 +62,70 @@ async function main() {
     const b2c = orgs.find((o) => o.slug === "personal-org");
     const b2b = orgs.find((o) => o.slug === "team-org");
     if (!b2c || !b2b) {
-        throw new Error("seed mancante: esegui `pnpm db:seed` prima");
+        throw new Error("missing seed: run `pnpm db:seed` first");
     }
 
-    // Un membro per ciascuna org (owner del seed).
+    // One member per org (seed owner).
     const b2cMember = await db
         .select({ userId: schema.member.userId })
         .from(schema.member)
         .where(eq(schema.member.organizationId, b2c.id))
         .limit(1);
-    if (!b2cMember[0]) throw new Error("seed mancante: nessun membro per org B2C");
+    if (!b2cMember[0]) throw new Error("missing seed: no member for B2C org");
     const b2cUserId = b2cMember[0].userId;
 
-    // Un project che appartiene a B2B (target cross-org per i tentativi da B2C).
+    // A project belonging to B2B (cross-org target for attempts from B2C).
     const b2bProjects = await db
         .select({ id: schema.projects.id })
         .from(schema.projects)
         .where(eq(schema.projects.organizationId, b2b.id))
         .limit(1);
-    if (!b2bProjects[0]) throw new Error("seed mancante: nessun project per org B2B");
+    if (!b2bProjects[0]) throw new Error("missing seed: no project for B2B org");
     const foreignProjectId = b2bProjects[0].id;
 
     const eventB2C = mockEvent(b2c.id, b2cUserId);
 
     let ok = true;
 
-    // INVARIANTE 1: list come membro B2C non contiene mai righe B2B.
+    // INVARIANT 1: list as a B2C member never contains B2B rows.
     const { projects: listedForB2C } = await listProjects(eventB2C);
     const leaked = listedForB2C.filter((p: any) => p.organizationId !== b2c.id);
     if (leaked.length > 0) {
-        console.error("[FAIL] listProjects(B2C) contiene righe non-B2C:", leaked);
+        console.error("[FAIL] listProjects(B2C) contains non-B2C rows:", leaked);
         ok = false;
     }
     if (listedForB2C.length === 0) {
-        console.error("[FAIL] listProjects(B2C) vuota — seed incompleto");
+        console.error("[FAIL] listProjects(B2C) empty — incomplete seed");
         ok = false;
     }
 
-    // INVARIANTE 2: get/put/delete su project di B2B come membro B2C → 403.
+    // INVARIANT 2: get/put/delete on a B2B project as a B2C member → 403.
     ok = (await expect403("getProject cross-org", () => getProject(eventB2C, foreignProjectId))) && ok;
     ok = (await expect403("updateProject cross-org", () => updateProject(eventB2C, foreignProjectId, { name: "hack" }))) && ok;
     ok = (await expect403("deleteProject cross-org", () => deleteProject(eventB2C, foreignProjectId))) && ok;
 
-    // Sanity: il project di B2B esiste ancora (il delete cross-org NON deve averlo toccato).
+    // Sanity: the B2B project still exists (the cross-org delete must NOT have touched it).
     const stillThere = await db
         .select({ id: schema.projects.id })
         .from(schema.projects)
         .where(eq(schema.projects.id, foreignProjectId))
         .limit(1);
     if (!stillThere[0]) {
-        console.error("[FAIL] il project B2B è sparito dopo i tentativi cross-org — leak di scrittura!");
+        console.error("[FAIL] B2B project disappeared after cross-org attempts — write leak!");
         ok = false;
     }
 
     if (!ok) {
-        console.error("[verify-isolation-api] ISOLAMENTO API VIOLATO");
+        console.error("[verify-isolation-api] API ISOLATION VIOLATED");
         process.exit(1);
     }
     console.log(
-        `[verify-isolation-api] OK — list scoped (${listedForB2C.length} righe B2C, 0 leak), get/put/delete cross-org → 403`,
+        `[verify-isolation-api] OK — list scoped (${listedForB2C.length} B2C rows, 0 leak), get/put/delete cross-org → 403`,
     );
     process.exit(0);
 }
 
 main().catch((e) => {
-    console.error("[verify-isolation-api] errore", e);
+    console.error("[verify-isolation-api] error", e);
     process.exit(1);
 });

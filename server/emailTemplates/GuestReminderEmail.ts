@@ -1,10 +1,10 @@
-// React Email template — reminder RSVP ospite Ceremly (SPEC §6 Reminder, owner B3).
-// Stesso design "Soft Meadow" dell'invito (GuestInviteEmail), tono da promemoria
-// gentile. Uses React.createElement to avoid JSX/Vue conflicts.
+// React Email template — Ceremly guest RSVP reminder (SPEC §6 Reminder, owner B3).
+// Same "Soft Meadow" design as the invite (GuestInviteEmail), with a gentle reminder
+// tone. Uses React.createElement to avoid JSX/Vue conflicts.
 //
-// `message` è il testo del reminder configurato dall'organizzatore con i
-// placeholder {nome}/{link} GIÀ sostituiti a monte: qui viene solo
-// renderizzato rispettando i newline.
+// `message` is the reminder text configured by the organiser with the
+// {name}/{link} placeholders ALREADY substituted upstream: here it is only
+// rendered preserving newlines.
 
 import * as React from 'react';
 import {
@@ -22,18 +22,18 @@ import { colors, fonts } from './_softMeadow';
 export interface GuestReminderEmailProps {
     eventTitle: string;
     firstName: string;
-    /** Testo del reminder, placeholder già sostituiti. */
+    /** Reminder text with placeholders already substituted. */
     message: string;
-    /** Link personale dell'ospite `{baseURL}/e/{slug}/{token}`. */
+    /** Guest's personal link `{baseURL}/e/{slug}/{token}`. */
     ctaUrl: string;
-    /** Pixel di tracking apertura `{baseURL}/api/public/pixel/{token}.gif`. */
+    /** Open-tracking pixel `{baseURL}/api/public/pixel/{token}.gif`. */
     pixelUrl: string;
     appName: string;
-    /** Host pubblico (es. "ceremly.app") per il footer, derivato da baseURL. */
+    /** Public host (e.g. "ceremly.app") for the footer, derived from baseURL. */
     appHost: string;
 }
 
-// Palette/font Soft Meadow: token condivisi importati da ./_softMeadow
+// Soft Meadow palette/fonts: shared tokens imported from ./_softMeadow
 
 const styles = {
     body: {
@@ -113,7 +113,7 @@ const styles = {
 
 const h = React.createElement;
 
-/** Renderizza il `message` rispettando i newline (no white-space CSS: Outlook). */
+/** Renders `message` preserving newlines (white-space CSS unsupported in Outlook). */
 function renderMessageLines(message: string): React.ReactNode[] {
     return message
         .split('\n')
