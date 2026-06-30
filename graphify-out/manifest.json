@@ -100,9 +100,9 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/composables/useTwoFactor.ts": {
-    "mtime": 1771865516.0,
-    "ast_hash": "f21ef9c2523e52b4001990ea7ca32605",
-    "semantic_hash": "f21ef9c2523e52b4001990ea7ca32605"
+    "mtime": 1782800657.5190043,
+    "ast_hash": "588aba3fff041d8fa3c3ac09bb74c42c",
+    "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/composables/useScrollReveal.ts": {
     "mtime": 1771865516.0,
@@ -240,9 +240,9 @@
     "semantic_hash": "865c6e76f888c12d9d75435946cf1546"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/components/auth/TwoFactorVerifyModal.vue": {
-    "mtime": 1771865516.0,
-    "ast_hash": "17419bfd362df26eac5bac9e74224620",
-    "semantic_hash": "17419bfd362df26eac5bac9e74224620"
+    "mtime": 1782800659.6831322,
+    "ast_hash": "556d1e891e33bc870d96201a43f9a103",
+    "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/components/admin/UserMenu.client.vue": {
     "mtime": 1781096160.3572254,
@@ -300,14 +300,14 @@
     "semantic_hash": "6c1b4a632ef8126069d25bfa764808e2"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/components/profile/DataExportSection.vue": {
-    "mtime": 1771865516.0,
-    "ast_hash": "dff208f47ca1daa0898c393e89c33612",
-    "semantic_hash": "dff208f47ca1daa0898c393e89c33612"
+    "mtime": 1782800599.8622139,
+    "ast_hash": "788bf70f987fb6ea2d3fdb084c064b73",
+    "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/components/profile/TwoFactorSetup.vue": {
-    "mtime": 1771865516.0,
-    "ast_hash": "79d910d124ae5706659f4c61aaa60445",
-    "semantic_hash": "79d910d124ae5706659f4c61aaa60445"
+    "mtime": 1782800591.1767914,
+    "ast_hash": "b95b8a8747936acc79e147019ff00647",
+    "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/components/ceremly/CerCheckbox.vue": {
     "mtime": 1781134087.404755,
@@ -485,8 +485,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/login.vue": {
-    "mtime": 1782733302.2007067,
-    "ast_hash": "c8bc861e495f4275507d894565177b2f",
+    "mtime": 1782800752.2690065,
+    "ast_hash": "273ebc70cf08558141b5e397f44feba4",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/features.vue": {
@@ -625,8 +625,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/dashboard/profile/index.vue": {
-    "mtime": 1782723514.49337,
-    "ast_hash": "2bbf69fdfd62e44fd78bfd342e94e904",
+    "mtime": 1782800597.904332,
+    "ast_hash": "8420ce7e28956b619ae0fc3c1b573618",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/dashboard/profile/members.vue": {
