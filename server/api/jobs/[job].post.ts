@@ -1,7 +1,7 @@
 import { Receiver } from '@upstash/qstash'
 import { runJob } from '~~/server/queue/handlers'
-import { isJobName } from '~~/server/queue/types'
-import type { JobName, JobPayload } from '~~/server/queue/types'
+import { isJobName, buildJobUrl, parseJobPayload } from '~~/server/queue/types'
+import type { JobName } from '~~/server/queue/types'
 import { cacheClient } from '~~/server/utils/drivers'
 
 /** TTL of the dedup key (24h): comfortably covers the QStash retry window. */
@@ -40,8 +40,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // URL must match exactly what dispatch() published (signed into the JWT `sub`).
+  // buildJobUrl normalises the trailing slash identically on both sides.
   const baseURL = config.public.baseURL as string | undefined
-  const url = `${baseURL}/api/jobs/${job}`
+  if (!baseURL) {
+    console.error('[jobs] public.baseURL not configured — cannot verify QStash signature')
+    throw createError({ statusCode: 500, statusMessage: 'Jobs not configured' })
+  }
+  const url = buildJobUrl(baseURL, job)
 
   const receiver = new Receiver({
     currentSigningKey,
@@ -69,8 +74,16 @@ export default defineEventHandler(async (event) => {
     return { ok: true, deduped: true }
   }
 
-  // Parse ONLY after the signature is verified.
-  const payload = JSON.parse(body) as JobPayload<typeof job>
+  // Parse + VALIDATE ONLY after the signature is verified. Zod guards against
+  // schema drift (old enqueue vs new consumer) → clean 400 instead of a
+  // TypeError deep in the handler that QStash would then retry 3x.
+  let payload
+  try {
+    payload = parseJobPayload(job, JSON.parse(body))
+  } catch (err) {
+    console.error(`[jobs] invalid payload for job "${job}":`, err)
+    throw createError({ statusCode: 400, statusMessage: 'Invalid job payload' })
+  }
 
   await runJob(job, payload)
 

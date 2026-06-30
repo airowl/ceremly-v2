@@ -33,7 +33,6 @@ export const generateRuntimeConfig = () => {
         googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID,
         googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET,
         // DB
-        redisUrl: process.env.NUXT_REDIS_URL,
         databaseUrl: process.env.NUXT_DATABASE_URL,
         // Admin API
         adminApiKey: process.env.NUXT_ADMIN_API_KEY,

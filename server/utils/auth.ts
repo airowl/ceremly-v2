@@ -188,7 +188,11 @@ export const createBetterAuth = () =>
             window: 60,
             max: 100,
             customRules: {
-                "/sign-in/email": { window: 60, max: 10 },
+                // Match (not loosen) Better Auth's built-in special rule for
+                // /sign-in* (window 10, max 3). customRules are applied LAST and
+                // win, so the previous { window: 60, max: 10 } silently RAISED the
+                // burst ceiling from 3→10 guesses/IP — the opposite of tightening.
+                "/sign-in/email": { window: 10, max: 3 },
                 "/request-password-reset": { window: 60, max: 5 },
                 "/reset-password": { window: 60, max: 10 },
             },

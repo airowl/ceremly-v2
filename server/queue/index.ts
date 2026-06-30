@@ -1,5 +1,6 @@
 import { Client } from '@upstash/qstash'
 import { runtimeConfig } from '~~/server/utils/runtimeConfig'
+import { buildJobUrl } from './types'
 import type { JobName, JobPayload } from './types'
 
 let qstashClient: Client | undefined
@@ -40,7 +41,7 @@ export async function dispatch<K extends JobName>(job: K, payload: JobPayload<K>
 
   const client = getQStashClient(token)
   await client.publishJSON({
-    url: `${baseURL}/api/jobs/${job}`,
+    url: buildJobUrl(baseURL, job),
     body: payload,
     // Idempotency hint to QStash in addition to handler-level idempotency.
     contentBasedDeduplication: true,

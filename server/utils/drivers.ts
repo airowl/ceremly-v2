@@ -45,8 +45,10 @@ export const cacheClient = {
         if (client) {
             try {
                 return await client.get<string>(key);
-            } catch {
-                // Fallback to memory on error
+            } catch (err) {
+                // Log so a Redis outage is VISIBLE (alertable) instead of silently
+                // degrading shared state to a per-instance memory Map.
+                console.error(`[cache] Upstash get failed for "${key}"; falling back to per-instance memory:`, err);
             }
         }
 
@@ -70,8 +72,8 @@ export const cacheClient = {
                     await client.set(key, stringValue);
                 }
                 return;
-            } catch {
-                // Fallback to memory on error
+            } catch (err) {
+                console.error(`[cache] Upstash set failed for "${key}"; falling back to per-instance memory:`, err);
             }
         }
 
@@ -87,8 +89,8 @@ export const cacheClient = {
             try {
                 await client.del(key);
                 return;
-            } catch {
-                // Fallback to memory on error
+            } catch (err) {
+                console.error(`[cache] Upstash del failed for "${key}"; falling back to per-instance memory:`, err);
             }
         }
 
@@ -96,24 +98,25 @@ export const cacheClient = {
     },
 
     /**
-     * Atomic fixed-window counter for rate limiting SHARED across serverless
-     * instances: Upstash INCR + EXPIRE (the window auto-extends under sustained
-     * hammering — desirable behaviour for a limiter).
-     * Returns the current count in the window. In-memory best-effort fallback
-     * (per-instance) if Redis is not configured or reachable.
+     * Atomic counter for rate limiting SHARED across serverless instances:
+     * Upstash INCR/INCRBY + EXPIRE (the window auto-extends under sustained
+     * hammering — desirable behaviour for a limiter). `by` lets callers
+     * reserve more than one slot atomically (INCRBY). Returns the NEW count
+     * after the increment. In-memory best-effort fallback (per-instance) if
+     * Redis is not configured or reachable — logged so an outage is visible.
      */
-    increment: async (key: string, windowSeconds: number): Promise<number> => {
+    increment: async (key: string, windowSeconds: number, by: number = 1): Promise<number> => {
         const client = getUpstashClient();
         if (client) {
             try {
-                const count = await client.incr(key);
+                const count = by === 1 ? await client.incr(key) : await client.incrby(key, by);
                 // Unconditional expire: avoids an orphan key without TTL if the
                 // process dies between incr and expire (equivalent on the first call,
                 // subsequent calls re-arm the window — acceptable).
                 await client.expire(key, windowSeconds);
                 return count;
-            } catch {
-                // Fallback to memory on error
+            } catch (err) {
+                console.error(`[cache] Upstash increment failed for "${key}"; shared rate limit degraded to per-instance memory:`, err);
             }
         }
 
@@ -121,10 +124,10 @@ export const cacheClient = {
         const now = Date.now();
         const entry = memoryCache.get(key);
         if (!entry || (entry.expires && entry.expires <= now)) {
-            memoryCache.set(key, { value: "1", expires: now + windowSeconds * 1000 });
-            return 1;
+            memoryCache.set(key, { value: String(by), expires: now + windowSeconds * 1000 });
+            return by;
         }
-        const next = (Number.parseInt(entry.value, 10) || 0) + 1;
+        const next = (Number.parseInt(entry.value, 10) || 0) + by;
         // Preserves the original window expiry (fixed-window).
         memoryCache.set(key, { value: String(next), expires: entry.expires });
         return next;

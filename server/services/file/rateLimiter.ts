@@ -24,37 +24,22 @@ export class UploadRateLimiter {
         const bucketKey = this.getBucketKey(userId);
         const ttlSeconds = this.windowSizeMinutes * 60;
 
-        try {
-            // Get current count
-            const currentValue = await cacheClient.get(bucketKey);
-            const currentCount = currentValue
-                ? Number.parseInt(currentValue)
-                : 0;
-
-            // Check if limit would be exceeded after increment
-            if (currentCount + incrementBy > this.maxUploadsPerWindow) {
-                return { allowed: false, currentCount };
-            }
-
-            // Increment counter by the specified amount
-            const newCount = currentCount + incrementBy;
-            await cacheClient.set(bucketKey, newCount.toString(), ttlSeconds);
-
-            return { allowed: true, currentCount: newCount };
-        } catch (error) {
-            console.error("Rate limiter error:", error);
-            return { allowed: false, currentCount: 0 };
+        // ATOMIC increment-then-check (Upstash INCRBY): the previous get+set was a
+        // TOCTOU race — concurrent serverless invocations all read the same count,
+        // each passed the check and each wrote count+1, silently exceeding the cap.
+        // Reserving the slot first guarantees the cap holds under concurrency. A
+        // request that lands over the limit still consumes its slot (standard
+        // fixed-window-counter behaviour); real usage is incrementBy=1.
+        const newCount = await cacheClient.increment(bucketKey, ttlSeconds, incrementBy);
+        if (newCount > this.maxUploadsPerWindow) {
+            return { allowed: false, currentCount: newCount };
         }
+        return { allowed: true, currentCount: newCount };
     }
 
     async getCurrentCount(userId: string): Promise<number> {
         const bucketKey = this.getBucketKey(userId);
-        try {
-            const currentValue = await cacheClient.get(bucketKey);
-            return currentValue ? Number.parseInt(currentValue) : 0;
-        } catch (error) {
-            console.error("Rate limiter get count error:", error);
-            return 0;
-        }
+        const currentValue = await cacheClient.get(bucketKey);
+        return currentValue ? Number.parseInt(currentValue, 10) : 0;
     }
 }

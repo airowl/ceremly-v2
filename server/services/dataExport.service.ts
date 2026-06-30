@@ -2,7 +2,7 @@
  * Data Export Service
  * Business logic for GDPR data export: collection, generation, and management.
  */
-import { eq, and, desc, inArray } from 'drizzle-orm';
+import { eq, and, ne, desc, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { getDB } from '../utils/db';
 import {
@@ -275,6 +275,24 @@ export async function updateExportStatus(
             ...data,
         })
         .where(eq(dataExports.id, exportId));
+}
+
+/**
+ * Atomically claim an export for processing. Flips status → 'processing' only
+ * if it is NOT already 'processing', returning whether THIS call won the claim.
+ * Guards against QStash redelivering a long-running job before the first
+ * invocation finishes: the unconditional updateExportStatus('processing') was
+ * not concurrency-safe (a redelivery would re-run processExport, duplicating
+ * R2 work and racing the final row). A 'failed' export is reclaimable (retry).
+ */
+export async function claimExportForProcessing(exportId: string): Promise<boolean> {
+    const db = getDB();
+    const claimed = await db
+        .update(dataExports)
+        .set({ status: 'processing' })
+        .where(and(eq(dataExports.id, exportId), ne(dataExports.status, 'processing')))
+        .returning({ id: dataExports.id });
+    return claimed.length > 0;
 }
 
 /**

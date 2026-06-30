@@ -71,8 +71,9 @@ The backend runs on **Vercel as serverless functions** — no persistent process
 2. `0.site-mode.ts` — Enforces active/waitinglist/maintenance mode
 3. `1.auth.ts` — Attaches auth session to `event.context`
 4. `2.organization.ts` — Resolves and attaches the active organization for scoped requests
-5. `3.rate-limit.ts` — Rate limiting (Upstash, 100 req/min)
-6. `4.block-bots.ts` — Blocks malicious bots
+5. `4.block-bots.ts` — Blocks malicious bots
+
+> **Rate limiting** has no dedicated middleware. Three layers: (a) global IP limit via `nuxt-security` `rateLimiter` (100/min, `nuxt.config.ts`); (b) Better Auth `rateLimit` on `/api/auth/*` (`server/utils/auth.ts`, Upstash secondary-storage); (c) per-endpoint app limiters backed by the atomic `cacheClient.increment` (Upstash) — `isEndpointRateLimited` (`spamProtection.ts`) for public forms and `UploadRateLimiter` for file uploads. The `nuxt-security` layer uses an in-memory driver (per-instance on serverless); only the `cacheClient` layer is shared across instances.
 
 ### Client Middleware
 - `auth.global.ts` — Supports `auth: { only: 'guest' }` and `auth: { only: 'user' }` per page
