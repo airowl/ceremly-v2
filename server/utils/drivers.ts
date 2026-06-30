@@ -29,6 +29,20 @@ const getUpstashClient = (): UpstashRedis | undefined => {
     return upstashClient;
 };
 
+// Atomic fixed-window counter in ONE round-trip: INCRBY, then EXPIRE only on
+// the FIRST hit of the window (v == by). Setting the TTL once — instead of the
+// previous incr+expire that re-armed it on every call — makes this a TRUE
+// fixed window (no sliding-window lockout) and removes the incr-then-expire
+// partial-failure gap. A pre-existing key with no TTL (orphan from the old
+// path) simply never gets re-armed; the atomic eval cannot create new ones.
+const INCR_WINDOW_LUA = `
+local v = redis.call('INCRBY', KEYS[1], ARGV[1])
+if v == tonumber(ARGV[1]) then
+  redis.call('EXPIRE', KEYS[1], ARGV[2])
+end
+return v
+`;
+
 // Clean expired entries from memory cache
 const cleanExpiredMemoryCache = () => {
     const now = Date.now();
@@ -109,12 +123,12 @@ export const cacheClient = {
         const client = getUpstashClient();
         if (client) {
             try {
-                const count = by === 1 ? await client.incr(key) : await client.incrby(key, by);
-                // Unconditional expire: avoids an orphan key without TTL if the
-                // process dies between incr and expire (equivalent on the first call,
-                // subsequent calls re-arm the window — acceptable).
-                await client.expire(key, windowSeconds);
-                return count;
+                // Single atomic round-trip: INCRBY + first-hit EXPIRE (see INCR_WINDOW_LUA).
+                return await client.eval<string[], number>(
+                    INCR_WINDOW_LUA,
+                    [key],
+                    [String(by), String(windowSeconds)],
+                );
             } catch (err) {
                 console.error(`[cache] Upstash increment failed for "${key}"; shared rate limit degraded to per-instance memory:`, err);
             }

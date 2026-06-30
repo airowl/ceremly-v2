@@ -11,6 +11,7 @@ import type { SupportedLanguage } from "../emailTemplates";
 import { logAudit } from "./audit";
 import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
+import { isUserBannedFresh } from "./banStatus";
 import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
 import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.service";
@@ -454,6 +455,23 @@ export const getAuthSession = async (event: H3Event<EventHandlerRequest>) => {
     const session = await serverAuth.api.getSession({
         headers,
     });
+
+    // Immediate ban/deletion revocation: the cached session can outlive a failed
+    // secondaryStorage revocation (e.g. an Upstash blip at ban time), so re-check
+    // the ban flag from the DB (source of truth) — the cached session.user.banned
+    // would be stale. FAIL-OPEN on a check error: 1.auth.ts wraps this in a silent
+    // try/catch, so letting a transient DB error propagate would 401 EVERY user on
+    // that request. A banned user slipping through a DB blip is rare and self-heals.
+    if (session?.user?.id) {
+        try {
+            if (await isUserBannedFresh(session.user.id)) {
+                return null;
+            }
+        } catch (err) {
+            console.error(`[auth] ban re-check failed for user ${session.user.id}; allowing (fail-open):`, err);
+        }
+    }
+
     return session;
 };
 

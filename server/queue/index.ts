@@ -43,8 +43,12 @@ export async function dispatch<K extends JobName>(job: K, payload: JobPayload<K>
   await client.publishJSON({
     url: buildJobUrl(baseURL, job),
     body: payload,
-    // Idempotency hint to QStash in addition to handler-level idempotency.
-    contentBasedDeduplication: true,
+    // NB: no contentBasedDeduplication. The payload is just {guestId}, identical
+    // across sends, so content-dedup silently collapsed a DELIBERATE re-send to
+    // an already-invited guest (a real UI feature: explicit guest selection).
+    // At-most-once on QStash RETRIES is handled at the consumer (upstash-message-id
+    // dedup); accidental double-send is guarded in the UI (button disabled while
+    // sending + confirm dialog + the default flow only targets sentAt===null guests).
     retries: 3,
   })
 }
