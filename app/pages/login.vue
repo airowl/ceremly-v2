@@ -20,6 +20,7 @@ const { signIn, fetchSession, errorCodes } = useAuth()
 const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
+const show2FA = ref(false)
 
 // Post-login redirect ONLY if same-origin relative (must start with a single
 // '/'): blocks open-redirect `?redirect=//evil.com` or `?redirect=https://…`
@@ -66,7 +67,7 @@ async function onSubmit() {
     loading.value = true
 
     try {
-        const { error } = await signIn.email({
+        const { data, error } = await signIn.email({
             email: parsed.data.email,
             password: parsed.data.password,
             callbackURL: safeRedirect()
@@ -83,6 +84,14 @@ async function onSubmit() {
             return
         }
 
+        // 2FA enabled: better-auth withholds the session and returns
+        // { twoFactorRedirect: true }. Show the TOTP / backup-code challenge;
+        // login completes in onTwoFactorVerified once the second factor passes.
+        if ((data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
+            show2FA.value = true
+            return
+        }
+
         toast.add({ title: t('ceremly.login.successTitle'), description: t('ceremly.login.successDescription') })
         await fetchSession()
         await reloadNuxtApp({ path: safeRedirect() })
@@ -91,6 +100,13 @@ async function onSubmit() {
     } finally {
         loading.value = false
     }
+}
+
+async function onTwoFactorVerified() {
+    // Second factor verified — better-auth has established the session.
+    toast.add({ title: t('ceremly.login.successTitle'), description: t('ceremly.login.successDescription') })
+    await fetchSession()
+    await reloadNuxtApp({ path: safeRedirect() })
 }
 </script>
 
@@ -169,6 +185,8 @@ async function onSubmit() {
                 <CeremlyCerIcon name="check" :s="12" /> {{ $t('ceremly.login.e2eNotice') }}
             </div>
         </div>
+
+        <AuthTwoFactorVerifyModal v-model:open="show2FA" @verified="onTwoFactorVerified" />
     </CeremlyAuthShell>
 </template>
 

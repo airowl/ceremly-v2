@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { user } = useAuth()
+const profileStore = useProfileStore()
 const {
     isTwoFactorEnabled,
     isLoading,
@@ -24,10 +24,10 @@ const disablePassword = ref('')
 const backupPassword = ref('')
 const enablePassword = ref('')
 
-// Check if user is OAuth only (no password)
-const isOAuthUser = computed(() => {
-    return !(user.value as { hasPassword?: boolean })?.hasPassword
-})
+// OAuth-only users (no password) can't use app-level 2FA. The real provider is
+// resolved server-side from the account table and exposed via the profile store
+// (authProvider). The parent profile page calls fetchProfile() on mount.
+const isOAuthUser = computed(() => profileStore.isOAuthUser)
 
 // OAuth provider name (Google is the only configured provider)
 const oauthProvider = 'Google'

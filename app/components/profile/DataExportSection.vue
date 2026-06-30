@@ -206,6 +206,11 @@ onUnmounted(() => {
                 />
             </div>
 
+            <!-- Export history -->
+            <div class="pt-4 border-t">
+                <ProfileDataExportHistory />
+            </div>
+
             <!-- GDPR info -->
             <div class="pt-4 border-t">
                 <div class="flex items-start gap-3 text-sm text-muted-foreground">

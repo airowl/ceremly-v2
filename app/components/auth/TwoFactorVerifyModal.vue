@@ -36,7 +36,8 @@ async function handleVerify() {
     if (useBackupCode.value) {
         success = await verifyBackupCode(code.value)
     } else {
-        success = await verifyTOTP(code.value)
+        // Login challenge: suppress the setup-only "2FA enabled" toast.
+        success = await verifyTOTP(code.value, { silent: true })
     }
 
     if (success) {

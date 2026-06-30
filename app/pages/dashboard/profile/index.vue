@@ -473,6 +473,9 @@ v-model="password.confirm" type="password" placeholder="••••••••
             </template>
         </UPageCard>
 
+        <!-- Section: Two-Factor Authentication -->
+        <ProfileTwoFactorSetup />
+
         <!-- Section: Data Export (GDPR Art. 20) -->
         <ProfileDataExportSection />
 

@@ -59,7 +59,7 @@ export function useTwoFactor() {
     /**
      * Verify TOTP code during setup or login
      */
-    async function verifyTOTP(code: string): Promise<boolean> {
+    async function verifyTOTP(code: string, opts?: { silent?: boolean }): Promise<boolean> {
         isLoading.value = true
         error.value = null
 
@@ -81,11 +81,15 @@ export function useTwoFactor() {
             // Refresh session to update user data
             await fetchSession()
 
-            toast.add({
-                title: t('common.success'),
-                description: t('twoFactor.enabled'),
-                color: 'success',
-            })
+            // The login challenge passes { silent }: the "2FA enabled" message is
+            // setup-only and would be misleading during sign-in.
+            if (!opts?.silent) {
+                toast.add({
+                    title: t('common.success'),
+                    description: t('twoFactor.enabled'),
+                    color: 'success',
+                })
+            }
 
             return true
         } catch (err) {
