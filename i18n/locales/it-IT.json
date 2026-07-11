@@ -1944,7 +1944,7 @@
           "heroTitlePart1": "Il matrimonio si gode.",
           "heroTitlePart2": "",
           "heroTitleMark": "La lista si delega",
-          "heroSub": "Da centocinquanta invitati in su, il problema non è la festa: è sapere chi c'è, cosa mangia e con chi arriva. Ceremly se ne occupa.",
+          "heroSub": "Da centocinquanta invitati in su, il problema non è la festa: è sapere chi c'è, cosa mangia e con chi arriva. Ceremly gestisce inviti e RSVP.",
           "heroPrimary": "Crea il tuo invito — gratis",
           "heroSecondary": "Invito d'esempio",
           "inviteDate": "12 · settembre · 2026",
@@ -2005,7 +2005,7 @@
           "heroTitlePart1": "Proclamazione alle 11.",
           "heroTitlePart2": "Lista chiusa",
           "heroTitleMark": "per pranzo",
-          "heroSub": "La data arriva all'improvviso e l'invito serve subito. Un link su WhatsApp, e in poche ore sai chi viene alla cerimonia e chi al brindisi.",
+          "heroSub": "La data arriva all'improvviso e l'invito con RSVP serve subito. Un link su WhatsApp, e in poche ore sai chi viene alla cerimonia e chi al brindisi.",
           "heroPrimary": "Crea il tuo invito — gratis",
           "heroSecondary": "Invito d'esempio",
           "inviteDate": "17 · luglio · 2026",
@@ -2066,7 +2066,7 @@
           "heroTitlePart1": "Famiglia allargata,",
           "heroTitlePart2": "numeri",
           "heroTitleMark": "precisi",
-          "heroSub": "Nonni, cugini, bambini al seguito: il battesimo è la festa dei numeri ballerini. Il ristorante invece li vuole esatti.",
+          "heroSub": "Nonni, cugini, bambini al seguito: il battesimo è la festa dei numeri ballerini. Il ristorante invece li vuole esatti — un invito con RSVP li dà.",
           "heroPrimary": "Crea il tuo invito — gratis",
           "heroSecondary": "Invito d'esempio",
           "inviteDate": "8 · marzo · 2026",
@@ -2127,7 +2127,7 @@
           "heroTitlePart1": "Basta sondaggi",
           "heroTitlePart2": "nel gruppo.",
           "heroTitleMark": "Un link",
-          "heroSub": "Per i compleanni che contano — i 18, i 40, i 70 — serve sapere chi viene davvero. Senza pollici alzati da interpretare.",
+          "heroSub": "Per i compleanni che contano — i 18, i 40, i 70 — serve un invito con RSVP, non pollici alzati da interpretare.",
           "heroPrimary": "Crea il tuo invito — gratis",
           "heroSecondary": "Invito d'esempio",
           "inviteDate": "21 · novembre · 2026",
@@ -2723,7 +2723,7 @@
     "home": {
       "seo": {
         "title": "Ceremly — Inviti digitali e RSVP intelligenti",
-        "description": "Smetti di rincorrere conferme su WhatsApp: un link, un invito digitale e una dashboard che ti dice chi viene davvero — per matrimoni, lauree, battesimi e compleanni."
+        "description": "Smetti di rincorrere conferme su WhatsApp: un link, un invito digitale e una dashboard che ti dice chi viene — per matrimoni, lauree, battesimi e compleanni."
       },
       "nav": {
         "ariaLabel": "Navigazione principale",

@@ -1944,7 +1944,7 @@
           "heroTitlePart1": "Enjoy the wedding.",
           "heroTitlePart2": "",
           "heroTitleMark": "Delegate the list",
-          "heroSub": "From a hundred and fifty guests up, the party isn't the problem: knowing who's coming, what they eat and who they're arriving with is. Ceremly handles it.",
+          "heroSub": "From a hundred and fifty guests up, the party isn't the problem: knowing who's coming, what they eat and who they're arriving with is. Ceremly handles invitations and RSVPs.",
           "heroPrimary": "Create your invite — free",
           "heroSecondary": "See a sample invite",
           "inviteDate": "12 · September · 2026",
@@ -2005,7 +2005,7 @@
           "heroTitlePart1": "Ceremony at 11.",
           "heroTitlePart2": "List closed",
           "heroTitleMark": "by lunch",
-          "heroSub": "The date lands out of nowhere and the invite is needed right away. One WhatsApp link, and within hours you know who's at the ceremony and who's at the toast.",
+          "heroSub": "The date lands out of nowhere and the RSVP invite is needed right away. One WhatsApp link, and within hours you know who's at the ceremony and who's at the toast.",
           "heroPrimary": "Create your invite — free",
           "heroSecondary": "See a sample invite",
           "inviteDate": "17 · July · 2026",
@@ -2066,7 +2066,7 @@
           "heroTitlePart1": "Extended family,",
           "heroTitlePart2": "exact",
           "heroTitleMark": "numbers",
-          "heroSub": "Grandparents, cousins, children in tow: the christening is the party of shifting numbers. The restaurant, though, wants them exact.",
+          "heroSub": "Grandparents, cousins, children in tow: the christening is the party of shifting numbers. The restaurant, though, wants them exact — an RSVP invite delivers.",
           "heroPrimary": "Create your invite — free",
           "heroSecondary": "See a sample invite",
           "inviteDate": "8 · March · 2026",
@@ -2127,7 +2127,7 @@
           "heroTitlePart1": "No more polls",
           "heroTitlePart2": "in the chat.",
           "heroTitleMark": "One link",
-          "heroSub": "For the birthdays that matter — the 18th, the 40th, the 70th — you need to know who's really coming. No thumbs-up to interpret.",
+          "heroSub": "For the birthdays that matter — the 18th, the 40th, the 70th — you need an invite with RSVP, not thumbs-up to interpret.",
           "heroPrimary": "Create your invite — free",
           "heroSecondary": "See a sample invite",
           "inviteDate": "21 · November · 2026",
@@ -2723,7 +2723,7 @@
     "home": {
       "seo": {
         "title": "Ceremly — Digital invitations and smart RSVPs",
-        "description": "Stop chasing confirmations on WhatsApp: one link, a digital invitation, and a dashboard that tells you who's really coming — for weddings, graduations, baptisms, and birthdays."
+        "description": "Stop chasing confirmations on WhatsApp: one link, a digital invitation, a dashboard that tells you who's coming — weddings, graduations, baptisms, birthdays."
       },
       "nav": {
         "ariaLabel": "Main navigation",

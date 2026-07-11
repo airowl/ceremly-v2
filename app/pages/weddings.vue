@@ -11,6 +11,7 @@ const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, 
 const seoTitle = t('ceremly.site.usecases.matrimoni.seoTitle')
 const seoDescription = t('ceremly.site.usecases.matrimoni.seoDescription')
 useSeoMeta({
+    titleTemplate: '',
     title: seoTitle,
     description: seoDescription,
     ogTitle: seoTitle,

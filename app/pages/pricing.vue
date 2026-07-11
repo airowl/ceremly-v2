@@ -18,6 +18,7 @@ const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, 
 const seoTitle = t('ceremly.site.prezzi.seoTitle')
 const seoDescription = t('ceremly.site.prezzi.seoDescription')
 useSeoMeta({
+    titleTemplate: '',
     title: seoTitle,
     description: seoDescription,
     ogTitle: seoTitle,
@@ -50,7 +51,7 @@ const faq = computed(() => (tm('ceremly.site.prezzi.faq') as Faq[]).map(x => ({ 
 <template>
     <div>
         <div class="cer-site-wrap" style="padding: 72px 0;">
-            <CerSitePricing />
+            <CerSitePricing title-tag="h1" />
         </div>
 
         <!-- comparison table -->

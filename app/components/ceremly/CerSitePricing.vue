@@ -3,6 +3,14 @@
 // index.vue to avoid duplication: the PrezziPage mockup renders <LandingPricing/>.
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 
+// titleTag: on the homepage this section sits below the hero <h1>, so the
+// section title must stay an <h2> (default). On the standalone /pricing page
+// there is no other heading before it, so pricing.vue passes "h1" to make
+// this the page's single <h1> (SEO fix — see docs/seo/SEO-AUDIT-2026-07-10.md §3.4).
+const props = withDefaults(defineProps<{ titleTag?: 'h1' | 'h2' }>(), {
+    titleTag: 'h2',
+})
+
 const { t } = useI18n()
 const localePath = useLocalePath()
 const { isActiveMode } = useSiteMode()
@@ -84,9 +92,9 @@ function tierTo(tier: Tier): string {
     <div class="cer-pricing">
         <div style="text-align: center; margin-bottom: 52px;">
             <span class="cer-tag" style="background: var(--wine-soft); color: var(--purple-ink); border-color: transparent; display: inline-flex;">{{ t('ceremly.home.nav.pricing') }}</span>
-            <h2 class="serif cer-pricing-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 12px; letter-spacing: -0.035em;">
+            <component :is="props.titleTag" class="serif cer-pricing-h2" style="font-weight: 800; line-height: 1.0; margin: 16px 0 12px; letter-spacing: -0.035em;">
                 <span style="color: var(--purple);">{{ t('ceremly.home.pricing.titleMark') }}</span>, {{ t('ceremly.home.pricing.titlePart1') }}<br>{{ t('ceremly.home.pricing.titlePart2') }}
-            </h2>
+            </component>
             <p style="font-size: 16px; color: var(--ink-700); max-width: 540px; margin: 0 auto; line-height: 1.6;">
                 {{ t('ceremly.home.pricing.subtitle') }}
             </p>
