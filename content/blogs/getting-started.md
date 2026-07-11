@@ -1,6 +1,7 @@
 ---
 title: "Getting Started: a quick development guide"
 description: "A technical setup guide: cloning the repository, configuring environment variables, and starting the dev server."
+cover: "/ogImage-en.png"
 date: "2026-01-15"
 tags:
   - development

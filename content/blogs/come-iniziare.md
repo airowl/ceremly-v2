@@ -1,6 +1,7 @@
 ---
 title: "Come iniziare: guida rapida per lo sviluppo"
 description: "Guida tecnica di avvio: clonare il repository, configurare le variabili d'ambiente e avviare il server di sviluppo."
+cover: "/ogImage-it.png"
 date: "2026-01-15"
 tags:
   - sviluppo

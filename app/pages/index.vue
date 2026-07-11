@@ -32,7 +32,6 @@ useSeoMeta({
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,
-    ogImage: `${baseUrl}/ogImage-it.png`,
     ogType: 'website',
 })
 

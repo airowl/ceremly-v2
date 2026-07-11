@@ -5,7 +5,6 @@ definePageMeta({ layout: 'public-site', auth: false })
 
 const { t, tm, rt } = useI18n()
 const runtimeConfig = useRuntimeConfig()
-const baseUrl = ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '')
 
 // Brand email: env-driven (outside i18n due to the '@' character)
 const privacyEmail = runtimeConfig.public.privacyEmail
@@ -18,7 +17,6 @@ useSeoMeta({
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,
-    ogImage: `${baseUrl}/ogImage-it.png`,
     ogType: 'website',
 })
 
