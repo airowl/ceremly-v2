@@ -117,6 +117,13 @@ useSchemaOrg([
         'keywords': article.value?.tags || [],
         'inLanguage': article.value?.locale === 'en' ? 'en-US' : 'it-IT',
     }),
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: `${baseUrl}${currentLocale.value === 'en' ? '/en' : ''}/` },
+            { name: t('landing.nav.blog'), item: `${baseUrl}${localePath('/blogs')}` },
+            { name: article.value?.title || '' },
+        ],
+    }),
 ])
 
 // Share

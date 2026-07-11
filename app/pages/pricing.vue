@@ -7,6 +7,7 @@ import CerSiteH2 from '~/components/ceremly/CerSiteH2.vue'
 import CerSiteCTA from '~/components/ceremly/CerSiteCTA.vue'
 import CerSitePricing from '~/components/ceremly/CerSitePricing.vue'
 import CerFaqGrid from '~/components/ceremly/CerFaqGrid.vue'
+import { CELEBRATION_PRICE_CENTS, ATELIER_PRICE_CENTS } from '~~/shared/constants/pricing'
 
 definePageMeta({ layout: 'public-site', auth: false })
 
@@ -28,6 +29,36 @@ useSeoMeta({
     ogType: 'website',
 })
 useAltHreflang()
+
+// Structured data: the three plans as Product offers (real prices from
+// shared/constants/pricing.ts — Free €0, Celebrazione €39 one-time, Atelier
+// €24/mo). Mirrors the AggregateOffer already on the homepage.
+useSchemaOrg([
+    defineProduct({
+        name: 'Ceremly',
+        description: seoDescription,
+        offers: [
+            defineOffer({
+                name: t('ceremly.site.prezzi.colFree'),
+                price: 0,
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+            }),
+            defineOffer({
+                name: t('ceremly.site.prezzi.colCeleb'),
+                price: CELEBRATION_PRICE_CENTS / 100,
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+            }),
+            defineOffer({
+                name: t('ceremly.site.prezzi.colAtelier'),
+                price: ATELIER_PRICE_CENTS / 100,
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+            }),
+        ],
+    }),
+])
 
 // Comparison table rows: each cell is "yes" / "no" / free text.
 interface Row { l: string, free: string, celeb: string, atelier: string }
