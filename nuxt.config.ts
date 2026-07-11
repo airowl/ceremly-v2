@@ -222,7 +222,7 @@ export default defineNuxtConfig({
     site: {
         url: process.env.NUXT_PUBLIC_BASE_URL || "",
         name: process.env.NUXT_PUBLIC_APP_NAME || "",
-        description: "",
+        description: "Inviti digitali e RSVP intelligenti per matrimoni, lauree, battesimi e compleanni.",
         defaultLocale: "it",
     },
 
