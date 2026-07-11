@@ -92,14 +92,30 @@ with the identity block.
 
 ### Fix 2 — BreadcrumbList on marketing pages
 
-New composable `app/composables/useCeremlyBreadcrumb.ts`: encapsulates `baseUrl`,
-locale, and the Home crumb; each page passes only its own trailing crumb(s). It wraps
-`useSchemaOrg([defineBreadcrumb({ itemListElement })])` following the blog pattern
-exactly (name + `item` absolute URL via `localePath`; the last crumb has no `item`).
+Declared **inline per page**, verbatim from the pattern `app/pages/legal/privacy.vue`
+already uses:
+
+```ts
+useSchemaOrg([
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
+```
+
+The `item: '/'` is a relative path that `nuxt-schema-org` resolves against `site.url`;
+the last crumb (page title) has no `item`. No `baseUrl`/`localePath` plumbing needed for
+a two-level trail. **No helper composable** — the block is 4 lines and matches exactly
+what the legal pages do; a helper would violate YAGNI and the "follow existing pattern"
+rule.
 
 Two-level trails (Home › Page) — these pages are all top-level in the nav:
 `features`, `weddings`, `baptisms`, `birthdays`, `graduations`, `wedding-planner`,
 `examples`, `templates`, `how-it-works`, `rsvp-guide`, `about`, `pricing`.
+(`pricing` and `how-it-works` receive their breadcrumb inside their own schema task.)
 
 (Legal pages already have breadcrumb — untouched. Blog already has it — untouched.)
 
@@ -153,8 +169,10 @@ with `pricing.vue`, prices from `shared/constants/pricing.ts`), and add `feature
    already-translated values via `t()`/`tm()` — no new keys with `@` are written →
    risk nil. (Still: if any existing FAQ answer contains a literal `@`, confirm the
    value resolves at build, not raw.)
-3. **Locale correctness.** Breadcrumb/FAQ must use `localePath` and the right
-   `inLanguage` (it-IT / en-US), as the blog does. Covered by the helper.
+3. **Locale correctness.** Two-level breadcrumbs use a relative `item: '/'` (resolved
+   against `site.url` per locale by `nuxt-schema-org`) and the last crumb has no
+   `item`, so no `localePath` is needed. FAQ/HowTo read already-localized `t()`/`rt()`
+   values, so they inherit the correct language. No manual `inLanguage` plumbing.
 4. **Prerender vs runtime.** All target pages are landing pages (SSR + prerender), so
    the JSON-LD lands in the static HTML. Dashboard/auth pages (`ssr: false`) are not
    touched and need no schema.
@@ -179,8 +197,10 @@ with `pricing.vue`, prices from `shared/constants/pricing.ts`), and add `feature
 ## Deliverables
 
 - Spec: this file.
-- New: `app/composables/useCeremlyBreadcrumb.ts`.
+- No new files (breadcrumb is inline per page).
 - Modified: `nuxt.config.ts`, `index.vue`, `pricing.vue`, `how-it-works.vue`,
-  + the breadcrumb pages (11 marketing pages listed in Fix 2; `pricing` and
-  `how-it-works` also receive breadcrumb, so they overlap the list above).
+  + 10 breadcrumb-only marketing pages (`features`, `templates`, `examples`,
+  `weddings`, `graduations`, `baptisms`, `birthdays`, `wedding-planner`,
+  `rsvp-guide`, `about`). `pricing` and `how-it-works` also get breadcrumb inside
+  their own schema change.
 - No migration, no endpoint, no new dependency.
