@@ -1,11 +1,11 @@
 ---
-title: "Getting Started: a quick development guide"
-description: "A technical setup guide: cloning the repository, configuring environment variables, and starting the dev server."
+title: "Getting started with Ceremly: your first invitation in 5 minutes"
+description: "A practical guide to creating your first digital invitation, sending each guest a personal link, and collecting RSVPs in one dashboard."
 cover: "/ogImage-en.png"
 date: "2026-01-15"
 tags:
-  - development
-  - technical-guide
+  - guide
+  - digital-invitations
 author: "The Team"
 featured: true
 published: true
@@ -15,17 +15,26 @@ translationSlug: "getting-started"
 
 ## Welcome
 
-This SaaS boilerplate gives you a multi-tenant foundation out of the box: organizations, teams, role-based access, subscriptions and authentication. You focus on your product; the infrastructure is already wired.
+Planning a private event shouldn't mean chasing people on WhatsApp, updating a spreadsheet by hand, and reaching the day before without really knowing who's coming. With Ceremly you create a digital invitation, send it with a personal link for each guest, and watch the confirmations arrive in real time. This guide walks you through getting started, step by step.
 
-## What's included
+## 1. Create your event
 
-- **Organizations & teams** — B2B-first tenancy with members, roles and invitations.
-- **Billing** — recurring subscriptions, plans and per-plan limits.
-- **Auth** — email/password, Google OAuth and two-factor authentication.
-- **Serverless by design** — Vercel deploy, Neon serverless database, HTTP work queues and managed cron.
+Pick the type of event — wedding, graduation, christening or birthday — and Ceremly gives you an invitation already tailored to the occasion: the right tone, fields and questions. Add the date, the venue and the details that matter. You can customise the colours and make it yours without touching a design tool.
 
-## Next steps
+## 2. Add your guest list
 
-Clone the repository, set `NUXT_PUBLIC_APP_NAME` and the rest of your environment variables, run the migrations and start the dev server. From there, replicate the example `projects` entity to model your own org-scoped resources.
+Add your guests with a name and a contact. For each one Ceremly generates a **personal link**: it pre-fills their name and tells you who opened the invitation and who hasn't replied yet. No more generic, one-size-fits-all forms.
 
-Happy shipping.
+## 3. Share the link
+
+Send the invitation however you like: Ceremly prepares personalised WhatsApp and email messages, ready to copy with one click. Your guests open the link and reply in under a minute — **no account to create, no app to download**. Built for the less tech-savvy guests too.
+
+## 4. Collect the replies
+
+RSVPs land in a single dashboard. You can ask conditional questions — allergies, menu preferences, plus-ones — that appear only when they're relevant. Automatic reminders take care of the people who forgot to answer, so you don't have to.
+
+## The payoff
+
+When it's time to give the numbers to your caterer or venue, everything is ready: who's actually coming, with how many people, and with what needs — exportable in one click. One tool, from the first invitation to the last confirmation.
+
+Create your first invitation — it's free, up to 30 guests, no credit card.
