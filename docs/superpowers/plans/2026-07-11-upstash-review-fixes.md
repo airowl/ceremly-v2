@@ -31,8 +31,10 @@
 - Test: `server/utils/drivers.strict.test.ts` (create)
 
 **Interfaces:**
-- Consumes: existing `getUpstashClient()` (module-private in `drivers.ts`).
-- Produces: `export const strictCacheClient` with `get(key: string): Promise<string | null>`, `set(key: string, value: string, ttl: number | undefined): Promise<void>`, `delete(key: string): Promise<void>`. NO in-memory fallback: on a missing Upstash client OR any Upstash error, it THROWS.
+- Consumes: existing `getUpstashClient()` (module-private in `drivers.ts`) and the existing `memoryCache` Map.
+- Produces: `export const strictCacheClient` with `get(key: string): Promise<string | null>`, `set(key: string, value: string, ttl: number | undefined): Promise<void>`, `delete(key: string): Promise<void>`. Failure model: **not-configured** (no Upstash url/token — i.e. local dev / single-instance self-host) → falls back to the same in-memory `memoryCache` as `cacheClient` (safe: no multi-instance split-brain possible when there's one process). **Configured-but-errored** (Upstash reachable in prod but a call throws) → the error PROPAGATES (fail-loud). Prod always has Upstash (it's in `REQUIRED_ENV`), so the memory fallback only ever runs in dev/self-host and the fail-loud path only ever runs in prod, exactly where multi-instance split-brain is the risk.
+
+> **Why the split:** `drivers.ts`'s header states dev/node-server uses an in-memory fallback, and `0.validate-env.ts` makes Upstash fatal only in production (dev = warning). A strict client that threw on *not-configured* would break login in local dev the moment `secondaryStorage` points at it (Task 3). Distinguishing not-configured from errored keeps dev working and still fails loud in prod.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -71,22 +73,22 @@ describe("strictCacheClient (fail-loud)", () => {
     clientRef.current = { get: getMock, set: setMock, del: delMock };
   });
 
-  it("returns the value on success", async () => {
+  it("returns the value on success (configured)", async () => {
     getMock.mockResolvedValueOnce("v");
     expect(await strictCacheClient.get("k")).toBe("v");
   });
 
-  it("THROWS on a get error instead of falling back to memory", async () => {
+  it("THROWS on a get error when Upstash IS configured (fail-loud in prod)", async () => {
     getMock.mockRejectedValueOnce(new Error("upstash down"));
     await expect(strictCacheClient.get("k")).rejects.toThrow("upstash down");
   });
 
-  it("THROWS on a set error", async () => {
+  it("THROWS on a set error when configured", async () => {
     setMock.mockRejectedValueOnce(new Error("upstash down"));
     await expect(strictCacheClient.set("k", "v", 60)).rejects.toThrow("upstash down");
   });
 
-  it("THROWS on a delete error", async () => {
+  it("THROWS on a delete error when configured", async () => {
     delMock.mockRejectedValueOnce(new Error("upstash down"));
     await expect(strictCacheClient.delete("k")).rejects.toThrow("upstash down");
   });
@@ -98,8 +100,18 @@ describe("strictCacheClient (fail-loud)", () => {
     await strictCacheClient.set("k", "v", undefined);
     expect(setMock).toHaveBeenCalledWith("k", "v");
   });
+
+  it("falls back to in-memory when Upstash is NOT configured (dev/self-host)", async () => {
+    clientRef.current = undefined; // getUpstashClient() returns undefined
+    await strictCacheClient.set("k", "v", 60);
+    expect(await strictCacheClient.get("k")).toBe("v"); // served from memory, no throw
+    await strictCacheClient.delete("k");
+    expect(await strictCacheClient.get("k")).toBeNull();
+  });
 });
 ```
+
+> The "not configured" test needs the runtimeConfig mock to yield no url/token for that case. Simplest: give `strictCacheClient` the same `getUpstashClient()` (which returns `undefined` when `clientRef.current` is falsy AND url/token absent). Since the mock forces `Redis` to return `clientRef.current`, setting it to `undefined` makes `getUpstashClient()` construct-then-return `undefined` — verify `getUpstashClient` guards on url/token FIRST (it does, `drivers.ts:20`), so also stub runtimeConfig with empty url/token in a nested `describe` if needed.
 
 > **Module-cache note:** `getUpstashClient()` memoizes `upstashClient` at module scope. Across tests in one file the stub persists, which is fine here (all tests use the same stubbed client via `clientRef.current`). If a later test needs a *different* client, use `vi.resetModules()` + dynamic `import()` inside that test. The `clientRef.current` indirection above lets each test swap behaviour without re-importing.
 
@@ -115,26 +127,37 @@ In `server/utils/drivers.ts`, add after the `cacheClient` object (after line 149
 ```typescript
 /**
  * Fail-LOUD Redis client for AUTHORITATIVE consumers (Better Auth session
- * store, site-mode kill-switch, job dedup markers). Unlike cacheClient it has
- * NO in-memory fallback: an Upstash error PROPAGATES. Rationale: for these
- * consumers a silent per-instance fallback is worse than an error — a session
- * read returning a phantom null triggers a fleet-wide logout, a "successful"
- * delete that didn't reach Redis reports a revocation that never happened, and
- * a lost dedup marker double-processes a job. Callers convert the throw into a
- * transient 500 / retry, which is the safe outcome.
- * NOTE: if Upstash is not configured (no url/token) this THROWS too — these
- * consumers must not run without a shared store.
+ * store, site-mode kill-switch, job dedup markers). Failure model:
+ *  - NOT configured (no Upstash url/token → dev / single-instance self-host):
+ *    falls back to the same in-memory `memoryCache` as cacheClient. Safe: with
+ *    one process there's no multi-instance split-brain.
+ *  - CONFIGURED but a call errors (prod Upstash blip): the error PROPAGATES.
+ *    For these consumers a silent per-instance fallback is worse than an error —
+ *    a session read returning a phantom null triggers a fleet-wide logout, a
+ *    "successful" delete that didn't reach Redis reports a revocation that never
+ *    happened, a lost dedup marker double-processes a job. Callers convert the
+ *    throw into a transient 500 / retry, which is the safe outcome.
+ * Prod always has Upstash (REQUIRED_ENV), so fail-loud runs only where a shared
+ * store exists and split-brain is possible; the memory fallback runs only in dev.
  */
 export const strictCacheClient = {
   get: async (key: string): Promise<string | null> => {
     const client = getUpstashClient();
-    if (!client) throw new Error(`[cache:strict] Upstash not configured; cannot get "${key}"`);
-    return await client.get<string>(key);
+    if (!client) {
+      // Not configured → dev/self-host memory path (no throw).
+      cleanExpiredMemoryCache();
+      const entry = memoryCache.get(key);
+      return entry && (!entry.expires || entry.expires > Date.now()) ? entry.value : null;
+    }
+    return await client.get<string>(key); // configured: errors propagate
   },
 
   set: async (key: string, value: string, ttl: number | undefined): Promise<void> => {
     const client = getUpstashClient();
-    if (!client) throw new Error(`[cache:strict] Upstash not configured; cannot set "${key}"`);
+    if (!client) {
+      memoryCache.set(key, { value, expires: ttl && ttl > 0 ? Date.now() + ttl * 1000 : undefined });
+      return;
+    }
     if (ttl != null && ttl > 0) {
       await client.set(key, value, { ex: ttl });
     } else {
@@ -144,7 +167,10 @@ export const strictCacheClient = {
 
   delete: async (key: string): Promise<void> => {
     const client = getUpstashClient();
-    if (!client) throw new Error(`[cache:strict] Upstash not configured; cannot delete "${key}"`);
+    if (!client) {
+      memoryCache.delete(key);
+      return;
+    }
     await client.del(key);
   },
 };
@@ -350,7 +376,37 @@ In `server/utils/siteMode.ts` line 18, change the import:
 import { strictCacheClient } from "./drivers";
 ```
 
-Replace all four `cacheClient.` occurrences (lines 46, 60, 66, 79) with `strictCacheClient.`. The existing `catch` blocks in `getServerSiteMode` (line 50-52) and `getSiteModeStatus` (line 81-83) now genuinely fire on an Upstash error and preserve the safe value — leave the catch bodies as-is (they keep env/override:null, which is correct). NOTE: `setServerSiteMode` and `clearServerSiteModeOverride` have NO catch → the throw propagates to the admin endpoint, which is the desired "no false success".
+Replace all four `cacheClient.` occurrences (lines 46, 60, 66, 79) with `strictCacheClient.`. NOTE: `setServerSiteMode` and `clearServerSiteModeOverride` have NO catch → the throw propagates to the admin endpoint, which is the desired "no false success".
+
+**Reader fix (#5 — don't silently un-maintenance on a READ error):** in `getServerSiteMode`, the current catch returns `envSiteMode()` on error. During an Upstash outage that silently reverts a `maintenance` override to env (possibly `active`) — the exact invariant the docstring forbids. Change the catch to **hold the last-known memo** if one exists, only falling to env if there's no memo yet:
+
+```typescript
+export async function getServerSiteMode(): Promise<SiteMode> {
+    const now = Date.now();
+    if (cached && now - cached.at < CACHE_TTL_MS) {
+        return cached.mode;
+    }
+
+    let mode = envSiteMode();
+    try {
+        const override = await strictCacheClient.get(SITE_MODE_OVERRIDE_KEY);
+        if (override) {
+            mode = resolveSiteMode(override);
+        }
+    } catch {
+        // Upstash unreachable on READ: do NOT silently drop to env (would lift
+        // maintenance mid-incident). Hold the last-known mode if we have one.
+        if (cached) return cached.mode;
+        // No prior memo → keep env value (safe: never forces "active" over a
+        // known override, because there is no known override yet).
+    }
+
+    cached = { mode, at: now };
+    return mode;
+}
+```
+
+`getSiteModeStatus` keeps `override: null` on error (it's a diagnostic read, and reporting "unknown/null" is acceptable there) — leave its catch as-is.
 
 In `server/utils/auth.ts` line 15, change the drivers import. At THIS point in the plan `cacheClient` is still referenced by the `rateLimit` block (until Task 10 relaxes it) — but Task 10 replaces the `/sign-in/email` rule with the catch-all guard and does NOT reference `cacheClient` inside `auth.ts`. So after Task 3, `cacheClient` becomes unused in `auth.ts`. To avoid a typecheck error, import ONLY `strictCacheClient` here and let Task 10 add its own import in `[...all].ts`:
 
@@ -363,6 +419,8 @@ Line 179, change:
 ```typescript
         secondaryStorage: strictCacheClient,
 ```
+
+> **CRITICAL — only the SESSION store goes strict, NOT the rate limiter.** Better Auth's `rateLimit.storage: "secondary-storage"` reuses this SAME `secondaryStorage` adapter, and its call site (`api-CkmycQ2x.mjs:320-321`) has NO try/catch — so if the rate limiter used `strictCacheClient`, an Upstash blip would 500 every `/api/auth/*` request, contradicting spec §5.2 (rate-limit must fail-soft). Task 10 fixes this by moving the limiter OFF `secondary-storage` onto an explicit fail-soft `customStorage`. Until Task 10 lands, `secondaryStorage = strictCacheClient` means the BA limiter is temporarily fail-loud — acceptable in the interim (dev has the memory fallback; prod rarely blips), and Task 10 is the immediate next cluster. Do Task 10 in the same batch as Task 3 if possible.
 
 > If `pnpm typecheck` reports `cacheClient` unused after this edit, that confirms the import change above is correct (it was only feeding `secondaryStorage`). If it reports `cacheClient` STILL used, grep `auth.ts` for the remaining reference and keep `cacheClient` in the import.
 
@@ -476,9 +534,13 @@ git commit -m "fix(auth): treat missing user row as revoked in isUserBannedFresh
 - Consumes: `isUserBannedFresh` (Task 4), the Better Auth session available in the hook context.
 - Produces: a `before` middleware that, for a request carrying a session, calls `isUserBannedFresh(session.user.id)` and throws `APIError("UNAUTHORIZED")` if banned — so a banned user with a failed Redis revocation can't use org/invite/change-email endpoints.
 
-- [ ] **Step 1: Read the current hooks block and Better Auth middleware API**
+- [ ] **Step 1: Read the current hooks block AND verify the load-bearing assumption**
 
-Read `server/utils/auth.ts:267-357` (the `hooks.after` block) and confirm the `createAuthMiddleware` import (line 5). A `before` hook uses the same `createAuthMiddleware` wrapper. Read how `ctx.context.session` is populated in a `before` hook (Better Auth resolves the session before `before` runs for authenticated routes).
+Read `server/utils/auth.ts:267-357` (the `hooks.after` block) and confirm the `createAuthMiddleware` import (line 5). A `before` hook uses the same `createAuthMiddleware` wrapper.
+
+**Load-bearing check (this fix silently no-ops if wrong):** confirm in `node_modules/better-auth/dist/` that a `hooks.before` middleware receives a populated `ctx.context.session` for authenticated endpoints. Grep the middleware-execution path: does BA resolve the session BEFORE running `hooks.before`, or only inside individual endpoints? If `ctx.context.session` is NOT populated in `before`, this approach can't gate on the session — fall back to gating in the catch-all `[...all].ts` (read the resolved session via `getAuthSession(event)` before `serverAuth.handler`, and 403 if `isSessionBanned`). Document which path the source supports before implementing.
+
+**Second check — don't break sign-out for a banned user:** a banned user must still be able to hit `/sign-out` (and `/get-session` returning null is fine). If the `before` hook throws UNAUTHORIZED on ALL auth paths, a banned user can't sign out. Scope the gate to the org/mutation endpoints (or exclude `/sign-out`, `/get-session`). Note the exact path-scoping in the implementation.
 
 - [ ] **Step 2: Write the failing test (helper-level)**
 
@@ -546,6 +608,10 @@ Create `server/utils/authBanGate.ts` as above. In `server/utils/auth.ts`, add a 
                 // excludes /api/auth/* from the app-level ban re-check, and the
                 // catch-all calls serverAuth.handler directly. Redis revocation
                 // can fail silently, so re-check the DB (source of truth).
+                // EXCLUDE sign-out / get-session so a banned user can still log
+                // out and the session probe returns cleanly.
+                const EXEMPT = ["/sign-out", "/get-session"];
+                if (EXEMPT.includes(ctx.path)) return;
                 const userId = ctx.context.session?.user?.id;
                 if (await isSessionBanned(userId)) {
                     throw new APIError("UNAUTHORIZED", { message: "Account suspended" });
@@ -556,6 +622,8 @@ Create `server/utils/authBanGate.ts` as above. In `server/utils/auth.ts`, add a 
 ```
 
 Add the import near line 15: `import { isSessionBanned } from "./authBanGate";`
+
+> If Step 1 found that `ctx.context.session` is NOT populated in `before`, DO NOT use this hook. Instead, in `server/api/auth/[...all].ts` before `serverAuth.handler`: resolve `const session = await getAuthSession(event)` (already does the app-level fresh-ban check) and, for non-exempt org/mutation paths, `throw createError({ statusCode: 403 })` if the session is null due to a ban. Pick the path the source supports.
 
 - [ ] **Step 5: Run tests + typecheck**
 
@@ -841,8 +909,8 @@ git commit -m "fix(webhook): DB unique-index idempotency for email_events; skip 
 - Test: `server/api/jobs/jobDedupe.test.ts` (test the claim/release logic via an extracted helper)
 
 **Interfaces:**
-- Consumes: `strictCacheClient` (Task 1), the `@upstash/redis` `set(key, val, { nx: true, ex })` option.
-- Produces: an extracted helper `claimJob(messageId): Promise<boolean>` (true = claim won) and `releaseJob(messageId): Promise<void>`, used so a job that throws releases its claim (preserving intentional retry-on-throw).
+- Consumes: `strictCacheClient` (Task 1), the `@upstash/redis` `set(key, val, { nx: true, ex })` option (verified: returns `"OK"` on create, `null` when the key exists — `chunk-2X4SLXT7.mjs:305`).
+- Produces: `claimJob(messageId): Promise<boolean>` (true = claim won), `releaseJob(messageId): Promise<void>` (release on throw → same message retried), `finalizeJob(messageId): Promise<void>` (extend TTL after success → late retries deduped). A lost claim makes the route return a retryable non-2xx (425), NOT 200 — see the two-phase note.
 
 - [ ] **Step 1: Read the current dedup block**
 
@@ -933,7 +1001,7 @@ export async function releaseJob(messageId: string): Promise<void> {
 Rewrite the dedup block in `server/api/jobs/[job].post.ts` (lines ~72-94). Remove the `JOB_DEDUPE_TTL_SECONDS` const (line 8) and the `cacheClient` import if now unused; import the helpers:
 
 ```typescript
-import { claimJob, releaseJob } from './jobDedupe'
+import { claimJob, releaseJob, finalizeJob } from './jobDedupe'
 ```
 
 Replace the get-then-set flow:
@@ -941,11 +1009,23 @@ Replace the get-then-set flow:
 ```typescript
   const messageId = getHeader(event, 'upstash-message-id')
 
-  // Atomic at-most-once claim (SET NX): overlapping redeliveries of the same
-  // message-id can't both win. A claim that wins but whose job THROWS is
-  // released, so QStash's retry re-runs it (preserves intentional retry-on-throw).
-  if (messageId && !(await claimJob(messageId))) {
-    return { ok: true, deduped: true }
+  // Atomic claim (SET NX) sized to the QStash retry window. Three outcomes:
+  //  - claim WON        → run the job.
+  //  - claim LOST       → a concurrent delivery is ALREADY running this message.
+  //                       Return a NON-2xx so QStash retries LATER (after the
+  //                       in-flight attempt has set the durable state), NOT a
+  //                       200 — a 200 would ack the message and, if the running
+  //                       attempt then crashes, the work would be LOST. This is
+  //                       the two-phase choice: never turn a concurrent race into
+  //                       at-most-zero.
+  //  - job THROWS       → release the claim so the SAME message is retried.
+  //  - job COMPLETES    → finalize (extend TTL) so late retries are deduped.
+  if (messageId) {
+    const won = await claimJob(messageId)
+    if (!won) {
+      // 409-ish: tell QStash to retry later; the twin is in flight.
+      throw createError({ statusCode: 425, statusMessage: 'Job in progress, retry later' })
+    }
   }
 
   let payload
@@ -963,9 +1043,20 @@ Replace the get-then-set flow:
     if (messageId) await releaseJob(messageId)
     throw err
   }
+  if (messageId) await finalizeJob(messageId)
 ```
 
-> Note: the claim now happens BEFORE payload parse; a parse failure releases the claim so a fixed redeploy can reprocess. The success path leaves the key in place for `JOB_LEASE_SECONDS`.
+> **Why 425 (not 200) on claim-loss.** The old code returned `{ deduped: true }` (200) whenever the key was present. With a claim-lease, the key present means "a twin is running RIGHT NOW" — its durable outcome isn't known yet. Returning 200 acks the message; if that twin then crashes, QStash never retries and the job is lost (worse than the double-run it replaced). Returning a retryable non-2xx (425 Too Early / 409) makes QStash retry after backoff, by which time either the twin finished (the finalized key dedups the retry cleanly) or it crashed-and-released (the retry re-runs). Net: at-least-once preserved, duplicates collapsed. Note: idempotent email jobs (invite via Task 6's Resend key, reminder via 0166dab's key) are ALSO protected at the email layer, so even a rare double-run there sends one email.
+
+Update `jobDedupe.ts` to add `finalizeJob` (extends the claim to the full dedup TTL after success):
+
+```typescript
+export async function finalizeJob(messageId: string): Promise<void> {
+  // Re-assert the key with the full dedup TTL so a late QStash retry (after the
+  // job already succeeded) is deduped rather than re-run.
+  await strictCacheClient.set(`job:dedupe:${messageId}`, 'done', JOB_LEASE_SECONDS);
+}
+```
 
 - [ ] **Step 5: Finalize the test**
 
@@ -982,130 +1073,154 @@ git commit -m "fix(queue): atomic SET NX job claim-lease with release-on-throw (
 
 ---
 
-## Cluster 3 — Rate-limit atomic (#4)
+## Cluster 3 — Rate-limit atomic + fail-soft isolation (#4)
 
-### Task 10: Atomic rate limiting for `/sign-in/email` via Better Auth `customRules` storage
+### Task 10: Better Auth `rateLimit.customStorage` on the atomic INCR primitive (fail-soft)
+
+This task does DOUBLE duty: (a) makes the limiter atomic (fixes #4 — the get→set race), and (b) moves the limiter OFF `secondaryStorage` (now strict) onto an explicit fail-soft store, so an Upstash blip does NOT 500 every `/api/auth/*` request (resolves the Task 3 interaction with spec §5.2).
+
+**Verified interface** (`api-CkmycQ2x.mjs:262`): `getRateLimitStorage` returns `ctx.options.rateLimit.customStorage` when set — so BA supports a custom storage with `get(key) → {count, lastRequest} | undefined` and `set(key, value, isUpdate)`. The default `secondary-storage` adapter (lines 265-273) does NON-atomic get→set with NO try/catch at the call site (lines 320-321) → both the race (#4) and the strict-throw-500 problem. A custom storage backed by the atomic `cacheClient.increment` fixes both.
 
 **Files:**
-- Modify: `server/utils/auth.ts` (`rateLimit` block lines 187-200)
-- Test: `server/utils/authRateLimit.test.ts` (test the custom storage adapter's atomicity)
+- Create: `server/utils/authRateLimitStorage.ts` (the custom storage adapter)
+- Modify: `server/utils/auth.ts` (`rateLimit` block lines 187-200 — add `customStorage`, keep `customRules`)
+- Test: `server/utils/authRateLimitStorage.test.ts`
 
 **Interfaces:**
-- Consumes: `cacheClient.increment` (the atomic INCR_WINDOW_LUA primitive — fail-soft is correct here; a rate-limit blip must fail-open, not block logins).
-- Produces: a Better Auth-compatible rate-limit storage backed by `cacheClient.increment`, so parallel `/sign-in/email` requests are counted atomically.
+- Consumes: `cacheClient.increment(key, windowSeconds)` (atomic INCR_WINDOW_LUA; fail-soft is correct — a rate-limit outage must fail-open, not block logins).
+- Produces: `createRateLimitStorage()` returning `{ get, set }` matching BA's shape, where the true per-key count comes from an atomic INCR keyed by the request key. Parallel `/sign-in/email` hits are counted race-free.
 
-- [ ] **Step 1: Confirm Better Auth's rate-limit custom storage interface**
+> **Design note on adapting an atomic counter to BA's get/set shape.** BA calls `get(key)` then, if under the limit, `set(key, {count, lastRequest})`. We can't make BA's two-call flow atomic from outside, BUT we can make the COUNT authoritative: have `set` perform the atomic `cacheClient.increment` (which both increments and returns the true shared count) and have `get` read that count back. Concretely, model each key's window with a single INCR: `get` returns `{ count: <current>, lastRequest: <stored> }`; `set` does the INCR. Because `increment` is atomic, concurrent requests each get a distinct incremented value, so `shouldRateLimit(max, window, {count})` sees the real count and no over-admission occurs. Store `lastRequest` alongside via a second key or fold it into the value. Keep it minimal — the load-bearing property is the atomic count.
 
-Read `node_modules/better-auth/dist/` for the rate-limit storage contract: grep for `customStorage` / `rateLimit` storage shape (the interface expects `get(key)` / `set(key, value)` returning a `{ count, lastRequest }`-style record, OR a custom increment). Confirm whether BA 1.4.x supports a custom atomic counter or only get/set. Document the exact interface found before implementing.
+- [ ] **Step 1: Re-read the BA storage contract to lock the exact shape**
 
-> Decision gate: if BA's storage is strictly get/set (no atomic hook), a faithful atomic fix is NOT possible through `customStorage` alone — fall to the catch-all front-door variant (Step 4b). If BA exposes a counter hook, use it (Step 4a). Pick based on what the source actually exposes.
+Read `api-CkmycQ2x.mjs:260-345` (in context above): confirm `get` returns `undefined` or `{ key, count, lastRequest }`, `set(key, value, isUpdate?)`, and `shouldRateLimit(max, window, data)` reads `data.count` + `data.lastRequest`. Lock the value shape you'll store.
 
-- [ ] **Step 2: Write the failing test (atomic counter adapter)**
+- [ ] **Step 2: Write the failing test**
 
-Create `server/utils/authRateLimit.test.ts`:
+Create `server/utils/authRateLimitStorage.test.ts`:
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { incrMock, store } = vi.hoisted(() => {
+const { incrMock, getMock, setMock, store } = vi.hoisted(() => {
   const store = new Map<string, number>();
   return {
     store,
     incrMock: vi.fn(async (key: string, _ttl: number, by = 1) => {
       const n = (store.get(key) ?? 0) + by; store.set(key, n); return n;
     }),
+    getMock: vi.fn(async (key: string) => {
+      const v = store.get(key); return v === undefined ? null : String(v);
+    }),
+    setMock: vi.fn(),
   };
 });
-vi.mock("./drivers", () => ({ cacheClient: { increment: incrMock } }));
+vi.mock("./drivers", () => ({ cacheClient: { increment: incrMock, get: getMock, set: setMock } }));
 
-import { signInRateLimited } from "./authRateLimit";
+import { createRateLimitStorage } from "./authRateLimitStorage";
 
-describe("signInRateLimited (atomic)", () => {
+describe("BA rate-limit custom storage (atomic)", () => {
   beforeEach(() => { store.clear(); vi.clearAllMocks(); });
 
-  it("blocks after 3 hits in the 10s window, even for parallel calls", async () => {
-    const ip = "1.2.3.4";
-    const results = await Promise.all(
-      Array.from({ length: 5 }, () => signInRateLimited(ip)),
+  it("counts parallel hits atomically (no over-admission past the window)", async () => {
+    const s = createRateLimitStorage();
+    const key = "1.2.3.4/sign-in/email";
+    // Simulate BA's set-on-each-request; run 5 in parallel.
+    const counts = await Promise.all(
+      Array.from({ length: 5 }, async () => {
+        await s.set(key, { key, count: 0, lastRequest: 1 });
+        const d = await s.get(key);
+        return d?.count ?? 0;
+      }),
     );
-    // First 3 allowed, rest blocked — atomic INCR guarantees no over-admission.
-    expect(results.filter((blocked) => !blocked)).toHaveLength(3);
-    expect(results.filter((blocked) => blocked)).toHaveLength(2);
+    // Atomic INCR → the 5 observed counts are distinct 1..5, never all 1.
+    expect(new Set(counts).size).toBe(5);
+    expect(Math.max(...counts)).toBe(5);
   });
 });
 ```
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `pnpm vitest run server/utils/authRateLimit.test.ts`
-Expected: FAIL — `authRateLimit.ts` / `signInRateLimited` does not exist.
+Run: `pnpm vitest run server/utils/authRateLimitStorage.test.ts`
+Expected: FAIL — `authRateLimitStorage.ts` does not exist.
 
-- [ ] **Step 4a: Implement (preferred — front-door guard in the catch-all)**
+- [ ] **Step 4: Implement the custom storage**
 
-Given the decision gate, the robust and BA-version-independent implementation is a front-door check on the atomic primitive. Create `server/utils/authRateLimit.ts`:
+Create `server/utils/authRateLimitStorage.ts`:
 
 ```typescript
 import { cacheClient } from "./drivers";
 
-const SIGNIN_WINDOW_SECONDS = 10;
-const SIGNIN_MAX = 3;
-
 /**
- * Atomic sign-in brute-force guard, backed by cacheClient.increment
- * (INCR_WINDOW_LUA, single round-trip). Returns true if the request should be
- * BLOCKED. Fail-soft is correct here: a rate-limit outage must fail-open, not
- * lock everyone out of login. Replaces Better Auth's non-atomic get→set limiter
- * for this one brute-force-sensitive path.
+ * Better Auth rate-limit custom storage backed by the ATOMIC INCR primitive
+ * (cacheClient.increment / INCR_WINDOW_LUA), fixing two problems with the
+ * default "secondary-storage" adapter:
+ *  1. it does a NON-atomic get→set → parallel requests over-admit (#4);
+ *  2. it reuses `secondaryStorage`, which is now strictCacheClient → an Upstash
+ *     blip would 500 every /api/auth/* request. This storage uses fail-soft
+ *     cacheClient (a rate-limit outage must fail OPEN, not block logins).
+ *
+ * BA calls get(key) then set(key,value,isUpdate) per request. We make the COUNT
+ * authoritative via the atomic INCR in set(); get() reads the current count so
+ * shouldRateLimit() sees the true shared value. lastRequest is stored under a
+ * side key so window-reset logic keeps working.
  */
-export async function signInRateLimited(ip: string): Promise<boolean> {
-  const count = await cacheClient.increment(`rl:auth-signin:${ip}`, SIGNIN_WINDOW_SECONDS);
-  return count > SIGNIN_MAX;
+export function createRateLimitStorage() {
+  return {
+    get: async (key: string): Promise<{ key: string; count: number; lastRequest: number } | undefined> => {
+      const countRaw = await cacheClient.get(`rl:ba:${key}:c`);
+      if (countRaw == null) return undefined;
+      const lastRaw = await cacheClient.get(`rl:ba:${key}:t`);
+      return { key, count: Number.parseInt(countRaw, 10) || 0, lastRequest: lastRaw ? Number.parseInt(lastRaw, 10) : 0 };
+    },
+    set: async (key: string, value: { count: number; lastRequest: number }, _isUpdate?: boolean): Promise<void> => {
+      // Window seconds inferred from BA's set TTL is not passed here; use a
+      // conservative window matching the tightest custom rule (10s for sign-in,
+      // 60s otherwise). BA also enforces max separately, so slight window skew
+      // only affects reset timing, not the atomic count.
+      const windowSeconds = 60;
+      // Atomic increment is the authoritative count; ignore value.count.
+      await cacheClient.increment(`rl:ba:${key}:c`, windowSeconds);
+      await cacheClient.set(`rl:ba:${key}:t`, String(value.lastRequest), windowSeconds);
+    },
+  };
 }
 ```
 
-Wire it in `server/api/auth/[...all].ts`, before delegating to `serverAuth.handler`, only for the sign-in path:
+> **Window caveat, stated explicitly (no silent cap):** BA's custom-storage `set` signature does not pass the per-rule window, so this adapter uses a fixed 60s TTL on the count key. Effect: the `/sign-in/email` rule (BA window 10s) is enforced by BA's `max=3` against a count that expires after 60s rather than 10s — i.e. slightly STRICTER reset (safe direction for brute-force). If exact per-rule windows are required, encode the window into the key prefix per rule. Documented here rather than hidden.
 
-```typescript
-    const path = getRequestURL(event).pathname;
-    // Atomic brute-force guard on the sign-in path (BA's own limiter is a
-    // non-atomic get→set, bypassable in parallel). Global BA rateLimit still
-    // covers the coarse 100/min.
-    if (path.endsWith("/sign-in/email")) {
-        const { getClientIp } = await import("~~/server/utils/clientIp");
-        if (await signInRateLimited(getClientIp(event))) {
-            throw createError({ statusCode: 429, statusMessage: "Too many attempts. Please wait." });
-        }
-    }
-```
-
-Then RELAX the `auth.ts` `customRules` for `/sign-in/email` so BA's non-atomic limiter no longer double-counts the same path (keep the other custom rules):
+In `server/utils/auth.ts`, add `customStorage` to the `rateLimit` block (keep `storage` and `customRules`):
 
 ```typescript
         rateLimit: {
             storage: "secondary-storage",
+            customStorage: createRateLimitStorage(),
             window: 60,
             max: 100,
             customRules: {
-                // /sign-in/email is now guarded atomically in the catch-all
-                // (server/utils/authRateLimit.ts); leave it to the global rule here.
+                "/sign-in/email": { window: 10, max: 3 },
                 "/request-password-reset": { window: 60, max: 5 },
                 "/reset-password": { window: 60, max: 10 },
             },
         },
 ```
 
-> If Step 1 found a clean BA atomic-counter hook, use 4b instead: implement `customStorage` calling `cacheClient.increment` and keep the `/sign-in/email` custom rule. Prefer whichever the source supports without hacks; 4a is the safe default.
+Add the import: `import { createRateLimitStorage } from "./authRateLimitStorage";`
+
+> Note: with `customStorage` set, BA ignores `storage: "secondary-storage"` (the `getRateLimitStorage` early-return at line 262 wins), so the limiter no longer touches `strictCacheClient` → the Task 3 interaction is resolved: sessions are strict, the limiter is fail-soft.
 
 - [ ] **Step 5: Run test + typecheck**
 
-Run: `pnpm vitest run server/utils/authRateLimit.test.ts` → PASS.
+Run: `pnpm vitest run server/utils/authRateLimitStorage.test.ts` → PASS.
 Run: `pnpm typecheck` → green.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add server/utils/authRateLimit.ts server/utils/auth.ts "server/api/auth/[...all].ts"
-git commit -m "fix(auth): atomic sign-in rate limit via INCR primitive (parallel bypass fix)"
+git add server/utils/authRateLimitStorage.ts server/utils/auth.ts server/utils/authRateLimitStorage.test.ts
+git commit -m "fix(auth): atomic + fail-soft rate-limit customStorage (parallel bypass; keep limiter off strict store)"
 ```
 
 ---
@@ -1425,20 +1540,16 @@ Expected: no external consumers. If any exist, leave that item and note it.
 
 `server/utils/runtimeConfig.ts` — delete the `githubClientId`, `githubClientSecret` (lines ~30-31) and `openaiApiKey` (line ~53) keys and any matching `.env` runtime mapping.
 
-`server/utils/siteMode.ts` — extract the duplicated override-read into one function and use it in `getServerSiteMode` and `getSiteModeStatus`:
+`server/utils/siteMode.ts` — **do NOT extract a shared `readOverride` that swallows errors**: after Task 3, `getServerSiteMode` and `getSiteModeStatus` have DIFFERENT error policies (reader holds last-known memo; diagnostic returns null). A shared error-swallowing helper would re-introduce bug #5 in the reader. Instead, extract only the pure parse (no try/catch):
 
 ```typescript
-/** Reads the runtime override (strict storage); null when unset or on error. */
-async function readOverride(): Promise<SiteMode | null> {
-  try {
-    const raw = await strictCacheClient.get(SITE_MODE_OVERRIDE_KEY);
-    return raw ? resolveSiteMode(raw) : null;
-  } catch {
-    return null; // Redis down → treat as no override; caller keeps the safe value
-  }
+/** Parses a raw override value; null when absent. Does NOT catch — callers
+ *  own their Upstash-error policy (reader holds memo, diagnostic returns null). */
+function parseOverride(raw: string | null): SiteMode | null {
+  return raw ? resolveSiteMode(raw) : null;
 }
 ```
-Replace the inline blocks in `getServerSiteMode` (lines 44-52) and `getSiteModeStatus` (lines 78-83) with `const override = await readOverride();` and use it. NOTE: this changes `getServerSiteMode`'s failure behaviour slightly — currently the catch keeps `envSiteMode()`; with `readOverride` returning null on error, `mode` stays `envSiteMode()` too (equivalent). Confirm the tests from Task 3 still pass.
+Use `parseOverride(await strictCacheClient.get(SITE_MODE_OVERRIDE_KEY))` inside each function's own try/catch, keeping the distinct catch bodies from Task 3. This removes the duplicated `raw ? resolveSiteMode(raw) : null` expression without touching error policy. Confirm the Task 3 tests still pass.
 
 `server/services/file/rateLimiter.ts` — delete the `getCurrentCount` method (lines 40-44).
 
