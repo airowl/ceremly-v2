@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/nuxt.config.ts": {
-    "mtime": 1783774277.7585254,
-    "ast_hash": "cd19be530668f27fd4f4efc9824d9aa1",
+    "mtime": 1783778998.1569939,
+    "ast_hash": "bdb813c9d46c06e14d4ccb262e358c42",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/tsconfig.json": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/pricing.vue": {
-    "mtime": 1783776309.3632426,
-    "ast_hash": "2493210c333b64bd8f433e3d0ccc7305",
+    "mtime": 1783779091.3756847,
+    "ast_hash": "20794963c53f1ed18d7ba61fe3e6f3df",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/maintenance.vue": {
@@ -585,8 +585,8 @@
     "semantic_hash": "43e27bb0102832d1722f91f0b7df1ff0"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/blogs/[slug].vue": {
-    "mtime": 1782733302.1803155,
-    "ast_hash": "aaee17903bbca95a2f420f08752a9f80",
+    "mtime": 1783779158.3250968,
+    "ast_hash": "9a7775acac77c725e5f4288d4e024665",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/auth/callback.vue": {
@@ -675,28 +675,28 @@
     "semantic_hash": "87a21f2cfe76f8ea773d07272189ecf4"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/legal/dpa.vue": {
-    "mtime": 1783776382.8467479,
-    "ast_hash": "2388ed47db0e691e4f203b61bb2ff071",
+    "mtime": 1783779417.7176254,
+    "ast_hash": "d8bb5cc504e325f011cf18765978ba0f",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/legal/cookie.vue": {
-    "mtime": 1783776381.7061715,
-    "ast_hash": "0030f9998d73d5867273c7a20be6fd7c",
+    "mtime": 1783779439.0368288,
+    "ast_hash": "728a0221485b3a85865aee31c0094b15",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/legal/privacy.vue": {
-    "mtime": 1783776378.8070054,
-    "ast_hash": "dd2e8960ceb9871c2b0d4c84e8628eef",
+    "mtime": 1783779409.1162386,
+    "ast_hash": "ab888e378493dfe350616312578d4649",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/legal/subprocessors.vue": {
-    "mtime": 1783776384.0374293,
-    "ast_hash": "758b4c6889193d0ce0f9c165a1e31f52",
+    "mtime": 1783779430.038717,
+    "ast_hash": "53dc808cf8a5e31e045d4d082c52dce2",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/app/pages/legal/tos.vue": {
-    "mtime": 1783776380.2847297,
-    "ast_hash": "be46e3c7fb1ac8a434d999ababc0ee6b",
+    "mtime": 1783779293.6127899,
+    "ast_hash": "76220be504fa4ce580aaa17442464ff5",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/test/setup.ts": {
@@ -2595,13 +2595,13 @@
     "semantic_hash": "46bd7e89b5fb87ad08df317e02dd224e"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/content/blogs/getting-started.md": {
-    "mtime": 1783775132.6117618,
-    "ast_hash": "a1fcf4ad1c7cd21c2da3d1e1e09db93a",
+    "mtime": 1783778966.5768535,
+    "ast_hash": "1cabf61569c2a37f5d675c638189ac08",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/content/blogs/come-iniziare.md": {
-    "mtime": 1783775131.433205,
-    "ast_hash": "401682449d54ee174e1c836682f93738",
+    "mtime": 1783778954.4643044,
+    "ast_hash": "3a3a39e01240488adb1e8ec0e6b86953",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/utils/requirements.md": {
@@ -3510,8 +3510,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/docs/seo/SEO-AUDIT-2026-07-10.md": {
-    "mtime": 1783700254.6356726,
-    "ast_hash": "2a0686916d7aa6b549f6238506874ea6",
+    "mtime": 1783779848.1529694,
+    "ast_hash": "3c974d94d8b2d08fb94142fe3d25744a",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/docs/superpowers/plans/2026-07-11-ai-seo.md": {
@@ -3592,6 +3592,26 @@
   "/Users/airowlgasga/coding/project/ceremly-v2/.superpowers/sdd/b2b-report.md": {
     "mtime": 1783774091.595068,
     "ast_hash": "aa1828c911a592f9fff664ee73791dda",
+    "semantic_hash": ""
+  },
+  "/Users/airowlgasga/coding/project/ceremly-v2/docs/superpowers/plans/2026-07-11-qstash-failure-visibility.md": {
+    "mtime": 1783779610.4012394,
+    "ast_hash": "7e5eefb05edea3634ffb44e761f1cf3d",
+    "semantic_hash": ""
+  },
+  "/Users/airowlgasga/coding/project/ceremly-v2/docs/superpowers/specs/2026-07-11-upstash-review-fixes-design.md": {
+    "mtime": 1783779752.682717,
+    "ast_hash": "4e3a7b0835bda8f3ecd26726f86e5ada",
+    "semantic_hash": ""
+  },
+  "/Users/airowlgasga/coding/project/ceremly-v2/docs/superpowers/specs/2026-07-11-r2-code-review-design.md": {
+    "mtime": 1783779342.664743,
+    "ast_hash": "d7a894fd007ddd0215572e0bff3a37f3",
+    "semantic_hash": ""
+  },
+  "/Users/airowlgasga/coding/project/ceremly-v2/.superpowers/sdd/b5-report.md": {
+    "mtime": 1783777714.3582976,
+    "ast_hash": "094fd04d3bda77fd8c6665b651deb09a",
     "semantic_hash": ""
   }
 }

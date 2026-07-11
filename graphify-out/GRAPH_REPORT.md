@@ -1,16 +1,16 @@
 # Graph Report - ceremly-v2  (2026-07-11)
 
 ## Corpus Check
-- 667 files · ~741,914 words
+- 671 files · ~751,735 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 12453 nodes · 14052 edges · 942 communities (893 shown, 49 thin omitted)
+- 12534 nodes · 14129 edges · 946 communities (897 shown, 49 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 224 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0166dabb`
+- Built from commit: `68758df8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -759,8 +759,12 @@
 - [[_COMMUNITY_Community 924|Community 924]]
 - [[_COMMUNITY_Community 925|Community 925]]
 - [[_COMMUNITY_Community 927|Community 927]]
+- [[_COMMUNITY_Community 928|Community 928]]
+- [[_COMMUNITY_Community 929|Community 929]]
+- [[_COMMUNITY_Community 930|Community 930]]
 - [[_COMMUNITY_Community 931|Community 931]]
-- [[_COMMUNITY_Community 935|Community 935]]
+- [[_COMMUNITY_Community 932|Community 932]]
+- [[_COMMUNITY_Community 933|Community 933]]
 - [[_COMMUNITY_Community 941|Community 941]]
 - [[_COMMUNITY_Community 942|Community 942]]
 - [[_COMMUNITY_Community 943|Community 943]]
@@ -786,8 +790,6 @@
 10. `contact` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Ceremly Multi-Tenancy (organizationId scoping)` --semantically_similar_to--> `Workspace-Based Multi-Tenancy`  [INFERRED] [semantically similar]
-  CLAUDE.md → .claude/skills/supabase-database/resources/multi-tenancy.md
 - `Ceremly Plan Limits (pricing.ts per org)` --semantically_similar_to--> `Effective Limit (override-then-plan-default)`  [INFERRED] [semantically similar]
   CLAUDE.md → .claude/skills/supabase-database/resources/plan-limits.md
 - `Ceremly Rate Limiting (Upstash 100/min)` --semantically_similar_to--> `rateLimit() (Upstash + in-memory fallback)`  [INFERRED] [semantically similar]
@@ -796,6 +798,8 @@
   README.md → docs/base/PHASE-1-data-and-tenancy.md
 - `Creem pricing model & per-event checkout (design spec)` --references--> `server/utils/runtimeConfig.ts`  [EXTRACTED]
   docs/superpowers/specs/2026-06-19-creem-pricing-model-checkout-design.md → server/utils/runtimeConfig.ts
+- `createEvent()` --calls--> `getDefaultDistribution()`  [INFERRED]
+  server/services/event.service.ts → shared/constants/templates.ts
 
 ## Import Cycles
 - None detected.
@@ -838,7 +842,7 @@
 - **Creem per-event unlock flow** — specs_2026_06_19_creem_one_time_unlock, specs_2026_06_19_creem_metadata_eventid, specs_2026_06_19_creem_get_event_limits, utils_creem [INFERRED 0.85]
 - **PRD RSVP/invite product flow** — uploads_prd_ceremly_personalized_link, uploads_prd_ceremly_conditional_rsvp, uploads_prd_ceremly_frictionless_guest, uploads_prd_ceremly_realtime_dashboard [INFERRED 0.85]
 
-## Communities (942 total, 49 thin omitted)
+## Communities (946 total, 49 thin omitted)
 
 ### Community 0 - "OpenAPI Specification"
 Cohesion: 0.06
@@ -853,28 +857,28 @@ Cohesion: 0.05
 Nodes (58): handleDataExport(), auditLog, account, accountRelations, creem_subscription, invitation, invitationRelations, member (+50 more)
 
 ### Community 3 - "Email Sending Service"
-Cohesion: 0.17
-Nodes (16): ContactMessage, contactMessages, NewContactMessage, waitingList, main(), sendContactMessage(), subscribe(), getClientIp() (+8 more)
+Cohesion: 0.04
+Nodes (60): SupportedLanguage, FileManagerConfig, findSeedContext(), insertEmailEvent(), insertEmailSeed(), recordGuestOpen(), isEmailSuppressed(), from (+52 more)
 
 ### Community 4 - "Email Best Practices Docs"
 Cohesion: 0.05
 Nodes (50): Consent Checkboxes (Marketing), Double Opt-In, Email Capture Best Practices, Email Validation (Client + Server), Single Opt-In, Verification Email, CAN-SPAM Act (US), CASL (Canada) (+42 more)
 
 ### Community 5 - "Email Templates"
-Cohesion: 0.05
-Nodes (77): buildTranslations(), ChangeEmailEmail(), ChangeEmailEmailProps, buildTranslations(), ContactConfirmationEmail(), ContactConfirmationEmailProps, ContactNotificationEmail(), ContactNotificationEmailProps (+69 more)
+Cohesion: 0.07
+Nodes (60): buildTranslations(), ChangeEmailEmail(), ChangeEmailEmailProps, buildTranslations(), ContactConfirmationEmail(), ContactConfirmationEmailProps, ContactNotificationEmail(), ContactNotificationEmailProps (+52 more)
 
 ### Community 6 - "Database Repositories"
-Cohesion: 0.11
-Nodes (29): FileManagerConfig, getEventCheckoutInfo(), unlockEvent(), deleteCreemSubscriptionsByReference(), deleteFilesByOrg(), deleteOrganizationRow(), deleteUserRow(), findFilesByOrg() (+21 more)
+Cohesion: 0.10
+Nodes (42): deleteCreemSubscriptionsByReference(), deleteFilesByOrg(), deleteOrganizationRow(), deleteUserRow(), findFilesByOrg(), findOwnedOrgIds(), findUsersScheduledForDeletion(), removeMembership() (+34 more)
 
 ### Community 7 - "Favicon Generator"
 Cohesion: 0.09
 Nodes (46): bool, str, float, FreeTypeFont, Image, int, add_noise(), adjust_brightness() (+38 more)
 
 ### Community 8 - "Plan Limits & Billing"
-Cohesion: 0.05
-Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
+Cohesion: 0.06
+Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
 
 ### Community 9 - "Invitation Schema"
 Cohesion: 0.09
@@ -897,12 +901,12 @@ Cohesion: 0.09
 Nodes (23): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 14 - "Member Schema"
-Cohesion: 0.13
-Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
+Cohesion: 0.09
+Nodes (23): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 15 - "Guest Service"
-Cohesion: 0.13
-Nodes (35): activeGuestEmailExists(), countActiveGuests(), createGuestRow(), createGuestsBulk(), CreateGuestValues, findActiveGuestEmails(), findActiveGuestNames(), findActivitiesByGuestScoped() (+27 more)
+Cohesion: 0.14
+Nodes (32): activeGuestEmailExists(), countActiveGuests(), createGuestRow(), createGuestsBulk(), CreateGuestValues, findActiveGuestEmails(), findActiveGuestNames(), findActivitiesByGuestScoped() (+24 more)
 
 ### Community 16 - "RSVP Form"
 Cohesion: 0.07
@@ -914,7 +918,7 @@ Nodes (37): dependencies, aws4fetch, better-auth, better-sqlite3, @creem_io/bett
 
 ### Community 18 - "Creem Subscription Schema"
 Cohesion: 0.05
-Nodes (42): creem_customer_id, creem_order_id, creem_subscription_id, period_end, period_start, product_id, reference_id, status (+34 more)
+Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 19 - "Audit Log Schema"
 Cohesion: 0.05
@@ -965,8 +969,8 @@ Cohesion: 0.05
 Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
 
 ### Community 31 - "columns"
-Cohesion: 0.05
-Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
+Cohesion: 0.04
+Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
 
 ### Community 32 - "columns"
 Cohesion: 0.05
@@ -974,7 +978,7 @@ Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+3
 
 ### Community 33 - "event.service"
 Cohesion: 0.10
-Nodes (39): countActiveEventsByOrg(), createEventRow(), CreateEventValues, deleteEventScoped(), EventRawCounts, findEventByIdScoped(), findEventsByOrgWithCounts(), findEventWarnTargetInfo() (+31 more)
+Nodes (38): countActiveEventsByOrg(), createEventRow(), CreateEventValues, deleteEventScoped(), EventRawCounts, findEventByIdScoped(), findEventsByOrgWithCounts(), findEventWarnTargetInfo() (+30 more)
 
 ### Community 34 - "SitemapGenerator"
 Cohesion: 0.12
@@ -993,20 +997,20 @@ Cohesion: 0.13
 Nodes (15): monthly, perMonth, perYear, savings, yearly, pricing, badge, billing (+7 more)
 
 ### Community 38 - "pricing"
-Cohesion: 0.07
-Nodes (29): cta, description, title, monthly, perMonth, perYear, savings, yearly (+21 more)
+Cohesion: 0.13
+Nodes (15): monthly, perMonth, perYear, savings, yearly, pricing, badge, billing (+7 more)
 
 ### Community 39 - "created at"
-Cohesion: 0.09
-Nodes (22): email, expires_at, inviter_id, status, name, notNull, primaryKey, type (+14 more)
+Cohesion: 0.06
+Nodes (31): 10. Riepilogo mapping finding → fix, 11. Verifica finale (prima del merge), 1. Contesto e principio guida, 2. Ordine di implementazione (dipendenze), 3.1 Client strict fail-loud, 3.2 Consumer che passano a strict, 3.3 Fix mirati ortogonali allo storage, 3.4 Fail-open ban re-check: invariato (+23 more)
 
 ### Community 40 - "id"
-Cohesion: 0.05
-Nodes (39): 1.1 robots.txt — clean, no accidental blocks (GET), 1.2 Indexation signals on public pages — clean, 1.3 Host canonicalization (apex vs www) — VERDICT: no 301, self-canonical only, 1.4 Sitemap structure — index + 2 locale sitemaps, correctly linked, 1.5 Sitemap exclude list vs. live contents — mostly correct, with leaks in both directions, 1.6 `/legal/**` excluded from sitemap — VERDICT: this is a misconfiguration, not intentional, 1.7 robots.txt / sitemap endpoints return 302→/login on HTTP HEAD (GET is fine), 1.8 Cache headers on robots.txt/sitemap — informational (+31 more)
+Cohesion: 0.04
+Nodes (44): 1.1 robots.txt — clean, no accidental blocks (GET), 1.2 Indexation signals on public pages — clean, 1.3 Host canonicalization (apex vs www) — VERDICT: no 301, self-canonical only, 1.4 Sitemap structure — index + 2 locale sitemaps, correctly linked, 1.5 Sitemap exclude list vs. live contents — mostly correct, with leaks in both directions, 1.6 `/legal/**` excluded from sitemap — VERDICT: this is a misconfiguration, not intentional, 1.7 robots.txt / sitemap endpoints return 302→/login on HTTP HEAD (GET is fine), 1.8 Cache headers on robots.txt/sitemap — informational (+36 more)
 
 ### Community 41 - "logAudit"
-Cohesion: 0.13
-Nodes (25): logAudit(), AUDIT_ACTIONS, AUDIT_CATEGORIES, AuditAction, AuditCategory, getCategoryFromAction(), LogAuditOptions, relockEventByOrder() (+17 more)
+Cohesion: 0.07
+Nodes (51): logAudit(), AUDIT_ACTIONS, AUDIT_CATEGORIES, AuditAction, AuditCategory, getCategoryFromAction(), LogAuditOptions, getPlanLimits() (+43 more)
 
 ### Community 42 - "created at"
 Cohesion: 0.07
@@ -1017,12 +1021,12 @@ Cohesion: 0.11
 Nodes (28): 500-Line Rule & Progressive Disclosure, Skill System Advanced Topics, Conditional Enforcement (Future), Content Patterns (Regex), database-verification Guardrail Example, Domain Skills, Enforcement Levels (block/suggest/warn), Exit Code 2 Block Mechanism (+20 more)
 
 ### Community 44 - "columns"
-Cohesion: 0.06
-Nodes (36): creem_customer_id, creem_order_id, creem_subscription_id, period_end, period_start, product_id, reference_id, name (+28 more)
+Cohesion: 0.05
+Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 45 - "columns"
-Cohesion: 0.33
-Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
+Cohesion: 0.05
+Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 46 - "created at"
 Cohesion: 0.10
@@ -1033,16 +1037,16 @@ Cohesion: 0.05
 Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 48 - "columns"
-Cohesion: 0.06
-Nodes (36): creem_customer_id, creem_order_id, creem_subscription_id, period_end, period_start, product_id, reference_id, name (+28 more)
+Cohesion: 0.05
+Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 49 - "created at"
 Cohesion: 0.10
 Nodes (21): logo, metadata, name, slug, name, notNull, primaryKey, type (+13 more)
 
 ### Community 50 - "columns"
-Cohesion: 0.04
-Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
+Cohesion: 0.05
+Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
 
 ### Community 51 - "columns"
 Cohesion: 0.06
@@ -1057,28 +1061,28 @@ Cohesion: 0.06
 Nodes (36): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+28 more)
 
 ### Community 54 - "columns"
-Cohesion: 0.05
-Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
-
-### Community 55 - "columns"
-Cohesion: 0.05
-Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
-
-### Community 56 - "columns"
 Cohesion: 0.04
 Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
 
-### Community 57 - "columns"
+### Community 55 - "columns"
 Cohesion: 0.06
 Nodes (36): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+28 more)
+
+### Community 56 - "columns"
+Cohesion: 0.05
+Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
+
+### Community 57 - "columns"
+Cohesion: 0.05
+Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
 
 ### Community 58 - "columns"
 Cohesion: 0.05
 Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
 
 ### Community 59 - "columns"
-Cohesion: 0.06
-Nodes (36): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+28 more)
+Cohesion: 0.05
+Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
 
 ### Community 60 - "SPEC Implementazione Ceremly MVP (Phase "
 Cohesion: 0.10
@@ -1097,8 +1101,8 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 64 - "user id"
-Cohesion: 0.12
-Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
+Cohesion: 0.10
+Nodes (21): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+13 more)
 
 ### Community 65 - "public.account"
 Cohesion: 0.08
@@ -1129,8 +1133,8 @@ Cohesion: 0.09
 Nodes (23): badge, cta, ctaSecondary, getStarted, headline, learnMore, microProof, mockup (+15 more)
 
 ### Community 72 - "public.invitation"
-Cohesion: 0.05
-Nodes (40): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method (+32 more)
+Cohesion: 0.09
+Nodes (23): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 73 - "public.organization"
 Cohesion: 0.14
@@ -1145,20 +1149,20 @@ Cohesion: 0.12
 Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
 
 ### Community 76 - "columns"
+Cohesion: 0.05
+Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
+
+### Community 77 - "columns"
+Cohesion: 0.06
+Nodes (36): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+28 more)
+
+### Community 78 - "columns"
 Cohesion: 0.06
 Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
 
-### Community 77 - "columns"
-Cohesion: 0.05
-Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
-
-### Community 78 - "columns"
-Cohesion: 0.09
-Nodes (23): created_at, organization_id, role, user_id, default, name, notNull, primaryKey (+15 more)
-
 ### Community 79 - "landing"
-Cohesion: 0.07
-Nodes (27): subtitle, title, cta, description, placeholder, title, landing, faq (+19 more)
+Cohesion: 0.10
+Nodes (21): subtitle, title, cta, description, placeholder, title, landing, faq (+13 more)
 
 ### Community 80 - "columns"
 Cohesion: 0.10
@@ -1185,12 +1189,12 @@ Cohesion: 0.13
 Nodes (19): PHASE 3 — Billing Creem, Plugin Creem ufficiale di Better Auth, Gating per piano (requirePlan / hasFeature), Mapping piano → productId Creem, Modulo astrazione server/billing/, Webhook subscription.paid (concede accesso), Webhook come fonte di verità (no redirect), PHASE 4 — Email, Errors, Rate-limit (+11 more)
 
 ### Community 86 - "id"
-Cohesion: 0.06
-Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
+Cohesion: 0.09
+Nodes (23): created_at, organization_id, role, user_id, default, name, notNull, primaryKey (+15 more)
 
 ### Community 87 - "id"
-Cohesion: 0.11
-Nodes (19): name, notNull, primaryKey, type, backup_codes, id, secret, name (+11 more)
+Cohesion: 0.12
+Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
 
 ### Community 88 - "Resend Skill (SKILL.md)"
 Cohesion: 0.16
@@ -1233,8 +1237,8 @@ Cohesion: 0.11
 Nodes (12): allTags, articleOgImage, firstTag, formattedDate, linkCopied, localeArticles, publishedArticles, readingTime (+4 more)
 
 ### Community 98 - "Supabase Edge Functions Skill"
-Cohesion: 0.16
-Nodes (18): Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Creem Payments (single provider), Ceremly Rate Limiting (Upstash 100/min), Ceremly Email (Resend + React Email), Ceremly Body/Query Validation (parseBody/Zod), Event CRUD Edge Function Example (+10 more)
+Cohesion: 0.15
+Nodes (20): Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Ceremly Audit Logging (logAudit), Creem Payments (single provider), Ceremly v2 Project Architecture (CLAUDE.md), Ceremly Rate Limiting (Upstash 100/min), Ceremly Email (Resend + React Email) (+12 more)
 
 ### Community 99 - "cards"
 Cohesion: 0.10
@@ -1305,24 +1309,24 @@ Cohesion: 0.12
 Nodes (17): member_organization_id_organization_id_fk, member_user_id_user_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 116 - "public.creem subscription"
-Cohesion: 0.22
-Nodes (9): checkConstraints, compositePrimaryKeys, foreignKeys, isRLSEnabled, name, policies, schema, uniqueConstraints (+1 more)
+Cohesion: 0.12
+Nodes (17): columns, concurrently, isUnique, method, name, with, creem_subscription_referenceId_status_idx, checkConstraints (+9 more)
 
 ### Community 117 - "invitation inviter id user id fk"
 Cohesion: 0.12
 Nodes (17): member_organization_id_organization_id_fk, member_user_id_user_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 118 - "member organization id organization id f"
-Cohesion: 0.09
-Nodes (23): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
+Cohesion: 0.13
+Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
 
 ### Community 119 - "public.creem subscription"
 Cohesion: 0.12
 Nodes (17): columns, concurrently, isUnique, method, name, with, creem_subscription_referenceId_status_idx, checkConstraints (+9 more)
 
 ### Community 120 - "invitation inviter id user id fk"
-Cohesion: 0.13
-Nodes (20): findSeedContext(), insertEmailEvent(), insertEmailSeed(), recordGuestOpen(), isEmailSuppressed(), from, insert, limit (+12 more)
+Cohesion: 0.09
+Nodes (22): email, expires_at, inviter_id, status, name, notNull, primaryKey, type (+14 more)
 
 ### Community 121 - "member organization id organization id f"
 Cohesion: 0.12
@@ -1337,12 +1341,12 @@ Cohesion: 0.12
 Nodes (17): columns, concurrently, isUnique, method, name, with, creem_subscription_referenceId_status_idx, checkConstraints (+9 more)
 
 ### Community 124 - "siteMode"
-Cohesion: 0.06
-Nodes (36): creem_customer_id, creem_order_id, creem_subscription_id, period_end, period_start, product_id, reference_id, name (+28 more)
+Cohesion: 0.05
+Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 125 - "distribution.service"
 Cohesion: 0.10
-Nodes (33): handleImageVariant(), JobHandler, JobHandlers, runJob(), handleSendInviteEmail(), handleSendReminderEmail(), dispatch(), getQStashClient() (+25 more)
+Nodes (34): handleImageVariant(), JobHandler, JobHandlers, runJob(), handleSendInviteEmail(), handleSendReminderEmail(), dispatch(), getQStashClient() (+26 more)
 
 ### Community 126 - "STACK-AND-CONVENTIONS (riferimento trasv"
 Cohesion: 0.18
@@ -1417,8 +1421,8 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 144 - "user id"
-Cohesion: 0.10
-Nodes (21): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+13 more)
+Cohesion: 0.12
+Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
 
 ### Community 145 - "public.account"
 Cohesion: 0.08
@@ -1489,8 +1493,8 @@ Cohesion: 0.25
 Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
 
 ### Community 162 - "invitation email idx"
-Cohesion: 0.09
-Nodes (23): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
+Cohesion: 0.13
+Nodes (15): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
 
 ### Community 163 - "member organizationId idx"
 Cohesion: 0.05
@@ -1505,20 +1509,20 @@ Cohesion: 0.05
 Nodes (36): Admin, App (branding is env-driven), Auth, Configure your .env file (see .env.example for all variables), Copy environment variables, Database, Database (Drizzle ORM + Neon Postgres), Database (Neon) (+28 more)
 
 ### Community 166 - "invitation email idx"
-Cohesion: 0.05
-Nodes (40): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method (+32 more)
+Cohesion: 0.09
+Nodes (23): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 167 - "member organizationId idx"
 Cohesion: 0.13
 Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
 
 ### Community 168 - "project.service"
-Cohesion: 0.05
-Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
+Cohesion: 0.06
+Nodes (36): creem_customer_id, creem_order_id, creem_subscription_id, period_end, period_start, product_id, reference_id, name (+28 more)
 
 ### Community 169 - "permissions"
-Cohesion: 0.20
-Nodes (16): findMemberRole(), expect403(), h3mod, main(), getAuthSession(), requireAuth(), isBanActive(), isUserBannedFresh() (+8 more)
+Cohesion: 0.30
+Nodes (13): findMemberRole(), expect403(), h3mod, main(), getAuthSession(), requireAuth(), getOrgRole(), loadActiveOrganization() (+5 more)
 
 ### Community 170 - "rsvpLogic"
 Cohesion: 0.21
@@ -1585,8 +1589,8 @@ Cohesion: 0.14
 Nodes (14): columns, name, nullsNotDistinct, checkConstraints, compositePrimaryKeys, foreignKeys, indexes, isRLSEnabled (+6 more)
 
 ### Community 186 - "public.member"
-Cohesion: 0.14
-Nodes (13): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+5 more)
+Cohesion: 0.12
+Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
 
 ### Community 187 - "public.organization"
 Cohesion: 0.14
@@ -1637,8 +1641,8 @@ Cohesion: 0.15
 Nodes (13): feature1, feature2, feature3, title, couples, planner, subtitle, title (+5 more)
 
 ### Community 199 - "cards"
-Cohesion: 0.09
-Nodes (22): email, gallery, import, members, socialProof, vendors, description, cards (+14 more)
+Cohesion: 0.10
+Nodes (20): gallery, import, members, socialProof, vendors, cards, description, subtitle (+12 more)
 
 ### Community 200 - "couples"
 Cohesion: 0.15
@@ -1665,8 +1669,8 @@ Cohesion: 0.17
 Nodes (13): server/database/schema/projects.ts, Shared Zod validation schemas requirements, parseBody(event, schema) helper, server/services/contact.service.ts, assertOwnership second guard, Reference clonable CRUD entity pattern, Org-scoped isolation by-construction, FASE 4 — projects example entity (design spec) (+5 more)
 
 ### Community 206 - "Ceremly v2 Project Architecture (CLAUDE."
-Cohesion: 0.17
-Nodes (12): Ceremly Audit Logging (logAudit), Better Auth Organization Plugin, Drizzle ORM + Neon Serverless Postgres, Ceremly Multi-Tenancy (organizationId scoping), Ceremly v2 Project Architecture (CLAUDE.md), Upstash QStash HTTP Queue, Ceremly RBAC (requireMember/Write/Owner), Services Layer (+4 more)
+Cohesion: 0.50
+Nodes (4): Drizzle ORM + Neon Serverless Postgres, Upstash QStash HTTP Queue, Strada A (event-driven serverless), Upstash Redis (distributed rate limit store)
 
 ### Community 208 - "features"
 Cohesion: 0.12
@@ -1753,8 +1757,8 @@ Cohesion: 0.22
 Nodes (11): shared/constants/pricing.ts, server/database/schema/events.ts, ADD-only pricing migration (keep B2B PRICING_PLANS), Stale-event cleanup cron (concluded AND inactive), getEventLimits tier resolution, metadata.eventId round-trip in webhook, One-time per-event unlock (Celebrazione), Creem pricing model & per-event checkout (design spec) (+3 more)
 
 ### Community 229 - "JWT Claims Pattern (workspace id + permi"
-Cohesion: 0.22
-Nodes (11): base Schema (not public), base.handle_new_auth_user() User Sync Trigger, JWT Claims Pattern (workspace_id + permissions), Two-Phase Authentication Flow, base.user_has_permissions() Function, Workspace-Based Multi-Tenancy, PERMISSIVE Permission-Based Policy, RESTRICTIVE Workspace Isolation Policy (+3 more)
+Cohesion: 0.16
+Nodes (14): base Schema (not public), Better Auth Organization Plugin, Ceremly Multi-Tenancy (organizationId scoping), Ceremly RBAC (requireMember/Write/Owner), base.handle_new_auth_user() User Sync Trigger, JWT Claims Pattern (workspace_id + permissions), Two-Phase Authentication Flow, base.user_has_permissions() Function (+6 more)
 
 ### Community 230 - "settings"
 Cohesion: 0.20
@@ -1777,8 +1781,8 @@ Cohesion: 0.20
 Nodes (10): nav, allOrganizations, code, goTo, home, members, organizationDashboard, organizations (+2 more)
 
 ### Community 236 - "updates"
-Cohesion: 0.05
-Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
+Cohesion: 0.04
+Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
 
 ### Community 237 - "customers"
 Cohesion: 0.20
@@ -1801,8 +1805,8 @@ Cohesion: 0.08
 Nodes (24): dialect, id, twoFactor_secret_idx, prevId, checkConstraints, compositePrimaryKeys, foreignKeys, indexes (+16 more)
 
 ### Community 242 - "expires at"
-Cohesion: 0.06
-Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
+Cohesion: 0.09
+Nodes (23): created_at, organization_id, role, user_id, default, name, notNull, primaryKey (+15 more)
 
 ### Community 243 - "eventAccess.service.ts (isOrgAtelier + g"
 Cohesion: 0.20
@@ -1845,12 +1849,12 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 254 - "audit log user id user id fk"
-Cohesion: 0.12
-Nodes (17): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+9 more)
+Cohesion: 0.22
+Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
 
 ### Community 255 - "audit log user id user id fk"
-Cohesion: 0.12
-Nodes (17): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+9 more)
+Cohesion: 0.22
+Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
 
 ### Community 256 - "account user id user id fk"
 Cohesion: 0.05
@@ -1873,20 +1877,20 @@ Cohesion: 0.06
 Nodes (34): Best Practices, Best Practices, Best Practices, Best Practices, Best Practices Summary, Common Content Patterns, Common Path Patterns, Common Pattern Examples (+26 more)
 
 ### Community 261 - "audit log user id user id fk"
-Cohesion: 0.08
-Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, dialect (+17 more)
+Cohesion: 0.12
+Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
 
 ### Community 262 - "account user id user id fk"
 Cohesion: 0.06
 Nodes (34): 1. Always Use RLS-Enabled Client, 2. Handle CORS for All Endpoints, 3. Validate All Input, 4. Use Standard Response Helpers, 5. Apply Rate Limiting, 6. Check Plan Limits Before Resource Creation, 7. Use Soft Delete Pattern, Anti-Patterns to Avoid (+26 more)
 
 ### Community 263 - "audit log user id user id fk"
-Cohesion: 0.12
-Nodes (17): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+9 more)
-
-### Community 264 - "audit log user id user id fk"
 Cohesion: 0.22
 Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
+
+### Community 264 - "audit log user id user id fk"
+Cohesion: 0.08
+Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, dialect (+17 more)
 
 ### Community 265 - "neon-http driver (drizzle-orm/neon-http)"
 Cohesion: 0.28
@@ -1945,8 +1949,8 @@ Cohesion: 0.06
 Nodes (33): analyze_seo.py, Anti-Patterns to Avoid, Astro, Canonical URLs, Codebase Analysis Workflow, Essential Meta Tags (Every Page), Framework Quick Reference, generate_sitemap.py (+25 more)
 
 ### Community 281 - "audit log created at idx"
-Cohesion: 0.06
-Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
+Cohesion: 0.25
+Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
 
 ### Community 282 - "public.account"
 Cohesion: 0.06
@@ -1957,12 +1961,12 @@ Cohesion: 0.29
 Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 284 - "audit log created at idx"
-Cohesion: 0.06
-Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
+Cohesion: 0.25
+Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
 
 ### Community 285 - "public.audit log"
-Cohesion: 0.09
-Nodes (23): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
+Cohesion: 0.05
+Nodes (40): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method (+32 more)
 
 ### Community 286 - "public.member"
 Cohesion: 0.06
@@ -1989,8 +1993,8 @@ Cohesion: 0.07
 Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
 
 ### Community 292 - "audit log created at idx"
-Cohesion: 0.29
-Nodes (15): createProject(), deleteProjectScoped(), findProjectByIdScoped(), findProjectsByOrg(), updateProjectScoped(), expect403(), h3mod, main() (+7 more)
+Cohesion: 0.09
+Nodes (22): email, expires_at, inviter_id, status, name, notNull, primaryKey, type (+14 more)
 
 ### Community 293 - "public.audit log"
 Cohesion: 0.14
@@ -2001,16 +2005,16 @@ Cohesion: 0.07
 Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
 
 ### Community 295 - "audit log created at idx"
-Cohesion: 0.06
-Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
-
-### Community 296 - "public.audit log"
-Cohesion: 0.08
-Nodes (36): CEREMLY_FREE_LIMITS, CEREMLY_TIER_LIMITS, CeremlyTier, exceedsLimit(), getPlanLimits(), isUnlimited(), PlanFeature, PlanLimits (+28 more)
-
-### Community 297 - "audit log created at idx"
 Cohesion: 0.25
 Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
+
+### Community 296 - "public.audit log"
+Cohesion: 0.17
+Nodes (11): CEREMLY_FREE_LIMITS, CEREMLY_TIER_LIMITS, CeremlyTier, exceedsLimit(), isUnlimited(), PlanFeature, PlanLimits, PlanPricing (+3 more)
+
+### Community 297 - "audit log created at idx"
+Cohesion: 0.06
+Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
 
 ### Community 298 - "public.audit log"
 Cohesion: 0.09
@@ -2061,8 +2065,8 @@ Cohesion: 0.29
 Nodes (7): Dramatic Purple Ambient Lighting, Elegant Banquet Event Hall, Floral Centerpieces, Wedding Guest Management, Wedding RSVP Blog Hero, Round Tables with Place Settings, Wedding Reception
 
 ### Community 310 - "base.workspace resource usage Table"
-Cohesion: 0.22
-Nodes (9): base.workspace_resource_usage Table, base.workspace_roles Table, base.workspace_users Junction Table, base.workspaces Table, updateResourceUsage() Resource Tracking, Cascade Soft Delete (parent → children), base.generate_slug() Function, Resource Count Triggers (increment/decrement) (+1 more)
+Cohesion: 0.20
+Nodes (10): base.workspace_resource_usage Table, base.workspace_roles Table, base.workspace_users Junction Table, base.workspaces Table, updateResourceUsage() Resource Tracking, Cascade Soft Delete (parent → children), base.custom_access_token_hook() JWT Claim Hook, base.generate_slug() Function (+2 more)
 
 ### Community 311 - "contentPatterns"
 Cohesion: 0.57
@@ -2077,8 +2081,8 @@ Cohesion: 0.29
 Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_event_id_idx
 
 ### Community 317 - "info"
-Cohesion: 0.20
-Nodes (10): info, title, value, title, value, email, hours, response (+2 more)
+Cohesion: 0.17
+Nodes (12): email, info, description, title, value, title, value, email (+4 more)
 
 ### Community 318 - "audit log organization id idx"
 Cohesion: 0.29
@@ -2105,16 +2109,16 @@ Cohesion: 0.10
 Nodes (21): logo, metadata, name, slug, name, notNull, primaryKey, type (+13 more)
 
 ### Community 324 - "audit log organization id idx"
-Cohesion: 0.12
-Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
+Cohesion: 0.14
+Nodes (13): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+5 more)
 
 ### Community 325 - "audit log user id idx"
 Cohesion: 0.18
 Nodes (10): Cosa fa il prodotto, Description (EN), Description (IT), Intro (EN), Intro (IT), Introduction, Introduzione, Stack tecnico e architettura (+2 more)
 
 ### Community 326 - "audit log created at idx"
-Cohesion: 0.33
-Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
+Cohesion: 0.12
+Nodes (17): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 327 - "audit log category idx"
 Cohesion: 0.07
@@ -2125,48 +2129,48 @@ Cohesion: 0.07
 Nodes (27): Actions, Add Column Migration, Base Schema Setup, Best Practices, Check Constraint, Commands, Common Patterns, Current Migrations (+19 more)
 
 ### Community 329 - "audit log action idx"
-Cohesion: 0.07
-Nodes (29): columns, concurrently, isUnique, method, name, with, columns, concurrently (+21 more)
-
-### Community 330 - "audit log category idx"
-Cohesion: 0.20
-Nodes (10): description, title, exclusiveContent, specialOffers, updates, features, description, title (+2 more)
-
-### Community 331 - "audit log organization id idx"
-Cohesion: 0.22
-Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
-
-### Community 332 - "audit log user id idx"
-Cohesion: 0.25
-Nodes (8): columns, concurrently, isUnique, method, name, with, creem_subscription_referenceId_status_idx, indexes
-
-### Community 333 - "audit log action idx"
 Cohesion: 0.06
 Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
 
-### Community 334 - "audit log category idx"
+### Community 330 - "audit log category idx"
+Cohesion: 0.29
+Nodes (7): description, title, exclusiveContent, specialOffers, features, description, title
+
+### Community 331 - "audit log organization id idx"
+Cohesion: 0.12
+Nodes (17): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+9 more)
+
+### Community 332 - "audit log user id idx"
+Cohesion: 0.12
+Nodes (17): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
+
+### Community 333 - "audit log action idx"
 Cohesion: 0.25
-Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
+Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
+
+### Community 334 - "audit log category idx"
+Cohesion: 0.13
+Nodes (15): invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
 
 ### Community 335 - "audit log organization id idx"
-Cohesion: 0.29
-Nodes (7): description, title, earlyAccess, specialBenefits, description, title, features
+Cohesion: 0.20
+Nodes (10): description, title, earlyAccess, specialBenefits, updates, description, title, description (+2 more)
 
 ### Community 336 - "audit log user id idx"
-Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
+Cohesion: 0.14
+Nodes (14): cta, description, title, badge, cta, description, title, tiers (+6 more)
 
 ### Community 337 - "audit log action idx"
-Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
+Cohesion: 0.14
+Nodes (13): Acceptance-test outputs, Approach chosen: B (per-page shared composable). Why not A., Blog proof (`/blogs/come-iniziare`), Concern: commit already exists + message mismatch (cannot fix), Files touched (24) — committed in `f590215`, Fix-group B5 — in-head reciprocal hreflang on path-shared pages — REPORT, How the blog conflict is prevented (the real guarantee), `/legal/privacy` note (brief-named page) (+5 more)
 
 ### Community 338 - "audit log category idx"
-Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
+Cohesion: 0.20
+Nodes (9): Deployment note (post-merge, manual), Global Constraints, QStash Failure Visibility (F3) Implementation Plan, Task 1: failureCallback URL helper + publish opt-in, Task 2: failure-callback processing (pure service) + new activity types, Task 3: signed route `/api/jobs/failure`, Task 4: Resend webhook → `email_bounced` activity, Task 5: `deliveryFailed` flag in the guest list (+1 more)
 
 ### Community 339 - "audit log organization id idx"
-Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
+Cohesion: 0.20
+Nodes (9): Cloudflare R2 Storage Code Review — Design / Spec, Context (verified during brainstorming), Fix selection → implementation plan, Goal, Method (approved: option A — dimensional lenses + adversarial verify), Out of scope, Report format, Success criteria (+1 more)
 
 ### Community 340 - "audit log user id idx"
 Cohesion: 0.33
@@ -2289,8 +2293,8 @@ Cohesion: 0.33
 Nodes (6): status, default, name, notNull, primaryKey, type
 
 ### Community 373 - "banned"
-Cohesion: 0.12
-Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
+Cohesion: 0.14
+Nodes (13): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+5 more)
 
 ### Community 374 - "columns"
 Cohesion: 0.05
@@ -2461,8 +2465,8 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 417 - "phone"
-Cohesion: 0.12
-Nodes (17): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
+Cohesion: 0.22
+Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
 
 ### Community 418 - "role"
 Cohesion: 0.08
@@ -2481,16 +2485,16 @@ Cohesion: 0.07
 Nodes (26): Commands run, Completezza, Concerns, Corrections to the brief, Cosa implementato, File cambiati, File modificati, Files touched (+18 more)
 
 ### Community 422 - "scope"
-Cohesion: 0.12
-Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
+Cohesion: 0.11
+Nodes (19): name, notNull, primaryKey, type, backup_codes, id, secret, name (+11 more)
 
 ### Community 423 - "account id"
-Cohesion: 0.13
-Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
+Cohesion: 0.09
+Nodes (23): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 424 - "category"
-Cohesion: 0.08
-Nodes (23): 1. Accessing $supabase Without Guard, 2. State Mutation During SSR, 3. localStorage Access, 4. window/document Access, 5. Non-Serializable State, 6. Async in Setup Without Guard, Always Do, Client-Only Operations (+15 more)
+Cohesion: 0.10
+Nodes (20): Always Do, Client-Only Operations, Component Initialization, Detection Checklist, Guard Variations, Initialization Pattern, Key Principle, Never Do (+12 more)
 
 ### Community 425 - "creem subscription id"
 Cohesion: 0.08
@@ -2505,8 +2509,8 @@ Cohesion: 0.08
 Nodes (23): Componenti (delete vs repoint — decisione esplicita per ciascuno), Decisioni adottate (da baseline D — NON rivalutare), FASE 1d — Frontend org-centric Implementation Plan, File Structure (mappa file — create / modify / delete), i18n (solo chiavi dashboard/team — landing/marketing resta FASE 5), Pagine, Prerequisiti / Gate (cosa deve essere landed PRIMA di 1d), Riepilogo gate (mappa al Checkpoint 1d dello spec) (+15 more)
 
 ### Community 428 - "reference id"
-Cohesion: 0.33
-Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
+Cohesion: 0.25
+Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
 
 ### Community 429 - "refresh token expires at"
 Cohesion: 0.09
@@ -2605,8 +2609,8 @@ Cohesion: 0.10
 Nodes (19): FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan, File Structure, Gap residui noti (consegnati a 1c/1d), Prerequisiti / Gate, Riepilogo verifiche (cosa prova cosa), Task 10 — Org attiva di sessione (databaseHooks.session.create.before), Task 11 — Smoke: signup→org + login + org attiva (manuale, gate CRITICO), Task 12 — Verifica assertiva: signup→org ha prodotto org + member owner (+11 more)
 
 ### Community 453 - "backup codes"
-Cohesion: 0.12
-Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
+Cohesion: 0.11
+Nodes (19): name, notNull, primaryKey, type, backup_codes, id, secret, name (+11 more)
 
 ### Community 454 - "creem order id"
 Cohesion: 0.40
@@ -2721,8 +2725,8 @@ Cohesion: 0.11
 Nodes (17): 10. Testing, 11. Fuori scope (Fase 3 / futuro), 12. Rischi & open question, 13. Manifest file (per il piano), 1. Contesto & obiettivo, 2. Decisioni (brainstorming), 3. Architettura & componenti, 4. Modello dati (+9 more)
 
 ### Community 482 - "scope"
-Cohesion: 0.33
-Nodes (6): creem_customer_id, name, notNull, primaryKey, type, columns
+Cohesion: 0.25
+Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
 
 ### Community 483 - "secret"
 Cohesion: 0.12
@@ -2737,8 +2741,8 @@ Cohesion: 0.12
 Nodes (17): columns, concurrently, isUnique, method, name, with, creem_subscription_referenceId_status_idx, checkConstraints (+9 more)
 
 ### Community 486 - "expires at"
-Cohesion: 0.05
-Nodes (40): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, invitation_email_idx, invitation_organizationId_idx, columns, concurrently, isUnique, method (+32 more)
+Cohesion: 0.12
+Nodes (17): invitation_inviter_id_user_id_fk, invitation_organization_id_organization_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 487 - "period start"
 Cohesion: 0.12
@@ -2833,8 +2837,8 @@ Cohesion: 0.83
 Nodes (4): Skill Enforcement Levels (suggest/block), Skill Activation (hooks), skill-rules.json, Skills Showcase README
 
 ### Community 517 - "HowItWorks"
-Cohesion: 0.33
-Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
+Cohesion: 0.25
+Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
 
 ### Community 519 - "useUsageNotifications"
 Cohesion: 0.13
@@ -2845,8 +2849,8 @@ Cohesion: 0.12
 Nodes (17): member_organization_id_organization_id_fk, member_user_id_user_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 541 - "onSelect"
-Cohesion: 0.33
-Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
+Cohesion: 0.25
+Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
 
 ### Community 553 - "HomeStats.client"
 Cohesion: 0.09
@@ -2865,20 +2869,20 @@ Cohesion: 0.12
 Nodes (15): AI SEO Implementation Plan, Follow-up fuori piano (da segnalare a fine esecuzione), Global Constraints, Task 10: Due articoli blog how-to (IT + EN), Task 11: Documenti Fase 3 (monitoring log, checklist directory, marketing context), Task 12: Verifica finale integrata, Task 1: Generatore + route `/pricing.md`, Task 2: Generatore + route `/llms.txt` (+7 more)
 
 ### Community 576 - "NewsletterCTA"
-Cohesion: 0.40
-Nodes (5): name, notNull, primaryKey, type, access_token_expires_at
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
 
 ### Community 578 - "Pricing"
 Cohesion: 0.13
 Nodes (14): Bounce Handling, Complaint Handling, DKIM (DomainKeys Identified Mail), DMARC, Email Authentication, Email Deliverability, Infrastructure, IP Warming (+6 more)
 
 ### Community 579 - "StarsBg"
-Cohesion: 0.40
-Nodes (5): creem_order_id, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 580 - "Features"
-Cohesion: 0.40
-Nodes (5): creem_subscription_id, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
 
 ### Community 581 - "TemplateMenu.client"
 Cohesion: 0.13
@@ -2889,20 +2893,20 @@ Cohesion: 0.13
 Nodes (14): Database migrations: where it hurt the most, Due decisioni che hanno deciso tutto il resto, I gotcha che solo il build reale rivela, La meta-lezione, Le migrazioni del database: dove ho sofferto di più, Lessons (EN), Lezioni (IT), Modeling the product: the boilerplate has an opinion, your domain has another (+6 more)
 
 ### Community 583 - "ImagePlaceholder"
-Cohesion: 0.40
-Nodes (5): period_end, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
 
 ### Community 585 - "HeroBackground"
-Cohesion: 0.40
-Nodes (5): period_start, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
 
 ### Community 586 - "Trust"
-Cohesion: 0.40
-Nodes (5): product_id, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 589 - "ForWho"
-Cohesion: 0.40
-Nodes (5): reference_id, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
 
 ### Community 590 - "Faq"
 Cohesion: 0.13
@@ -2913,12 +2917,12 @@ Cohesion: 0.13
 Nodes (14): Common Error Codes, Error Handling, Error Handling Pattern, Exponential Backoff, Idempotency, Key Generation Strategies, Queuing for Reliability, Related (+6 more)
 
 ### Community 593 - "DeleteModal.client"
-Cohesion: 0.13
-Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
+Cohesion: 0.09
+Nodes (23): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+15 more)
 
 ### Community 594 - "AddModal.client"
-Cohesion: 0.40
-Nodes (5): id_token, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
 
 ### Community 595 - "MembersList.client"
 Cohesion: 0.14
@@ -2945,8 +2949,8 @@ Cohesion: 0.20
 Nodes (9): 1. Add the i18n label key (both locales), 2. Add the footer link, Changes, Constraints, Decision (scoped for this fix-group), Exact current state (verified — do not re-discover), Fix-group B6 — fix orphan pages in the site footer (§5.4), Report contract (+1 more)
 
 ### Community 601 - "HomeStatCards.client"
-Cohesion: 0.40
-Nodes (5): scope, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
 
 ### Community 602 - "HomeWelcome.client"
 Cohesion: 0.40
@@ -3013,8 +3017,8 @@ Cohesion: 0.14
 Nodes (13): 1.1 — Studia l'integrazione Better Auth + organization + Drizzle, 1.2 — Definisci lo schema core, 1.3 — Tabella di dominio d'esempio (pattern multi-tenant), 1.4 — Migrations, 1.5 — Seeders, 1.6 — Repository core, Checkpoint di verifica, ✅ In questa fase (+5 more)
 
 ### Community 751 - "Community 751"
-Cohesion: 0.14
-Nodes (14): Architectural principle: Strada A (event-driven serverless), Architecture, Auth Flow, Client Middleware, Database Schema, Design System, Key Directories, Key Server Utilities (+6 more)
+Cohesion: 0.12
+Nodes (16): Architectural principle: Strada A (event-driven serverless), Architecture, Auth Flow, Client Middleware, Database Schema, Design System, Key Directories, Key Server Utilities (+8 more)
 
 ### Community 752 - "Community 752"
 Cohesion: 0.14
@@ -3118,7 +3122,7 @@ Nodes (10): Topics, Common Mistakes, Constraints, Create Topic, Managing Contact
 
 ### Community 778 - "Community 778"
 Cohesion: 0.18
-Nodes (10): 10. User Onboarding Plan, 12. Edge Cases & Open Questions, 13. Stakeholders & Responsibilities, 2. Objectives & Success Metrics, Ceremly, Edge Cases, Inviti digitali e RSVP intelligenti per gli eventi che contano., Open Questions (+2 more)
+Nodes (10): 10. User Onboarding Plan, 13. Stakeholders & Responsibilities, 2. Objectives & Success Metrics, 6. Scope, Ceremly, Explicitly Excluded (Future Roadmap), Included in MVP (Phase 1), Inviti digitali e RSVP intelligenti per gli eventi che contano. (+2 more)
 
 ### Community 779 - "Community 779"
 Cohesion: 0.20
@@ -3305,8 +3309,8 @@ Cohesion: 0.33
 Nodes (6): buildTranslations(), colors, fonts, styles, WaitingListEmail(), WaitingListEmailProps
 
 ### Community 825 - "Community 825"
-Cohesion: 0.12
-Nodes (16): dialect, id, prevId, checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies (+8 more)
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 826 - "Community 826"
 Cohesion: 0.35
@@ -3329,12 +3333,12 @@ Cohesion: 0.25
 Nodes (7): Constraints, EXPLICITLY OUT OF SCOPE — do NOT touch:, Fix-group B2b — de-duplicate doubled brand suffix on legal + about pages, Report contract, Scope — EXACTLY these 5 pages (verified they have a hand-written `— Ceremly` suffix in their i18n title, so they double):, The change (per file), Verification (required, report all outputs)
 
 ### Community 831 - "Community 831"
-Cohesion: 0.25
-Nodes (8): checkConstraints, compositePrimaryKeys, isRLSEnabled, name, policies, schema, uniqueConstraints, public.audit_log
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
 
 ### Community 832 - "Community 832"
-Cohesion: 0.25
-Nodes (8): columns, concurrently, isUnique, method, name, with, audit_log_created_at_idx, indexes
+Cohesion: 0.06
+Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concurrently (+28 more)
 
 ### Community 833 - "Community 833"
 Cohesion: 0.25
@@ -3454,23 +3458,23 @@ Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_catego
 
 ### Community 862 - "Community 862"
 Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
 
 ### Community 863 - "Community 863"
 Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_action_idx
 
 ### Community 864 - "Community 864"
 Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 865 - "Community 865"
 Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_organization_id_idx
 
 ### Community 866 - "Community 866"
-Cohesion: 0.40
-Nodes (5): id_token, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_id_idx
 
 ### Community 867 - "Community 867"
 Cohesion: 0.29
@@ -3482,7 +3486,7 @@ Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_user_i
 
 ### Community 869 - "Community 869"
 Cohesion: 0.29
-Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
+Nodes (7): 1. Accessing $supabase Without Guard, 2. State Mutation During SSR, 3. localStorage Access, 4. window/document Access, 5. Non-Serializable State, 6. Async in Setup Without Guard, Common Pitfalls
 
 ### Community 870 - "Community 870"
 Cohesion: 0.40
@@ -3541,12 +3545,12 @@ Cohesion: 0.40
 Nodes (5): FEATURE 5.4: LINK PERSONALIZZATO PER INVITATO E GUEST LIST MANAGEMENT [M], FEATURE 5.5: DISTRIBUZIONE VIA EMAIL E MESSAGGIO PRECOMPILATO WHATSAPP [M], FEATURE 5.6: QR CODE PER INVITI FISICI [S], FEATURE 5.7: CONTENUTO CONDIZIONALE PER GRUPPI DI OSPITI [C], Layer 2 — Distribuzione intelligente
 
 ### Community 884 - "Community 884"
-Cohesion: 0.50
-Nodes (3): Benvenuto, Cosa include, Prossimi passi
+Cohesion: 0.22
+Nodes (8): 1. Crea il tuo evento, 2. Aggiungi la lista ospiti, 3. Distribuisci il link, 4. Raccogli le risposte, Benvenuto, Cosa include, Il risultato, Prossimi passi
 
 ### Community 885 - "Community 885"
-Cohesion: 0.50
-Nodes (3): Next steps, Welcome, What's included
+Cohesion: 0.22
+Nodes (8): 1. Create your event, 2. Add your guest list, 3. Share the link, 4. Collect the replies, Next steps, The payoff, Welcome, What's included
 
 ### Community 889 - "Community 889"
 Cohesion: 0.50
@@ -3565,8 +3569,8 @@ Cohesion: 0.50
 Nodes (4): Basic Setup, i18n Configuration, Locale Files, Usage in Components
 
 ### Community 896 - "Community 896"
-Cohesion: 0.50
-Nodes (4): Guard Variations, Server Guard Pattern, The Essential Guard, Why It's Necessary
+Cohesion: 0.33
+Nodes (6): landingFooter, blog, contacts, copyright, privacy, terms
 
 ### Community 897 - "Community 897"
 Cohesion: 0.50
@@ -3597,8 +3601,8 @@ Cohesion: 0.67
 Nodes (3): 3. Target Audience & User Personas, Primary Persona: Giulia, l'organizzatrice del suo matrimonio, Secondary Persona: Marco, il padre che organizza la laurea del figlio
 
 ### Community 906 - "Community 906"
-Cohesion: 0.40
-Nodes (5): name, notNull, primaryKey, type, access_token_expires_at
+Cohesion: 0.33
+Nodes (6): default, name, notNull, primaryKey, type, cancel_at_period_end
 
 ### Community 907 - "Community 907"
 Cohesion: 0.67
@@ -3610,7 +3614,7 @@ Nodes (3): 9. Roadmap & Timeline, Key Milestones, Phased Rollout
 
 ### Community 912 - "Community 912"
 Cohesion: 0.40
-Nodes (5): refresh_token, name, notNull, primaryKey, type
+Nodes (5): password, name, notNull, primaryKey, type
 
 ### Community 915 - "Community 915"
 Cohesion: 0.40
@@ -3626,11 +3630,11 @@ Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
 
 ### Community 918 - "Community 918"
 Cohesion: 0.40
-Nodes (5): scope, name, notNull, primaryKey, type
+Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
 
 ### Community 919 - "Community 919"
 Cohesion: 0.40
-Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
+Nodes (5): password, name, notNull, primaryKey, type
 
 ### Community 920 - "Community 920"
 Cohesion: 0.40
@@ -3642,27 +3646,43 @@ Nodes (5): updated_at, name, notNull, primaryKey, type
 
 ### Community 922 - "Community 922"
 Cohesion: 0.40
-Nodes (5): id_token, name, notNull, primaryKey, type
+Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
 
 ### Community 923 - "Community 923"
 Cohesion: 0.40
-Nodes (5): updated_at, name, notNull, primaryKey, type
+Nodes (5): name, notNull, primaryKey, type, account_id
 
 ### Community 924 - "Community 924"
 Cohesion: 0.50
 Nodes (3): setMock, updateMock, whereMock
 
 ### Community 925 - "Community 925"
-Cohesion: 0.67
-Nodes (3): 6. Scope, Explicitly Excluded (Future Roadmap), Included in MVP (Phase 1)
+Cohesion: 0.40
+Nodes (5): scope, name, notNull, primaryKey, type
 
-### Community 931 - "Community 931"
+### Community 928 - "Community 928"
 Cohesion: 0.40
 Nodes (5): updated_at, name, notNull, primaryKey, type
 
-### Community 935 - "Community 935"
+### Community 929 - "Community 929"
 Cohesion: 0.40
 Nodes (5): scope, name, notNull, primaryKey, type
+
+### Community 930 - "Community 930"
+Cohesion: 0.40
+Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
+
+### Community 931 - "Community 931"
+Cohesion: 0.40
+Nodes (5): name, notNull, primaryKey, type, account_id
+
+### Community 932 - "Community 932"
+Cohesion: 0.40
+Nodes (5): id_token, name, notNull, primaryKey, type
+
+### Community 933 - "Community 933"
+Cohesion: 0.67
+Nodes (3): 12. Edge Cases & Open Questions, Edge Cases, Open Questions
 
 ### Community 941 - "Community 941"
 Cohesion: 0.50
@@ -3677,7 +3697,7 @@ Nodes (3): PART B — FIXES, Task 6: Executive Summary + Prioritized Action Plan
   docs/superpowers/plans/2026-06-19-resend-webhooks.md · relation: references
 
 ## Knowledge Gaps
-- **8142 isolated node(s):** `version`, `source`, `sourceType`, `skillPath`, `computedHash` (+8137 more)
+- **8207 isolated node(s):** `version`, `source`, `sourceType`, `skillPath`, `computedHash` (+8202 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **49 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -3686,15 +3706,15 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `/api/webhooks/resend (Svix verify + dedup)` and `Vitest harness setup (Resend webhooks)`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `createEvent()` connect `event.service` to `public.audit log`, `logAudit`, `templates`, `Guest Service`?**
+- **Why does `createEvent()` connect `event.service` to `logAudit`, `templates`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `getDB()` connect `Database Repositories` to `event.service`, `GDPR Data Export & Users`, `Email Sending Service`, `audit log created at idx`, `File Storage (R2)`, `public.audit log`, `logAudit`, `permissions`, `Guest Service`, `invitation inviter id user id fk`, `distribution.service`, `reminder.service`, `publicInvite.service`?**
+- **Why does `logAudit()` connect `logAudit` to `File Storage (R2)`, `event.service`, `Email Sending Service`, `GDPR Data Export & Users`, `Database Repositories`, `Guest Service`, `distribution.service`, `reminder.service`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `logAudit()` connect `logAudit` to `File Storage (R2)`, `event.service`, `Email Sending Service`, `audit log created at idx`, `GDPR Data Export & Users`, `Database Repositories`, `Email Templates`, `Guest Service`, `distribution.service`, `reminder.service`?**
+- **Why does `getDB()` connect `Database Repositories` to `event.service`, `GDPR Data Export & Users`, `Email Sending Service`, `File Storage (R2)`, `logAudit`, `permissions`, `Guest Service`, `distribution.service`, `reminder.service`, `publicInvite.service`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `getDB()` (e.g. with `sendContactMessage()` and `subscribe()`) actually correct?**
   _`getDB()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `logAudit()` (e.g. with `.confirmUpload()` and `.deleteFile()`) actually correct?**
   _`logAudit()` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `version`, `source`, `sourceType` to the rest of the system?**
-  _8301 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _8366 weakly-connected nodes found - possible documentation gaps or missing edges._

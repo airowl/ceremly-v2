@@ -107,11 +107,9 @@ Il fail-open di `getAuthSession` (un errore del DB check → si lascia passare) 
 
 ## 5. Cluster 3 — Export GDPR (#9) e Rate-limit atomico (#4)
 
-### 5.1 #9 — export GDPR bloccato (wire `failStaleExports`)
-- **Stato**: `0166dab` ha scritto `failStaleExports()` (`dataExport.service.ts:317` — flippa righe `pending`/`processing` più vecchie di `STALE_EXPORT_MINUTES=60` → `failed`), ma **non è agganciata da nessuna parte** → inerte. Verificato: nessun call site fuori dal service.
-- **Causa residua**: un crash di piattaforma (Vercel timeout/OOM) dopo `claimExportForProcessing` lascia lo stato `processing` per sempre; `hasPendingExport` include `processing` (`service:344`) → ogni export futuro dell'utente va in 400.
-- **Fix**: chiamare `failStaleExports(userId)` nel path di **richiesta** export, **prima** di `hasPendingExport(userId)`. Così una richiesta bloccata si auto-sblocca al tentativo successivo e il pulsante retry riappare (UI mostra retry per `failed`/`expired`).
-- **Rete di sicurezza (opzionale, in plan)**: aggancio anche al cron esistente `purge-deleted-accounts.get.ts` (già schedulato) per sanare le righe senza attendere una nuova richiesta utente. Da valutare se vale la complessità o se il path-di-richiesta basta.
+### 5.1 #9 — export GDPR bloccato — ✅ GIÀ CHIUSO da 0166dab (fuori scope)
+- **Correzione post-verifica**: al momento della prima stesura risultava "scritta ma non agganciata". **Riverifica contro HEAD**: `failStaleExports(userId)` **È già agganciata** in `user.service.ts:282` (dentro `requestDataExport`, esattamente prima di `hasPendingExport`) e anche a `:95`. Il grep iniziale aveva cercato solo dentro `dataExport.service.ts`, mancando i call site in `user.service.ts`.
+- **Conclusione**: il finding #9 è **completamente risolto** da 0166dab (funzione + wiring + test `dataExport.service.test.ts`). **Nessun task** — rimosso dal piano. Resta qui solo per tracciabilità.
 
 ### 5.2 #4 — rate-limit Better Auth non atomico
 - **Causa**: `auth.ts:188` — `rateLimit.storage: "secondary-storage"` fa get→check→set non atomico; `/sign-in/email` (3 per 10s) è aggirabile con richieste parallele.
@@ -173,6 +171,7 @@ Il fail-open di `getAuthSession` (un errore del DB check → si lascia passare) 
 ---
 
 ## 8. Finding già chiusi da 0166dab (fuori scope, per tracciabilità)
+- **#9 Export GDPR bloccato**: `failStaleExports()` scritta E agganciata in `user.service.ts:282` prima di `hasPendingExport` (+ test). Chiuso. (Vedi §5.1 per la correzione post-verifica.)
 - **Reminder race**: `markReminderSent` ora immediatamente dopo enqueue (`reminder.service.ts:160`) + `idempotencyKey Resend reminder:{id}:{guestId}` in `email.ts`. Chiuso.
 - **Reminder all-fail**: se tutti i dispatch falliscono (outage QStash durante cron), il reminder resta non-sent per il retry al giro successivo; fallimento parziale marca comunque sent (no re-send di massa). Chiuso.
 
@@ -195,7 +194,7 @@ Il fail-open di `getAuthSession` (un errore del DB check → si lascia passare) 
 | 6-webhook | email_events duplicati | 2 | col `providerEventId` + indice unique 0011 + onConflictDoNothing |
 | 6-jobs | doppio job | 2 | claim-lease SET NX strict, release-on-throw |
 | 10 | Doppio invito | 2 | `idempotencyKey invite:{eventId}:{guestId}` |
-| 9 | Export GDPR bloccato | 3 | wire `failStaleExports` pre-`hasPendingExport` |
+| ~~9~~ | ~~Export GDPR bloccato~~ | — | ✅ già chiuso da 0166dab (`failStaleExports` wire in `user.service.ts:282`) |
 | 4 | Rate-limit BA non atomico | 3 | `cacheClient.increment` agganciato a BA |
 | 11 | `ttl=0` chiave permanente | 4 | `ttl > 0` guard su entrambi i rami |
 | 12 | Clock-skew scarta submit | 4 | clamp differenza negativa / timestamp firmato |
