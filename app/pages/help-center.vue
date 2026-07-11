@@ -23,6 +23,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/help-center-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 const catIcons = ['sparkle', 'edit', 'guests', 'check', 'copy', 'settings']
 const catCounts = [8, 12, 9, 11, 6, 5]

@@ -13,6 +13,7 @@ useSeoMeta({
     ogImage: () => `${baseUrl}/og/contact-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     twitterImage: () => `${baseUrl}/og/contact-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
 })
+useAltHreflang()
 </script>
 
 <template>

@@ -21,6 +21,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/rsvp-guide-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 const toc = computed(() => (tm('ceremly.site.guidaRsvp.toc') as string[]).map(x => rt(x)))
 

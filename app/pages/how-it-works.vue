@@ -24,6 +24,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/how-it-works-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 interface Step { k: string, t: string, d: string, bullets: string[] }
 const EMPTY_STEP: Step = { k: '', t: '', d: '', bullets: [] }

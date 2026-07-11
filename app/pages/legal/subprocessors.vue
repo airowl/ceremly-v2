@@ -13,6 +13,7 @@ useSeoMeta({
   ogTitle: seoTitle,
   ogDescription: seoDescription,
 })
+useAltHreflang()
 
 interface Row { provider: string, purpose: string, location: string, transfer: string }
 const rows = computed(() => (tm('subprocessors.rows') as Row[]).map(r => ({

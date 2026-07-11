@@ -20,6 +20,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/changelog-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 // CRITICAL: no '@' in i18n strings. Placeholder with '@' kept here as a literal.
 const newsletterPlaceholder = 'la-tua@email.it'

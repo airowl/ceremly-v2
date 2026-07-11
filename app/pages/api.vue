@@ -23,6 +23,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/api-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 const bullets = computed(() => (tm('ceremly.site.api.bullets') as string[]).map(x => rt(x)))
 

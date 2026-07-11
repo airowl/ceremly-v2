@@ -20,6 +20,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/birthdays-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 </script>
 
 <template>

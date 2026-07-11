@@ -17,6 +17,7 @@ useSeoMeta({
     ogTitle: seoTitle,
     ogDescription: seoDescription,
 })
+useAltHreflang()
 </script>
 
 <template>

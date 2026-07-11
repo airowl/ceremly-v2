@@ -23,6 +23,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/features-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 // Icons per group (3 features each), by index — non-textual, kept in the .vue.
 const groupIcons: string[][] = [

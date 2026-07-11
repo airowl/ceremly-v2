@@ -24,6 +24,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/about-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 interface Pair { n: string, l: string }
 const nums = computed(() => (tm('ceremly.site.chiSiamo.nums') as Pair[]).map(x => ({ n: rt(x.n), l: rt(x.l) })))

@@ -19,6 +19,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/status-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 // Giorni "degradati" deterministici per componente (logica nel .vue, non i18n).
 const compDeg: number[][] = [[], [], [21], [21, 44], []]

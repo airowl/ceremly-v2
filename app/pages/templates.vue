@@ -24,6 +24,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/templates-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 const chips = computed(() => (tm('ceremly.site.modelli.chips') as string[]).map(c => rt(c)))
 

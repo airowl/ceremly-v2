@@ -19,6 +19,7 @@ useSeoMeta({
     ogDescription: seoDescription,
     ogType: 'website',
 })
+useAltHreflang()
 
 interface Section { t: string, ps: string[] }
 const sections = computed(() => (tm('ceremly.site.cookie.sections') as Section[]).map(s => ({

@@ -24,6 +24,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/examples-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 // Invite background per event type — consistent with the "For whom" pages.
 const sampleBg = ['var(--bone-300)', 'var(--purple)', 'var(--bone-200)', 'var(--orange-soft)']

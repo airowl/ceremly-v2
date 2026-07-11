@@ -34,6 +34,7 @@ useSeoMeta({
     ogDescription: seoDescription,
     ogType: 'website',
 })
+useAltHreflang()
 
 useSchemaOrg([
     {

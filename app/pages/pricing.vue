@@ -27,6 +27,7 @@ useSeoMeta({
     twitterImage: () => `${baseUrl}/og/pricing-${locale.value.startsWith('it') ? 'it' : 'en'}.png`,
     ogType: 'website',
 })
+useAltHreflang()
 
 // Comparison table rows: each cell is "yes" / "no" / free text.
 interface Row { l: string, free: string, celeb: string, atelier: string }
