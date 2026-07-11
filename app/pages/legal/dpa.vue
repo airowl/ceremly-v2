@@ -12,6 +12,7 @@ const seoTitle = t('dpa.meta.seoTitle')
 const seoDescription = t('dpa.meta.seoDescription')
 useSeoMeta({
   title: seoTitle,
+  titleTemplate: '',
   description: seoDescription,
   ogTitle: seoTitle,
   ogDescription: seoDescription,

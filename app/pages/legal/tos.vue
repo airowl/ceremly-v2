@@ -12,6 +12,7 @@ const seoTitle = t('tos.meta.seoTitle')
 const seoDescription = t('tos.meta.seoDescription')
 useSeoMeta({
     title: seoTitle,
+    titleTemplate: '',
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,

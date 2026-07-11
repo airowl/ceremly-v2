@@ -12,6 +12,7 @@ const seoTitle = t('privacy.meta.seoTitle')
 const seoDescription = t('privacy.meta.seoDescription')
 useSeoMeta({
   title: seoTitle,
+  titleTemplate: '',
   description: seoDescription,
   ogTitle: seoTitle,
   ogDescription: seoDescription,

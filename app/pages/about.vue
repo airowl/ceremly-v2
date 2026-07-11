@@ -16,6 +16,7 @@ const seoTitle = t('ceremly.site.chiSiamo.seoTitle')
 const seoDescription = t('ceremly.site.chiSiamo.seoDescription')
 useSeoMeta({
     title: seoTitle,
+    titleTemplate: '',
     description: seoDescription,
     ogTitle: seoTitle,
     ogDescription: seoDescription,
