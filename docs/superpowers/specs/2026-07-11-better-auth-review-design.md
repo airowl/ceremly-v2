@@ -59,13 +59,11 @@ Severity legend: **HIGH** = exploitable account takeover under realistic precond
 ```
 Pre-hijacking uses the victim's *verified* Google email, so `!userInfo.emailVerified` is already `false` and linking already proceeds — `trustedProviders` changes nothing for the attack, and adding `google` would *disable* the `!emailVerified` check, auto-linking unverified provider emails too (strictly worse).
 
-**Product decision required (drives both fixes).** Does the product need a user to hold **both** a Google identity and an email/password credential on the same email address?
-- **Option A (recommended) — No same-email dual credentials.** Disable OAuth auto-linking of pre-existing accounts; treat Google and email/password as distinct sign-in methods keyed on a single primary credential. Eliminates F1 entirely and removes the linked-account precondition for F2.
-- **Option B — Yes, keep linking.** Then block the *adoption* path: reject or purge unverified local credential rows before OAuth link (so there is nothing to adopt), AND add an explicit 2FA step-up (F2 fix below) because a linked 2FA-protected account remains reachable via Google.
+**Product decision — RESOLVED: Option A** (no same-email dual credentials; see §5). The fixes below follow Option A.
 
-**F1 fix (once the decision is made):**
-- Option A: remove `accountLinking.enabled` (or set the pre-existing-account link to require an authenticated session via the `/link-social` flow, which the app does not currently expose).
-- Option B: add a Better Auth `databaseHooks`/account hook that refuses to link when the pre-existing local user's `emailVerified === false`, and/or a scheduled purge of stale unverified credential signups.
+**F1 fix (Option A):** disable `account.accountLinking.enabled` (`auth.ts:262-266`). Google and email/password become distinct sign-in methods. Pre-implementation check: confirm no existing production users rely on an already-linked account (query `account` for users with both a `credential` and a `google` provider row on the same email); if any exist, plan a migration/communication step. If `/link-social` is later exposed from settings, it must require an authenticated session.
+
+> *(Rejected Option B, for the record: keep linking but reject/purge unverified local credential rows before OAuth link + add the F2 step-up. More surface area; not chosen.)*
 
 **F2 fix (needed under Option B, and any time `/link-social` might be exposed later):** enforce a 2FA step-up on the OAuth-callback and verification paths when `user.twoFactorEnabled` — do not let a session be minted on a path the twoFactor matcher does not cover. Implement as an `after` hook on the callback path that withholds the session and returns the 2FA challenge, mirroring the plugin's own `/sign-in/email` handler.
 
@@ -115,6 +113,10 @@ These share a root: Better Auth's own endpoints under `/api/auth/*` are excluded
 5. **Cluster 6 (F10/F13/F14)** — hardening.
 6. **Cluster 5 (F9/F12)** and non-functional (F15/F16) — lowest priority / separate track.
 
-## 5. Open decision for the user
+## 5. Product decision — RESOLVED (2026-07-11)
 
-**F1/F2 (Cluster 1):** Option A (no same-email dual credentials — recommended) vs Option B (keep linking, add gating + 2FA step-up). This is product-facing and must be answered before the Cluster 1 implementation plan is finalized.
+**F1/F2 (Cluster 1): Option A chosen.** No same-email dual credentials — OAuth auto-linking of pre-existing accounts is disabled. Google and email/password are distinct sign-in methods keyed on a single primary credential.
+
+Consequences for the implementation plan:
+- **F1:** disable `account.accountLinking.enabled` in `auth.ts:262-266`. Verify existing users are unaffected (no already-linked accounts break); if `/link-social` is ever exposed from settings, it must require an authenticated session.
+- **F2:** disabling auto-linking removes F2's precondition **today**. Still add the 2FA step-up on the OAuth-callback/verification paths (or explicitly document + track it) so re-enabling linking later cannot silently reopen the bypass. The plan keeps F2 as its own task, lower urgency than F1.
