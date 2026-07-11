@@ -1,10 +1,10 @@
 ---
-title: "Come iniziare con il boilerplate SaaS"
-description: "Un tour rapido di ciò che è già pronto in questo boilerplate SaaS multi-tenant e come lanciare il tuo prodotto più velocemente."
+title: "Come iniziare: guida rapida per lo sviluppo"
+description: "Guida tecnica di avvio: clonare il repository, configurare le variabili d'ambiente e avviare il server di sviluppo."
 date: "2026-01-15"
 tags:
-  - boilerplate
-  - guida
+  - sviluppo
+  - guida-tecnica
 author: "Il Team"
 featured: false
 published: true

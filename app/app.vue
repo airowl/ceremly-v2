@@ -46,7 +46,7 @@ useSeoMeta({
 useSchemaOrg([
     defineWebSite({
         name: appName.value,
-        description: computed(() => t('landing.seo.description')),
+        description: computed(() => t('ceremly.home.seo.description')),
         inLanguage: ['it-IT', 'en-US'],
     }),
 ])

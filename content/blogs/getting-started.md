@@ -1,10 +1,10 @@
 ---
-title: "Getting Started with the SaaS Boilerplate"
-description: "A quick tour of what comes pre-wired in this multi-tenant SaaS boilerplate and how to ship your product faster."
+title: "Getting Started: a quick development guide"
+description: "A technical setup guide: cloning the repository, configuring environment variables, and starting the dev server."
 date: "2026-01-15"
 tags:
-  - boilerplate
-  - getting-started
+  - development
+  - technical-guide
 author: "The Team"
 featured: true
 published: true

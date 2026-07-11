@@ -7,6 +7,15 @@ const { t } = useI18n()
 
 // Brand email: env-driven (outside i18n due to the '@' character)
 const legalEmail = useRuntimeConfig().public.legalEmail
+
+const seoTitle = t('tos.meta.seoTitle')
+const seoDescription = t('tos.meta.seoDescription')
+useSeoMeta({
+    title: seoTitle,
+    description: seoDescription,
+    ogTitle: seoTitle,
+    ogDescription: seoDescription,
+})
 </script>
 
 <template>

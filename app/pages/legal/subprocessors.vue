@@ -5,6 +5,15 @@ definePageMeta({
 
 const { t, tm, rt } = useI18n()
 
+const seoTitle = t('subprocessors.seoTitle')
+const seoDescription = t('subprocessors.seoDescription')
+useSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+  ogTitle: seoTitle,
+  ogDescription: seoDescription,
+})
+
 interface Row { provider: string, purpose: string, location: string, transfer: string }
 const rows = computed(() => (tm('subprocessors.rows') as Row[]).map(r => ({
   provider: rt(r.provider),

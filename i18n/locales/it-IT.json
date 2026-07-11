@@ -137,11 +137,11 @@
       "cta": "Unisciti alla lista d'attesa"
     },
     "seo": {
-      "title": "Boilerplate SaaS multi-tenant pronto al lancio",
-      "description": "Boilerplate SaaS multi-tenant con organizzazioni, team, abbonamenti, autenticazione e billing. Lancia il tuo prodotto più velocemente.",
-      "ogTitle": "Boilerplate SaaS multi-tenant — lancia più velocemente",
-      "ogDescription": "Organizzazioni, team, billing e auth pronti all'uso. Concentrati sul prodotto, non sull'infrastruttura.",
-      "keywords": "saas boilerplate, multi-tenant, organizzazioni, team, abbonamenti, autenticazione, billing, nuxt, starter kit"
+      "title": "Ceremly — Inviti digitali e RSVP intelligenti",
+      "description": "Un link personalizzato per ogni invitato, RSVP con domande su misura e una dashboard che ti dice subito chi viene davvero.",
+      "ogTitle": "Ceremly — Inviti e RSVP senza rincorrere nessuno",
+      "ogDescription": "Inviti digitali e conferme di partecipazione per matrimoni, lauree, battesimi e compleanni. Niente più WhatsApp.",
+      "keywords": "inviti digitali, RSVP online, conferme partecipazione, inviti matrimonio, inviti laurea, gestione invitati, lista ospiti"
     },
     "landingFooter": {
       "privacy": "Privacy Policy",
@@ -659,7 +659,9 @@
     "meta": {
       "headline": "Legale",
       "title": "Termini e Condizioni d'Uso",
-      "effectiveDate": "Effettivi dal: 1 gennaio 2025"
+      "effectiveDate": "Effettivi dal: 1 gennaio 2025",
+      "seoTitle": "Termini e condizioni — Ceremly",
+      "seoDescription": "Le condizioni d'uso del servizio Ceremly per la creazione di inviti digitali e la gestione delle conferme RSVP."
     },
     "intro": {
       "description": "Benvenuto sulla nostra piattaforma. Usando i nostri servizi accetti questi Termini e Condizioni. Ti preghiamo di leggerli attentamente prima di utilizzare la piattaforma."
@@ -774,7 +776,9 @@
     "meta": {
       "headline": "Legale",
       "title": "Privacy Policy (GDPR)",
-      "effectiveDate": "Effettiva dal: 1 gennaio 2025"
+      "effectiveDate": "Effettiva dal: 1 gennaio 2025",
+      "seoTitle": "Informativa sulla privacy — Ceremly",
+      "seoDescription": "Come Ceremly raccoglie, usa e protegge i dati di chi organizza eventi e dei loro invitati, in conformità al GDPR."
     },
     "overview": {
       "description": "Apprezziamo la tua privacy. Questa policy spiega come trattiamo i dati personali nel nostro servizio."
@@ -880,7 +884,9 @@
       "headline": "Legale",
       "title": "Data Processing Agreement (DPA)",
       "subtitle": "Data Processing Agreement (DPA) art. 28 GDPR",
-      "effectiveDate": "Effettivo dal: 1 gennaio 2025"
+      "effectiveDate": "Effettivo dal: 1 gennaio 2025",
+      "seoTitle": "Data Processing Agreement — Ceremly",
+      "seoDescription": "L'accordo sul trattamento dei dati (art. 28 GDPR) tra Ceremly e i propri clienti: ruoli, misure di sicurezza e sub-responsabili."
     },
     "intro": {
       "description": "Questo Data Processing Agreement definisce i ruoli, le responsabilità e le misure di sicurezza per il trattamento dei dati personali nel nostro servizio, in conformità all'art. 28 del GDPR."
@@ -1397,7 +1403,7 @@
   "blog": {
     "seo": {
       "title": "Blog | Guide e Consigli",
-      "description": "Scopri guide pratiche, consigli e strategie per lanciare e far crescere il tuo prodotto SaaS."
+      "description": "Guide pratiche su inviti digitali, RSVP e organizzazione di matrimoni, lauree, battesimi e compleanni."
     },
     "hero": {
       "badge": "Idee & Risorse",
