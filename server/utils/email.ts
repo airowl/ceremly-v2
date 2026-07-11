@@ -40,6 +40,13 @@ export interface BaseEmailOptions {
     userId?: string;
     /** Context to correlate webhooks (open/click) with the guest/event. */
     context?: EmailContext;
+    /**
+     * Resend Idempotency-Key (24h window): a QStash retry that re-runs the
+     * handler after a successful send (e.g. a post-send DB write failed)
+     * re-issues the SAME send instead of a duplicate email. Only pass keys
+     * that are unique per logical send — never reused for deliberate re-sends.
+     */
+    idempotencyKey?: string;
 }
 
 // Template-specific options
@@ -247,7 +254,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
             ...(options.type === "custom" && options.replyTo
                 ? { replyTo: options.replyTo }
                 : {}),
-        });
+        }, options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : undefined);
 
         // Log to audit
         await logEmailEvent(options, response);

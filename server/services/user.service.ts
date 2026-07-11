@@ -12,6 +12,7 @@ import {
   hasPendingExport,
   updateExportStatus,
 } from '../utils/dataExport'
+import { failStaleExports } from './dataExport.service'
 import { dispatch } from '~~/server/queue'
 import { useServerAuth } from '../utils/auth'
 import { ACCOUNT_DELETION_GRACE_DAYS } from './gdpr.service'
@@ -89,6 +90,9 @@ export async function getUserProfile(userId: string) {
  */
 export async function getDataExportStatus(userId: string) {
   const db = getDB()
+
+  // Self-heal exports orphaned by a hard kill, otherwise the UI spins forever.
+  await failStaleExports(userId)
 
   // Get the most recent export
   const latestExport = await db.query.dataExports.findFirst({
@@ -273,6 +277,10 @@ export async function requestDataExport(
   h3Event: H3Event<EventHandlerRequest>,
   userId: string,
 ) {
+  // Self-heal exports orphaned by a hard kill BEFORE the pending check,
+  // otherwise a stale 'processing' row blocks the user forever.
+  await failStaleExports(userId)
+
   // Check if user already has a pending export
   const pending = await hasPendingExport(userId)
   if (pending) {

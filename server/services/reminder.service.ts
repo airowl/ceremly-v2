@@ -131,9 +131,11 @@ export async function processDueReminders(): Promise<{ processed: number; queued
             reminder.eventId,
         );
         // Concurrent dispatch in chunks (#6): a single failure does NOT abort the
-        // run (Promise.allSettled), so markReminderSent always runs and there is no
-        // mass re-send the next day; handler/consumer idempotency prevents duplicates
-        // regardless. Chunks avoid timeout on large lists.
+        // run (Promise.allSettled), so a PARTIAL failure still marks the reminder
+        // sent and there is no mass re-send the next day; handler/consumer
+        // idempotency prevents duplicates regardless. Chunks avoid timeout on
+        // large lists.
+        let enqueuedForReminder = 0;
         for (let i = 0; i < guests.length; i += REMINDER_DISPATCH_CONCURRENCY) {
             const chunk = guests.slice(i, i + REMINDER_DISPATCH_CONCURRENCY);
             const settled = await Promise.allSettled(
@@ -142,10 +144,18 @@ export async function processDueReminders(): Promise<{ processed: number; queued
             settled.forEach((res, idx) => {
                 if (res.status === "fulfilled") {
                     queued++;
+                    enqueuedForReminder++;
                 } else {
                     console.error(`[cron:send-reminders] dispatch failed for guest ${chunk[idx]!.id} reminder ${reminder.id}:`, res.reason);
                 }
             });
+        }
+        // TOTAL enqueue failure (e.g. QStash outage during the cron run): leave
+        // the reminder unsent so tomorrow's run retries it while still inside
+        // the daysBefore window — marking it sent would silently lose it forever.
+        if (guests.length > 0 && enqueuedForReminder === 0) {
+            console.error(`[cron:send-reminders] all ${guests.length} dispatches failed for reminder ${reminder.id}; NOT marking sent (next run retries)`);
+            continue;
         }
         await markReminderSent(reminder.organizationId, reminder.id);
         processed++;

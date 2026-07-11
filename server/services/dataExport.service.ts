@@ -2,7 +2,7 @@
  * Data Export Service
  * Business logic for GDPR data export: collection, generation, and management.
  */
-import { eq, and, ne, desc, inArray } from 'drizzle-orm';
+import { eq, and, ne, desc, inArray, lt } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { getDB } from '../utils/db';
 import {
@@ -293,6 +293,35 @@ export async function claimExportForProcessing(exportId: string): Promise<boolea
         .where(and(eq(dataExports.id, exportId), ne(dataExports.status, 'processing')))
         .returning({ id: dataExports.id });
     return claimed.length > 0;
+}
+
+/**
+ * Exports stuck in 'pending'/'processing' longer than this are dead: the QStash
+ * retry window (3 retries, exponential backoff) spans ~35 minutes from enqueue,
+ * so after an hour no delivery can still be in flight.
+ */
+const STALE_EXPORT_MINUTES = 60;
+
+/**
+ * Self-heal exports orphaned by a hard kill (Vercel timeout/OOM mid-processExport):
+ * the catch that flips status → 'failed' never runs, the QStash redelivery is
+ * skipped by the claim and answered 200, and the row stays 'pending'/'processing'
+ * forever — blocking the user via hasPendingExport() with no recovery path.
+ * Flipping stale rows to 'failed' unblocks new requests and surfaces the retry
+ * button in the UI (shown for 'failed'/'expired' only).
+ */
+export async function failStaleExports(userId: string): Promise<void> {
+    const db = getDB();
+    const cutoff = new Date(Date.now() - STALE_EXPORT_MINUTES * 60 * 1000);
+
+    await db
+        .update(dataExports)
+        .set({ status: 'failed', errorMessage: 'Export timed out. Please try again.' })
+        .where(and(
+            eq(dataExports.userId, userId),
+            inArray(dataExports.status, ['pending', 'processing']),
+            lt(dataExports.createdAt, cutoff),
+        ));
 }
 
 /**

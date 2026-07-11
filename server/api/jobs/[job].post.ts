@@ -75,8 +75,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Parse + VALIDATE ONLY after the signature is verified. Zod guards against
-  // schema drift (old enqueue vs new consumer) → clean 400 instead of a
-  // TypeError deep in the handler that QStash would then retry 3x.
+  // schema drift (old enqueue vs new consumer) → clean 400, immediately
+  // diagnosable in the logs. NB: QStash retries on ANY non-2xx (400 included;
+  // only 489 + Upstash-NonRetryable-Error suppresses retries) — and that is
+  // fine here: the ~35-min retry window is a grace period in which a deploy
+  // rollback/fix-forward can still save the message before it lands in the DLQ.
   let payload
   try {
     payload = parseJobPayload(job, JSON.parse(body))

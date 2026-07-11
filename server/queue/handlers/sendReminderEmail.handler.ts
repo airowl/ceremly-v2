@@ -59,7 +59,10 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
+  // Idempotency: a reminder goes to a guest at most once (hasReminderActivity),
+  // so the key is stable. Closes the send-ok → insertActivities-fail → QStash
+  // retry → duplicate email window (Resend replays the same send instead).
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId }, idempotencyKey: `reminder:${reminder.id}:${guest.id}` })
   if (!result.success) {
     throw new Error(`[job:send-reminder-email] send failed for guest ${guest.id}: ${result.error}`)
   }
