@@ -106,7 +106,7 @@ These share a root: Better Auth's own endpoints under `/api/auth/*` are excluded
 
 ## 4. Recommended execution order
 
-1. **Cluster 1 (F1/F2)** — after the product decision (Option A vs B). Highest severity; the decision gates the implementation.
+1. **Cluster 1 (F1/F2)** — Option A resolved (§5). F1 (disable auto-linking) first — highest severity; F2 (2FA step-up) tracked as a lower-urgency follow-up since Option A removes its precondition today.
 2. **Cluster 2 (F3/F4)** — two-line config changes closing real session/token windows.
 3. **Cluster 3 (F5)** — ban-enforcement gap on `/api/auth/*`. F8 pending the admin-login confirmation.
 4. **Cluster 4 (F6/F7/F11)** — audit correctness; low risk, improves incident response.
