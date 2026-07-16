@@ -2958,6 +2958,7 @@
       "errorFallback": "Accesso non riuscito. Riprova.",
       "errorInvalidCredentials": "Email o password non corretti.",
       "errorEmailNotVerified": "Devi verificare la tua email prima di accedere.",
+      "errorAccountNotLinked": "Questo indirizzo email è già registrato con email e password. Accedi con la tua password.",
       "successTitle": "Bentornato!",
       "successDescription": "Accesso effettuato con successo.",
       "shellLabel": "Accedi",

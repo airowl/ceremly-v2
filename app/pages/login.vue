@@ -43,12 +43,24 @@ const schema = z.object({
     password: z.string().min(8, t('ceremly.login.validationPassword'))
 })
 
+// F1 UX: OAuth auto-linking is disabled, so a user who registered with
+// email/password and clicks "Continue with Google" is redirected back here
+// (errorCallbackURL below) with ?error=account_not_linked instead of being
+// silently linked. Surface it via the same toast used for other sign-in
+// failures.
+onMounted(() => {
+    if (route.query.error === 'account_not_linked') {
+        toast.add({ title: t('ceremly.login.errorTitle'), description: t('ceremly.login.errorAccountNotLinked') })
+    }
+})
+
 async function signInWithGoogle() {
     try {
         loading.value = true
         await signIn.social({
             provider: 'google',
-            callbackURL: safeRedirect()
+            callbackURL: safeRedirect(),
+            errorCallbackURL: '/login?error=account_not_linked'
         })
     } catch (error) {
         toast.add({ title: t('ceremly.login.errorTitle'), description: error instanceof Error && error.message ? error.message : t('ceremly.login.errorGoogle') })

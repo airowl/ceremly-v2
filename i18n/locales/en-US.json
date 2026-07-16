@@ -2958,6 +2958,7 @@
       "errorFallback": "Sign in failed. Please try again.",
       "errorInvalidCredentials": "Incorrect email or password.",
       "errorEmailNotVerified": "You need to verify your email before signing in.",
+      "errorAccountNotLinked": "This email address is already registered with email and password. Sign in with your password.",
       "successTitle": "Welcome back!",
       "successDescription": "Signed in successfully.",
       "shellLabel": "Sign in",

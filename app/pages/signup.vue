@@ -87,7 +87,8 @@ async function signUpWithGoogle() {
         loading.value = true
         await signIn.social({
             provider: 'google',
-            callbackURL: safeRedirect()
+            callbackURL: safeRedirect(),
+            errorCallbackURL: '/login?error=account_not_linked'
         })
     } catch (error) {
         toast.add({ title: t('ceremly.signup.errorTitle'), description: error instanceof Error && error.message ? error.message : t('ceremly.signup.errorGoogle') })
