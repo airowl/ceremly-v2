@@ -227,7 +227,11 @@ export const createBetterAuth = () =>
         },
         emailVerification: {
             sendOnSignUp: true,
-            autoSignInAfterVerification: true,
+            // Security review F4: the verification token is a stateless HS256 JWT with no
+            // single-use DB record (api-CkmycQ2x.mjs:1260) → replayable until expiry (~1h).
+            // With auto-sign-in ON, a leaked verification URL granted repeated account access.
+            // Require an explicit login after verification instead.
+            autoSignInAfterVerification: false,
             sendVerificationEmail: async ({ user, url }, request) => {
                 const language = ((user as { locale?: string }).locale as SupportedLanguage) || 'it';
                 const result = await sendEmail({
