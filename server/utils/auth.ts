@@ -196,6 +196,9 @@ export const createBetterAuth = () =>
                 "/sign-in/email": { window: 10, max: 3 },
                 "/request-password-reset": { window: 60, max: 5 },
                 "/reset-password": { window: 60, max: 10 },
+                // F9: /change-email returns a distinct 422 for an already-registered target
+                // (library default), enabling enumeration. Rate-limit to bound it.
+                "/change-email": { window: 60, max: 5 },
             },
         },
         emailAndPassword: {
