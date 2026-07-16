@@ -433,6 +433,12 @@ export const createBetterAuth = () =>
             ...(runtimeConfig.public.appEnv === "development"
                 ? [openAPI()]
                 : []),
+            // SECURITY (F8): the admin() plugin mounts impersonate/set-role/ban under
+            // /api/auth/admin/* (role-gated: adminRoles=["admin"], admin-D-OMdNIc.mjs:75),
+            // a SEPARATE control plane from the API-key-gated /api/admin routes. role="admin"
+            // is input:false at signup (not self-escalatable). Access requires a web-login
+            // by an admin-role user. If admins are DB-only and never web-authenticate, this
+            // surface is inert; otherwise restrict via adminUserIds allowlist + step-up.
             admin(),
             organization({
                 sendInvitationEmail: async (data) => {
@@ -493,6 +499,11 @@ export const createBetterAuth = () =>
                     },
                 },
             }),
+            // SECURITY (F2): the twoFactor challenge hook matches only /sign-in/{email,
+            // username,phone-number} (two-factor-BDQvVILL.mjs:872), NOT the OAuth callback
+            // or verification paths. Auto-linking is disabled (F1), which removes the
+            // linked-2FA-account bypass precondition TODAY. If /link-social is ever exposed
+            // from settings, add a 2FA step-up on the OAuth-callback path before re-enabling.
             twoFactor({
                 issuer: runtimeConfig.public.appName || "SaaS App",
                 backupCodeOptions: { amount: 10 },

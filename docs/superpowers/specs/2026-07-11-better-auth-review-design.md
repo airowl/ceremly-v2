@@ -120,3 +120,10 @@ These share a root: Better Auth's own endpoints under `/api/auth/*` are excluded
 Consequences for the implementation plan:
 - **F1:** disable `account.accountLinking.enabled` in `auth.ts:262-266`. Verify existing users are unaffected (no already-linked accounts break); if `/link-social` is ever exposed from settings, it must require an authenticated session.
 - **F2:** disabling auto-linking removes F2's precondition **today**. Still add the 2FA step-up on the OAuth-callback/verification paths (or explicitly document + track it) so re-enabling linking later cannot silently reopen the bypass. The plan keeps F2 as its own task, lower urgency than F1.
+
+## 6. Deferred / documented (not fixed in code)
+
+- **F2 (2FA-OAuth bypass):** precondition removed by F1 (auto-linking disabled). Pointer comment left at the twoFactor config. Re-add a 2FA step-up on the OAuth callback IF `/link-social` is ever exposed. Tracked, not urgent.
+- **F8 (admin control plane):** role-based `/api/auth/admin/*` accepted as a separate control plane from `/api/admin`. Documented at the config. Follow-up only if admins web-authenticate → then `adminUserIds` allowlist.
+- **F12 (signup/login enumeration):** accepted UX tradeoff, rate-limited. No change.
+- **F15 (no /reset-password page):** the reset flow has no consumer UI — the "forgot password" link points to `/`. This is a FEATURE GAP, tracked separately from this security plan. Build `/reset-password/[token]` + fix `login.vue:162` in a product task.
