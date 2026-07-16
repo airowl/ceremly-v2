@@ -285,7 +285,9 @@ export const createBetterAuth = () =>
                 const AUTH_PATH_MAP: Record<string, AuditAction> = {
                     '/sign-in/email': 'auth.signed_in',
                     '/sign-up/email': 'auth.signed_up',
-                    '/forget-password': 'auth.password_reset_requested',
+                    // F6: real Better Auth 1.4.5 endpoint is /request-password-reset
+                    // (api-CkmycQ2x.mjs:1804); /forget-password does not exist in this version.
+                    '/request-password-reset': 'auth.password_reset_requested',
                     '/reset-password': 'auth.password_reset_completed',
                 };
 
@@ -300,11 +302,11 @@ export const createBetterAuth = () =>
                     targetId = ctx.context.session?.user.id ||
                         ctx.context.newSession?.user.id;
                 } else if (
-                    ["/sign-in/email", "/sign-up/email", "forget-password"]
+                    ["/sign-in/email", "/sign-up/email", "/request-password-reset"]
                         .includes(ctx.path)
                 ) {
                     targetType = "email";
-                    targetId = ctx.body.email || "";
+                    targetId = ctx.body?.email || "";
                 }
                 const returned = ctx.context.returned;
                 if (returned && returned instanceof APIError) {
@@ -338,12 +340,22 @@ export const createBetterAuth = () =>
                     const action = AUTH_PATH_MAP[ctx.path];
                     if (action) {
                         let userId: string | undefined;
-                        if (
-                            ["/sign-in/email", "/sign-up/email"].includes(
-                                ctx.path,
-                            )
-                        ) {
+                        if (ctx.path === "/sign-in/email") {
                             userId = ctx.context.newSession?.user.id;
+                        } else if (ctx.path === "/sign-up/email") {
+                            // F7: under requireEmailVerification, sign-up returns no session
+                            // (newSession is undefined). Resolve the just-created user by email
+                            // so auth.signed_up and auth.tos_accepted attribute correctly.
+                            const email = ctx.body?.email as string | undefined;
+                            if (email) {
+                                const db = getDB();
+                                const rows = await db
+                                    .select({ id: schema.user.id })
+                                    .from(schema.user)
+                                    .where(eq(schema.user.email, email))
+                                    .limit(1);
+                                userId = rows[0]?.id;
+                            }
                         } else {
                             userId = ctx.context.session?.user.id;
                         }
