@@ -28,12 +28,14 @@ const route = useRoute()
 const loading = ref(false)
 
 // Post-signup redirect ONLY if same-origin relative (single leading '/'):
-// blocks open-redirect '//evil.com' / 'https://…'. Backstopped by Better Auth's
-// originCheck server-side, kept here for consistency (F13).
+// blocks open-redirect '//evil.com' and '/\evil.com' (WHATWG URL parsing
+// normalizes a leading backslash to '/', making it protocol-relative too) /
+// 'https://…'. Backstopped by Better Auth's originCheck server-side, kept
+// here for consistency (F13).
 function safeRedirect(): string {
     const raw = route.query.redirect
     const path = typeof raw === 'string' ? raw : ''
-    return /^\/(?!\/)/.test(path) ? path : '/dashboard'
+    return /^\/(?![/\\])/.test(path) ? path : '/dashboard'
 }
 
 const firstName = ref('')

@@ -24,11 +24,13 @@ const show2FA = ref(false)
 
 // Post-login redirect ONLY if same-origin relative (must start with a single
 // '/'): blocks open-redirect `?redirect=//evil.com` or `?redirect=https://…`
-// (post-auth phishing). Otherwise falls back to /dashboard.
+// (post-auth phishing), and `?redirect=/\evil.com` (WHATWG URL parsing
+// normalizes a leading backslash to `/`, making it protocol-relative too).
+// Otherwise falls back to /dashboard.
 function safeRedirect(): string {
     const raw = route.query.redirect
     const path = typeof raw === 'string' ? raw : ''
-    return /^\/(?!\/)/.test(path) ? path : '/dashboard'
+    return /^\/(?![/\\])/.test(path) ? path : '/dashboard'
 }
 
 const email = ref('')

@@ -15,10 +15,12 @@ onMounted(async () => {
 
     // Redirect based on authentication status
     if (loggedIn.value) {
-        // Solo path relativo same-origin (no open-redirect post-auth).
+        // Solo path relativo same-origin (no open-redirect post-auth): blocca
+        // '//evil.com' e '/\evil.com' (il parsing URL WHATWG normalizza il
+        // backslash iniziale in '/', rendendolo protocol-relative).
         const raw = route.query.redirect
         const path = typeof raw === 'string' ? raw : ''
-        await router.push(/^\/(?!\/)/.test(path) ? path : '/dashboard')
+        await router.push(/^\/(?![/\\])/.test(path) ? path : '/dashboard')
     } else {
         await router.push('/login')
     }
