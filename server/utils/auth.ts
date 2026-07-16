@@ -128,6 +128,11 @@ export const createBetterAuth = () =>
                     before: async (session) => {
                         // Initial active org: the user's first membership (createdAt asc).
                         const db = getDB();
+                        // TODO(F14): true concurrency (two logins racing) can still double-insert
+                        // a personal org (slugs differ by uuidv7 suffix, so the UNIQUE(slug) does
+                        // not catch it). A durable fix is a partial unique index guaranteeing one
+                        // personal org per user, or a pg advisory lock keyed on userId. Deferred:
+                        // needs a migration; the re-select above bounds the common case.
                         const findFirstOrg = async () =>
                             db
                                 .select({ organizationId: schema.member.organizationId })
@@ -155,17 +160,28 @@ export const createBetterAuth = () =>
                                     await useServerAuth().api.createOrganization({
                                         body: { name, slug, userId: session.userId },
                                     });
+                                    // F14: re-select AFTER create. Under a concurrent login the
+                                    // other request may have created the org first; re-reading here
+                                    // means we adopt whichever committed first as the active org and
+                                    // avoids acting on a stale empty read. (Does not fully prevent a
+                                    // duplicate insert under true concurrency — that needs a DB unique
+                                    // constraint on (member.userId, personal-org) or an advisory lock;
+                                    // tracked as a follow-up, see Step 3.)
                                     rows = await findFirstOrg();
                                 }
                             } catch (err) {
-                                // Do not block login: without an active org, the app handles the fallback.
                                 console.error(`[session→org self-heal] createOrganization failed for user ${session.userId}:`, err);
+                                rows = await findFirstOrg(); // a concurrent creator may have succeeded
                             }
                         }
 
                         const activeOrganizationId = rows[0]?.organizationId;
                         if (!activeOrganizationId) {
-                            return; // no org (anomalous state) → no override
+                            // F14: "every user has an org" invariant violated after self-heal.
+                            // This is an anomaly worth alerting on, not a silent pass — Sentry
+                            // will capture the error-level log.
+                            console.error(`[session→org] user ${session.userId} has NO active org after self-heal — invariant violated`);
+                            return; // no override; app tolerates a null active org via RBAC 403
                         }
                         return {
                             data: {
