@@ -132,7 +132,8 @@ export const createBetterAuth = () =>
                         // a personal org (slugs differ by uuidv7 suffix, so the UNIQUE(slug) does
                         // not catch it). A durable fix is a partial unique index guaranteeing one
                         // personal org per user, or a pg advisory lock keyed on userId. Deferred:
-                        // needs a migration; the re-select above bounds the common case.
+                        // needs a migration; the re-select in the self-heal branch below bounds
+                        // the common case.
                         const findFirstOrg = async () =>
                             db
                                 .select({ organizationId: schema.member.organizationId })
@@ -166,7 +167,7 @@ export const createBetterAuth = () =>
                                     // avoids acting on a stale empty read. (Does not fully prevent a
                                     // duplicate insert under true concurrency — that needs a DB unique
                                     // constraint on (member.userId, personal-org) or an advisory lock;
-                                    // tracked as a follow-up, see Step 3.)
+                                    // tracked as a deferred follow-up.)
                                     rows = await findFirstOrg();
                                 }
                             } catch (err) {
@@ -302,9 +303,9 @@ export const createBetterAuth = () =>
         },
         hooks: {
             before: createAuthMiddleware(async (ctx) => {
-                // F5: re-check ban freshness from the DB on authenticated, state-changing
-                // Better Auth endpoints that the app middleware does not cover. Fail-CLOSED
-                // here (unlike getAuthSession's fail-open): these are sensitive mutations and
+                // F5: re-check ban freshness from the DB on org/admin/creem Better Auth
+                // sub-paths (reads included) that the app middleware does not cover.
+                // Fail-CLOSED here (unlike getAuthSession's fail-open): these endpoints
                 // are low-volume, so a transient DB error blocking them is acceptable.
                 if (!shouldBanGuardPath(ctx.path)) return;
                 // At before-hook time ctx.context.session is still null: runBeforeHooks runs

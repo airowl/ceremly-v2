@@ -10,6 +10,9 @@ describe("shouldBanGuardPath", () => {
     it("guards admin endpoints", () => {
         expect(shouldBanGuardPath("/admin/impersonate-user")).toBe(true);
     });
+    it("guards creem billing endpoints", () => {
+        expect(shouldBanGuardPath("/creem/create-checkout")).toBe(true);
+    });
     it("does NOT guard sign-out or session reads (avoid locking a user out of logging out)", () => {
         expect(shouldBanGuardPath("/sign-out")).toBe(false);
         expect(shouldBanGuardPath("/get-session")).toBe(false);
