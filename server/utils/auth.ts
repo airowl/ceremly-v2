@@ -2,7 +2,7 @@ import type { H3Event, EventHandlerRequest } from "~~/server/types/h3";
 import type { User } from "~~/shared/utils/types";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { admin, openAPI, organization, twoFactor } from "better-auth/plugins";
 import { v7 as uuidv7 } from "uuid";
 import * as schema from "../database/schema";
@@ -12,6 +12,7 @@ import { logAudit } from "./audit";
 import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
 import { isUserBannedFresh } from "./banStatus";
+import { shouldBanGuardPath } from "./authBanGuard";
 import { cacheClient } from "./drivers";
 import { sendEmail } from "./email";
 import { deriveOrgNameFromUser, generateUniqueOrgSlug } from "../services/org.service";
@@ -284,6 +285,25 @@ export const createBetterAuth = () =>
             },
         },
         hooks: {
+            before: createAuthMiddleware(async (ctx) => {
+                // F5: re-check ban freshness from the DB on authenticated, state-changing
+                // Better Auth endpoints that the app middleware does not cover. Fail-CLOSED
+                // here (unlike getAuthSession's fail-open): these are sensitive mutations and
+                // are low-volume, so a transient DB error blocking them is acceptable.
+                if (!shouldBanGuardPath(ctx.path)) return;
+                // At before-hook time ctx.context.session is still null: runBeforeHooks runs
+                // BEFORE the endpoint's own session middleware (api-CkmycQ2x.mjs:2921 seeds
+                // session:null, :2928 runs before-hooks, :2951 runs the endpoint). Resolve it
+                // explicitly. getSessionFromCtx caches onto ctx.context.session, so the
+                // endpoint's own sessionMiddleware reuses it (session-AaRl3_x-.mjs:226) — no
+                // double fetch — and returns null (not throwing) for unauthenticated requests.
+                const session = await getSessionFromCtx(ctx);
+                const userId = session?.user?.id;
+                if (!userId) return; // unauthenticated → plugin's own guard handles it
+                if (await isUserBannedFresh(userId)) {
+                    throw new APIError("FORBIDDEN", { message: "Account banned" });
+                }
+            }),
             after: createAuthMiddleware(async (ctx) => {
                 const AUTH_PATH_MAP: Record<string, AuditAction> = {
                     '/sign-in/email': 'auth.signed_in',
