@@ -10,7 +10,7 @@ import { cleanupOrphanFiles } from '~~/server/services/file/cleanup'
 import { logAudit } from '~~/server/utils/audit'
 
 export default defineEventHandler(async (event) => {
-  requireAdminApiKey(event)
+  await requireAdminApiKey(event)
 
   const body = await readBody<{ graceHours?: number }>(event).catch(() => ({ graceHours: undefined }))
   const graceHours = body.graceHours ?? 1

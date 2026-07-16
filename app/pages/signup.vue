@@ -27,6 +27,15 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 
+// Post-signup redirect ONLY if same-origin relative (single leading '/'):
+// blocks open-redirect '//evil.com' / 'https://…'. Backstopped by Better Auth's
+// originCheck server-side, kept here for consistency (F13).
+function safeRedirect(): string {
+    const raw = route.query.redirect
+    const path = typeof raw === 'string' ? raw : ''
+    return /^\/(?!\/)/.test(path) ? path : '/dashboard'
+}
+
 const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
@@ -76,7 +85,7 @@ async function signUpWithGoogle() {
         loading.value = true
         await signIn.social({
             provider: 'google',
-            callbackURL: (route.query.redirect as string) || '/dashboard'
+            callbackURL: safeRedirect()
         })
     } catch (error) {
         toast.add({ title: t('ceremly.signup.errorTitle'), description: error instanceof Error && error.message ? error.message : t('ceremly.signup.errorGoogle') })
@@ -114,7 +123,7 @@ async function onSubmit() {
             email: parsed.data.email,
             password: parsed.data.password,
             name: `${parsed.data.firstName} ${parsed.data.lastName}`.trim(),
-            callbackURL: (route.query.redirect as string) || '/dashboard'
+            callbackURL: safeRedirect()
         })
 
         if (error) {
