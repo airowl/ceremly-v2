@@ -348,13 +348,20 @@ export const createBetterAuth = () =>
                             // so auth.signed_up and auth.tos_accepted attribute correctly.
                             const email = ctx.body?.email as string | undefined;
                             if (email) {
-                                const db = getDB();
-                                const rows = await db
-                                    .select({ id: schema.user.id })
-                                    .from(schema.user)
-                                    .where(eq(schema.user.email, email))
-                                    .limit(1);
-                                userId = rows[0]?.id;
+                                try {
+                                    const db = getDB();
+                                    const rows = await db
+                                        .select({ id: schema.user.id })
+                                        .from(schema.user)
+                                        .where(eq(schema.user.email, email))
+                                        .limit(1);
+                                    userId = rows[0]?.id;
+                                } catch (err) {
+                                    // Audit attribution is best-effort: a transient DB error here
+                                    // must not break the sign-up response (Better Auth re-throws
+                                    // non-APIError from after-hooks). Degrade to undefined userId.
+                                    console.error("[audit] sign-up userId lookup failed:", err);
+                                }
                             }
                         } else {
                             userId = ctx.context.session?.user.id;
