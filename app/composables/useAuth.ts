@@ -40,43 +40,56 @@ export function useAuth() {
     const sessionFetching = import.meta.server
         ? ref(false)
         : useState("auth:sessionFetching", () => false);
+    const pending = import.meta.server
+        ? ref<Promise<unknown> | null>(null)
+        : useState<Promise<unknown> | null>("auth:sessionPending", () => null);
 
     const fetchSession = async () => {
-        if (sessionFetching.value) {
-            return;
+        // F16: if a fetch is already in flight, await IT instead of returning undefined
+        // against a possibly-stale session (e.g. concurrent $sessionSignal listener).
+        if (sessionFetching.value && pending.value) {
+            return pending.value;
         }
         sessionFetching.value = true;
-        const { data } = await client.getSession();
-        session.value = data?.session || null;
+        const run = (async () => {
+            const { data } = await client.getSession();
+            session.value = data?.session || null;
 
-        const userDefaults = {
-            image: null as string | null,
-            phone: null as string | null,
-            bio: null as string | null,
-            role: null as string | null,
-            banReason: null as string | null,
-            banned: null as boolean | null,
-            banExpires: null as Date | null,
-            creemCustomerId: null as string | null,
-            hadTrial: null as boolean | null,
-            locale: null as string | null,
-            timezone: null as string | null,
-            twoFactorEnabled: null as boolean | null,
-            tosAcceptedAt: null as Date | null,
-        };
-        if (data?.user) {
-            const normalizedUser = {
-                ...userDefaults,
-                ...data.user,
-                banned: data.user.banned ?? null,
-                twoFactorEnabled: data.user.twoFactorEnabled ?? null,
+            const userDefaults = {
+                image: null as string | null,
+                phone: null as string | null,
+                bio: null as string | null,
+                role: null as string | null,
+                banReason: null as string | null,
+                banned: null as boolean | null,
+                banExpires: null as Date | null,
+                creemCustomerId: null as string | null,
+                hadTrial: null as boolean | null,
+                locale: null as string | null,
+                timezone: null as string | null,
+                twoFactorEnabled: null as boolean | null,
+                tosAcceptedAt: null as Date | null,
             };
-            user.value = normalizedUser;
-        } else {
-            user.value = null;
+            if (data?.user) {
+                const normalizedUser = {
+                    ...userDefaults,
+                    ...data.user,
+                    banned: data.user.banned ?? null,
+                    twoFactorEnabled: data.user.twoFactorEnabled ?? null,
+                };
+                user.value = normalizedUser;
+            } else {
+                user.value = null;
+            }
+            return data;
+        })();
+        pending.value = run;
+        try {
+            return await run;
+        } finally {
+            sessionFetching.value = false;
+            pending.value = null;
         }
-        sessionFetching.value = false;
-        return data;
     };
 
     if (import.meta.client) {
