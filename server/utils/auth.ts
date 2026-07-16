@@ -201,6 +201,11 @@ export const createBetterAuth = () =>
         emailAndPassword: {
             enabled: true,
             requireEmailVerification: true,
+            // Security review F3: a user who resets their password (often BECAUSE they
+            // suspect compromise) must not leave the attacker's existing session alive.
+            // Better Auth only calls deleteSessions(userId) on reset when this is set
+            // (api-CkmycQ2x.mjs:1946).
+            revokeSessionsOnPasswordReset: true,
             sendResetPassword: async ({ user, url }) => {
                 const language = ((user as { locale?: string }).locale as SupportedLanguage) || 'it';
                 const result = await sendEmail({
