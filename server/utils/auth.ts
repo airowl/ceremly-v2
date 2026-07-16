@@ -261,7 +261,14 @@ export const createBetterAuth = () =>
         },
         account: {
             accountLinking: {
-                enabled: true,
+                // Auto-linking of a pre-existing account is DISABLED (security review F1):
+                // Better Auth only checks the INCOMING provider email's verification, never
+                // whether the pre-existing LOCAL credential row was verified. With linking on,
+                // an attacker who pre-registers victim@gmail.com (unverified, no session) has
+                // that row adopted — and flipped to emailVerified=true — when the real victim
+                // later signs in with Google (api-CkmycQ2x.mjs:826,852). Google and
+                // email/password are now distinct sign-in methods keyed on one primary credential.
+                enabled: false,
             },
         },
         hooks: {
