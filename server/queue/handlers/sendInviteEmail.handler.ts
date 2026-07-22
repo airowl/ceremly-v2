@@ -50,8 +50,14 @@ export async function handleSendInviteEmail(payload: JobPayload<'send-invite-ema
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
+  // Idempotency: one invite per guest. Closes the send-ok → post-send-write-fail
+  // → QStash retry → duplicate-email window (Resend replays the same send).
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId }, idempotencyKey: `invite:${guest.eventId}:${guest.id}` })
   if (!result.success) {
+    if (result.skipped) {
+      console.warn(`[job:send-invite-email] guest ${guest.id} suppressed, skipping`)
+      return
+    }
     throw new Error(`[job:send-invite-email] send failed for guest ${guest.id}: ${result.error}`)
   }
 }
