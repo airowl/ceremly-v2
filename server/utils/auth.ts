@@ -23,6 +23,26 @@ if (import.meta.dev) {
     console.log(`Base URL is ${runtimeConfig.public.baseURL}`);
 }
 
+// sendInvitationEmail runs before afterCreateInvitation in the same request
+// (better-auth awaits both sequentially); this map hands the delivery outcome
+// across the two hooks. Entries are delete-on-read; the resend-invitation path
+// has no afterCreate hook, so its entry is simply overwritten on the next resend.
+const inviteDeliveryStatus = new Map<string, boolean>();
+
+export async function logInviteAudit(
+    input: { invitationId: string; email: string; inviterId: string; organizationId: string; role: string },
+    delivered: boolean,
+): Promise<void> {
+    await logAudit(null, "team.member_invited", {
+        userId: input.inviterId,
+        organizationId: input.organizationId,
+        targetType: "email",
+        targetId: input.email,
+        status: delivered ? "success" : "failure",
+        details: { role: input.role, invitationId: input.invitationId, emailDelivered: delivered },
+    });
+}
+
 export const createBetterAuth = () =>
     betterAuth({
         baseURL: runtimeConfig.public.baseURL,
@@ -459,17 +479,28 @@ export const createBetterAuth = () =>
                             `[org.sendInvitationEmail] send failed to ${data.email}: ${result.error}`,
                         );
                     }
+                    // data.id IS the invitation id (better-auth passes id: invitation.id).
+                    // afterCreateInvitation reads this in the same request to reflect the
+                    // real delivery outcome in the audit; see inviteDeliveryStatus above.
+                    inviteDeliveryStatus.set(data.id, result.success);
                 },
                 organizationHooks: {
                     afterCreateInvitation: async (data) => {
-                        await logAudit(null, "team.member_invited", {
-                            userId: data.inviter.id,
-                            organizationId: data.organization.id,
-                            targetType: "email",
-                            targetId: data.invitation.email,
-                            status: "success",
-                            details: { role: data.invitation.role, invitationId: data.invitation.id },
-                        });
+                        // Fail-open default (true): if better-auth's hook ordering ever
+                        // changes upstream, we degrade to today's always-success behavior
+                        // rather than false-alarming a delivery failure that didn't happen.
+                        const delivered = inviteDeliveryStatus.get(data.invitation.id) ?? true;
+                        inviteDeliveryStatus.delete(data.invitation.id);
+                        await logInviteAudit(
+                            {
+                                invitationId: data.invitation.id,
+                                email: data.invitation.email,
+                                inviterId: data.inviter.id,
+                                organizationId: data.organization.id,
+                                role: data.invitation.role,
+                            },
+                            delivered,
+                        );
                     },
                     afterAcceptInvitation: async (data) => {
                         await logAudit(null, "team.invite_accepted", {
