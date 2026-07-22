@@ -13,11 +13,25 @@ const { upsertSuppression, insertEmailEvent, recordGuestOpen, findSeedContext } 
 vi.mock("../repositories/emailSuppression.repository", () => ({ upsertSuppression }));
 vi.mock("../repositories/emailEvent.repository", () => ({ insertEmailEvent, recordGuestOpen, findSeedContext }));
 
-import { isOwnDomain, handleResendEvent } from "./emailWebhook.service";
+import { isOwnDomain, handleResendEvent, isHardBounce } from "./emailWebhook.service";
 
 beforeEach(() => {
     vi.clearAllMocks();
     insertEmailEvent.mockResolvedValue({ inserted: true }); // reset default after clearAllMocks wipes it
+});
+
+describe("isHardBounce", () => {
+    it("treats permanent subtypes as hard", () => {
+        expect(isHardBounce("Permanent")).toBe(true);
+        expect(isHardBounce("General")).toBe(true);
+        expect(isHardBounce("NoEmail")).toBe(true);
+    });
+    it("treats transient/unknown subtypes as soft", () => {
+        expect(isHardBounce("Transient")).toBe(false);
+        expect(isHardBounce("MailboxFull")).toBe(false);
+        expect(isHardBounce(undefined)).toBe(false);
+        expect(isHardBounce("SomethingNew")).toBe(false);
+    });
 });
 
 describe("emailWebhook.service", () => {
@@ -70,5 +84,15 @@ describe("emailWebhook.service", () => {
             "svix_fresh_1",
         );
         expect(recordGuestOpen).toHaveBeenCalledWith("g1", expect.any(Date));
+    });
+
+    it("does NOT suppress on a transient bounce, but still records the event", async () => {
+        await handleResendEvent(
+            { type: "email.bounced", created_at: new Date(0).toISOString(),
+              data: { email_id: "m1", from: OWN_FROM, to: ["a@b.com"], bounce: { subType: "Transient" } } },
+            "svix_soft_1",
+        );
+        expect(upsertSuppression).not.toHaveBeenCalled();
+        expect(insertEmailEvent).toHaveBeenCalledWith(expect.objectContaining({ type: "bounced" }));
     });
 });

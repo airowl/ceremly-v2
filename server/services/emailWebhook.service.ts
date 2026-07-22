@@ -3,6 +3,17 @@ import { runtimeConfig } from "../utils/runtimeConfig";
 import { upsertSuppression } from "../repositories/emailSuppression.repository";
 import { insertEmailEvent, recordGuestOpen, findSeedContext } from "../repositories/emailEvent.repository";
 
+// Resend does not type bounce subtypes; values follow SES conventions. We
+// whitelist HARD (permanent) subtypes — anything unknown defaults to SOFT so a
+// transient failure never permanently suppresses a valid address.
+const HARD_BOUNCE_SUBTYPES = new Set([
+    "Permanent", "General", "NoEmail", "Suppressed", "OnAccountSuppressionList",
+]);
+
+export function isHardBounce(subType?: string): boolean {
+    return !!subType && HARD_BOUNCE_SUBTYPES.has(subType);
+}
+
 export interface ResendWebhookEvent {
     type: string;
     created_at: string;
@@ -75,12 +86,15 @@ export async function handleResendEvent(event: ResendWebhookEvent, svixId: strin
     };
 
     switch (type) {
-        case "email.bounced":
-            // Suppression policy handled in Task 3 (isHardBounce). Placeholder
-            // kept identical here; Task 3 replaces this branch.
-            await upsertSuppression({ email: recipient, reason: "hard_bounce", bounceSubtype: data.bounce?.subType });
+        case "email.bounced": {
+            // Only permanent bounces suppress; transient bounces are logged only
+            // (Resend retries them upstream). Unknown subtype → treated as soft.
+            if (isHardBounce(data.bounce?.subType)) {
+                await upsertSuppression({ email: recipient, reason: "hard_bounce", bounceSubtype: data.bounce?.subType });
+            }
             await insertEmailEvent({ ...baseEvent, type: "bounced" });
             break;
+        }
         case "email.complained":
             await upsertSuppression({ email: recipient, reason: "complaint" });
             await insertEmailEvent({ ...baseEvent, type: "complained" });
