@@ -35,13 +35,14 @@ Better Auth hooks / Services / Cron
 - **`server/utils/drivers.ts`** — `getResendInstance()`: singleton lazy, crea una sola `new Resend(runtimeConfig.resendApiKey)` per processo serverless e la cachea in modulo.
 - **`server/utils/email.ts`** — superficie pubblica:
   - `sendEmail(options: EmailOptions): Promise<EmailResult>` — `options` è una union tipizzata: `verification | reset_password | change_email | waiting_list | invitation | custom`.
-  - `sendBatchEmails(emails[])` — batch con concorrenza fissa **10**.
+  - `sendBatchEmails(emails[])` — batch con concorrenza fissa **10**, usa `resend.batch.send()` (1 API call per chunk ≤100, non audita né seedizza correlazioni).
   - `isEmailServiceConfigured()` — true sse `NUXT_RESEND_API_KEY` + `appNotifyEmail` + `appName` presenti.
-  - `EmailResult = { success, messageId?, error? }`.
-  - **From** = `${appName} <${appNotifyEmail}>` via `getDefaultSender()`.
+  - `EmailResult = { success, messageId?, error?, skipped? }`.
+  - **From** = `${appName} <${appNotifyEmail}>` via `getDefaultSender()`; per email event-correlate (context.eventId), usa il tracked subdomain (`appEventsNotifyEmail`) per abilitare open+click tracking.
   - **Reply-to**: impostato **solo** per il tipo `custom` se `options.replyTo` è passato; gli altri tipi non hanno reply-to (si risponde al `from`).
+  - **Idempotency key Resend** (finestra 24h): opzionale, passato via `EmailOptions.idempotencyKey`; il QStash guest-invite handler usa `invite:<eventId>:<guestId>:<dispatchId>` (dispatchId minted per send-invocation, un uuid condiviso dal batch; distingue re-send deliberati da retry QStash); il reminder handler usa `reminder:<reminderId>:<guestId>`. Key legacy senza dispatchId fallback a `invite:<eventId>:<guestId>`.
+  - **Recipient suppresso** (hard bounce / complaint): `sendEmail()` ritorna `{ success: false, skipped: true }` — terminale non-retryable. I job handlers lo trattano come warn + return (no QStash retry).
   - **Niente retry** a questo livello: l'errore Resend torna subito; la policy di retry la decide il chiamante (la coda).
-  - **Niente idempotency key** lato email (vedi §4 per il dedup di coda).
 
 ### 2.2 Template (React Email)
 - Cartella **`server/emailTemplates/`**: 9 template + `_softMeadow.ts` (design system) + `index.ts` (barrel).
@@ -117,9 +118,30 @@ Better Auth hooks / Services / Cron
 
 ---
 
-## 6. Gap noti / fragilità
+## 6. Webhook Resend & event tracking
 
-- **Niente webhook Resend** → nessun tracking di delivery/bounce.
+### 6.1 Endpoint & verifica firma
+- **Route**: `server/api/webhooks/resend.post.ts` — verifica Svix su raw body via `getResendInstance().webhooks.verify()`.
+- **Configurazione**: `NUXT_RESEND_WEBHOOK_SECRET` (mandatory; mancanza → 500 startup). Firma non valida → 401.
+- **Rate limit**: 120/min per IP (nuxt-security route-level rule).
+
+### 6.2 Dedup & DB-idempotency
+- `email_events.svix_id` ha unique index (`email_events_svix_id_uq`) — tollerante ai NULL (seed rows tipo 'sent' non hanno svix_id).
+- Webhook handler: `onConflictDoNothing` → solo il primo insert vince. Redis dedup (`cacheClient.set`, TTL 24h) è best-effort short-circuit.
+
+### 6.3 Eventi & suppression
+- **Bounce**: solo hard-bounce permanenti sopprimono globalmente (whitelist `HARD_BOUNCE_SUBTYPES`: Permanent, General, NoEmail, Suppressed, OnAccountSuppressionList). Bounce soft/transient loggati solo in `email_events` (no suppression row). Subtype sconosciuto → trattato come soft.
+- **Complaint**: sopprime globalmente.
+- **Delivered / Failed / Delivery_delayed**: loggati in `email_events`.
+- **Opened / Clicked**: loggati in `email_events`; open incrementa il counter del guest (una volta per distinct `svix_id`).
+
+### 6.4 Correlazione entità
+- Seed row (type='sent'): scritto subito dopo send in `sendEmail()`, contiene `messageId` + `organizationId|guestId|eventId` se passato `context`.
+- Webhook: lookup via `findSeedContext(messageId)` → recupera la correlazione. Se assente (fallback), `organizationId|guestId|eventId` restano NULL nell'evento (no blocco del webhook).
+- Org-invite delivery failures: visible in `audit_log` (flag `emailDelivered`, stato failure).
+
+## 7. Gap noti / fragilità
+
 - **Niente retry** sugli invii inline (contact, waiting-list): soft-fail — la risorsa resta in DB, l'utente non vede la mail. Solo le code QStash hanno retry.
 - **Guest invite/reminder solo in italiano** (no i18n).
 - `ContactNotificationEmail` italiano-only.
@@ -127,7 +149,7 @@ Better Auth hooks / Services / Cron
 
 ---
 
-## 7. Tooling AI Resend (MCP / CLI / skill)
+## 8. Tooling AI Resend (MCP / CLI / skill)
 
 Installato il 2026-06-19 (vedi memoria `resend-ai-tooling`). **Sono aiuti dev/agent, non vanno cablati nel codice app**: la regola resta "Resend solo dietro `email.ts` / `drivers.ts` / `emailTemplates/`".
 
