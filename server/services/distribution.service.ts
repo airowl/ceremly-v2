@@ -163,12 +163,18 @@ export async function sendInvites(
     // serverless function timeout on large lists (bulk import → hundreds).
     // Chunks reduce wall-clock by ~DISPATCH_CONCURRENCY× while maintaining
     // per-guest isolation (one failure does not block others).
+    //
+    // One dispatchId per invocation of sendInvites, shared by every guest's job
+    // payload: a QStash retry re-delivers the SAME message (same dispatchId → same
+    // Resend idempotency key, no duplicate email), while a NEW /send call (deliberate
+    // re-send) gets a fresh dispatchId → a fresh key → a real re-send goes out.
+    const dispatchId = crypto.randomUUID();
     const enqueued: typeof withEmail = [];
     const failedIds: string[] = [];
     for (let i = 0; i < withEmail.length; i += DISPATCH_CONCURRENCY) {
         const chunk = withEmail.slice(i, i + DISPATCH_CONCURRENCY);
         const settled = await Promise.allSettled(
-            chunk.map((g) => dispatch("send-invite-email", { guestId: g.id })),
+            chunk.map((g) => dispatch("send-invite-email", { guestId: g.id, dispatchId })),
         );
         settled.forEach((res, idx) => {
             const guest = chunk[idx]!;

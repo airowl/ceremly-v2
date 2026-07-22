@@ -9,7 +9,9 @@ export interface JobPayloadMap {
   'data-export': { exportId: string; userId: string }
   'image-variant': { fileId: string }
   // Ceremly — invite/reminder distribution (SPEC §6, owner B3): 1 job per guest.
-  'send-invite-email': { guestId: string }
+  // dispatchId (optional, backward-compatible with pre-deploy queued messages)
+  // distinguishes one /send invocation from another for idempotency-key purposes.
+  'send-invite-email': { guestId: string; dispatchId?: string }
   'send-reminder-email': { guestId: string; reminderId: string }
 }
 
@@ -32,7 +34,7 @@ export function isJobName(value: string): value is JobName {
 const jobPayloadSchemas = {
   'data-export': z.object({ exportId: z.string().min(1), userId: z.string().min(1) }),
   'image-variant': z.object({ fileId: z.string().min(1) }),
-  'send-invite-email': z.object({ guestId: z.string().min(1) }),
+  'send-invite-email': z.object({ guestId: z.string().min(1), dispatchId: z.string().min(1).optional() }),
   'send-reminder-email': z.object({ guestId: z.string().min(1), reminderId: z.string().min(1) }),
 } satisfies Record<JobName, z.ZodType>
 

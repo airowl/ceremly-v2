@@ -95,7 +95,15 @@ beforeEach(() => {
 });
 
 describe("sendInviteEmail.handler", () => {
-  it("passes a stable idempotencyKey invite:<eventId>:<guestId>", async () => {
+  it("passes idempotencyKey invite:<eventId>:<guestId>:<dispatchId> when dispatchId is present", async () => {
+    sendEmail.mockResolvedValue({ success: true, messageId: "m1" });
+    await handleSendInviteEmail({ guestId: "g1", dispatchId: "d1" });
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: "invite:e1:g1:d1" }),
+    );
+  });
+
+  it("falls back to invite:<eventId>:<guestId> when dispatchId is absent (back-compat)", async () => {
     sendEmail.mockResolvedValue({ success: true, messageId: "m1" });
     await handleSendInviteEmail(validPayload);
     expect(sendEmail).toHaveBeenCalledWith(

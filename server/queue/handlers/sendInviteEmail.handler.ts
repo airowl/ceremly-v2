@@ -52,7 +52,13 @@ export async function handleSendInviteEmail(payload: JobPayload<'send-invite-ema
 
   // Idempotency: one invite per guest. Closes the send-ok → post-send-write-fail
   // → QStash retry → duplicate-email window (Resend replays the same send).
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId }, idempotencyKey: `invite:${guest.eventId}:${guest.id}` })
+  // The dispatchId component (when present) distinguishes a deliberate re-send
+  // (new /send invocation → new dispatchId → new key → real email) from a
+  // QStash retry of the same message (same dispatchId → same key → Resend dedup).
+  const idempotencyKey = payload.dispatchId
+    ? `invite:${guest.eventId}:${guest.id}:${payload.dispatchId}`
+    : `invite:${guest.eventId}:${guest.id}`
+  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId }, idempotencyKey })
   if (!result.success) {
     if (result.skipped) {
       console.warn(`[job:send-invite-email] guest ${guest.id} suppressed, skipping`)
