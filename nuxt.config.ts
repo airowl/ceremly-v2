@@ -178,7 +178,10 @@ export default defineNuxtConfig({
             security: {
                 corsHandler: false,
                 xssValidator: false,
-                rateLimiter: false,
+                rateLimiter: {
+                    tokensPerInterval: 120,
+                    interval: 60000, // 120 req/min per IP — far above Resend retry cadence
+                },
             },
         },
 
