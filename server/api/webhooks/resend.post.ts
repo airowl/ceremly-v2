@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
         return { ok: true, skipped: "foreign-domain" };
     }
 
-    await handleResendEvent(parsed);
+    await handleResendEvent(parsed, headers["svix-id"]);
 
     if (dedupeKey) await cacheClient.set(dedupeKey, "1", DEDUPE_TTL_SECONDS);
     return { ok: true };

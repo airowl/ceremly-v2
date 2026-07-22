@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Own-domain "from" address reused across cases (matches isOwnDomain via NUXT_PUBLIC_APP_NOTIFY_EMAIL).
+const OWN_FROM = "noreply@airowlgasga.dev";
+
 const { upsertSuppression, insertEmailEvent, recordGuestOpen, findSeedContext } = vi.hoisted(() => ({
     upsertSuppression: vi.fn(),
-    insertEmailEvent: vi.fn(),
+    insertEmailEvent: vi.fn(() => Promise.resolve({ inserted: true })),
     recordGuestOpen: vi.fn(),
     findSeedContext: vi.fn(() => Promise.resolve({ organizationId: "o1", guestId: "g1", eventId: "e1", emailType: "custom" })),
 }));
@@ -12,7 +15,10 @@ vi.mock("../repositories/emailEvent.repository", () => ({ insertEmailEvent, reco
 
 import { isOwnDomain, handleResendEvent } from "./emailWebhook.service";
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+    vi.clearAllMocks();
+    insertEmailEvent.mockResolvedValue({ inserted: true }); // reset default after clearAllMocks wipes it
+});
 
 describe("emailWebhook.service", () => {
     it("isOwnDomain recognizes domain and subdomain of the environment", () => {
@@ -23,14 +29,14 @@ describe("emailWebhook.service", () => {
 
     it("hard bounce → upsert suppression + insert event", async () => {
         await handleResendEvent({ type: "email.bounced", created_at: "2026-01-01T00:00:00Z",
-            data: { email_id: "m1", from: "noreply@airowlgasga.dev", to: ["a@x.com"], bounce: { subType: "General" } } });
+            data: { email_id: "m1", from: OWN_FROM, to: ["a@x.com"], bounce: { subType: "General" } } }, "svix_1");
         expect(upsertSuppression).toHaveBeenCalledWith(expect.objectContaining({ email: "a@x.com", reason: "hard_bounce", bounceSubtype: "General" }));
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
 
     it("opened with guest → recordGuestOpen", async () => {
         await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",
-            data: { email_id: "m1", from: "inviti@events.airowlgasga.dev", to: ["g@x.com"] } });
+            data: { email_id: "m1", from: "inviti@events.airowlgasga.dev", to: ["g@x.com"] } }, "svix_2");
         expect(recordGuestOpen).toHaveBeenCalledWith("g1", expect.any(Date));
         expect(insertEmailEvent).toHaveBeenCalledOnce();
     });
@@ -39,8 +45,30 @@ describe("emailWebhook.service", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         findSeedContext.mockResolvedValueOnce({ organizationId: "o1", guestId: null, eventId: null, emailType: "verification" } as any);
         await handleResendEvent({ type: "email.opened", created_at: "2026-01-01T00:00:00Z",
-            data: { email_id: "m2", from: "noreply@airowlgasga.dev", to: ["u@x.com"] } });
+            data: { email_id: "m2", from: OWN_FROM, to: ["u@x.com"] } }, "svix_3");
         expect(recordGuestOpen).not.toHaveBeenCalled();
         expect(insertEmailEvent).toHaveBeenCalledOnce();
+    });
+
+    it("does not increment guest open counter when the event insert is a duplicate", async () => {
+        insertEmailEvent.mockResolvedValue({ inserted: false });
+        findSeedContext.mockResolvedValue({ guestId: "g1", organizationId: "o1", eventId: "e1", emailType: "custom" });
+        await handleResendEvent(
+            { type: "email.opened", created_at: new Date(0).toISOString(),
+              data: { email_id: "m1", from: OWN_FROM, to: ["a@b.com"] } },
+            "svix_dup_1",
+        );
+        expect(recordGuestOpen).not.toHaveBeenCalled();
+    });
+
+    it("increments guest open counter on a fresh open insert", async () => {
+        insertEmailEvent.mockResolvedValue({ inserted: true });
+        findSeedContext.mockResolvedValue({ guestId: "g1", organizationId: "o1", eventId: "e1", emailType: "custom" });
+        await handleResendEvent(
+            { type: "email.opened", created_at: new Date(0).toISOString(),
+              data: { email_id: "m1", from: OWN_FROM, to: ["a@b.com"] } },
+            "svix_fresh_1",
+        );
+        expect(recordGuestOpen).toHaveBeenCalledWith("g1", expect.any(Date));
     });
 });

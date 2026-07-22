@@ -55,14 +55,15 @@ export function isOwnDomain(from: string): boolean {
     return own.includes(d);
 }
 
-export async function handleResendEvent(event: ResendWebhookEvent): Promise<void> {
+export async function handleResendEvent(event: ResendWebhookEvent, svixId: string): Promise<void> {
     const { type, data } = event;
     const recipient = data.to?.[0] ?? "";
-    if (!recipient) return; // no recipient → nothing to suppress/attribute (subscribed events always have `to`)
+    if (!recipient) return; // subscribed events always have `to`; nothing to attribute
     const occurredAt = new Date(event.created_at);
     const ctx = await findSeedContext(data.email_id);
 
     const baseEvent = {
+        svixId,
         messageId: data.email_id,
         recipient,
         occurredAt,
@@ -75,6 +76,8 @@ export async function handleResendEvent(event: ResendWebhookEvent): Promise<void
 
     switch (type) {
         case "email.bounced":
+            // Suppression policy handled in Task 3 (isHardBounce). Placeholder
+            // kept identical here; Task 3 replaces this branch.
             await upsertSuppression({ email: recipient, reason: "hard_bounce", bounceSubtype: data.bounce?.subType });
             await insertEmailEvent({ ...baseEvent, type: "bounced" });
             break;
@@ -87,19 +90,18 @@ export async function handleResendEvent(event: ResendWebhookEvent): Promise<void
         case "email.failed":
             await insertEmailEvent({ ...baseEvent, type: type.replace("email.", "") });
             break;
-        case "email.opened":
-            // Intentional order: the durable record is written BEFORE the non-idempotent counter.
-            // On retry (insertEmailEvent throws → 500 → Resend retries), the counter is not
-            // incremented a second time because the branch never reaches recordGuestOpen.
-            // The counter is a best-effort derived value; the append is the source of truth.
-            await insertEmailEvent({ ...baseEvent, type: "opened" });
-            if (ctx?.guestId) await recordGuestOpen(ctx.guestId, occurredAt);
+        case "email.opened": {
+            // Idempotency is now a DB fact: insert returns inserted:false on a
+            // duplicate svix_id, so the counter fires exactly once per distinct
+            // Resend open event — no reliance on retry-throws or Redis dedup.
+            const { inserted } = await insertEmailEvent({ ...baseEvent, type: "opened" });
+            if (inserted && ctx?.guestId) await recordGuestOpen(ctx.guestId, occurredAt);
             break;
+        }
         case "email.clicked":
             await insertEmailEvent({ ...baseEvent, type: "clicked", clickedUrl: data.click?.link });
             break;
         default:
-            // unhandled event → ignore (the route still responds 200)
-            break;
+            break; // unhandled event → ignore (route still responds 200)
     }
 }
