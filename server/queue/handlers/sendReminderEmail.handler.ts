@@ -20,7 +20,9 @@ import {
  * (state can change between enqueue and delivery). Subject/message come
  * from the reminder, with {nome}/{link} substituted here. The reminder_sent
  * activity is written by THIS handler (meta { reminderId }), only on successful send.
- * On send failure, throws → QStash retries.
+ * On send failure, throws → QStash retries. Exception: a suppressed send
+ * (result.skipped, recipient on the suppression list) returns silently instead —
+ * retrying can never succeed, so it must not become a QStash poison loop.
  */
 export async function handleSendReminderEmail(payload: JobPayload<'send-reminder-email'>): Promise<void> {
   const row = await findGuestForEmail(payload.guestId)

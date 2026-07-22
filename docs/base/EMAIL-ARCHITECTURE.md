@@ -35,7 +35,7 @@ Better Auth hooks / Services / Cron
 - **`server/utils/drivers.ts`** — `getResendInstance()`: singleton lazy, crea una sola `new Resend(runtimeConfig.resendApiKey)` per processo serverless e la cachea in modulo.
 - **`server/utils/email.ts`** — superficie pubblica:
   - `sendEmail(options: EmailOptions): Promise<EmailResult>` — `options` è una union tipizzata: `verification | reset_password | change_email | waiting_list | invitation | custom`.
-  - `sendBatchEmails(emails[])` — batch con concorrenza fissa **10**, usa `resend.batch.send()` (1 API call per chunk ≤100, non audita né seedizza correlazioni).
+  - `sendBatchEmails(emails[])` — usa `resend.batch.send()` (1 API call per chunk ≤100, non audita né seedizza correlazioni).
   - `isEmailServiceConfigured()` — true sse `NUXT_RESEND_API_KEY` + `appNotifyEmail` + `appName` presenti.
   - `EmailResult = { success, messageId?, error?, skipped? }`.
   - **From** = `${appName} <${appNotifyEmail}>` via `getDefaultSender()`; per email event-correlate (context.eventId), usa il tracked subdomain (`appEventsNotifyEmail`) per abilitare open+click tracking.
@@ -122,7 +122,7 @@ Better Auth hooks / Services / Cron
 
 ### 6.1 Endpoint & verifica firma
 - **Route**: `server/api/webhooks/resend.post.ts` — verifica Svix su raw body via `getResendInstance().webhooks.verify()`.
-- **Configurazione**: `NUXT_RESEND_WEBHOOK_SECRET` (mandatory; mancanza → 500 startup). Firma non valida → 401.
+- **Configurazione**: `NUXT_RESEND_WEBHOOK_SECRET` (mandatory). Se mancante: la route webhook ritorna 500 alla richiesta; inoltre un guard di startup logga la misconfigurazione (solo log, non blocca il boot). Firma non valida → 401.
 - **Rate limit**: 120/min per IP (nuxt-security route-level rule).
 
 ### 6.2 Dedup & DB-idempotency

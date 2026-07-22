@@ -278,8 +278,10 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
 
         // Webhook → entity correlation: seed row only if there is context.
         // Best-effort: the email is already sent (audit email.sent written above).
-        // A seed failure must not flip the result to "failed"; the backfill in
-        // insertEmailSeed re-correlates later if a subsequent seed lands.
+        // A seed failure must not flip the result to "failed". The backfill in
+        // insertEmailSeed only closes the race where the webhook arrives BEFORE
+        // this seed write; if the seed write itself fails, there is no later
+        // retry, so any events for this messageId stay uncorrelated (logged above).
         if (options.context && response.data?.id) {
             try {
                 await insertEmailSeed({

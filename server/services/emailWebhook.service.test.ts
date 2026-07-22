@@ -46,6 +46,7 @@ describe("emailWebhook.service", () => {
             data: { email_id: "m1", from: OWN_FROM, to: ["a@x.com"], bounce: { subType: "General" } } }, "svix_1");
         expect(upsertSuppression).toHaveBeenCalledWith(expect.objectContaining({ email: "a@x.com", reason: "hard_bounce", bounceSubtype: "General" }));
         expect(insertEmailEvent).toHaveBeenCalledOnce();
+        expect(insertEmailEvent).toHaveBeenCalledWith(expect.objectContaining({ svixId: "svix_1" }));
     });
 
     it("opened with guest → recordGuestOpen", async () => {

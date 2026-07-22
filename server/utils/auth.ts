@@ -27,6 +27,9 @@ if (import.meta.dev) {
 // (better-auth awaits both sequentially); this map hands the delivery outcome
 // across the two hooks. Entries are delete-on-read; the resend-invitation path
 // has no afterCreate hook, so its entry is simply overwritten on the next resend.
+// Third fate: if afterCreateInvitation never runs at all (e.g. a throw between
+// the two hooks), the entry is never read/deleted and stays orphaned in the map
+// until the serverless instance recycles (bounded — not a real leak).
 const inviteDeliveryStatus = new Map<string, boolean>();
 
 export async function logInviteAudit(
