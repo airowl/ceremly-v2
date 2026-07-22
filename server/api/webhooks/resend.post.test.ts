@@ -35,6 +35,13 @@ const { get, set } = vi.hoisted(() => ({
 }));
 vi.mock("~~/server/utils/drivers", () => ({ cacheClient: { get, set } }));
 
+// Mutable mock object: tests reassign `resendWebhookSecret` directly to exercise
+// the misconfig branch, restored to a truthy default in beforeEach.
+const { mockRuntimeConfig } = vi.hoisted(() => ({
+    mockRuntimeConfig: { resendWebhookSecret: "whsec_test" as string },
+}));
+vi.mock("~~/server/utils/runtimeConfig", () => ({ runtimeConfig: mockRuntimeConfig }));
+
 import handler from "./resend.post";
 
 beforeEach(() => {
@@ -43,6 +50,7 @@ beforeEach(() => {
     readRawBodyMock.mockImplementation(() => Promise.resolve('{"type":"email.delivered"}'));
     getHeaderMock.mockImplementation((_e: unknown, n: string) => (n === "svix-id" ? "id1" : "x"));
     get.mockImplementation((): Promise<string | null> => Promise.resolve(null));
+    mockRuntimeConfig.resendWebhookSecret = "whsec_test";
 });
 
 describe("POST /api/webhooks/resend", () => {
@@ -80,5 +88,12 @@ describe("POST /api/webhooks/resend", () => {
     (readRawBodyMock as any).mockImplementationOnce(() => Promise.resolve(undefined));
         const err = await (handler as any)({}).catch((e: unknown) => e);
         expect((err as any).statusCode).toBe(400);
+    });
+
+    it("responds 500 (not 401) when the webhook secret is not configured", async () => {
+        mockRuntimeConfig.resendWebhookSecret = "";
+        const err = await (handler as any)({}).catch((e: unknown) => e);
+        expect((err as any).statusCode).toBe(500);
+        expect(verifyResendEvent).not.toHaveBeenCalled();
     });
 });

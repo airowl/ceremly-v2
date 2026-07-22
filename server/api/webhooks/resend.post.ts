@@ -1,5 +1,6 @@
 import { verifyResendEvent, isOwnDomain, handleResendEvent } from "~~/server/services/emailWebhook.service";
 import { cacheClient } from "~~/server/utils/drivers";
+import { runtimeConfig } from "~~/server/utils/runtimeConfig";
 
 const DEDUPE_TTL_SECONDS = 86400; // 24h
 
@@ -12,6 +13,14 @@ export default defineEventHandler(async (event) => {
         "svix-timestamp": getHeader(event, "svix-timestamp") ?? "",
         "svix-signature": getHeader(event, "svix-signature") ?? "",
     };
+
+    // Distinguish "secret not configured" (our misconfig → must be visible) from
+    // "invalid signature" (hostile/garbled → 401). An empty secret otherwise makes
+    // svix throw and masquerade as a 401, silently dropping every bounce/complaint.
+    if (!runtimeConfig.resendWebhookSecret) {
+        console.error("[webhook:resend] NUXT_RESEND_WEBHOOK_SECRET is not configured — rejecting all events");
+        throw createError({ statusCode: 500, statusMessage: "Webhook secret not configured" });
+    }
 
     let parsed;
     try {
