@@ -324,9 +324,18 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     }
 }
 
+// Resend's hard cap on the number of emails per `batch.send` call.
+const RESEND_BATCH_MAX = 100;
+
 /**
- * Send multiple emails in batch (useful for cron jobs)
- * Returns results for each email
+ * Send multiple emails in batch (useful for cron jobs).
+ * Returns results for each email, in the same order as the input.
+ *
+ * Uses `resend.batch.send()` (one API call per chunk of <= 100) instead of
+ * looping `sendEmail` — the old per-email loop made N concurrent API calls
+ * and could trip Resend's rate limit under load. Note this path does NOT go
+ * through `sendEmail`, so unlike single sends, batch sends are not audited
+ * and do not write an email-event seed row.
  *
  * @example
  * const results = await sendBatchEmails([
@@ -337,19 +346,40 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
 export async function sendBatchEmails(
     emails: EmailOptions[]
 ): Promise<EmailResult[]> {
-    // Process in parallel with concurrency limit
-    const BATCH_SIZE = 10;
-    const results: EmailResult[] = [];
+    // Resolve suppression first so suppressed recipients never enter the batch.
+    const results: (EmailResult | null)[] = await Promise.all(
+        emails.map(async (e) =>
+            (await isEmailSuppressed(e.to))
+                ? { success: false, skipped: true, error: "suppressed" }
+                : null
+        )
+    );
 
-    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
-        const batch = emails.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.all(
-            batch.map((email) => sendEmail(email))
+    // Collect the sendable emails with their original index for order-preserving merge.
+    const sendable: { index: number; options: EmailOptions }[] = [];
+    emails.forEach((options, index) => {
+        if (results[index] === null) sendable.push({ index, options });
+    });
+
+    for (let i = 0; i < sendable.length; i += RESEND_BATCH_MAX) {
+        const chunk = sendable.slice(i, i + RESEND_BATCH_MAX);
+        const payload = await Promise.all(
+            chunk.map(async ({ options }) => {
+                const { subject, html, text } = await buildEmailContent(options);
+                return { from: getSender(options), to: options.to, subject, html, text };
+            })
         );
-        results.push(...batchResults);
+        const response = await getResendInstance().batch.send(payload);
+        chunk.forEach(({ index }, j) => {
+            if (response.error) {
+                results[index] = { success: false, error: response.error.message };
+            } else {
+                results[index] = { success: true, messageId: response.data?.data?.[j]?.id };
+            }
+        });
     }
 
-    return results;
+    return results.map((r) => r ?? { success: false, error: "unknown" });
 }
 
 /**
