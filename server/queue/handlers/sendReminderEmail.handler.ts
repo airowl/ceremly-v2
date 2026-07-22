@@ -64,6 +64,12 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
   // retry → duplicate email window (Resend replays the same send instead).
   const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId }, idempotencyKey: `reminder:${reminder.id}:${guest.id}` })
   if (!result.success) {
+    // Suppressed = terminal: the recipient is on the suppression list, retrying
+    // will never succeed. Return (no throw) so QStash does not build a poison loop.
+    if (result.skipped) {
+      console.warn(`[job:send-reminder-email] guest ${guest.id} suppressed, skipping`)
+      return
+    }
     throw new Error(`[job:send-reminder-email] send failed for guest ${guest.id}: ${result.error}`)
   }
 
