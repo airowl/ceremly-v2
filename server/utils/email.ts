@@ -103,6 +103,9 @@ export interface EmailResult {
     success: boolean;
     messageId?: string;
     error?: string;
+    /** True when the send was intentionally skipped (recipient suppressed).
+     *  Terminal non-error: do NOT retry. */
+    skipped?: boolean;
 }
 
 /**
@@ -240,7 +243,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
                 status: 'failure',
                 details: { error: 'suppressed', emailType: options.type },
             });
-            return { success: false, error: 'suppressed' };
+            return { success: false, skipped: true, error: 'suppressed' };
         }
 
         const from = getSender(options);
@@ -274,15 +277,24 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
         );
 
         // Webhook → entity correlation: seed row only if there is context.
+        // Best-effort: the email is already sent (audit email.sent written above).
+        // A seed failure must not flip the result to "failed"; the backfill in
+        // insertEmailSeed re-correlates later if a subsequent seed lands.
         if (options.context && response.data?.id) {
-            await insertEmailSeed({
-                messageId: response.data.id,
-                recipient: options.to,
-                emailType: options.type,
-                organizationId: options.context.organizationId,
-                guestId: options.context.guestId,
-                eventId: options.context.eventId,
-            });
+            try {
+                await insertEmailSeed({
+                    messageId: response.data.id,
+                    recipient: options.to,
+                    emailType: options.type,
+                    organizationId: options.context.organizationId,
+                    guestId: options.context.guestId,
+                    eventId: options.context.eventId,
+                });
+            } catch (seedErr) {
+                console.error(
+                    `[Email] seed correlation write failed for ${response.data.id}: ${seedErr instanceof Error ? seedErr.message : "unknown"}`
+                );
+            }
         }
 
         return {
