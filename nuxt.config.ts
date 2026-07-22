@@ -368,7 +368,9 @@ export default defineNuxtConfig({
         // ✅ Rate limiting (difesa brute-force / scraping)
         rateLimiter: {
             tokensPerInterval: 100,
-            interval: "minute",
+            // Must be numeric ms: the runtime does Number(interval), and a string
+            // like "minute" yields NaN → every comparison false → limiter never 429s.
+            interval: 60_000, // 100 req/min per IP
         },
 
         // ✅ Limitazione metodi HTTP
