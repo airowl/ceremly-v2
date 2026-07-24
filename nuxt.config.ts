@@ -286,7 +286,7 @@ export default defineNuxtConfig({
             type: "Organization",
             name: process.env.NUXT_PUBLIC_APP_NAME || "",
             url: process.env.NUXT_PUBLIC_BASE_URL || "",
-            logo: "/icon.png",
+            logo: `${process.env.NUXT_PUBLIC_BASE_URL || ""}/icon.png`,
         },
     },
 
