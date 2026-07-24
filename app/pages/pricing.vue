@@ -30,6 +30,13 @@ useSeoMeta({
 })
 useAltHreflang()
 
+// FAQ items for FAQPage structured data (same source the visible accordion uses).
+interface FaqItem { q: string, a: string }
+const faqItems = (tm('ceremly.site.prezzi.faq') as FaqItem[]).map(x => ({
+    q: rt(x.q),
+    a: rt(x.a),
+}))
+
 // Structured data: the three plans as Product offers (real prices from
 // shared/constants/pricing.ts — Free €0, Celebrazione €39 one-time, Atelier
 // €24/mo). Mirrors the AggregateOffer already on the homepage.
@@ -56,6 +63,23 @@ useSchemaOrg([
                 priceCurrency: 'EUR',
                 availability: 'https://schema.org/InStock',
             }),
+        ],
+    }),
+    {
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map(item => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.a,
+            },
+        })),
+    },
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
         ],
     }),
 ])
