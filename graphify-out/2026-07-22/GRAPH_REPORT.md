@@ -1,16 +1,16 @@
 # Graph Report - ceremly-v2  (2026-07-22)
 
 ## Corpus Check
-- 703 files · ~814,971 words
+- 703 files · ~814,513 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 13441 nodes · 15084 edges · 966 communities (925 shown, 41 thin omitted)
+- 13441 nodes · 15084 edges · 964 communities (923 shown, 41 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 224 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1e608c84`
+- Built from commit: `9ab8833f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -793,8 +793,6 @@
 - [[_COMMUNITY_Community 960|Community 960]]
 - [[_COMMUNITY_Community 961|Community 961]]
 - [[_COMMUNITY_Community 962|Community 962]]
-- [[_COMMUNITY_Community 964|Community 964]]
-- [[_COMMUNITY_Community 965|Community 965]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `getDB()` - 128 edges
@@ -809,16 +807,16 @@
 10. `contact` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Ceremly Multi-Tenancy (organizationId scoping)` --semantically_similar_to--> `Workspace-Based Multi-Tenancy`  [INFERRED] [semantically similar]
-  CLAUDE.md → .claude/skills/supabase-database/resources/multi-tenancy.md
 - `Ceremly Plan Limits (pricing.ts per org)` --semantically_similar_to--> `Effective Limit (override-then-plan-default)`  [INFERRED] [semantically similar]
   CLAUDE.md → .claude/skills/supabase-database/resources/plan-limits.md
 - `Ceremly Rate Limiting (Upstash 100/min)` --semantically_similar_to--> `rateLimit() (Upstash + in-memory fallback)`  [INFERRED] [semantically similar]
   CLAUDE.md → .claude/skills/supabase-edge-functions/resources/rate-limiting.md
-- `Multi-tenancy B2B-first organization tenancy` --semantically_similar_to--> `B2B-first tenancy, B2C come caso degenere`  [INFERRED] [semantically similar]
-  README.md → docs/base/PHASE-1-data-and-tenancy.md
 - `Creem pricing model & per-event checkout (design spec)` --references--> `server/utils/runtimeConfig.ts`  [EXTRACTED]
   docs/superpowers/specs/2026-06-19-creem-pricing-model-checkout-design.md → server/utils/runtimeConfig.ts
+- `createEvent()` --calls--> `getDefaultDistribution()`  [INFERRED]
+  server/services/event.service.ts → shared/constants/templates.ts
+- `createEvent()` --calls--> `getTemplate()`  [INFERRED]
+  server/services/event.service.ts → shared/constants/templates.ts
 
 ## Import Cycles
 - None detected.
@@ -861,7 +859,7 @@
 - **Creem per-event unlock flow** — specs_2026_06_19_creem_one_time_unlock, specs_2026_06_19_creem_metadata_eventid, specs_2026_06_19_creem_get_event_limits, utils_creem [INFERRED 0.85]
 - **PRD RSVP/invite product flow** — uploads_prd_ceremly_personalized_link, uploads_prd_ceremly_conditional_rsvp, uploads_prd_ceremly_frictionless_guest, uploads_prd_ceremly_realtime_dashboard [INFERRED 0.85]
 
-## Communities (966 total, 41 thin omitted)
+## Communities (964 total, 41 thin omitted)
 
 ### Community 0 - "OpenAPI Specification"
 Cohesion: 0.06
@@ -924,8 +922,8 @@ Cohesion: 0.13
 Nodes (15): member_organizationId_idx, member_userId_idx, columns, concurrently, isUnique, method, name, with (+7 more)
 
 ### Community 15 - "Guest Service"
-Cohesion: 0.11
-Nodes (37): activeGuestEmailExists(), countActiveGuests(), createGuestRow(), createGuestsBulk(), CreateGuestValues, findActiveGuestEmails(), findActiveGuestNames(), findActivitiesByGuestScoped() (+29 more)
+Cohesion: 0.14
+Nodes (32): activeGuestEmailExists(), countActiveGuests(), createGuestRow(), createGuestsBulk(), CreateGuestValues, findActiveGuestEmails(), findActiveGuestNames(), findActivitiesByGuestScoped() (+24 more)
 
 ### Community 16 - "RSVP Form"
 Cohesion: 0.07
@@ -997,7 +995,7 @@ Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+3
 
 ### Community 33 - "event.service"
 Cohesion: 0.08
-Nodes (44): FileManagerConfig, countActiveEventsByOrg(), createEventRow(), CreateEventValues, deleteEventScoped(), EventRawCounts, findEventByIdScoped(), findEventsByOrgWithCounts() (+36 more)
+Nodes (45): FileManagerConfig, countActiveEventsByOrg(), createEventRow(), CreateEventValues, deleteEventScoped(), EventRawCounts, findEventByIdScoped(), findEventsByOrgWithCounts() (+37 more)
 
 ### Community 34 - "SitemapGenerator"
 Cohesion: 0.12
@@ -1092,8 +1090,8 @@ Cohesion: 0.04
 Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
 
 ### Community 57 - "columns"
-Cohesion: 0.05
-Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
+Cohesion: 0.06
+Nodes (36): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+28 more)
 
 ### Community 58 - "columns"
 Cohesion: 0.04
@@ -1112,8 +1110,8 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 62 - "user id"
-Cohesion: 0.12
-Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
+Cohesion: 0.10
+Nodes (21): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+13 more)
 
 ### Community 63 - "public.account"
 Cohesion: 0.08
@@ -1176,8 +1174,8 @@ Cohesion: 0.05
 Nodes (42): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+34 more)
 
 ### Community 78 - "columns"
-Cohesion: 0.09
-Nodes (22): email, expires_at, inviter_id, status, name, notNull, primaryKey, type (+14 more)
+Cohesion: 0.05
+Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
 
 ### Community 79 - "landing"
 Cohesion: 0.06
@@ -1192,8 +1190,8 @@ Cohesion: 0.04
 Nodes (46): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+38 more)
 
 ### Community 82 - "columns"
-Cohesion: 0.10
-Nodes (21): logo, metadata, name, slug, name, notNull, primaryKey, type (+13 more)
+Cohesion: 0.07
+Nodes (27): created_at, logo, metadata, name, slug, default, name, notNull (+19 more)
 
 ### Community 83 - "columns"
 Cohesion: 0.10
@@ -1204,24 +1202,24 @@ Cohesion: 0.10
 Nodes (21): logo, metadata, name, slug, name, notNull, primaryKey, type (+13 more)
 
 ### Community 85 - "PHASE 3 — Billing Creem"
-Cohesion: 0.11
-Nodes (24): PHASE 3 — Billing Creem, Plugin Creem ufficiale di Better Auth, Gating per piano (requirePlan / hasFeature), Mapping piano → productId Creem, Modulo astrazione server/billing/, Webhook subscription.paid (concede accesso), Webhook come fonte di verità (no redirect), PHASE 4 — Email, Errors, Rate-limit (+16 more)
+Cohesion: 0.10
+Nodes (26): PHASE 3 — Billing Creem, Plugin Creem ufficiale di Better Auth, Gating per piano (requirePlan / hasFeature), Mapping piano → productId Creem, Modulo astrazione server/billing/, Webhook subscription.paid (concede accesso), Idempotenza webhook Creem, Webhook come fonte di verità (no redirect) (+18 more)
 
 ### Community 86 - "id"
 Cohesion: 0.09
 Nodes (23): created_at, organization_id, role, user_id, default, name, notNull, primaryKey (+15 more)
 
 ### Community 87 - "id"
-Cohesion: 0.11
-Nodes (19): name, notNull, primaryKey, type, backup_codes, id, secret, name (+11 more)
+Cohesion: 0.08
+Nodes (24): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+16 more)
 
 ### Community 88 - "Resend Skill (SKILL.md)"
 Cohesion: 0.16
 Nodes (24): resend broadcasts Command Reference, Contact property interpolation (triple-mustache), Resend CLI: contact-properties commands, Resend CLI: contacts commands, Resend CLI: domains commands, Domain claim (cross-account transfer), Tracking subdomain (open & click tracking), Resend CLI: emails commands (+16 more)
 
 ### Community 89 - "contact"
-Cohesion: 0.11
-Nodes (19): badge, description, emailLabel, emailPlaceholder, errorMessage, errorTitle, messageLabel, messagePlaceholder (+11 more)
+Cohesion: 0.08
+Nodes (26): badge, description, emailLabel, emailPlaceholder, errorMessage, errorTitle, info, messageLabel (+18 more)
 
 ### Community 90 - "profile"
 Cohesion: 0.05
@@ -1256,12 +1254,12 @@ Cohesion: 0.11
 Nodes (12): allTags, articleOgImage, firstTag, formattedDate, linkCopied, localeArticles, publishedArticles, readingTime (+4 more)
 
 ### Community 98 - "Supabase Edge Functions Skill"
-Cohesion: 0.16
-Nodes (18): Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Creem Payments (single provider), Ceremly Rate Limiting (Upstash 100/min), Ceremly Email (Resend + React Email), Ceremly Body/Query Validation (parseBody/Zod), Event CRUD Edge Function Example (+10 more)
+Cohesion: 0.22
+Nodes (13): Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Ceremly Email (Resend + React Email), Ceremly Body/Query Validation (parseBody/Zod), Event CRUD Edge Function Example, CORS Preflight Handling (OPTIONS first), Response Helpers (successResponse/errorResponse) (+5 more)
 
 ### Community 99 - "cards"
-Cohesion: 0.09
-Nodes (22): email, gallery, import, members, socialProof, vendors, description, cards (+14 more)
+Cohesion: 0.08
+Nodes (25): email, gallery, import, members, socialProof, vendors, description, title (+17 more)
 
 ### Community 100 - "trust"
 Cohesion: 0.11
@@ -1272,8 +1270,8 @@ Cohesion: 0.11
 Nodes (18): description, primary, secondary, benefit1, benefit2, description, title, trust (+10 more)
 
 ### Community 102 - "created at"
-Cohesion: 0.06
-Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
+Cohesion: 0.05
+Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
 
 ### Community 103 - "created at"
 Cohesion: 0.04
@@ -1300,8 +1298,8 @@ Cohesion: 0.12
 Nodes (17): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+9 more)
 
 ### Community 109 - "public.two factor"
-Cohesion: 0.06
-Nodes (32): two_factor_user_id_user_id_fk, twoFactor_secret_idx, twoFactor_userId_idx, checkConstraints, compositePrimaryKeys, foreignKeys, indexes, isRLSEnabled (+24 more)
+Cohesion: 0.12
+Nodes (17): two_factor_user_id_user_id_fk, checkConstraints, compositePrimaryKeys, foreignKeys, isRLSEnabled, name, policies, schema (+9 more)
 
 ### Community 110 - "public.verification"
 Cohesion: 0.12
@@ -1364,8 +1362,8 @@ Cohesion: 0.05
 Nodes (42): default, name, notNull, primaryKey, type, cancel_at_period_end, creem_customer_id, creem_order_id (+34 more)
 
 ### Community 125 - "distribution.service"
-Cohesion: 0.09
-Nodes (23): created_at, organization_id, role, user_id, default, name, notNull, primaryKey (+15 more)
+Cohesion: 0.19
+Nodes (22): handleSendInviteEmail(), handleSendReminderEmail(), findGuestForEmail(), findGuestsForSend(), findReminderById(), GuestActivityValues, hasReminderActivity(), insertActivities() (+14 more)
 
 ### Community 126 - "STACK-AND-CONVENTIONS (riferimento trasv"
 Cohesion: 0.18
@@ -1424,8 +1422,8 @@ Cohesion: 0.08
 Nodes (24): dialect, id, twoFactor_secret_idx, prevId, checkConstraints, compositePrimaryKeys, foreignKeys, indexes (+16 more)
 
 ### Community 140 - "user id"
-Cohesion: 0.10
-Nodes (21): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+13 more)
+Cohesion: 0.08
+Nodes (27): name, notNull, primaryKey, type, backup_codes, id, organization_id, secret (+19 more)
 
 ### Community 141 - "columns"
 Cohesion: 0.06
@@ -1440,8 +1438,8 @@ Cohesion: 0.08
 Nodes (25): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, columns (+17 more)
 
 ### Community 144 - "user id"
-Cohesion: 0.12
-Nodes (16): name, notNull, primaryKey, type, backup_codes, secret, user_id, columns (+8 more)
+Cohesion: 0.10
+Nodes (21): name, notNull, primaryKey, type, backup_codes, id, secret, user_id (+13 more)
 
 ### Community 145 - "public.account"
 Cohesion: 0.08
@@ -1460,8 +1458,8 @@ Cohesion: 0.14
 Nodes (18): React Email Skill, react-email CLI (email command), PreviewProps Convention, render() Function, Static Files Dev/Prod baseURL Pattern, Tailwind with pixelBasedPreset, React Email Components Reference, CodeBlock Component (Prism.js) (+10 more)
 
 ### Community 149 - "SaaS Boilerplate Build Guide (Strada A)"
-Cohesion: 0.18
-Nodes (18): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, PHASE 0 — Scaffold & Fondamenta del Progetto, Env validation Zod fail-fast, B2B-first tenancy, B2C come caso degenere, PHASE 1 — Data Model & Multi-Tenancy, projects — entità di dominio d'esempio org-scoped (+10 more)
+Cohesion: 0.19
+Nodes (15): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, React Email templates (.ts con React.createElement), PHASE 0 — Scaffold & Fondamenta del Progetto, Env validation Zod fail-fast, B2B-first tenancy, B2C come caso degenere, PHASE 1 — Data Model & Multi-Tenancy (+7 more)
 
 ### Community 150 - "NUXT ADMIN API KEY (reference segreto)"
 Cohesion: 0.18
@@ -1492,8 +1490,8 @@ Cohesion: 0.13
 Nodes (15): projects, cancel, confirm, confirmButton, error, success, title, create (+7 more)
 
 ### Community 157 - "twoFactor secret idx"
-Cohesion: 0.20
-Nodes (10): info, title, value, title, value, email, hours, response (+2 more)
+Cohesion: 0.13
+Nodes (15): twoFactor_secret_idx, twoFactor_userId_idx, indexes, columns, concurrently, isUnique, method, name (+7 more)
 
 ### Community 158 - "id"
 Cohesion: 0.10
@@ -1644,8 +1642,8 @@ Cohesion: 0.17
 Nodes (11): author, description, homepage, license, name, packageManager, private, resolutions (+3 more)
 
 ### Community 195 - "priority levels"
-Cohesion: 0.22
-Nodes (9): intentPatterns, keywords, pathPatterns, block, suggest, warn, notes, customization (+1 more)
+Cohesion: 0.14
+Nodes (14): intentPatterns, keywords, pathPatterns, block, suggest, warn, notes, customization (+6 more)
 
 ### Community 196 - "HomeChart.client"
 Cohesion: 0.12
@@ -1688,8 +1686,8 @@ Cohesion: 0.17
 Nodes (13): server/database/schema/projects.ts, Shared Zod validation schemas requirements, parseBody(event, schema) helper, server/services/contact.service.ts, assertOwnership second guard, Reference clonable CRUD entity pattern, Org-scoped isolation by-construction, FASE 4 — projects example entity (design spec) (+5 more)
 
 ### Community 206 - "Ceremly v2 Project Architecture (CLAUDE."
-Cohesion: 0.17
-Nodes (12): Ceremly Audit Logging (logAudit), Better Auth Organization Plugin, Drizzle ORM + Neon Serverless Postgres, Ceremly Multi-Tenancy (organizationId scoping), Ceremly v2 Project Architecture (CLAUDE.md), Upstash QStash HTTP Queue, Ceremly RBAC (requireMember/Write/Owner), Services Layer (+4 more)
+Cohesion: 0.18
+Nodes (13): Ceremly Audit Logging (logAudit), Creem Payments (single provider), Drizzle ORM + Neon Serverless Postgres, Ceremly v2 Project Architecture (CLAUDE.md), Upstash QStash HTTP Queue, Ceremly Rate Limiting (Upstash 100/min), Ceremly RBAC (requireMember/Write/Owner), Strada A (event-driven serverless) (+5 more)
 
 ### Community 208 - "features"
 Cohesion: 0.12
@@ -1720,8 +1718,8 @@ Cohesion: 0.05
 Nodes (41): name, notNull, primaryKey, type, name, notNull, primaryKey, type (+33 more)
 
 ### Community 215 - "checkPlanLimit Edge Function Utility"
-Cohesion: 0.24
-Nodes (11): Service Role Client (supabase.ts), Ceremly Plan Limits (pricing.ts per org), checkPlanLimit() Edge Function Utility, Effective Limit (override-then-plan-default), base.get_effective_user_limit() Function, base.get_effective_workspace_limit() Function, base.limit_audit_log Table, base.plan_limits Table (+3 more)
+Cohesion: 0.21
+Nodes (12): Service Role Client (supabase.ts), Ceremly Plan Limits (pricing.ts per org), base.workspace_roles Table, checkPlanLimit() Edge Function Utility, Effective Limit (override-then-plan-default), base.get_effective_user_limit() Function, base.get_effective_workspace_limit() Function, base.limit_audit_log Table (+4 more)
 
 ### Community 216 - "usePricing"
 Cohesion: 0.17
@@ -1752,8 +1750,8 @@ Cohesion: 0.09
 Nodes (22): Come iniziare con il boilerplate SaaS (IT), Getting Started with the SaaS Boilerplate (EN), Blog System Requirements, Architecture Notes, Blog System (@nuxt/content v3), Blog System Requirements, Components, Content (+14 more)
 
 ### Community 223 - "app/stores/organizationStore.ts (client-"
-Cohesion: 0.20
-Nodes (11): /api/organizations/* routes, max_events → max_organizations rename, organization.service.ts (delegates to plugin), Path-id authz vs active-org authz, Accept-invite auth-first (invitation.id), dashboard/organization/** pages, FASE 1d — Frontend org-centric (Plan), organizationClient() in auth client (+3 more)
+Cohesion: 0.25
+Nodes (9): /api/organizations/* routes, max_events → max_organizations rename, organization.service.ts (delegates to plugin), Path-id authz vs active-org authz, dashboard/organization/** pages, FASE 1d — Frontend org-centric (Plan), app/stores/organizationStore.ts (client-plugin-first), useOrganization() composable (role gating) (+1 more)
 
 ### Community 224 - "Email Best Practices Skill"
 Cohesion: 0.17
@@ -1776,22 +1774,22 @@ Cohesion: 0.22
 Nodes (11): shared/constants/pricing.ts, server/database/schema/events.ts, ADD-only pricing migration (keep B2B PRICING_PLANS), Stale-event cleanup cron (concluded AND inactive), getEventLimits tier resolution, metadata.eventId round-trip in webhook, One-time per-event unlock (Celebrazione), Creem pricing model & per-event checkout (design spec) (+3 more)
 
 ### Community 229 - "JWT Claims Pattern (workspace id + permi"
-Cohesion: 0.22
-Nodes (11): base Schema (not public), base.handle_new_auth_user() User Sync Trigger, JWT Claims Pattern (workspace_id + permissions), Two-Phase Authentication Flow, base.user_has_permissions() Function, Workspace-Based Multi-Tenancy, PERMISSIVE Permission-Based Policy, RESTRICTIVE Workspace Isolation Policy (+3 more)
+Cohesion: 0.18
+Nodes (13): base Schema (not public), Better Auth Organization Plugin, Ceremly Multi-Tenancy (organizationId scoping), base.handle_new_auth_user() User Sync Trigger, JWT Claims Pattern (workspace_id + permissions), Two-Phase Authentication Flow, base.user_has_permissions() Function, Workspace-Based Multi-Tenancy (+5 more)
 
 ### Community 230 - "settings"
 Cohesion: 0.20
 Nodes (9): enableAllProjectMcpServers, enabledMcpjsonServers, enabledPlugins, neon-plugin@neon, hooks, PreToolUse, permissions, allow (+1 more)
 
 ### Community 232 - "info"
-Cohesion: 0.06
-Nodes (49): handleDataExport(), handleImageVariant(), JobHandler, JobHandlers, runJob(), handleSendInviteEmail(), {
+Cohesion: 0.07
+Nodes (29): handleDataExport(), handleImageVariant(), JobHandler, JobHandlers, runJob(), {
   applyInvitePlaceholders,
   buildGuestInviteLink,
   buildGuestPixelUrl,
 }, {
   findGuestForEmail,
-} (+41 more)
+}, mockEvent (+21 more)
 
 ### Community 233 - "customers"
 Cohesion: 0.20
@@ -1814,8 +1812,8 @@ Cohesion: 0.20
 Nodes (10): loading, noData, searchPlaceholder, table, title, customers, email, name (+2 more)
 
 ### Community 238 - "nav"
-Cohesion: 0.11
-Nodes (18): dashboard, dropdown, nav, pageTitle, sidebar, inviteMember, newEvent, newOrganization (+10 more)
+Cohesion: 0.20
+Nodes (10): nav, allOrganizations, code, goTo, home, members, organizationDashboard, organizations (+2 more)
 
 ### Community 239 - "public.creem subscription"
 Cohesion: 0.05
@@ -2022,8 +2020,8 @@ Cohesion: 0.06
 Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
 
 ### Community 293 - "public.audit log"
-Cohesion: 0.06
-Nodes (39): created_at, email, expires_at, id, inviter_id, organization_id, role, default (+31 more)
+Cohesion: 0.05
+Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
 
 ### Community 294 - "public.invitation"
 Cohesion: 0.07
@@ -2035,7 +2033,7 @@ Nodes (36): columns, concurrently, isUnique, method, name, with, columns, concur
 
 ### Community 296 - "public.audit log"
 Cohesion: 0.07
-Nodes (35): CEREMLY_FREE_LIMITS, CEREMLY_TIER_LIMITS, CeremlyTier, exceedsLimit(), getPlanLimits(), isUnlimited(), PlanFeature, PlanLimits (+27 more)
+Nodes (37): CEREMLY_FREE_LIMITS, CEREMLY_TIER_LIMITS, CeremlyTier, exceedsLimit(), getPlanLimits(), isUnlimited(), PlanFeature, PlanLimits (+29 more)
 
 ### Community 297 - "audit log created at idx"
 Cohesion: 0.25
@@ -2050,8 +2048,8 @@ Cohesion: 0.39
 Nodes (8): Blog Badge, Blog OG Card (EN), Ceremly Brand Name, Guides, Tips & Resources Headline, Organize Unforgettable Events Tagline, Warm Earthy Color Palette, Blog OG Card (IT), Guide, Consigli e Risorse Headline
 
 ### Community 300 - "FASE 1 — Tenancy: events → organizations"
-Cohesion: 0.32
-Nodes (8): FASE 0 — Strip risorse-prodotto eventi (Design), Active organization (session), Better Auth organization plugin, Roles owner/admin/member, FASE 1 — Tenancy: events → organizations (Design), Tenancy spine (atomic unit), FASE 1b — Auth flows + signup→org + team via plugin (Scope), Signup → personal org hook
+Cohesion: 0.24
+Nodes (10): Accept-invite auth-first (invitation.id), organizationClient() in auth client, FASE 0 — Strip risorse-prodotto eventi (Design), Active organization (session), Better Auth organization plugin, Roles owner/admin/member, FASE 1 — Tenancy: events → organizations (Design), Tenancy spine (atomic unit) (+2 more)
 
 ### Community 301 - "Email Accessibility"
 Cohesion: 0.29
@@ -2090,8 +2088,8 @@ Cohesion: 0.29
 Nodes (7): Dramatic Purple Ambient Lighting, Elegant Banquet Event Hall, Floral Centerpieces, Wedding Guest Management, Wedding RSVP Blog Hero, Round Tables with Place Settings, Wedding Reception
 
 ### Community 310 - "base.workspace resource usage Table"
-Cohesion: 0.22
-Nodes (9): base.workspace_resource_usage Table, base.workspace_roles Table, base.workspace_users Junction Table, base.workspaces Table, updateResourceUsage() Resource Tracking, Cascade Soft Delete (parent → children), base.generate_slug() Function, Resource Count Triggers (increment/decrement) (+1 more)
+Cohesion: 0.17
+Nodes (13): base.workspace_resource_usage Table, base.workspace_users Junction Table, base.workspaces Table, updateResourceUsage() Resource Tracking, Active Views (active_*), Cascade Soft Delete (parent → children), soft-delete.ts Utilities (softDelete/restore/listActive), Hard Delete (retention-based purge) (+5 more)
 
 ### Community 311 - "contentPatterns"
 Cohesion: 0.57
@@ -2118,8 +2116,8 @@ Cohesion: 0.29
 Nodes (18): appHost(), appName(), baseUrl(), emailSubjects, legalLinks(), renderBoth(), renderChangeEmailEmail(), renderContactConfirmationEmail() (+10 more)
 
 ### Community 320 - "audit log action idx"
-Cohesion: 0.22
-Nodes (11): Idempotenza webhook Creem, Test isolamento multi-tenant, Service layer testabile in isolamento, PHASE 7 — Testing & Finalizzazione, Vitest (unit + integration), Test webhook billing (firma + idempotenza), Multi-tenancy in ogni query (organizationId), Service / Action layer (Laravel-style) (+3 more)
+Cohesion: 0.18
+Nodes (16): Test isolamento multi-tenant, Service layer testabile in isolamento, PHASE 7 — Testing & Finalizzazione, Vitest (unit + integration), STACK-AND-CONVENTIONS (riferimento trasversale), Multi-tenancy in ogni query (organizationId), Neon HTTP/serverless driver, Anti-pattern: niente Active Record / Facade / DI (+8 more)
 
 ### Community 321 - "audit log category idx"
 Cohesion: 0.10
@@ -2782,8 +2780,8 @@ Cohesion: 0.12
 Nodes (17): member_organization_id_organization_id_fk, member_user_id_user_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom (+9 more)
 
 ### Community 490 - "target id"
-Cohesion: 0.12
-Nodes (15): React Email templates (.ts con React.createElement), SaaS Boilerplate README, Deployment, Development, Environment Variables, Features, Installation, License (+7 more)
+Cohesion: 0.17
+Nodes (11): Deployment, Development, Environment Variables, Features, Installation, License, Prerequisites, Project Structure (+3 more)
 
 ### Community 491 - "password"
 Cohesion: 0.12
@@ -2926,8 +2924,8 @@ Cohesion: 0.22
 Nodes (9): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, audit_log_user_id_user_id_fk (+1 more)
 
 ### Community 586 - "Trust"
-Cohesion: 0.33
-Nodes (6): status, default, name, notNull, primaryKey, type
+Cohesion: 0.25
+Nodes (8): dashboard, dropdown, pageTitle, sidebar, inviteMember, newEvent, newOrganization, hello
 
 ### Community 589 - "ForWho"
 Cohesion: 0.25
@@ -3042,8 +3040,8 @@ Cohesion: 0.14
 Nodes (13): 1.1 — Studia l'integrazione Better Auth + organization + Drizzle, 1.2 — Definisci lo schema core, 1.3 — Tabella di dominio d'esempio (pattern multi-tenant), 1.4 — Migrations, 1.5 — Seeders, 1.6 — Repository core, Checkpoint di verifica, ✅ In questa fase (+5 more)
 
 ### Community 751 - "Community 751"
-Cohesion: 0.14
-Nodes (14): Architectural principle: Strada A (event-driven serverless), Architecture, Auth Flow, Client Middleware, Database Schema, Design System, Key Directories, Key Server Utilities (+6 more)
+Cohesion: 0.12
+Nodes (16): Architectural principle: Strada A (event-driven serverless), Architecture, Auth Flow, Client Middleware, Database Schema, Design System, Key Directories, Key Server Utilities (+8 more)
 
 ### Community 752 - "Community 752"
 Cohesion: 0.14
@@ -3474,8 +3472,8 @@ Cohesion: 0.29
 Nodes (7): columns, concurrently, isUnique, method, name, with, audit_log_category_idx
 
 ### Community 860 - "Community 860"
-Cohesion: 0.05
-Nodes (40): created_at, email, expires_at, inviter_id, organization_id, role, status, default (+32 more)
+Cohesion: 0.07
+Nodes (28): email, expires_at, inviter_id, role, status, name, notNull, primaryKey (+20 more)
 
 ### Community 861 - "Community 861"
 Cohesion: 0.29
@@ -3659,7 +3657,7 @@ Nodes (5): Corrections to the brief, Files touched, Findings written to Section 
 
 ### Community 919 - "Community 919"
 Cohesion: 0.40
-Nodes (5): name, notNull, primaryKey, type, access_token_expires_at
+Nodes (5): password, name, notNull, primaryKey, type
 
 ### Community 920 - "Community 920"
 Cohesion: 0.33
@@ -3687,7 +3685,7 @@ Nodes (5): refresh_token_expires_at, name, notNull, primaryKey, type
 
 ### Community 928 - "Community 928"
 Cohesion: 0.40
-Nodes (5): refresh_token, name, notNull, primaryKey, type
+Nodes (5): scope, name, notNull, primaryKey, type
 
 ### Community 929 - "Community 929"
 Cohesion: 0.40
@@ -3817,14 +3815,6 @@ Nodes (5): Step 1: Edit ✓, Step 2: Typecheck ✓, Step 3: Manual Verification,
 Cohesion: 0.50
 Nodes (3): insertValues, onConflictDoNothing, returning
 
-### Community 964 - "Community 964"
-Cohesion: 0.40
-Nodes (5): priority_levels, critical, high, low, medium
-
-### Community 965 - "Community 965"
-Cohesion: 0.50
-Nodes (5): Active Views (active_*), soft-delete.ts Utilities (softDelete/restore/listActive), Hard Delete (retention-based purge), Soft Delete Pattern (deleted_at), Soft Delete Rule (DELETE → UPDATE)
-
 ## Ambiguous Edges - Review These
 - `/api/webhooks/resend (Svix verify + dedup)` → `Vitest harness setup (Resend webhooks)`  [AMBIGUOUS]
   docs/superpowers/plans/2026-06-19-resend-webhooks.md · relation: references
@@ -3839,11 +3829,11 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `/api/webhooks/resend (Svix verify + dedup)` and `Vitest harness setup (Resend webhooks)`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `logAudit()` connect `logAudit` to `File Storage (R2)`, `event.service`, `GDPR Data Export & Users`, `Database Repositories`, `info`, `audit log category idx`, `reference id`, `Guest Service`, `expires at`, `reminder.service`?**
+- **Why does `logAudit()` connect `logAudit` to `File Storage (R2)`, `event.service`, `GDPR Data Export & Users`, `Database Repositories`, `audit log category idx`, `reference id`, `Guest Service`, `expires at`, `distribution.service`, `reminder.service`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
-- **Why does `createEvent()` connect `event.service` to `public.audit log`, `logAudit`, `ceremly`, `Guest Service`?**
+- **Why does `createEvent()` connect `event.service` to `public.audit log`, `logAudit`, `ceremly`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `getDB()` connect `Database Repositories` to `event.service`, `GDPR Data Export & Users`, `Email Sending Service`, `File Storage (R2)`, `info`, `logAudit`, `public.audit log`, `permissions`, `reference id`, `audit log category idx`, `Guest Service`, `reminder.service`, `publicInvite.service`?**
+- **Why does `getDB()` connect `Database Repositories` to `event.service`, `GDPR Data Export & Users`, `Email Sending Service`, `File Storage (R2)`, `public.audit log`, `logAudit`, `permissions`, `audit log category idx`, `reference id`, `info`, `Guest Service`, `distribution.service`, `reminder.service`, `publicInvite.service`?**
   _High betweenness centrality (0.001) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `getDB()` (e.g. with `sendContactMessage()` and `subscribe()`) actually correct?**
   _`getDB()` has 2 INFERRED edges - model-reasoned connections that need verification._

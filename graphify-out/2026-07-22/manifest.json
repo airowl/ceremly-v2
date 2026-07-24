@@ -950,8 +950,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/utils/email.ts": {
-    "mtime": 1784713927.5347605,
-    "ast_hash": "ea58a5d30d7f17b4282847e1e1fcedd0",
+    "mtime": 1784710929.234879,
+    "ast_hash": "cf6dfac203464835b9120469247f6e13",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/utils/creem.ts": {
@@ -995,8 +995,8 @@
     "semantic_hash": "a1bf6ab150b5821c2e0891a6c3e9e9e0"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/utils/auth.ts": {
-    "mtime": 1784713959.9242215,
-    "ast_hash": "cd7413929ae44e7b0849935dd127d7d1",
+    "mtime": 1784710439.0731196,
+    "ast_hash": "b73a734d1364e9bd1aa1020aa4d9be58",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/utils/audit/types.ts": {
@@ -1150,8 +1150,8 @@
     "semantic_hash": "451512e1b26195f640195ea53d043f05"
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/queue/handlers/sendReminderEmail.handler.ts": {
-    "mtime": 1784713936.7143123,
-    "ast_hash": "ea3da7b5b2194ad9c6bea4d2a212c677",
+    "mtime": 1784708603.8649793,
+    "ast_hash": "64d24fb672b8d37780a35d9cbd62a756",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/queue/handlers/index.ts": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/services/emailWebhook.service.test.ts": {
-    "mtime": 1784713950.8732998,
-    "ast_hash": "2419d24efa358fda099f36b58dbb722e",
+    "mtime": 1784707247.162944,
+    "ast_hash": "df10b858c472adc696a6ef42a6736ac1",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/server/services/dataExport.service.ts": {
@@ -2800,8 +2800,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/docs/base/EMAIL-ARCHITECTURE.md": {
-    "mtime": 1784713908.8798416,
-    "ast_hash": "437b951fd3ed2fced90b78d7b5bcc2f6",
+    "mtime": 1784712918.9017215,
+    "ast_hash": "57851f3187af1d399e30f2b173a7e719",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/docs/base/PHASE-7-testing.md": {
@@ -3240,8 +3240,8 @@
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/.superpowers/sdd/progress.md": {
-    "mtime": 1784714077.609494,
-    "ast_hash": "18daadc0d21d7fc277d9c0344626d68d",
+    "mtime": 1784713033.4250014,
+    "ast_hash": "f5c65eb80106e0c212f7b1815cb8b343",
     "semantic_hash": ""
   },
   "/Users/airowlgasga/coding/project/ceremly-v2/.superpowers/sdd/task-10-brief.md": {
