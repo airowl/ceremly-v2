@@ -65,17 +65,10 @@ useSchemaOrg([
             }),
         ],
     }),
-    {
-        '@type': 'FAQPage',
-        mainEntity: faqItems.map(item => ({
-            '@type': 'Question',
-            name: item.q,
-            acceptedAnswer: {
-                '@type': 'Answer',
-                text: item.a,
-            },
-        })),
-    },
+    ...faqItems.map(item => defineQuestion({
+        name: item.q,
+        acceptedAnswer: item.a,
+    })),
     defineBreadcrumb({
         itemListElement: [
             { name: t('blog.article.breadcrumbHome'), item: '/' },
