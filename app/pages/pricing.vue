@@ -40,7 +40,12 @@ const faqItems = (tm('ceremly.site.prezzi.faq') as FaqItem[]).map(x => ({
 // Structured data: the three plans as Product offers (real prices from
 // shared/constants/pricing.ts — Free €0, Celebrazione €39 one-time, Atelier
 // €24/mo). Mirrors the AggregateOffer already on the homepage.
+// defineWebPage({ '@type': 'FAQPage' }) promotes the page's WebPage node to
+// FAQPage so nuxt-schema-org attaches the defineQuestion nodes to its
+// mainEntity — without it the Question nodes stay loose in the @graph (no
+// FAQPage container). No hand-written JSON-LD: the helper does the merge.
 useSchemaOrg([
+    defineWebPage({ '@type': 'FAQPage' }),
     defineProduct({
         name: 'Ceremly',
         description: seoDescription,
