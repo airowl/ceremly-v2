@@ -9,6 +9,7 @@
 import CerIcon from '~/components/ceremly/CerIcon.vue'
 import CerSitePricing from '~/components/ceremly/CerSitePricing.vue'
 import CerSiteFooter from '~/components/ceremly/CerSiteFooter.vue'
+import { CELEBRATION_PRICE_CENTS, ATELIER_PRICE_CENTS } from '~~/shared/constants/pricing'
 
 definePageMeta({
     auth: false,
@@ -44,12 +45,16 @@ useSchemaOrg([
         'operatingSystem': 'Web',
         'description': seoDescription,
         'url': baseUrl,
-        'offers': {
-            '@type': 'AggregateOffer',
-            'priceCurrency': 'EUR',
-            'lowPrice': '0',
-            'offerCount': '3',
-        },
+        'featureList': [
+            t('ceremly.home.seo.feature1'),
+            t('ceremly.home.seo.feature2'),
+            t('ceremly.home.seo.feature3'),
+        ],
+        'offers': [
+            defineOffer({ name: t('ceremly.site.prezzi.colFree'), price: 0, priceCurrency: 'EUR', availability: 'https://schema.org/InStock' }),
+            defineOffer({ name: t('ceremly.site.prezzi.colCeleb'), price: CELEBRATION_PRICE_CENTS / 100, priceCurrency: 'EUR', availability: 'https://schema.org/InStock' }),
+            defineOffer({ name: t('ceremly.site.prezzi.colAtelier'), price: ATELIER_PRICE_CENTS / 100, priceCurrency: 'EUR', availability: 'https://schema.org/InStock' }),
+        ],
     },
 ])
 

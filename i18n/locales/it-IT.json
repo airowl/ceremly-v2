@@ -141,7 +141,10 @@
       "description": "Un link personalizzato per ogni invitato, RSVP con domande su misura e una dashboard che ti dice subito chi viene davvero.",
       "ogTitle": "Ceremly — Inviti e RSVP senza rincorrere nessuno",
       "ogDescription": "Inviti digitali e conferme di partecipazione per matrimoni, lauree, battesimi e compleanni. Niente più WhatsApp.",
-      "keywords": "inviti digitali, RSVP online, conferme partecipazione, inviti matrimonio, inviti laurea, gestione invitati, lista ospiti"
+      "keywords": "inviti digitali, RSVP online, conferme partecipazione, inviti matrimonio, inviti laurea, gestione invitati, lista ospiti",
+      "feature1": "Inviti digitali personalizzati per ogni ospite",
+      "feature2": "Raccolta RSVP con domande su menu, allergie e plus-one",
+      "feature3": "Dashboard in tempo reale con promemoria automatici"
     },
     "landingFooter": {
       "privacy": "Privacy Policy",

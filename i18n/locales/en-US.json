@@ -141,7 +141,10 @@
       "description": "A personal link for every guest, tailored RSVP questions, and a dashboard that tells you who is really coming.",
       "ogTitle": "Ceremly — Invitations and RSVPs without the chasing",
       "ogDescription": "Digital invitations and RSVPs for weddings, graduations, baptisms, and birthdays. No more WhatsApp threads.",
-      "keywords": "digital invitations, online RSVP, guest confirmations, wedding invitations, graduation invitations, guest management, guest list"
+      "keywords": "digital invitations, online RSVP, guest confirmations, wedding invitations, graduation invitations, guest management, guest list",
+      "feature1": "Personalized digital invitations for every guest",
+      "feature2": "RSVP collection with menu, allergy and plus-one questions",
+      "feature3": "Real-time dashboard with automatic reminders"
     },
     "landingFooter": {
       "privacy": "Privacy Policy",
