@@ -42,6 +42,25 @@ const steps = computed(() => ({
     s4: stepsRaw.value[3] ?? EMPTY_STEP,
 }))
 
+// Structured data: HowTo (4 real steps from the page) + breadcrumb.
+useSchemaOrg([
+    defineHowTo({
+        name: seoTitle,
+        step: [
+            { name: steps.value.s1.t, text: steps.value.s1.d },
+            { name: steps.value.s2.t, text: steps.value.s2.d },
+            { name: steps.value.s3.t, text: steps.value.s3.d },
+            { name: steps.value.s4.t, text: steps.value.s4.d },
+        ],
+    }),
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
+
 const distChannels = computed(() => [
     { i: 'whatsapp', t: t('ceremly.site.comeFunziona.distWhatsapp') },
     { i: 'mail', t: t('ceremly.site.comeFunziona.distEmail') },
