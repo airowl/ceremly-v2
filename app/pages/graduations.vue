@@ -21,6 +21,17 @@ useSeoMeta({
     ogType: 'website',
 })
 useAltHreflang()
+
+// Breadcrumb structured data (Home › this page). Relative item paths are
+// resolved against site.url by nuxt-schema-org.
+useSchemaOrg([
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
 </script>
 
 <template>

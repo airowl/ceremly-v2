@@ -26,6 +26,17 @@ useSeoMeta({
 })
 useAltHreflang()
 
+// Breadcrumb structured data (Home › this page). Relative item paths are
+// resolved against site.url by nuxt-schema-org.
+useSchemaOrg([
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
+
 // Invite background per event type — consistent with the "For whom" pages.
 const sampleBg = ['var(--bone-300)', 'var(--purple)', 'var(--bone-200)', 'var(--orange-soft)']
 

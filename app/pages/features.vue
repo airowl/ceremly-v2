@@ -25,6 +25,17 @@ useSeoMeta({
 })
 useAltHreflang()
 
+// Breadcrumb structured data (Home › this page). Relative item paths are
+// resolved against site.url by nuxt-schema-org.
+useSchemaOrg([
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
+
 // Icons per group (3 features each), by index — non-textual, kept in the .vue.
 const groupIcons: string[][] = [
     ['sparkle', 'edit', 'qr'],

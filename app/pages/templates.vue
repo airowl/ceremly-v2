@@ -26,6 +26,17 @@ useSeoMeta({
 })
 useAltHreflang()
 
+// Breadcrumb structured data (Home › this page). Relative item paths are
+// resolved against site.url by nuxt-schema-org.
+useSchemaOrg([
+    defineBreadcrumb({
+        itemListElement: [
+            { name: t('blog.article.breadcrumbHome'), item: '/' },
+            { name: seoTitle },
+        ],
+    }),
+])
+
 const chips = computed(() => (tm('ceremly.site.modelli.chips') as string[]).map(c => rt(c)))
 
 // Visual data and showcase content (names/dates/venues) for the index — kept in the .vue.
