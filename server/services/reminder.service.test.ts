@@ -14,7 +14,7 @@ vi.mock("~~/server/services/eventAccess.service", () => ({
 vi.mock("~~/server/repositories/reminderRepository", () => ({
     findRemindersByEvent: (...a: unknown[]) => findRemindersByEvent(...a),
     bulkUpsertReminders: (...a: unknown[]) => bulkUpsertReminders(...a),
-    findDueReminders: vi.fn(), findPendingGuestsForReminder: vi.fn(), markReminderSent: vi.fn(),
+    claimReminderForProcessing: vi.fn(), findDueReminders: vi.fn(), findPendingGuestsForReminder: vi.fn(), markReminderSent: vi.fn(), releaseReminderProcessing: vi.fn(),
 }));
 vi.mock("~~/server/utils/audit", () => ({ logAudit: vi.fn() }));
 vi.mock("~~/server/utils/permissions", () => ({ assertOwnership: (r: unknown) => r }));

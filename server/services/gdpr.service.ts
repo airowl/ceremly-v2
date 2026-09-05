@@ -65,22 +65,37 @@ function pickNewOwner(
     return [...others].sort(byTenure)[0]!.userId;
 }
 
-/** Elimina un'org solo-membro: oggetti R2 + righe file, poi cascade DB. */
+/** Elimina un'org solo-membro: oggetti R2 + righe file, poi cascade DB.
+ * Se R2 delete fallisce, NON procedere con i delete DB per non perdere
+ * il riferimento agli oggetti R2 (diventerebbero orphan irrecuperabili).
+ * Il cron ritenterà al prossimo giro.
+ */
 async function purgeOrganization(
     organizationId: string,
     storage: ReturnType<typeof createR2Storage>,
     result: PurgeResult,
 ): Promise<void> {
     const files = await findFilesByOrg(organizationId);
+    let r2Errors = 0;
     for (const f of files) {
         try {
             // S3/R2 DeleteObject è idempotente (ok anche se la chiave non esiste).
             await storage.delete(f.path);
             result.filesDeleted++;
         } catch (e) {
+            r2Errors++;
             result.errors.push(`R2 delete ${f.id}: ${e instanceof Error ? e.message : "errore"}`);
         }
     }
+
+    // Se qualche delete R2 è fallito, NON procedere con i delete DB.
+    // Gli oggetti R2 resterebbero orphan senza riferimento in DB.
+    // Il cron ritenterà al prossimo giro.
+    if (r2Errors > 0) {
+        result.errors.push(`Org ${organizationId}: ${r2Errors} R2 delete falliti, skip DB delete per evitare orphan`);
+        return;
+    }
+
     await deleteFilesByOrg(organizationId);
     await deleteOrganizationRow(organizationId);
     result.orgsDeleted++;

@@ -40,10 +40,24 @@ export async function cleanupOrphanFiles(
 
   for (const orphan of orphans) {
     try {
+      // Claim atomico: confirmUpload aggiorna solo record ancora pending.
+      // Così non può rendere attivo un oggetto che stiamo per cancellare.
+      const claimed = await db.update(fileTable)
+        .set({ uploadStatus: 'cleaning' })
+        .where(and(eq(fileTable.id, orphan.id), eq(fileTable.uploadStatus, 'pending')))
+        .returning({ id: fileTable.id })
+      if (claimed.length === 0) {
+        continue
+      }
+
       await storage.delete(orphan.path)
-      await db.delete(fileTable).where(eq(fileTable.id, orphan.id))
+      await db.delete(fileTable).where(and(eq(fileTable.id, orphan.id), eq(fileTable.uploadStatus, 'cleaning')))
       result.deletedCount++
     } catch (error) {
+      // Rende il record nuovamente candidabile al prossimo cron.
+      await db.update(fileTable)
+        .set({ uploadStatus: 'pending' })
+        .where(and(eq(fileTable.id, orphan.id), eq(fileTable.uploadStatus, 'cleaning')))
       result.failedCount++
       result.errors.push(`${orphan.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }

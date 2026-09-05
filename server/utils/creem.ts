@@ -59,27 +59,30 @@ export async function handleCheckoutCompleted(data: FlatCheckoutCompleted): Prom
     }
 }
 
-/** Estrae il creemOrderId da refund/dispute (order/checkout come oggetto o stringa). */
-function extractCreemOrderId(data: FlatRefundCreated | FlatDisputeCreated): string | undefined {
-    if (typeof data.order === "string") return data.order;
-    if (data.order?.id) return data.order.id;
-    if (data.checkout && typeof data.checkout !== "string") return data.checkout.order?.id;
-    return undefined;
+/** Estrae il creemOrderId e creemCheckoutId da refund/dispute. */
+function extractCreemIds(data: FlatRefundCreated | FlatDisputeCreated): { orderId?: string; checkoutId?: string } {
+    const orderId = typeof data.order === "string"
+        ? data.order
+        : data.order?.id ?? (typeof data.checkout !== "string" ? data.checkout?.order?.id : undefined);
+    const checkoutId = typeof data.checkout === "string" ? data.checkout : data.checkout?.id;
+    return { orderId, checkoutId };
 }
 
 /**
  * Webhook refund.created / dispute.created — re-lock (SPEC §6.4).
+ * Gestisce anche il caso refund-arrivato-prima-del-checkout: se non trova
+ * l'evento per orderId, prova con checkoutId (persistito alla creazione checkout).
  * Senza questo un evento rimborsato resterebbe sbloccato gratis.
  */
 export async function handleRefundCreated(data: FlatRefundCreated | FlatDisputeCreated): Promise<void> {
-    const creemOrderId = extractCreemOrderId(data);
-    if (!creemOrderId) return;
+    const { orderId, checkoutId } = extractCreemIds(data);
+    if (!orderId && !checkoutId) return;
     try {
-        await relockEventByOrder(creemOrderId);
+        await relockEventByOrder(orderId, checkoutId);
         await logAudit(null, "event.relocked", {
             targetType: "event",
-            targetId: creemOrderId,
-            details: { provider: "creem", event: data.webhookEventType, creemOrderId },
+            targetId: orderId ?? checkoutId,
+            details: { provider: "creem", event: data.webhookEventType, creemOrderId: orderId, creemCheckoutId: checkoutId },
         });
     } catch (err) {
         console.error("[creem] refund relock error", err);

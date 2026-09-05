@@ -118,6 +118,7 @@ export const AUDIT_ACTIONS = {
   'admin.user_limits_updated': 'admin.user_limits_updated',
   'admin.subscription_updated': 'admin.subscription_updated',
   'admin.cleanup_files': 'admin.cleanup_files',
+  'admin.requeue_image_variants': 'admin.requeue_image_variants',
   'admin.site_mode_changed': 'admin.site_mode_changed',
 } as const
 

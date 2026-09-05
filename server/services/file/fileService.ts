@@ -3,7 +3,7 @@ import type { H3Event, EventHandlerRequest } from "~~/server/types/h3"
 import type { StorageProvider } from './types'
 import { extname } from 'node:path'
 import { format } from 'date-fns'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import { v7 as uuidv7 } from 'uuid'
 import { file as fileTable } from '~~/server/database/schema'
 import { logAudit } from '~~/server/utils/audit'
@@ -164,7 +164,35 @@ export class FileService {
         variantType: 'original',
       }
 
-      const [fileRecord] = await db.insert(fileTable).values(fileData).returning()
+      let fileRecord
+      try {
+        const [inserted] = await db.insert(fileTable).values(fileData).returning()
+        fileRecord = inserted
+      } catch (err: any) {
+        // 23505 = unique_violation (concorrenza dedup TOCTOU)
+        // Un altro upload ha inserito lo stesso sha256+orgId: trova e ritorna quello.
+        if (err?.code === '23505') {
+          const duplicate = await this.findDuplicate(sha256, eventId)
+          if (duplicate) {
+            // L'oggetto è stato già caricato prima del conflitto DB: rimuovilo
+            // per non lasciare un orphan R2.
+            await this.storage.delete(path)
+            await logAudit(event ?? null, 'file.dedup_matched', {
+              userId: uploadedBy,
+              targetType: 'file',
+              targetId: duplicate.id,
+              details: {
+                originalName,
+                sha256,
+                existingFileId: duplicate.id,
+                reason: 'unique_constraint_race',
+              },
+            })
+            return duplicate
+          }
+        }
+        throw err
+      }
       if (!fileRecord) {
         throw createError({
           statusCode: 500,
@@ -308,6 +336,12 @@ export class FileService {
       record.uploadedBy ?? undefined,
       record.isPublic,
     )
+
+    // Marca i varianti come generati per il recovery scan
+    await db
+      .update(fileTable)
+      .set({ variantsGeneratedAt: new Date() })
+      .where(eq(fileTable.id, fileId))
   }
 
   async requestPresignedUpload(
@@ -513,13 +547,13 @@ export class FileService {
         sha256,
         updatedAt: new Date(),
       })
-      .where(eq(fileTable.id, fileId))
+      .where(and(eq(fileTable.id, fileId), eq(fileTable.uploadStatus, 'pending')))
       .returning()
 
     if (!updatedFile) {
       throw createError({
-        statusCode: 500,
-        message: 'Failed to confirm upload',
+        statusCode: 409,
+        message: 'Upload is no longer pending',
       })
     }
 
@@ -641,5 +675,48 @@ export class FileService {
       .orderBy(desc(fileTable.createdAt))
       .limit(limit)
       .offset(offset)
+  }
+
+  /**
+   * Recovery scan: trova file immagine processabili che non hanno varianti generati.
+   * Usato da un cron job per re-inviare i job 'image-variant' persi.
+   * Restituisce gli ID dei file per cui accodare il job.
+   */
+  static async findFilesNeedingVariants(limit = 100): Promise<string[]> {
+    const db = await useDB()
+    const rows = await db
+      .select({ id: fileTable.id })
+      .from(fileTable)
+      .where(
+        and(
+          eq(fileTable.isActive, true),
+          eq(fileTable.variantType, 'original'),
+          isNull(fileTable.variantsGeneratedAt),
+          // Solo tipi di file per cui generateVariants produce output
+          sql`${fileTable.mimeType} LIKE 'image/%'`,
+        ),
+      )
+      .limit(limit)
+    return rows.map((r) => r.id)
+  }
+
+  /**
+   * Re-invia i job di generazione varianti per i file che ne hanno bisogno.
+   * Da chiamare via cron (es. ogni ora) per recuperare job persi.
+   */
+  static async requeueMissingVariants(limit = 100): Promise<{ queued: number; failed: number }> {
+    const fileIds = await this.findFilesNeedingVariants(limit)
+    let queued = 0
+    let failed = 0
+    for (const fileId of fileIds) {
+      try {
+        await dispatch('image-variant', { fileId })
+        queued++
+      } catch (err) {
+        console.error(`[fileService] recovery dispatch failed for ${fileId}:`, err)
+        failed++
+      }
+    }
+    return { queued, failed }
   }
 }

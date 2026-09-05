@@ -3,7 +3,6 @@ import {
   findGuestForEmail,
   findReminderById,
   hasReminderActivity,
-  insertActivities,
 } from '~~/server/repositories/distributionRepository'
 import { renderGuestReminderEmail } from '~~/server/emailTemplates'
 import { sendEmail } from '~~/server/utils/email'
@@ -12,6 +11,8 @@ import {
   buildGuestInviteLink,
   buildGuestPixelUrl,
 } from '~~/server/services/distribution.service'
+import { getDB } from '~~/server/utils/db'
+import * as schema from '~~/server/database/schema'
 
 /**
  * Invia l'email di reminder RSVP a UN ospite (accodato dal cron B4, SPEC §6).
@@ -20,6 +21,8 @@ import {
  * (lo stato può cambiare tra enqueue e delivery). Subject/message arrivano
  * dal reminder, con {nome}/{link} sostituiti qui. L'attività reminder_sent
  * la scrive QUESTO handler (meta { reminderId }), solo a invio riuscito.
+ * Idempotenza: vincolo univoco su guest_activities(guest_id, type, meta->>'reminderId')
+ * + catch 23505 (unique_violation) = già inviato.
  * Su invio fallito lancia → QStash ritenta.
  */
 export async function handleSendReminderEmail(payload: JobPayload<'send-reminder-email'>): Promise<void> {
@@ -40,8 +43,7 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
     return
   }
 
-  // Idempotenza (difesa in profondità sul path più visibile): se questo reminder
-  // è già stato inviato all'ospite, non re-inviare su un retry QStash.
+  // Idempotenza veloce (evita render/invio se già tracciato)
   if (await hasReminderActivity(guest.id, reminder.id)) {
     return
   }
@@ -59,16 +61,36 @@ export async function handleSendReminderEmail(payload: JobPayload<'send-reminder
     pixelUrl: buildGuestPixelUrl(guest.token),
   })
 
-  const result = await sendEmail({ type: 'custom', to: guest.email, subject, html, text, context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId } })
+  const result = await sendEmail({
+    type: 'custom',
+    to: guest.email,
+    subject,
+    html,
+    text,
+    context: { organizationId: guest.organizationId, guestId: guest.id, eventId: guest.eventId },
+    idempotencyKey: `reminder/${reminder.id}/guest/${guest.id}`,
+  })
   if (!result.success) {
     throw new Error(`[job:send-reminder-email] invio fallito per guest ${guest.id}: ${result.error}`)
   }
 
-  await insertActivities([{
-    organizationId: guest.organizationId,
-    eventId: guest.eventId,
-    guestId: guest.id,
-    type: 'reminder_sent',
-    meta: { reminderId: reminder.id },
-  }])
+  // Inserisci activity con idempotenza DB-level (unique constraint).
+  // Se fallisce per 23505 (unique_violation) = già inserito da retry concorrente.
+  try {
+    const db = getDB()
+    await db.insert(schema.guestActivities).values({
+      organizationId: guest.organizationId,
+      eventId: guest.eventId,
+      guestId: guest.id,
+      type: 'reminder_sent',
+      meta: { reminderId: reminder.id },
+    })
+  } catch (err: any) {
+    // 23505 = unique_violation (concorrenza tra retry QStash o handler paralleli)
+    // Trattiamo come successo idempotente.
+    if (err?.code === '23505') {
+      return
+    }
+    throw err
+  }
 }

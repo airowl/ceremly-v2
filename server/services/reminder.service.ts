@@ -16,10 +16,12 @@ import type { RemindersInput } from "~~/shared/schemas/ceremly";
 import { getEventLimits } from "./eventAccess.service";
 import {
     bulkUpsertReminders,
+    claimReminderForProcessing,
     findDueReminders,
     findPendingGuestsForReminder,
     findRemindersByEvent,
     markReminderSent,
+    releaseReminderProcessing,
 } from "../repositories/reminderRepository";
 import { findEventByIdScoped } from "../repositories/eventRepository";
 import { assertOwnership } from "../utils/permissions";
@@ -114,26 +116,35 @@ export async function saveReminders(
 
 /**
  * Processa i reminder dovuti (SPEC §6 GET /api/cron/send-reminders):
- * per ogni reminder dovuto → ospiti pendenti (con email, non removed,
- * remindersDisabled=false, senza risposta) → dispatch 'send-reminder-email'
- * per ciascuno → markReminderSent SUBITO dopo l'enqueue (idempotenza: un cron
- * che rigira nello stesso giorno non re-invia). Il lavoro pesante (render +
- * send email, activity 'reminder_sent') sta nel job handler, non qui (Strada A).
+ * Per ogni reminder dovuto → tenta claim atomico (lease 5min) →
+ * ospiti pendenti → dispatch 'send-reminder-email' per ciascuno →
+ * markReminderSent (pulisce processingAt, setta sentAt).
+ * Se claim fallisce → un altro cron sta processando, skip.
+ * Se dispatch fallisce parzialmente → release claim per permettere retry.
  */
-export async function processDueReminders(): Promise<{ processed: number; queued: number }> {
+export async function processDueReminders(): Promise<{ processed: number; queued: number; skipped: number }> {
     const due = await findDueReminders();
     let processed = 0;
     let queued = 0;
+    let skipped = 0;
 
     for (const reminder of due) {
+        // Claim atomico: previene doppia esecuzione cron concorrenti
+        const claimed = await claimReminderForProcessing(reminder.organizationId, reminder.id);
+        if (!claimed) {
+            skipped++;
+            continue;
+        }
+
         const guests = await findPendingGuestsForReminder(
             reminder.organizationId,
             reminder.eventId,
         );
+
+        let allDispatched = true;
         // Dispatch concorrente a chunk (#6): un fallimento singolo NON aborta il
-        // run (Promise.allSettled), così markReminderSent gira sempre e non si
-        // ha re-invio di massa il giorno dopo; l'idempotenza handler/consumer
-        // evita comunque doppioni. I chunk evitano il timeout su liste grandi.
+        // run (Promise.allSettled). Se qualche dispatch fallisce, rilasciamo il
+        // claim per permettere retry al prossimo cron run.
         for (let i = 0; i < guests.length; i += REMINDER_DISPATCH_CONCURRENCY) {
             const chunk = guests.slice(i, i + REMINDER_DISPATCH_CONCURRENCY);
             const settled = await Promise.allSettled(
@@ -143,13 +154,20 @@ export async function processDueReminders(): Promise<{ processed: number; queued
                 if (res.status === "fulfilled") {
                     queued++;
                 } else {
+                    allDispatched = false;
                     console.error(`[cron:send-reminders] dispatch fallito per guest ${chunk[idx]!.id} reminder ${reminder.id}:`, res.reason);
                 }
             });
         }
-        await markReminderSent(reminder.organizationId, reminder.id);
-        processed++;
+
+        if (allDispatched) {
+            await markReminderSent(reminder.organizationId, reminder.id);
+            processed++;
+        } else {
+            // Alcuni dispatch falliti → rilascia claim per retry
+            await releaseReminderProcessing(reminder.organizationId, reminder.id);
+        }
     }
 
-    return { processed, queued };
+    return { processed, queued, skipped };
 }

@@ -1,4 +1,4 @@
-import { useFileManagerConfig } from '~~/server/services/file/fileService'
+import { FileService, useFileManagerConfig } from '~~/server/services/file/fileService'
 import { createR2Storage } from '~~/server/services/file/storage/r2'
 import { cleanupOrphanFiles } from '~~/server/services/file/cleanup'
 import { purgeDueDeletedAccounts } from '~~/server/services/gdpr.service'
@@ -37,6 +37,10 @@ export default defineEventHandler(async (event) => {
 
   const files = await cleanupOrphanFiles(storage, 1)
 
+  // Recovery dei job varianti persi: resta nello stesso cron per non
+  // consumare uno slot Vercel aggiuntivo.
+  const variants = await FileService.requeueMissingVariants(100)
+
   // Hard-delete degli account programmati la cui grace window è scaduta.
   // Isolato: un suo errore non deve far fallire la pulizia file.
   let accounts: Awaited<ReturnType<typeof purgeDueDeletedAccounts>> | { error: string }
@@ -53,9 +57,10 @@ export default defineEventHandler(async (event) => {
       graceHours: 1,
       trigger: 'cron',
       files,
+      variants,
       accounts,
     },
   })
 
-  return { files, accounts }
+  return { files, variants, accounts }
 })

@@ -310,6 +310,8 @@ export async function getEventCheckoutInfo(
 /**
  * Sblocca un evento Free → 'celebration' (pagamento one-time Creem completato).
  * Idempotente by-construction: il predicato `tier='free'` evita doppie scritture.
+ * Se creemOrderId è già popolato (refund arrivato prima del checkout), non sblocca:
+ * l'ordine è già stato rimborsato.
  * Org-scoped: l'org dev'essere quella dell'evento (dal metadata del checkout).
  */
 export async function unlockEvent(
@@ -326,21 +328,53 @@ export async function unlockEvent(
                 eq(schema.events.id, eventId),
                 eq(schema.events.organizationId, organizationId),
                 eq(schema.events.tier, "free"),
+                // Se creemOrderId è già settato, un refund è già arrivato per questo ordine
+                isNull(schema.events.creemOrderId),
             ),
         );
 }
 
 /**
  * Re-locka l'evento collegato a un order Creem rimborsato/contestato → 'free'.
- * Match per `creem_order_id` (univoco lato Creem). Senza, un evento rimborsato
- * resterebbe sbloccato gratis (SPEC §6.4). No-op se nessun match.
+ * Match per `creem_order_id` (univoco lato Creem). Se l'orderId non c'è ancora
+ * (refund arrivato prima del checkout.completed), prova a matchare per
+ * `creem_checkout_id` che è persistito alla creazione del checkout.
+ * Se trova per checkoutId, salva anche l'orderId per bloccare futuri unlock.
+ * Senza match, un evento rimborsato resterebbe sbloccato gratis (SPEC §6.4).
+ * No-op se nessun match.
  */
-export async function relockEventByOrder(creemOrderId: string): Promise<void> {
+export async function relockEventByOrder(
+    creemOrderId: string | undefined,
+    creemCheckoutId?: string,
+): Promise<void> {
     const db = getDB();
-    await db
-        .update(schema.events)
-        .set({ tier: "free", unlockedAt: null, creemOrderId: null })
-        .where(eq(schema.events.creemOrderId, creemOrderId));
+
+    // Prima prova per orderId (caso normale: checkout già completato)
+    if (creemOrderId) {
+        const byOrder = await db
+            .update(schema.events)
+            // Conserva l'order: un checkout.completed ritardato non deve
+            // poter risbloccare un pagamento già rimborsato.
+            .set({ tier: "free", unlockedAt: null, creemOrderId })
+            .where(eq(schema.events.creemOrderId, creemOrderId))
+            .returning({ id: schema.events.id });
+
+        if (byOrder.length > 0) return;
+    }
+
+    // Fallback: refund arrivato prima del checkout.completed.
+    // Cerca per checkoutId (persistito alla creazione del checkout).
+    // Se trova, salva l'orderId (se disponibile) per bloccare futuri unlock.
+    if (creemCheckoutId) {
+        await db
+            .update(schema.events)
+            .set({
+                tier: "free",
+                unlockedAt: null,
+                creemOrderId: creemOrderId ?? null, // salva l'orderId se c'è per bloccare unlock futuri
+            })
+            .where(eq(schema.events.creemCheckoutId, creemCheckoutId));
+    }
 }
 
 /**
