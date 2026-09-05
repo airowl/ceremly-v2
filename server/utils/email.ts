@@ -40,6 +40,8 @@ export interface BaseEmailOptions {
     userId?: string;
     /** Contesto per correlare i webhook (open/click) all'ospite/evento. */
     context?: EmailContext;
+    /** Chiave Resend per rendere sicuri retry dello stesso invio (24 ore). */
+    idempotencyKey?: string;
 }
 
 // Template-specific options
@@ -238,16 +240,19 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
 
         const from = getSender(options);
 
-        const response = await getResendInstance().emails.send({
-            from,
-            to: options.to,
-            subject,
-            html,
-            text,
-            ...(options.type === "custom" && options.replyTo
-                ? { replyTo: options.replyTo }
-                : {}),
-        });
+        const response = await getResendInstance().emails.send(
+            {
+                from,
+                to: options.to,
+                subject,
+                html,
+                text,
+                ...(options.type === "custom" && options.replyTo
+                    ? { replyTo: options.replyTo }
+                    : {}),
+            },
+            options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : undefined,
+        );
 
         // Log to audit
         await logEmailEvent(options, response);

@@ -37,7 +37,7 @@ afterAll(async () => {
 });
 
 describe("relockEventByOrder", () => {
-    it("(a) re-locka un evento celebration → tier='free', unlockedAt=null, creemOrderId=null", async () => {
+    it("(a) re-locka un evento celebration e conserva l'orderId per bloccare webhook ritardati", async () => {
         await relockEventByOrder(ORDER_ID);
 
         const rows = await db
@@ -49,7 +49,7 @@ describe("relockEventByOrder", () => {
         expect(evt).toBeDefined();
         expect(evt.tier).toBe("free");
         expect(evt.unlockedAt).toBeNull();
-        expect(evt.creemOrderId).toBeNull();
+        expect(evt.creemOrderId).toBe(ORDER_ID);
     });
 
     it("(b) no-op silenzioso per orderId sconosciuto: nessun errore, nessuna modifica", async () => {

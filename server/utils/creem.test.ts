@@ -133,7 +133,7 @@ describe("handleRefundCreated", () => {
         const rows = await db.select().from(schema.events).where(eq(schema.events.id, EVT_ID));
         const evt = rows[0];
         expect(evt.tier).toBe("free");
-        expect(evt.creemOrderId).toBeNull();
+        expect(evt.creemOrderId).toBe(ORDER_ID);
         expect(evt.unlockedAt).toBeNull();
     });
 
@@ -151,7 +151,7 @@ describe("handleRefundCreated", () => {
         const rows = await db.select().from(schema.events).where(eq(schema.events.id, EVT_ID));
         const evt = rows[0];
         expect(evt.tier).toBe("free");
-        expect(evt.creemOrderId).toBeNull();
+        expect(evt.creemOrderId).toBe(ORDER_ID);
         expect(evt.unlockedAt).toBeNull();
     });
 
@@ -171,7 +171,7 @@ describe("handleRefundCreated", () => {
         const rows = await db.select().from(schema.events).where(eq(schema.events.id, EVT_ID));
         const evt = rows[0];
         expect(evt.tier).toBe("free");
-        expect(evt.creemOrderId).toBeNull();
+        expect(evt.creemOrderId).toBe(ORDER_ID);
         expect(evt.unlockedAt).toBeNull();
     });
 });

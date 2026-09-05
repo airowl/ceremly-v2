@@ -103,32 +103,50 @@ export async function bulkUpsertReminders(
                 result.skipped++;
                 continue;
             }
-            await db
-                .update(schema.eventReminders)
-                .set({
+            try {
+                await db
+                    .update(schema.eventReminders)
+                    .set({
+                        daysBefore: item.daysBefore,
+                        subject: item.subject,
+                        message: item.message,
+                        enabled: item.enabled,
+                    })
+                    .where(
+                        and(
+                            eq(schema.eventReminders.id, item.id),
+                            eq(schema.eventReminders.organizationId, organizationId),
+                            eq(schema.eventReminders.eventId, eventId),
+                            isNull(schema.eventReminders.sentAt),
+                        ),
+                    );
+            } catch (err: any) {
+                // 23505 = unique_violation (concorrenza su daysBefore per stesso evento)
+                if (err?.code === '23505') {
+                    result.skipped++;
+                    continue;
+                }
+                throw err;
+            }
+            result.updated++;
+        } else {
+            try {
+                await db.insert(schema.eventReminders).values({
+                    organizationId,
+                    eventId,
                     daysBefore: item.daysBefore,
                     subject: item.subject,
                     message: item.message,
                     enabled: item.enabled,
-                })
-                .where(
-                    and(
-                        eq(schema.eventReminders.id, item.id),
-                        eq(schema.eventReminders.organizationId, organizationId),
-                        eq(schema.eventReminders.eventId, eventId),
-                        isNull(schema.eventReminders.sentAt),
-                    ),
-                );
-            result.updated++;
-        } else {
-            await db.insert(schema.eventReminders).values({
-                organizationId,
-                eventId,
-                daysBefore: item.daysBefore,
-                subject: item.subject,
-                message: item.message,
-                enabled: item.enabled,
-            });
+                });
+            } catch (err: any) {
+                // 23505 = unique_violation (daysBefore già esistente per questo evento)
+                if (err?.code === '23505') {
+                    result.skipped++;
+                    continue;
+                }
+                throw err;
+            }
             result.inserted++;
         }
     }
@@ -136,14 +154,79 @@ export async function bulkUpsertReminders(
 }
 
 /**
+ * Marca un reminder come inviato (idempotenza cron: WHERE sentAt IS NULL).
+ * Org-scoped: l'organizationId arriva dalla riga trovata da findDueReminders.
+ * Ritorna true se la riga è stata effettivamente marcata.
+ * Pulisce anche processingAt per rilasciare il lease.
+ */
+export async function markReminderSent(organizationId: string, id: string): Promise<boolean> {
+    const db = getDB();
+    const rows = await db
+        .update(schema.eventReminders)
+        .set({ sentAt: new Date(), processingAt: null })
+        .where(
+            and(
+                eq(schema.eventReminders.id, id),
+                eq(schema.eventReminders.organizationId, organizationId),
+                isNull(schema.eventReminders.sentAt),
+            ),
+        )
+        .returning({ id: schema.eventReminders.id });
+    return rows.length > 0;
+}
+
+/**
+ * Tenta di acquisire il lease per processare un reminder (atomic claim).
+ * Imposta processingAt = now() solo se:
+ *  - sentAt IS NULL (non ancora inviato)
+ *  - processingAt IS NULL OPPURE processingAt > 5 minuti fa (lease scaduto)
+ * Ritorna true se il claim è riuscito, false se un altro cron sta processando.
+ */
+export async function claimReminderForProcessing(organizationId: string, id: string): Promise<boolean> {
+    const db = getDB();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const rows = await db
+        .update(schema.eventReminders)
+        .set({ processingAt: new Date() })
+        .where(
+            and(
+                eq(schema.eventReminders.id, id),
+                eq(schema.eventReminders.organizationId, organizationId),
+                isNull(schema.eventReminders.sentAt),
+                sql`(${schema.eventReminders.processingAt} IS NULL OR ${schema.eventReminders.processingAt} < ${fiveMinutesAgo.toISOString()})`,
+            ),
+        )
+        .returning({ id: schema.eventReminders.id });
+    return rows.length > 0;
+}
+
+/**
+ * Rilascia il lease di processing (clear processingAt) in caso di fallimento.
+ * Permette al prossimo cron run di riprovare.
+ */
+export async function releaseReminderProcessing(organizationId: string, id: string): Promise<void> {
+    const db = getDB();
+    await db
+        .update(schema.eventReminders)
+        .set({ processingAt: null })
+        .where(
+            and(
+                eq(schema.eventReminders.id, id),
+                eq(schema.eventReminders.organizationId, organizationId),
+            ),
+        );
+}
+
+/**
  * Reminder "dovuti" per il cron giornaliero (SPEC §6 GET /api/cron/send-reminders):
- * enabled, mai inviati, evento `active` con rsvpDeadline valorizzata e
+ * enabled, mai inviati, NON in processing (lease valido), evento `active` con rsvpDeadline valorizzata e
  * now >= rsvpDeadline - daysBefore giorni (calcolo in SQL con interval).
  * Guard aggiuntivo: now <= rsvpDeadline (a deadline passata il form è chiuso,
  * un reminder sarebbe fuorviante). Query di sistema, cross-org by design.
  */
 export async function findDueReminders() {
     const db = getDB();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     return db
         .select({
             id: schema.eventReminders.id,
@@ -157,6 +240,8 @@ export async function findDueReminders() {
             and(
                 eq(schema.eventReminders.enabled, true),
                 isNull(schema.eventReminders.sentAt),
+                // Escludi reminder già in processing da un altro cron (lease valido < 5min)
+                sql`(${schema.eventReminders.processingAt} IS NULL OR ${schema.eventReminders.processingAt} < ${fiveMinutesAgo.toISOString()})`,
                 eq(schema.events.status, "active"),
                 isNotNull(schema.events.rsvpDeadline),
                 sql`now() >= ${schema.events.rsvpDeadline} - (${schema.eventReminders.daysBefore} * interval '1 day')`,
@@ -164,27 +249,6 @@ export async function findDueReminders() {
             ),
         )
         .orderBy(schema.eventReminders.createdAt);
-}
-
-/**
- * Marca un reminder come inviato (idempotenza cron: WHERE sentAt IS NULL).
- * Org-scoped: l'organizationId arriva dalla riga trovata da findDueReminders.
- * Ritorna true se la riga è stata effettivamente marcata.
- */
-export async function markReminderSent(organizationId: string, id: string): Promise<boolean> {
-    const db = getDB();
-    const rows = await db
-        .update(schema.eventReminders)
-        .set({ sentAt: new Date() })
-        .where(
-            and(
-                eq(schema.eventReminders.id, id),
-                eq(schema.eventReminders.organizationId, organizationId),
-                isNull(schema.eventReminders.sentAt),
-            ),
-        )
-        .returning({ id: schema.eventReminders.id });
-    return rows.length > 0;
 }
 
 /**

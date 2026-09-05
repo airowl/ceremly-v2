@@ -1,5 +1,5 @@
-import { relations } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { v7 as uuidv7 } from "uuid";
 import { organization } from "./auth";
 import { events } from "./events";
@@ -31,6 +31,12 @@ export const guestActivities = pgTable(
         index("guest_activities_organization_id_idx").on(table.organizationId),
         index("guest_activities_event_id_idx").on(table.eventId),
         index("guest_activities_guest_id_idx").on(table.guestId),
+        // Unicità per idempotenza reminder: un guest può ricevere al massimo
+        // un reminder dello stesso tipo per lo stesso reminderId.
+        // Estrae reminderId dal JSONB meta per l'indice unico parziale.
+        uniqueIndex("guest_activities_guest_type_reminder_uidx")
+            .on(table.guestId, table.type, sql`(${table.meta}->>'reminderId')`)
+            .where(sql`${table.type} = 'reminder_sent'`),
     ],
 );
 
