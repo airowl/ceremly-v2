@@ -93,7 +93,7 @@ La UI Vue resta personalizzata. I widget React/Svelte del componente non sono pa
 
 Il bucket e gli oggetti esistenti restano invariati. Convex conserva metadata e autorizzazioni; browser e R2 scambiano file tramite URL firmati. I flussi server-to-server possono usare binding Workers/R2 o firma S3 compatibile senza cambiare chiavi oggetto.
 
-`sharp` non può continuare a generare varianti nel runtime Worker/Convex. Prima del cutover va completato uno spike e scelta una soluzione: Cloudflare Images/Image Resizing oppure un microservizio Node isolato. Le varianti non possono degradare silenziosamente in produzione.
+Oggi l'import dinamico di `sharp` degrada intenzionalmente: se il modulo manca, registra un log e restituisce nessuna variante. Il comportamento può restare durante sviluppo e staging, ma lo spike target alza il requisito: per ogni immagine processabile in produzione la pipeline deve generare le varianti richieste oppure registrare uno stato persistito, osservabile e rieseguibile; non è ammesso un fallback silenzioso. Prima del cutover va scelta la soluzione: Cloudflare Images/Image Resizing oppure un microservizio Node isolato.
 
 ### Job e cron
 
@@ -121,7 +121,7 @@ QStash, consumer `/api/jobs/*`, cron `/api/cron/*`, firma QStash e `NUXT_CRON_SE
 - I segreti Creem/Resend e webhook sono in Convex; Cloudflare conserva solo deploy, proxy e configurazione R2 necessaria.
 - Il client non decide `organizationId`, ruoli, piano o billing entity: ogni valore è risolto/validato sul server Convex.
 - Webhook e job mantengono idempotenza tramite stato di dominio e chiavi evento, non tramite sola deduplica di trasporto.
-- Cloudflare WAF e Rate Limiting proteggono route pubbliche e auth; un Workers Rate Limiting binding protegge le quote applicative che oggi dipendono da Redis. Regole, chiavi e soglie sono documentate e testate prima di rimuovere Upstash.
+- Lo spike di rate limiting produce una matrice rotta → protezione: il limite globale `nuxt-security` (100/min) e le route pubbliche passanti da Cloudflare diventano WAF/Rate Limiting; `/api/auth/*` conserva limiti edge e Better Auth; RSVP/contact/waiting-list e presign/upload, se chiamano Convex direttamente, ricevono un limite applicativo Convex per IP o utente. Un Workers Rate Limiting binding può proteggere solo le route che transitano dal Worker e non è considerato protezione delle query/mutation dirette a Convex. Regole, chiavi e soglie sono documentate e testate prima di rimuovere Upstash.
 - CSP, HSTS, limiti body/upload, `nosniff`, fake server headers e bot trap restano applicati dal layer Nuxt/Worker; il proxy auth e i webhook mantengono le sole eccezioni strettamente necessarie.
 - Dashboard costi Cloudflare, Convex, R2, Resend e Creem vengono osservati mensilmente; impostare limiti di spesa/uso prima del go-live.
 
@@ -138,8 +138,8 @@ Prima di migrare dati reali devono superare ambiente staging:
 5. import 2FA e login con authenticator già registrato, backup codes e recovery controllato;
 6. modello applicativo Convex per org/membership/inviti/RBAC;
 7. Creem ufficiale con organization `entityId`, checkout, portal, webhook e sync prodotti;
-8. alternativa a Sharp per le varianti;
-9. WAF/rate limiting Cloudflare, bot trap e header di sicurezza equivalenti a produzione;
+8. alternativa a Sharp per le varianti: ogni immagine processabile genera varianti oppure lascia uno stato persistito, osservabile e rieseguibile;
+9. mappa e test delle protezioni attuali: `nuxt-security` globale, Better Auth, RSVP/contact/waiting-list e upload; WAF/Worker solo per traffico Cloudflare e limite Convex per chiamate dirette, più bot trap e header di sicurezza equivalenti a produzione;
 10. carico sintetico rappresentativo che misura call Convex incluse riesecuzioni reattive e produce il confronto economico.
 
 Il fallimento di uno spike blocca la migrazione completa, non viene aggirato con un downgrade silenzioso.
@@ -150,7 +150,7 @@ Il fallimento di uno spike blocca la migrazione completa, non viene aggirato con
 - esportare Neon, auth e stato billing in formato versionato e cifrato;
 - caricare una copia di staging Convex con import idempotente;
 - validare conteggi, foreign key logiche, dati R2, piani/limiti, customer/subscription Creem e audit;
-- eseguire flussi end-to-end di login, OAuth, 2FA, tenant isolation, RSVP, checkout, webhook e admin;
+- eseguire flussi end-to-end di login, Google OAuth/account linking, 2FA, tenant isolation, RSVP, checkout, webhook e admin;
 - misurare i tempi per rendere credibile la finestra di manutenzione: delta import più riconciliazione devono completare entro 15 minuti e l'intera maintenance entro 30 minuti; altrimenti il risultato è no-go e il piano va ridisegnato.
 
 ### 3. Cutover
@@ -172,11 +172,12 @@ Fino alla riapertura delle scritture Convex, Vercel/Neon rimangono candidati rol
 
 - Ogni record di dominio previsto è importato una volta e riconciliato con la sorgente.
 - Ogni utente email/password testato accede con la password precedente dopo il nuovo login.
-- Google OAuth funziona su dominio Cloudflare; ogni utente 2FA esistente testato completa il login con il proprio authenticator precedente o con il recovery flow approvato.
+- Google OAuth completa callback e account linking sul dominio Cloudflare.
+- Ogni utente 2FA esistente testato completa il login con il proprio authenticator precedente o con il recovery flow approvato.
 - Nessun utente può leggere o scrivere dati di un'altra organizzazione.
 - Customer, subscription, ordini e product mapping Creem riconciliano con la sorgente e i webhook replay non duplicano effetti.
 - I job/cron aggiornano stato una sola volta anche se ripetuti e gli errori di action finiscono in retry persistito o stato terminale visibile/rieseguibile da admin.
-- R2 conserva chiavi e accesso ai file esistenti; varianti immagini hanno una soluzione verificata.
+- R2 conserva chiavi e accesso ai file esistenti; ogni nuova immagine processabile genera le varianti o ha uno stato persistito, osservabile e rieseguibile.
 - `/admin` rifiuta un utente non `superAdmin` e audita tutte le scritture.
 - I dashboard mostrano consumo e limiti per Cloudflare, Convex, R2, Resend e Creem; la misura di carico reattivo conferma il caso economico scelto.
 - Delta import più riconciliazione completano entro 15 minuti e la maintenance completa entro 30 minuti.
