@@ -94,3 +94,6 @@ Added `.wrangler/` (local dry-run outputs, regenerable)
 
 ## Next Steps
 1. Task 7: Move image processing to Cloudflare Images → removes sharp stub
+
+## D1 note (@nuxt/content on Workers)
+`wrangler.jsonc` carries a local `d1_databases` binding `DB` → `ceremly-staging-content` (placeholder id `000…`) because @nuxt/content's cloudflare setup hardcodes binding name `DB` and self-seeds D1 from the prerendered `/__nuxt_content/<collection>/sql_dump.txt`; `wrangler dev` emulates D1 locally. Before any remote staging deploy: `wrangler d1 create ceremly-staging-content --env staging` and replace `database_id`. Rationale also inline in `nuxt.config.ts`.
