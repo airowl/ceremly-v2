@@ -524,10 +524,13 @@ export default defineNuxtConfig({
         // module crashes the Workers runtime at import (createRequire with
         // undefined import.meta.url) and is unused there anyway: on
         // Cloudflare the runtime adapter is D1 (set by @nuxt/content's
-        // cloudflare preset setup). Applies to all presets; Node >= 22.5
-        // supports node:sqlite for build/prerender too. Task 7 owns media;
+        // cloudflare preset setup). Cloudflare-only: Vercel keeps the
+        // better-sqlite3 default byte-identical. Node >= 22.5 supports
+        // node:sqlite for build/prerender too. Task 7 owns media;
         // a real D1 database + dump import belongs to the data rehearsal.
-        experimental: { sqliteConnector: "native" },
+        experimental: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? { sqliteConnector: "native" }
+            : {},
         build: {
             markdown: {
                 highlight: {

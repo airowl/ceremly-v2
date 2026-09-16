@@ -26,22 +26,20 @@ const PROCESSABLE_TYPES = new Set([
 let sharpModule: any = null
 let sharpChecked = false
 
-// NOTE (migration G01): static import (not dynamic) because Rollup emits a
-// broken `_default` reference for inlined dynamic-import namespaces when the
-// Cloudflare preset bundles everything into one IIFE file. When building for
-// Workers, the `sharp` specifier is aliased to server/utils/sharp-stub.ts via
-// nitro.alias (throws only if actually invoked). Task 7 replaces image
-// processing with the Cloudflare Images binding.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-import sharpStatic from 'sharp'
-
+// NOTE (migration G01): dynamic import with graceful fallback. When building
+// for Workers, the `sharp` specifier is aliased to server/utils/sharp-stub.ts
+// via nitro.alias (throws only if actually invoked). Output is ESM
+// (cloudflare-module preset), where dynamic-import namespace interop
+// (`.default ?? namespace`) works. Task 7 replaces image processing with
+// the Cloudflare Images binding.
 async function getSharp(): Promise<any> {
   if (sharpChecked) return sharpModule
   sharpChecked = true
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sharpModule = (sharpStatic as any).default ?? sharpStatic
+    const mod = await import('sharp') as any
+    sharpModule = mod.default ?? mod
     return sharpModule
   } catch {
     console.info('[imageProcessor] Sharp not available — image variant generation disabled')
