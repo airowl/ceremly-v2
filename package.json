@@ -14,6 +14,9 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "test": "vitest run",
+    "dev:convex": "convex dev",
+    "typecheck:convex": "convex codegen && tsc --noEmit -p convex/tsconfig.json",
+    "test:migration": "vitest run test/migration convex/**/*.test.ts",
     "test:watch": "vitest",
     "typecheck": "nuxt typecheck",
     "auth:schema": "npx @better-auth/cli generate --config server/utils/auth.ts --output server/database/schema/auth.ts -y",
@@ -33,7 +36,9 @@
     "og:generate": "node scripts/generate-og.mjs"
   },
   "dependencies": {
-    "@creem_io/better-auth": "^0.0.13",
+    "@convex-dev/better-auth": "0.12.5",
+    "@creem_io/better-auth": "0.0.13",
+    "@creem_io/convex": "0.4.1",
     "@iconify-json/lucide": "^1.2.71",
     "@iconify-json/simple-icons": "^1.2.55",
     "@neondatabase/serverless": "^1.0.2",
@@ -55,8 +60,11 @@
     "@vueuse/core": "^14.0.0",
     "@vueuse/nuxt": "^14.3.0",
     "aws4fetch": "^1.0.20",
-    "better-auth": "^1.4.5",
+    "better-auth": "1.6.15",
     "better-sqlite3": "^12.6.2",
+    "convex": "1.45.0",
+    "convex-vue": "0.1.5",
+    "creem": "1.9.0",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.0",
     "nuxt": "^4.2.0",
@@ -77,6 +85,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "convex-test": "0.0.58",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.38.0",
@@ -87,7 +96,7 @@
     "typescript": "^5.9.3",
     "vitest": "^2.1.9",
     "vue-tsc": "^3.1.2",
-    "wrangler": "^4.45.4"
+    "wrangler": "4.131.2"
   },
   "packageManager": "pnpm@10.19.0",
   "pnpm": {
