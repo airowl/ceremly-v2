@@ -2,9 +2,22 @@
 /// <reference types="vitest/globals" />
 /// <reference lib="dom" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createApp, h } from "vue";
+import { createApp, defineComponent, h } from "vue";
 import { createPinia } from "pinia";
 import { installConvex } from "~/plugins/convex";
+import { useConvexQuery } from "convex-vue";
+import { makeFunctionReference } from "convex/server";
+
+// Sanctioned manual reference (convex docs: for custom clients); onUpdate is
+// spied so no server is ever contacted.
+const fakeQuery = makeFunctionReference<"query">("health:ping");
+
+const QueryProbe = defineComponent({
+  setup() {
+    useConvexQuery(fakeQuery, {});
+    return () => h("div");
+  },
+});
 
 describe("convex-vue binding with auth token", () => {
   let app: ReturnType<typeof createApp>;
@@ -15,9 +28,7 @@ describe("convex-vue binding with auth token", () => {
   beforeEach(() => {
     fetchTokenSpy = vi.fn().mockResolvedValue("test-token");
     pinia = createPinia();
-    app = createApp({
-      render: () => h("div"),
-    });
+    app = createApp(QueryProbe);
     app.use(pinia);
   });
 
@@ -25,14 +36,30 @@ describe("convex-vue binding with auth token", () => {
     // Install convex using our wrapper
     client = installConvex(app, "http://localhost:3210", fetchTokenSpy);
 
-    // Mount the app to trigger setAuth
+    // Spy the subscription path before mount: no server is contacted.
+    const mockUnsubscribe = vi.fn();
+    vi.spyOn(client, "onUpdate").mockReturnValue(mockUnsubscribe as any);
+
+    // The client points at a dead URL by design; silence its network-layer
+    // reconnect chatter so test output stays pristine (assertions unaffected).
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    // Mount the app to trigger setAuth + query subscription
     app.mount(document.createElement("div"));
 
     // Verify setAuth was called once with fetchToken
     expect(fetchTokenSpy).toHaveBeenCalledTimes(1);
     expect(fetchTokenSpy).toHaveBeenCalledWith({ forceRefreshToken: false });
 
-    // Unmount
+    // A query subscription was established through convex-vue
+    expect(client.onUpdate).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribe).not.toHaveBeenCalled();
+
+    // Unmount tears the subscription down via onScopeDispose
     app.unmount();
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+    // Shut the client down so its socket stops retrying the dead URL
+    // (prevents post-test reconnect chatter).
+    await (client as any).close?.();
+    logSpy.mockRestore();
   });
 });

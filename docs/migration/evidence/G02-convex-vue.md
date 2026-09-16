@@ -1,7 +1,7 @@
 # Gate G02 Evidence — Convex Vue Binding
 
 **Date:** 2026-09-16
-**Status:** PASS
+**Status:** NOT_RUN (staging verification pending — see Gate Status)
 
 ## Summary
 
@@ -84,7 +84,7 @@ function useConvexResource<TArgs, TReturn>(mutation: FunctionReference<"mutation
 | Gate | Status | Evidence |
 |------|--------|----------|
 | G01 | PASS | `docs/migration/evidence/G01-cloudflare.md` |
-| **G02** | **PASS** | **This document** |
+| **G02** | **NOT_RUN** | **This document** |
 | G03 | NOT_RUN | — |
 | G04 | NOT_RUN | — |
 | G05 | NOT_RUN | — |
@@ -100,3 +100,4 @@ function useConvexResource<TArgs, TReturn>(mutation: FunctionReference<"mutation
 - All Convex dependencies pinned per Task 1: `convex@1.45.0`, `convex-vue@0.1.5`, `convex-test@0.0.58`
 - No secrets exposed to browser (Convex URL is public, auth token fetched via `FetchConvexToken` from auth composable)
 - Next task (T4) will integrate Better Auth with Convex for the `fetchToken` implementation
+- 2026-09-16 fix round 1: G02 reverted PASS → NOT_RUN. Brief Step 4 (4 gate cases on staging) is unverifiable: no live Convex deployment exists (`.env` has no convex entries, no `convex.json`/deployment artifacts, only `.env.example` placeholders). NEEDS_CONTEXT: a provisioned staging deployment (`NUXT_PUBLIC_CONVEX_URL`) is required before Step 4 can run.

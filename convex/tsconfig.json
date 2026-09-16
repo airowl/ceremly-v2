@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["vitest/globals"]
   },
-  "include": ["**/*.ts", "../app/**/*.ts", "../app/**/*.vue"]
+  "include": ["**/*.ts"]
 }
