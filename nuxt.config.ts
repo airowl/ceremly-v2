@@ -408,12 +408,42 @@ export default defineNuxtConfig({
                 ],
             },
         },
-        // sharp (image processing) is dynamically imported with graceful fallback.
-        // Externalize it for Cloudflare Workers — not needed in Worker runtime
-        // (variants are processed via Cloudflare Images binding).
-        // Known issue: sharp-wasm32 causes build error on Cloudflare preset (pre-existing).
-        // Externalization via nitro.externals/rollupConfig conflicts with IIFE format.
-        // Workaround: will be resolved in Task 7 when moving image processing to Cloudflare Images.
+        // The cloudflare-worker preset (via abstract base-worker) forces IIFE
+        // single-file output, but this app needs code-splitting (dynamic
+        // imports in queue dispatch, node:buffer) and the node-based
+        // prerenderer cannot use IIFE for multi-chunk builds at all.
+        // ESM multi-chunk output for both, matching the
+        // cloudflare-module-legacy preset shape. Wrangler deploys ESM workers
+        // with chunks. ONLY active when NUXT_NITRO_PRESET=cloudflare;
+        // Vercel default keeps preset behavior.
+        rollupConfig:
+            process.env.NUXT_NITRO_PRESET === "cloudflare"
+                ? { output: { format: "esm", inlineDynamicImports: false } }
+                : undefined,
+        // Belt-and-braces: the prerenderer inherits resolved output options;
+        // force ESM here too so a preset upgrade cannot silently re-break it.
+        hooks: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? {
+                  "prerender:config": (prerendererConfig: any) => {
+                      prerendererConfig.inlineDynamicImports = false;
+                      prerendererConfig.rollupConfig = prerendererConfig.rollupConfig || {};
+                      prerendererConfig.rollupConfig.output = {
+                          ...(prerendererConfig.rollupConfig.output || {}),
+                          format: "esm",
+                          inlineDynamicImports: false,
+                      };
+                  },
+              }
+            : {},
+        // For Cloudflare Workers (NUXT_NITRO_PRESET=cloudflare), sharp is aliased to a stub
+        // because the Workers runtime doesn't support native modules and the bundle
+        // cannot include its native prebuilds. Image variants are processed via
+        // Cloudflare Images binding (Task 7). The stub satisfies TypeScript but
+        // throws if actually invoked at runtime.
+        // This alias is ONLY active when NUXT_NITRO_PRESET=cloudflare; Vercel preset keeps real sharp.
+        alias: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? { sharp: "./server/utils/sharp-stub.ts" }
+            : {},
         routeRules: {
             "/.env": { redirect: "/404" },
             "/.git": { redirect: "/404" },
@@ -458,18 +488,18 @@ export default defineNuxtConfig({
             allowedHosts: [".trycloudflare.com"],
         },
         build: {
-            rollupOptions: {
-                output: {
-                    manualChunks(id) {
-                        if (id.includes("node_modules/@unovis")) return "vendor-unovis";
+            rollupOptions:
+                process.env.NUXT_NITRO_PRESET === "cloudflare"
+                    ? {}
+                    : {
+                          output: {
+                              manualChunks(id) {
+                                  if (id.includes("node_modules/@unovis")) return "vendor-unovis";
 
-                        if (id.includes("@iconify-json")) return "vendor-icons";
-                    },
-                },
-            },
-        },
-        ssr: {
-            external: ["sharp", "@img/sharp-wasm32"],
+                                  if (id.includes("@iconify-json")) return "vendor-icons";
+                              },
+                          },
+                      },
         },
     },
 

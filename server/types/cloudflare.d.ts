@@ -13,5 +13,5 @@ declare module "nitropack" {
 }
 
 interface CFImages {
-  input(input: ArrayBuffer | ReadableStream | Blob | FormData, options?: { rules?: string[] }): Promise<ReadableStream>;
+  input(input: ArrayBuffer | ReadableStream | FormData, options?: { rules?: string[] }): Promise<ReadableStream>;
 }
