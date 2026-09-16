@@ -499,6 +499,8 @@ export default defineNuxtConfig({
         },
     },
 
+    // NOTE (migration G02): Convex needs no plugins entry — app/plugins/convex.client.ts
+    // is auto-discovered; public.convexUrl is exposed via generateRuntimeConfig().
     runtimeConfig: generateRuntimeConfig(),
 
     icon: {
