@@ -8,14 +8,6 @@
   "observability": { "enabled": true },
   "r2_buckets": [{ "binding": "CEREMLY_R2", "bucket_name": "ceremly-staging" }],
   "images": { "binding": "IMAGES" },
-  // @nuxt/content runtime on Workers requires D1 (binding name `DB` is
-  // hardcoded by its cloudflare preset setup; the worker self-seeds D1
-  // from the prerendered /__nuxt_content/<collection>/sql_dump.txt).
-  // `wrangler dev` emulates D1 locally (see .wrangler/state, gitignored).
-  // Before any remote staging deploy, create the real database:
-  // `wrangler d1 create ceremly-staging-content --env staging` and replace
-  // database_id below with the returned id. No remote resource is created
-  // by this spike.
   "d1_databases": [{ "binding": "DB", "database_name": "ceremly-staging-content", "database_id": "00000000-0000-0000-0000-000000000000" }],
   "env": {
     "staging": {
