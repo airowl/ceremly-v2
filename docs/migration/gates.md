@@ -3,7 +3,7 @@
 | Gate | Name | Status | Command | Evidence | Approved by | Approved at |
 |------|------|--------|---------|----------|-------------|-------------|
 | G01 | Cloudflare/Nuxt | PASS | `pnpm build:cloudflare && pnpm preview:cloudflare` | docs/migration/evidence/G01-cloudflare.md | — | — |
-| G02 | Vue binding | NOT_RUN | `pnpm vitest run test/migration/convex-vue-spike.test.ts` | docs/migration/evidence/G02-convex-vue.md | — | — |
+| G02 | Vue binding | PASS | `pnpm vitest run test/migration/convex-vue-spike.test.ts` | docs/migration/evidence/G02-convex-vue.md | — | 2026-09-16 |
 | G03 | Password | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G04 | Google | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G05 | 2FA | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
