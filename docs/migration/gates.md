@@ -2,7 +2,7 @@
 
 | Gate | Name | Status | Command | Evidence | Approved by | Approved at |
 |------|------|--------|---------|----------|-------------|-------------|
-| G01 | Cloudflare/Nuxt | CONDITIONAL | `pnpm build:cloudflare && pnpm preview:cloudflare` | docs/migration/evidence/G01-cloudflare.md | — | — |
+| G01 | Cloudflare/Nuxt | PASS | `pnpm build:cloudflare && pnpm preview:cloudflare` | docs/migration/evidence/G01-cloudflare.md | — | — |
 | G02 | Vue binding | NOT_RUN | `pnpm vitest run test/migration/convex-vue-spike.test.ts` | docs/migration/evidence/G02-convex-vue.md | — | — |
 | G03 | Password | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G04 | Google | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
@@ -17,4 +17,4 @@
 **Gate rule:** The next phase does not start until the previous gate is `PASS`. A failed gate remains `FAIL` with evidence and blocks migration; the requirement is not changed to make it pass.
 
 **Notes:**
-- G01: CONDITIONAL — Config test PASS, client build PASS, security headers verified. Server build blocked by known `sharp-wasm32` issue (pre-existing, documented in AGENTS.md). Will be resolved in Task 7 when image processing moves to Cloudflare Images. Gate G02+ can proceed in parallel.
+- G01: PASS — Config test, client+server build, 79 prerendered routes, Worker entry, dry-run bindings, live SSR/headers/bot-trap verified on `wrangler dev`. sharp aliased to stub for cloudflare preset only (server/utils/sharp-stub.ts); real Images pipeline in Task 7.

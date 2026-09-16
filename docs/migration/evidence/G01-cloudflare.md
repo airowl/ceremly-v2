@@ -28,11 +28,7 @@ Verifies:
 ### Server Build (BLOCKED — Known Issue)
 **Error**: `Cannot resolve "@img/sharp-wasm32/versions" from "sharp/lib/utility.js" and externals are not allowed!`
 
-**Root cause**: `creem@1.9.0` has transitive dependency on `sharp@0.33.5`. The Cloudflare Workers preset uses IIFE output format which conflicts with Rollup externals needed to exclude sharp.
-
-**Pre-existing issue**: Documented in AGENTS.md: "`sharp-wasm32` error during Nitro build is pre-existing"
-
-**Workaround planned**: Task 7 moves image variant processing to Cloudflare Images binding (removing sharp runtime dependency). Until then, Cloudflare Worker entry `.output/server/index.mjs` is not generated.
+**Root cause (corrected)**: sharp is a DIRECT dependency (`"sharp": "^0.33.5"`, used by `server/services/file/imageProcessor.ts`) plus `@nuxt/image`→`ipx` and miniflare copies — NOT from `creem@1.9.0` (`pnpm why sharp` verified). Fix: `NUXT_NITRO_PRESET=cloudflare` maps to nitro preset `cloudflare-module` (ESM module worker with `export default { fetch }`; bare `cloudflare` = legacy service-worker/IIFE rejected by wrangler 4), `compatibilityDate 2026-09-15` for preset selection, sharp aliased to `server/utils/sharp-stub.ts` (cloudflare only; throws if invoked — real Images pipeline in Task 7), `import.meta.url` static shim, `@nuxt/content` on `node:sqlite` connector. Vercel default preset untouched.
 
 ## Configuration Verification
 
@@ -88,16 +84,13 @@ Added `.wrangler/` (local dry-run outputs, regenerable)
 - `/e/**` — Public invite SSR
 - All marketing pages (`/features`, `/pricing`, `/templates`, etc.) — Prerendered
 
-## G01 Status: CONDITIONAL PASS
-- ✅ Configuration test passes
-- ✅ Client build + prerender passes
-- ✅ Security headers, CSP, HSTS, bot traps verified in code
-- ⚠️ Server build blocked by known sharp-wasm32 issue (pre-existing)
-- ⚠️ Worker entry `.output/server/index.mjs` not generated
-- ⚠️ `pnpm preview:cloudflare` and `wrangler deploy --dry-run` cannot run without server entry
-
-**Resolution**: Will be unblocked in Task 7 when sharp dependency is removed via Cloudflare Images migration. G01 will be re-verified then.
+## G01 Status: PASS (verified 2026-09-16 on `wrangler dev`, build log /tmp/cf-build.log)
+- ✅ Config test 1/1; client build ~13s; server build ~10s; Prerendered 79 routes
+- ✅ Worker entry `.output/server/index.mjs` present (module worker, `export default` from `./chunks/nitro/nitro.mjs`)
+- ✅ `wrangler deploy --dry-run`: bindings DB (D1 local), CEREMLY_R2, IMAGES
+- ✅ Live `wrangler dev`: `/` → 200 (browser UA); `/blogs` → 200 (browser UA; curl UA → 403 from app's own `4.block-bots.ts`, identical on Vercel — prerendered `/` is served by Workers Assets without hitting middleware)
+- ✅ `/maintenance` → 302 `/` (site active); `/wp-admin` → 307 (bot trap)
+- ✅ SSR headers: `Server: Apache/2.2.15`, `X-Powered-By: PHP/5.2.17`, HSTS `max-age=63072000`, CSP, `nosniff`, `DENY`, permissions-policy, COEP/COOP/CORP
 
 ## Next Steps
-1. Task 3: Convex base + Vue binding (independent, can proceed)
-2. Task 7: Move image processing to Cloudflare Images → removes sharp → unblocks G01
+1. Task 7: Move image processing to Cloudflare Images → removes sharp stub

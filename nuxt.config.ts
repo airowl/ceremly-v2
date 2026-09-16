@@ -391,7 +391,23 @@ export default defineNuxtConfig({
     },
 
     nitro: {
-        preset: process.env.NUXT_NITRO_PRESET || "vercel",
+        // NUXT_NITRO_PRESET=cloudflare maps to nitro's `cloudflare-module`
+        // preset (ESM module worker with `export default { fetch }`). The
+        // bare `cloudflare` name resolves to the legacy service-worker/IIFE
+        // preset, which wrangler 4 rejects and which cannot bundle this app.
+        // Task 7 owns the real Images pipeline (comment pointer).
+        preset: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? "cloudflare-module"
+            : (process.env.NUXT_NITRO_PRESET || "vercel"),
+        // Nitro filters presets by compatibility date: the modern
+        // `cloudflare-module` preset requires >= 2024-09-19, but Nuxt's
+        // top-level date (2024-07-11) would exclude it and silently fall
+        // back to the legacy sites-based preset (unbootable: it imports
+        // `__STATIC_CONTENT_MANIFEST`). Bump the date for Cloudflare only;
+        // Vercel keeps the pinned default. Matches wrangler.jsonc.
+        compatibilityDate: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? "2026-09-15"
+            : undefined,
         // nitropack 2.11 mette "../**/*" nell'include del tsconfig server:
         // senza questi exclude tutta app/ viene typecheckata nel project
         // server (niente auto-import Vue → ~680 errori spuri).
@@ -408,33 +424,13 @@ export default defineNuxtConfig({
                 ],
             },
         },
-        // The cloudflare-worker preset (via abstract base-worker) forces IIFE
-        // single-file output, but this app needs code-splitting (dynamic
-        // imports in queue dispatch, node:buffer) and the node-based
-        // prerenderer cannot use IIFE for multi-chunk builds at all.
-        // ESM multi-chunk output for both, matching the
-        // cloudflare-module-legacy preset shape. Wrangler deploys ESM workers
-        // with chunks. ONLY active when NUXT_NITRO_PRESET=cloudflare;
-        // Vercel default keeps preset behavior.
-        rollupConfig:
-            process.env.NUXT_NITRO_PRESET === "cloudflare"
-                ? { output: { format: "esm", inlineDynamicImports: false } }
-                : undefined,
-        // Belt-and-braces: the prerenderer inherits resolved output options;
-        // force ESM here too so a preset upgrade cannot silently re-break it.
-        hooks: process.env.NUXT_NITRO_PRESET === "cloudflare"
-            ? {
-                  "prerender:config": (prerendererConfig: any) => {
-                      prerendererConfig.inlineDynamicImports = false;
-                      prerendererConfig.rollupConfig = prerendererConfig.rollupConfig || {};
-                      prerendererConfig.rollupConfig.output = {
-                          ...(prerendererConfig.rollupConfig.output || {}),
-                          format: "esm",
-                          inlineDynamicImports: false,
-                      };
-                  },
-              }
-            : {},
+        // Workerd (and wrangler dev's bundle) provides no `import.meta.url`:
+        // Nuxt core evaluates `import.meta.url.replace(...)` at module init
+        // (distURL, dev-only stack-trace helper, never read in production).
+        // Static-shim it for Cloudflare only; Vercel keeps real semantics.
+        replace: process.env.NUXT_NITRO_PRESET === "cloudflare"
+            ? { "import.meta.url.replace(/\\/app\\/.*$/, \"/\")": '"file:///"' }
+            : undefined,
         // For Cloudflare Workers (NUXT_NITRO_PRESET=cloudflare), sharp is aliased to a stub
         // because the Workers runtime doesn't support native modules and the bundle
         // cannot include its native prebuilds. Image variants are processed via
@@ -523,6 +519,15 @@ export default defineNuxtConfig({
     },
 
     content: {
+        // Use Node's built-in sqlite (node:sqlite) instead of the native
+        // better-sqlite3 prebuilds for the local content adapter. The native
+        // module crashes the Workers runtime at import (createRequire with
+        // undefined import.meta.url) and is unused there anyway: on
+        // Cloudflare the runtime adapter is D1 (set by @nuxt/content's
+        // cloudflare preset setup). Applies to all presets; Node >= 22.5
+        // supports node:sqlite for build/prerender too. Task 7 owns media;
+        // a real D1 database + dump import belongs to the data rehearsal.
+        experimental: { sqliteConnector: "native" },
         build: {
             markdown: {
                 highlight: {
