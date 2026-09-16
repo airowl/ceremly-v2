@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ceremly-staging",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".output/public" },
+  "observability": { "enabled": true },
+  "r2_buckets": [{ "binding": "CEREMLY_R2", "bucket_name": "ceremly-staging" }],
+  "images": { "binding": "IMAGES" },
+  "env": {
+    "staging": {
+      "name": "ceremly-staging",
+      "r2_buckets": [{ "binding": "CEREMLY_R2", "bucket_name": "ceremly-staging" }],
+      "images": { "binding": "IMAGES" }
+    }
+  }
+}

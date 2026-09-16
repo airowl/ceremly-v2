@@ -408,6 +408,12 @@ export default defineNuxtConfig({
                 ],
             },
         },
+        // sharp (image processing) is dynamically imported with graceful fallback.
+        // Externalize it for Cloudflare Workers — not needed in Worker runtime
+        // (variants are processed via Cloudflare Images binding).
+        // Known issue: sharp-wasm32 causes build error on Cloudflare preset (pre-existing).
+        // Externalization via nitro.externals/rollupConfig conflicts with IIFE format.
+        // Workaround: will be resolved in Task 7 when moving image processing to Cloudflare Images.
         routeRules: {
             "/.env": { redirect: "/404" },
             "/.git": { redirect: "/404" },
@@ -461,6 +467,9 @@ export default defineNuxtConfig({
                     },
                 },
             },
+        },
+        ssr: {
+            external: ["sharp", "@img/sharp-wasm32"],
         },
     },
 
