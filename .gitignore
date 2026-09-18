@@ -29,3 +29,6 @@ logs
 .vercel
 
 migrationsDocs
+
+# Gate locale (Task 3+): chiavi private e batch di credenziali cifrati, mai nel repo
+.gate/

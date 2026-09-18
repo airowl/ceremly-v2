@@ -16,6 +16,10 @@ export const generateRuntimeConfig = () => {
     return {
         preset: process.env.NUXT_NITRO_PRESET,
         betterAuthSecret: process.env.NUXT_BETTER_AUTH_SECRET,
+        // Migration blue-green switch per `/api/auth/*`: `legacy` (default) è il
+        // Better Auth in-process su Neon/Drizzle, `convex` è il proxy verso il
+        // deployment Convex. Il cutover (Task 17) è l'unico punto che lo cambia.
+        authBackend: process.env.NUXT_AUTH_BACKEND || "legacy",
         // Creem
         creemApiKey: process.env.NUXT_CREEM_API_KEY,
         creemWebhookSecret: process.env.NUXT_CREEM_WEBHOOK_SECRET,

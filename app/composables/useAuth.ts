@@ -1,36 +1,14 @@
 import type { Session } from "better-auth";
 import type { RouteLocationRaw } from "vue-router";
-import { creemClient } from "@creem_io/better-auth/client";
-import { adminClient, inferAdditionalFields, organizationClient, twoFactorClient } from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/vue";
+import { createCeremlyAuthClient } from "~/lib/auth-client";
 
 export function useAuth() {
     const url = useRequestURL();
     const headers = import.meta.server ? useRequestHeaders() : undefined;
-    const client = createAuthClient({
-        baseURL: url.origin,
-        fetchOptions: {
-            headers,
-        },
-        plugins: [
-            inferAdditionalFields({
-                user: {
-                    creemCustomerId: {
-                        type: "string",
-                        required: false,
-                    },
-                    twoFactorEnabled: {
-                        type: "boolean",
-                        required: false,
-                    },
-                },
-            }),
-            adminClient(),
-            twoFactorClient(),
-            creemClient(),
-            organizationClient(),
-        ],
-    });
+    // Same factory for both backends: the request goes to this origin and the
+    // Nuxt route either serves Better Auth in-process (legacy) or proxies to
+    // Convex (NUXT_AUTH_BACKEND=convex).
+    const client = createCeremlyAuthClient({ baseURL: url.origin, headers });
 
     const session = useState<Session | null>(
         "auth:session",

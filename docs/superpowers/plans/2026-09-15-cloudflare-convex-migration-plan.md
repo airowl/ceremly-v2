@@ -10,6 +10,18 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-11-cloudflare-convex-migration-design.md`
 
+## Stato verificato — 2026-09-18
+
+Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su `dev`).
+
+- **Task 1:** implementato; il contratto versioni è presente e passa nella suite locale `pnpm test:migration`.
+- **Task 2 / G01:** completato e `PASS`: build e preview Nuxt/Cloudflare sono state provate localmente; `wrangler.jsonc` resta una configurazione staging con binding D1 placeholder, non un deploy Cloudflare confermato.
+- **Task 3 / G02:** completato e `PASS` (2026-09-18) contro il dev deployment di staging `airowl/ceremly-staging` → `wary-spaniel-466` (eu-west-1). Tutti i casi dello Step 4 sono verificati live: query pubblica SSR con `suspense()`, opt-out CSR, mutation tipizzata, realtime dopo una write, query autenticata (provider `customJwt` solo-gate), anonimo, refresh forzato singolo e sopravvivenza a un failure transiente della sessione. Evidenza: `docs/migration/evidence/G02-convex-vue.md`.
+- **Task 4 / G03–G05:** completato (2026-09-18) su staging. Better Auth vive nel componente Convex `betterAuth`, il proxy same-origin `/api/auth/*` è implementato dietro `NUXT_AUTH_BACKEND` (default `legacy`, così la produzione Vercel non si sposta) e l'import idempotente delle credenziali è verificato live: `G03=PASS`, `G05=PASS`, `G04=NOT_RUN` (riga OAuth Google bloccata). Evidenza: `docs/migration/evidence/G03-G05-auth.md`.
+- **Task 5–18:** non avviati. Runtime, dati applicativi e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+
+Il prossimo lavoro autorizzato dal piano è il Task 5 (gate G06: organizzazioni applicative e RBAC Convex).
+
 ## Global Constraints
 
 - Deploy target: Cloudflare Workers con preset Nitro `cloudflare`; Vercel resta disponibile solo come ambiente legacy blue-green fino alla fine dell'osservazione.
@@ -113,7 +125,7 @@ export interface ReconciliationResult {
 - Consumes: versioni approvate nella spec e peer range npm verificati il 2026-09-15.
 - Produces: script `test:migration`, `typecheck:convex`, `dev:convex`; tabella gate `G01`-`G10` con stato iniziale `NOT_RUN`.
 
-- [ ] **Step 1: Scrivere il test del contratto versioni**
+- [x] **Step 1: Scrivere il test del contratto versioni**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -143,7 +155,7 @@ Run: `pnpm vitest run test/migration/version-contract.test.ts`
 
 Expected: FAIL perché le dipendenze Convex non esistono e Better Auth/Wrangler non sono pin esatti.
 
-- [ ] **Step 3: Installare le versioni esatte e aggiungere gli script**
+- [x] **Step 3: Installare le versioni esatte e aggiungere gli script**
 
 Run:
 
@@ -164,7 +176,7 @@ Aggiungere queste tre chiavi a `scripts` senza sostituire gli script esistenti:
 }
 ```
 
-- [ ] **Step 4: Creare il ledger dei gate**
+- [x] **Step 4: Creare il ledger dei gate**
 
 `docs/migration/gates.md` deve contenere una riga per `G01`-`G10`, rispettivamente: Cloudflare/Nuxt, Vue binding, password, Google, 2FA, org/RBAC, Creem, media, protezioni, costi. Colonne obbligatorie: `Gate`, `Status`, `Command`, `Evidence`, `Approved by`, `Approved at`; lo stato iniziale è `NOT_RUN`, gli ultimi due campi sono `—`.
 
@@ -174,7 +186,7 @@ Run: `pnpm install --frozen-lockfile && pnpm vitest run test/migration/version-c
 
 Expected: tutti PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json pnpm-lock.yaml test/migration/version-contract.test.ts docs/migration/gates.md
@@ -196,7 +208,7 @@ git commit -m "chore(migration): pin Cloudflare and Convex stack"
 - Consumes: `NUXT_NITRO_PRESET` esistente.
 - Produces: `pnpm build:cloudflare`, `pnpm preview:cloudflare`, Worker entry `.output/server/index.mjs`, binding `CEREMLY_R2` e `IMAGES`.
 
-- [ ] **Step 1: Scrivere il test della configurazione Worker**
+- [x] **Step 1: Scrivere il test della configurazione Worker**
 
 ```ts
 import { expect, it } from "vitest";
@@ -214,13 +226,13 @@ it("deploys Nuxt output with required Cloudflare bindings", () => {
 });
 ```
 
-- [ ] **Step 2: Eseguire il test rosso**
+- [x] **Step 2: Eseguire il test rosso**
 
 Run: `pnpm vitest run test/migration/cloudflare-config.test.ts`
 
 Expected: FAIL perché `wrangler.jsonc` non esiste.
 
-- [ ] **Step 3: Aggiungere configurazione e script Cloudflare**
+- [x] **Step 3: Aggiungere configurazione e script Cloudflare**
 
 ```jsonc
 {
@@ -253,23 +265,23 @@ Script esatti:
 }
 ```
 
-- [ ] **Step 4: Rendere il preset esplicito senza rompere il blue-green**
+- [x] **Step 4: Rendere il preset esplicito senza rompere il blue-green**
 
 Mantenere `process.env.NUXT_NITRO_PRESET || "vercel"` durante spike e rehearsal. Il comando Cloudflare imposta `cloudflare`; il default passa a `cloudflare` solo nel Task 17, dopo il go/no-go.
 
 Aggiungere `.wrangler/` a `.gitignore`: gli output di dry-run sono evidenze locali rigenerabili e non devono entrare nei commit.
 
-- [ ] **Step 5: Verificare build, SSR e sicurezza in locale Worker**
+- [x] **Step 5: Verificare build, SSR e sicurezza in locale Worker**
 
 Run: `pnpm build:cloudflare && pnpm wrangler deploy --dry-run --outdir .wrangler/dry-run`
 
 Expected: build riuscita, entry Worker presente, nessun import runtime di Neon/Sharp nei chunk raggiungibili dalle route target. Avviare `pnpm preview:cloudflare` e verificare `/`, `/blogs`, `/maintenance`, CSP, HSTS, `nosniff`, fake server header e bot trap.
 
-- [ ] **Step 6: Registrare G01**
+- [x] **Step 6: Registrare G01**
 
 Salvare log build e checklist in `docs/migration/evidence/G01-cloudflare.md`; impostare `G01=PASS` solo se SSR, `@nuxt/content`, cookie e header corrispondono a produzione.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add wrangler.jsonc server/types/cloudflare.d.ts test/migration/cloudflare-config.test.ts nuxt.config.ts .env.example .gitignore package.json docs/migration
@@ -294,7 +306,7 @@ git commit -m "feat(migration): prove Nuxt Cloudflare deployment"
 - Consumes: `NUXT_PUBLIC_CONVEX_URL`, `NUXT_PUBLIC_CONVEX_SITE_URL`.
 - Produces: `api.health.ping`, typed `useConvexResource(query, args)` e un `ConvexClient` a cui viene collegato `setAuth(fetchToken)`.
 
-- [ ] **Step 1: Creare schema minimo e health query**
+- [x] **Step 1: Creare schema minimo e health query**
 
 ```ts
 // convex/schema.ts
@@ -316,7 +328,7 @@ import { query } from "./_generated/server";
 export const ping = query({ args: {}, handler: async () => ({ ok: true as const }) });
 ```
 
-- [ ] **Step 2: Scrivere il test del binding**
+- [x] **Step 2: Scrivere il test del binding**
 
 Il test monta un'app Vue, installa `convexVue`, ottiene il client tramite `app.runWithContext(() => useConvexClient())`, sostituisce `setAuth` con uno spy e verifica che il fetch token sia registrato una sola volta e che una query venga disiscritta all'unmount.
 
@@ -324,7 +336,7 @@ Run: `pnpm vitest run test/migration/convex-vue-spike.test.ts`
 
 Expected: FAIL finché `app/plugins/convex.ts` non esporta `installConvex(app, url, fetchToken)`.
 
-- [ ] **Step 3: Implementare l'integrazione `convex-vue`**
+- [x] **Step 3: Implementare l'integrazione `convex-vue`**
 
 ```ts
 export type FetchConvexToken = (args: { forceRefreshToken: boolean }) => Promise<string | null>;
@@ -337,7 +349,7 @@ export function installConvex(app: App, url: string, fetchToken: FetchConvexToke
 }
 ```
 
-- [ ] **Step 4: Verificare i quattro casi del gate**
+- [x] **Step 4: Verificare i quattro casi del gate**
 
 Testare su staging: query pubblica SSR con `suspense()`, query autenticata CSR, mutation tipizzata, realtime dopo una write. Ripetere con refresh token forzato e rete offline/online; una failure transiente non deve trasformarsi in logout definitivo.
 
@@ -345,7 +357,7 @@ Testare su staging: query pubblica SSR con `suspense()`, query autenticata CSR, 
 
 Se `convex-vue@0.1.5` fallisce, rimuovere la dipendenza e implementare gli stessi export in `app/composables/useConvexResource.ts` usando esclusivamente `ConvexClient.onUpdate`, `ConvexClient.mutation` e `ConvexHttpClient.query`. Il contratto pubblico resta `{ data, error, isPending, suspense }` per query e `{ mutate, error, isPending }` per mutation; nessun endpoint CRUD Nuxt viene aggiunto.
 
-- [ ] **Step 6: Registrare G02 e commit**
+- [x] **Step 6: Registrare G02 e commit** — il ledger registra `G02=PASS` (2026-09-18) con evidenza su staging; `Approved by` resta `—` perché la firma umana appartiene al GO/NO-GO del Task 17–18.
 
 ```bash
 git add convex app/plugins/convex.ts app/composables/useConvexResource.ts test/migration/convex-vue-spike.test.ts nuxt.config.ts .env.example docs/migration
@@ -353,6 +365,15 @@ git commit -m "feat(migration): prove typed Convex Vue data layer"
 ```
 
 ### Task 4: Spike G03-G05 — Better Auth, proxy e import credenziali
+
+> **Stato 2026-09-18: completato.** `G03=PASS` e `G05=PASS` su staging (`airowl/ceremly-staging` → `wary-spaniel-466`); `G04=NOT_RUN` (riga OAuth Google non eseguibile in questo ambiente: serve il consenso Google reale e un redirect URI di staging). Evidenza: `docs/migration/evidence/G03-G05-auth.md`.
+>
+> **Deviazioni misurate dal testo sotto** (dettagli e motivazioni nell'evidenza):
+> - il plugin `admin` e `user.additionalFields` **non** sono attivi: la tabella `user` del componente `@convex-dev/better-auth@0.12.5` ha schema fisso e valida `data` con `v.object(...)`. `globalRole`, `locale` e i campi profilo passano quindi alle tabelle applicative (`appUsers` nel Task 5, profilo nel Task 10/12); l'import li elenca in `deferredProfileFields` invece di scartarli in silenzio.
+> - il gateway G02 usa `applicationID: "gate"`: il plugin Convex rifiuta due provider con `applicationID: "convex"`.
+> - l'import normalizza gli indirizzi email in minuscolo (Better Auth cerca sempre `email.toLowerCase()`) e riporta `normalizedEmails`.
+> - `BETTER_AUTH_SECRET` non può ruotare al cutover: il plugin two-factor cifra segreto TOTP e backup code con quel secret (`symmetricEncrypt`), e le copie importate restano decifrabili solo con lo stesso valore.
+> - il proxy è dietro il flag `NUXT_AUTH_BACKEND` (default `legacy`) per non spostare la produzione Vercel prima del cutover.
 
 **Files:**
 - Create: `convex/auth.config.ts`
@@ -371,7 +392,7 @@ git commit -m "feat(migration): prove typed Convex Vue data layer"
 - Consumes: Better Auth Neon `user`, `account`, `two_factor`; `NUXT_PUBLIC_CONVEX_SITE_URL`.
 - Produces: `createAuth(ctx)`, `authComponent`, `authComponent.clientApi().getAuthUser`, proxy byte-for-byte, `assertMigrationKey(value): void`, `importAuthRecordsIdempotently(adapter, batch): Promise<{ imported: number; skipped: number }>` e `internal.migrations.authImport.importBatch`.
 
-- [ ] **Step 1: Registrare il componente Better Auth**
+- [x] **Step 1: Registrare il componente Better Auth** — fatto con le deviazioni sopra (niente `admin()`, niente `additionalFields`).
 
 ```ts
 // convex/convex.config.ts
@@ -387,7 +408,7 @@ export default app;
 
 `convex/auth.ts` usa `createClient(components.betterAuth)`, `betterAuth` da `better-auth/minimal`, plugin `convex` e `twoFactor`; configura email/password, Google, account linking, campi `locale`, `tosAcceptedAt`, `phone`, `bio`, `timezone`, ruolo admin e callback email via action Resend. Non usare `crossDomain`: il client parla allo stesso origin Nuxt e il Worker inoltra `/api/auth/*`; `SITE_URL` è il `baseURL` pubblico canonico.
 
-- [ ] **Step 2: Registrare route lazy e proxy same-origin**
+- [x] **Step 2: Registrare route lazy e proxy same-origin** — `cors: false` fa ignorare a `registerRoutesLazy` la sua opzione `trustedOrigins`: l'autorità restano le opzioni di `createAuth` (`baseURL: SITE_URL`), e il proxy inoltra l'`Origin` del browser (obbligatorio: Better Auth risponde `MISSING_OR_NULL_ORIGIN`/`INVALID_ORIGIN` senza).
 
 ```ts
 // convex/http.ts
@@ -405,7 +426,7 @@ export default http;
 
 Il controller Nuxt inoltra metodo, path, query, body binario e header al Convex site URL; restituisce status, body e tutti i `Set-Cookie` senza concatenarli. Non segue redirect OAuth lato server (`redirect: "manual"`).
 
-- [ ] **Step 3: Testare il proxy prima dell'implementazione**
+- [x] **Step 3: Testare il proxy prima dell'implementazione** — `test/migration/auth-proxy.test.ts` gira contro un upstream HTTP reale: GET sessione, POST JSON byte-for-byte, callback 302 con due `Set-Cookie` distinti, body vuoto, 500 upstream, header di forwarding non falsificabili e rifiuto di un origin `.convex.cloud`.
 
 `auth-proxy.test.ts` copre GET sessione, POST JSON, callback 302, due `Set-Cookie`, body vuoto, errore Convex 500 e rifiuto di host arbitrari.
 
@@ -413,7 +434,7 @@ Run: `pnpm vitest run test/migration/auth-proxy.test.ts`
 
 Expected: FAIL contro l'handler Better Auth locale corrente.
 
-- [ ] **Step 4: Implementare l'import auth idempotente**
+- [x] **Step 4: Implementare l'import auth idempotente** — idempotenza per chiave naturale (`email`, `(providerId, accountId)`, `userId`), non per `id` legacy: il componente genera `_id`, quindi `importAuthRecordsIdempotently` risolve la mappa legacy→nuovo dentro il batch e rifiuta un record il cui utente non è risolvibile.
 
 ```ts
 export const importBatch = internalMutation({
@@ -434,7 +455,7 @@ export const importBatch = internalMutation({
 
 La chiave idempotente è `model + legacy id`; i record importati mantengono ID Better Auth, hash `account.password`, provider/account ID Google, `two_factor.secret` e `backupCodes`. Non importare session e verification.
 
-- [ ] **Step 5: Eseguire i tre test reali minimizzati**
+- [x] **Step 5: Eseguire i tre test reali minimizzati** — catena reale (Neon dev → export cifrato AES-256-GCM → import → sign-in su Convex) con account sintetici prodotti dalle stesse primitive del legacy (`hashPassword`, `symmetricEncrypt`). `G03` e `G05` PASS; il giro OAuth Google resta bloccato: `G04=NOT_RUN`.
 
 Su una copia cifrata con almeno un account per scenario:
 
@@ -444,11 +465,11 @@ Su una copia cifrata con almeno un account per scenario:
 
 Ogni test deve fare logout, invalidare la sessione e ripetere il login. Salvare solo ID pseudonimi e risultati, mai hash o segreti, in `docs/migration/evidence/G03-G05-auth.md`.
 
-- [ ] **Step 6: Verificare il comportamento su errori transitori**
+- [x] **Step 6: Verificare il comportamento su errori transitori** — `test/migration/auth-client.test.ts` fissa il contratto di `createConvexTokenFetcher` (G02 finding 2): mai un reject, 502 transiente conserva l'ultimo token, solo 401/403 lo azzera.
 
 Simulare 502 su `/get-session` e `/convex/token`: il client conserva lo stato precedente, mostra stato retryable e non cancella il token finché Better Auth non risponde esplicitamente con sessione assente.
 
-- [ ] **Step 7: Gate e commit**
+- [x] **Step 7: Gate e commit**
 
 Impostare `G03`, `G04`, `G05` a `PASS` solo con evidenze staging. Se il segreto 2FA non è compatibile, impostare `G05=FAIL` e fermarsi; il recovery alternativo richiede una revisione esplicita della spec.
 

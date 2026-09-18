@@ -8,7 +8,13 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
+import type * as email from "../email.js";
 import type * as health from "../health.js";
+import type * as http from "../http.js";
+import type * as lib_env from "../lib/env.js";
+import type * as lib_migrationKey from "../lib/migrationKey.js";
+import type * as migrations_authImport from "../migrations/authImport.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +23,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
+  email: typeof email;
   health: typeof health;
+  http: typeof http;
+  "lib/env": typeof lib_env;
+  "lib/migrationKey": typeof lib_migrationKey;
+  "migrations/authImport": typeof migrations_authImport;
 }>;
 
 /**
@@ -46,4 +58,7 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
+  creem: import("@creem_io/convex/_generated/component.js").ComponentApi<"creem">;
+};

@@ -4,9 +4,9 @@
 |------|------|--------|---------|----------|-------------|-------------|
 | G01 | Cloudflare/Nuxt | PASS | `pnpm build:cloudflare && pnpm preview:cloudflare` | docs/migration/evidence/G01-cloudflare.md | — | — |
 | G02 | Vue binding | PASS | `pnpm test:gate:g02` | docs/migration/evidence/G02-convex-vue.md | — | — |
-| G03 | Password | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
-| G04 | Google | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
-| G05 | 2FA | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
+| G03 | Password | PASS | `pnpm test:gate:g03-g05` | docs/migration/evidence/G03-G05-auth.md | — | — |
+| G04 | Google | NOT_RUN | `pnpm test:gate:g03-g05` | docs/migration/evidence/G03-G05-auth.md | — | — |
+| G05 | 2FA | PASS | `pnpm test:gate:g03-g05` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G06 | org/RBAC | NOT_RUN | `pnpm vitest run convex/organizations.test.ts` | docs/migration/evidence/G06-org-rbac.md | — | — |
 | G07 | Creem | NOT_RUN | `pnpm vitest run convex/billing.test.ts` | docs/migration/evidence/G07-creem.md | — | — |
 | G08 | Media | NOT_RUN | `pnpm vitest run convex/media.test.ts` | docs/migration/evidence/G08-media.md | — | — |
@@ -17,5 +17,8 @@
 **Gate rule:** The next phase does not start until the previous gate is `PASS`. A failed gate remains `FAIL` with evidence and blocks migration; the requirement is not changed to make it pass.
 
 **Notes:**
+- G03: PASS (2026-09-18, staging `airowl/ceremly-staging` → `wary-spaniel-466`) — the production chain was exercised end-to-end on synthetic-but-faithful accounts: legacy Neon rows → AES-256-GCM encrypted `MigrationBatch` → `internal.migrations.authImport.importBatch` → sign-in on Convex Better Auth. Cases: password sign-in with the imported hash (plus a wrong-password negative control), logout invalidating the session and a second login, replay of the same batch writing nothing (idempotency), and the Better Auth JWT accepted as a Convex identity. `Approved by` stays `—`: this is mechanism evidence on staging, not the human sign-off (GO/NO-GO, Tasks 17–18).
+- G04: NOT_RUN — the imported `google` account row is preserved and linked to the same user (verified live after a password sign-in via `/api/auth/list-accounts`), but the OAuth round trip itself needs a real Google consent screen and a staging redirect URI, so the requirement is unexecuted, not failed. Blocked on the minimized production copy + staging Google client.
+- G05: PASS (2026-09-18, same deployment) — the imported (`symmetricEncrypt`-ed) TOTP secret validates a code computed by an independent RFC 6238 implementation outside the auth library, and the imported (`"encrypted"` by default) backup codes are consumed exactly once: first use succeeds, replay is rejected, and an untouched code still recovers. Handoff to Task 5+: `BETTER_AUTH_SECRET` must not rotate at cutover (2FA payloads are encrypted with it) and the Better Auth component schema is fixed, so `globalRole`/profile fields belong to `appUsers`/domain tables.
 - G01: PASS — Config test, client+server build, 79 prerendered routes, Worker entry, dry-run bindings, live SSR/headers/bot-trap verified on `wrangler dev`. sharp aliased to stub for cloudflare preset only (server/utils/sharp-stub.ts); real Images pipeline in Task 7.
 - G02: PASS (2026-09-18) — verified against the staging dev deployment `airowl/ceremly-staging` → `wary-spaniel-466` (eu-west-1). All Task 3 Step 4 cases pass: public query with `suspense()` on SSR, CSR `server: false` opt-out, typed mutation, realtime re-execution after a write, authenticated query identity (gate-only RS256 `customJwt` provider), anonymous fallback, exactly one forced token refresh, and survival of a transient session failure. Two constraints handed to Task 4: `installConvex` must call `setAuth` itself (convex-vue ignores its `auth` option) and `fetchToken` must never reject (unhandled rejection, client never connects). `Approved by` stays `—`: the gate is evidenced, not human-signed; sign-off belongs to GO/NO-GO (Task 17–18).
