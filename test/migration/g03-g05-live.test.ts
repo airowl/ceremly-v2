@@ -321,14 +321,45 @@ describe.skipIf(!armed)("G03–G05 live · legacy credentials on Convex Better A
         await authCall("/api/auth/sign-out", { method: "POST", jar });
     }, 60_000);
 
-    it("G05: a backup code is consumed exactly once and the rest stay usable", async () => {
+    it("G05: a backup code is consumed exactly once and recovery survives", async () => {
         const fixture = fixtureOf("G05");
-        const [firstCode, , thirdCode] = fixture.twoFactor!.backupCodes;
 
+        // 1. Full session for the imported account: password + imported TOTP.
+        const sessionJar = new CookieJar();
+        const signedIn = await signIn(fixture, sessionJar);
+        expect(signedIn.data).toMatchObject({ twoFactorRedirect: true });
+
+        const totp = await authCall("/api/auth/two-factor/verify-totp", {
+            method: "POST",
+            body: { code: generateTotp(GATE_TOTP_SECRET) },
+            jar: sessionJar,
+        });
+        expect(totp.status).toBe(200);
+
+        // 2. Fresh codes for this run.
+        //
+        // The imported backup-code column is an opaque `symmetricEncrypt` blob
+        // (its preservation is asserted byte-for-byte in auth-import.test.ts),
+        // and a previous run consumes the plaintext of the imported set. Rather
+        // than making the suite pass only on a clean deployment, the gate asks
+        // the product for a new set through its own endpoint — which is itself
+        // part of the 2FA surface being migrated.
+        const generated = await authCall("/api/auth/two-factor/generate-backup-codes", {
+            method: "POST",
+            body: { password: fixture.password },
+            jar: sessionJar,
+        });
+        expect(generated.status).toBe(200);
+
+        const codes = (generated.data as { backupCodes?: string[] } | null)?.backupCodes ?? [];
+        expect(codes.length).toBeGreaterThanOrEqual(3);
+        const [firstCode, secondCode] = codes;
+
+        // 3. Consumption, replay and recovery, each from a clean challenge.
         const startFlow = async () => {
             const jar = new CookieJar();
-            const signedIn = await signIn(fixture, jar);
-            expect(signedIn.data).toMatchObject({ twoFactorRedirect: true });
+            const challenge = await signIn(fixture, jar);
+            expect(challenge.data).toMatchObject({ twoFactorRedirect: true });
             return jar;
         };
 
@@ -347,7 +378,7 @@ describe.skipIf(!armed)("G03–G05 live · legacy credentials on Convex Better A
         expect(replay.status).toBeGreaterThanOrEqual(400);
 
         // Recovery is still possible with an untouched code.
-        const recovery = await consume(await startFlow(), thirdCode!);
+        const recovery = await consume(await startFlow(), secondCode!);
         expect(recovery.status).toBe(200);
     }, 90_000);
 });

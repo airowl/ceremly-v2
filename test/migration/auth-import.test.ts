@@ -104,10 +104,16 @@ const legacyAccount = (overrides: Partial<LegacyAuthAccount> = {}): LegacyAuthAc
     ...overrides,
 });
 
+/**
+ * Both 2FA columns are `symmetricEncrypt` output in the legacy database (better
+ * auth 1.6.15 encrypts the TOTP secret and defaults `storeBackupCodes` to
+ * `"encrypted"`), so the fixtures use opaque hex payloads: the import must
+ * preserve them byte-for-byte, it can never interpret them.
+ */
 const legacyTwoFactor = (overrides: Partial<LegacyTwoFactor> = {}): LegacyTwoFactor => ({
     id: "legacy-2fa-1",
-    secret: "JBSWY3DPEHPK3PXP",
-    backupCodes: JSON.stringify(["AAAAA-11111"]),
+    secret: "7f3a91c25b0e4d88aa61f0c3",
+    backupCodes: "41b0d97e6c2f8a35e1d4c7ba",
     userId: "legacy-user-1",
     ...overrides,
 });
@@ -149,8 +155,8 @@ describe("importAuthRecordsIdempotently", () => {
             userId: "user_1",
         });
         expect(state.createdTwoFactors[0]).toMatchObject({
-            secret: "JBSWY3DPEHPK3PXP",
-            backupCodes: JSON.stringify(["AAAAA-11111"]),
+            secret: "7f3a91c25b0e4d88aa61f0c3",
+            backupCodes: "41b0d97e6c2f8a35e1d4c7ba",
             userId: "user_1",
         });
     });
@@ -265,7 +271,7 @@ describe("encrypted migration batches", () => {
         const serialized = JSON.stringify(envelope);
 
         expect(serialized).not.toContain("$scrypt$hash");
-        expect(serialized).not.toContain("JBSWY3DPEHPK3PXP");
+        expect(serialized).not.toContain("7f3a91c25b0e4d88aa61f0c3");
         // JSON is the transport format: `Date` values arrive as ISO strings and
         // `toEpochMs` handles both, so equality is asserted on the wire shape.
         expect(decryptJson<AuthImportBatch>(parseEncryptedEnvelope(serialized), passphrase)).toEqual(

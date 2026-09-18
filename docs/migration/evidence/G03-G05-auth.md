@@ -29,7 +29,24 @@ Result: **1 file passed, 6 tests passed, 0 skipped** (~11.3 s).
 | 5 | Better Auth JWT accepted as a Convex identity | `issues a Convex JWT accepted as an identity by the deployment` | PASS |
 | 6 | Google account row preserved and linked to the same user | `G04: the Google account row survives…` | PASS |
 | 7 | TOTP validates an independently computed code | `G05: the imported TOTP secret validates…` | PASS |
-| 8 | backup code consumed once, replay rejected, other codes usable | `G05: a backup code is consumed exactly once…` | PASS |
+| 8 | backup code consumed once, replay rejected, other codes usable | `G05: a backup code is consumed exactly once and recovery survives` | PASS |
+
+Re-runnability: the suite was executed three times back to back, all green (6/6 each run, ~11.7 s).
+The backup-code case regenerates its codes through `/api/auth/two-factor/generate-backup-codes`
+instead of depending on a clean deployment, because a consumed code cannot be restored on the
+deployment without a destructive write (the import is idempotent by natural key, by design).
+
+### G05 — the backup codes, precisely
+
+On the **first clean run** (2026-09-18, before the suite was made re-runnable) the gate consumed the
+imported plaintext codes directly: `GATEA-AAAA1` → `200`, its replay → rejected, `GATEC-CCCC3` →
+recovery `200`. That is the observation that proves the *imported* backup-code blob is usable — the
+column is opaque ciphertext, and only the deployment's secret can turn it back into those codes.
+
+The durable form of the case keeps the same semantics but asks the product for a fresh set each
+run (step 2 of the test), so a second and third execution still verify consumption, replay
+rejection and recovery. Preservation of the imported blob is asserted separately and byte-for-byte
+in `test/migration/auth-import.test.ts`.
 
 Case 5 closes the loop with Task 3: `GET /api/auth/convex/token` returns an RS256 JWT whose
 `iss` is the deployment's `CONVEX_SITE_URL` and whose `aud` is `convex`; `health:whoami` on the
@@ -95,22 +112,27 @@ These are the facts that shaped Task 4; each one was observed against the real p
    JSON in the legacy column, and a fixture/export that writes plaintext makes
    `verify-backup-code` fail with a hex decode error (`500`). Plaintext JSON is only valid when
    the legacy deployment explicitly configured `storeBackupCodes: "plain"`.
-6. **Origin header is mandatory end-to-end.** Better Auth validates `Origin` against
+6. **`view-backup-codes` is declared without a path** in 1.6.15 (only `method` and `body`), so it
+   is not registered and answers `404` — there is no endpoint that hands out another user's
+   backup codes. It also means a client cannot read the stored codes, which is why the gate
+   regenerates a set through `generate-backup-codes` (session + password) instead of inspecting
+   them.
+7. **Origin header is mandatory end-to-end.** Better Auth validates `Origin` against
    `trustedOrigins` whenever a cookie is present (and for the 2FA endpoints), so the Nuxt proxy
    must forward the browser's `Origin` verbatim. A request missing it gets
    `MISSING_OR_NULL_ORIGIN`, a wrong one `INVALID_ORIGIN` (both 403).
-7. **`registerRoutesLazy` ignores its `trustedOrigins` option when `cors: false`.** With the
+8. **`registerRoutesLazy` ignores its `trustedOrigins` option when `cors: false`.** With the
    non-CORS path the only trusted origins are the ones on the auth options, so `createAuth` sets
    `baseURL: SITE_URL` (which is what the proxy serves) and the deployment env `SITE_URL` must
    match the Nuxt origin.
-8. **The gate-only JWT provider needed its own application ID.** The Better Auth Convex plugin
+9. **The gate-only JWT provider needed its own application ID.** The Better Auth Convex plugin
    throws on load if more than one provider claims `applicationID: "convex"`, so the G02 provider
    moved to `"gate"`; `test/migration/gate-jwt.ts` reads the same constant, and the G02 suite was
    re-run to prove the change is inert (7/7 PASS).
-9. **Internal mutations need an explicit key.** `assertMigrationKey` refuses when
+10. **Internal mutations need an explicit key.** `assertMigrationKey` refuses when
    `MIGRATION_API_KEY` is unset on the deployment and compares in constant time, so opening
    `internal.migrations.*` from a shell does not lower the bar.
-10. **`Uint8Array` is no longer a `BodyInit`.** TypeScript 5.7+ types `Uint8Array<ArrayBufferLike>`
+11. **`Uint8Array` is no longer a `BodyInit`.** TypeScript 5.7+ types `Uint8Array<ArrayBufferLike>`
     as unassignable to `fetch`'s `BodyInit`, so the proxy takes a copy on a plain `ArrayBuffer`.
 
 ## Files
@@ -128,7 +150,8 @@ Created:
 - `server/utils/authProxy.ts` — same-origin proxy core (`resolveConvexSiteUrl`, `proxyAuthRequest`)
 - `app/lib/auth-client.ts` — shared auth client factory + `createConvexTokenFetcher`
 - `scripts/migration/{crypto,auth-fixtures,seed-auth-fixture,export-auth}.ts`
-- `test/migration/auth-import.test.ts` (10), `auth-proxy.test.ts` (8), `auth-client.test.ts` (6),
+- `test/migration/auth-import.test.ts` (10 — both 2FA columns are asserted as opaque ciphertext),
+  `auth-proxy.test.ts` (8), `auth-client.test.ts` (6),
   `g03-g05-live.test.ts` (6), `test/migration/totp.ts`
 
 Modified:
@@ -145,7 +168,7 @@ Modified:
 
 ## Verified alongside
 
-- `pnpm test:gate:g03-g05` → 6 passed (live, staging)
+- `pnpm test:gate:g03-g05` → 6 passed (live, staging), three consecutive runs, all green
 - `pnpm test:gate:g02` → 7 passed (re-run after the auth-config change: no regression)
 - `pnpm test:migration` → 6 files passed / 3 skipped, 27 tests passed / 13 skipped (gates unarmed)
 - `pnpm typecheck:convex` → clean
@@ -163,8 +186,11 @@ Modified:
   staging until Task 13 wires Resend properly.
 - Imported fixtures: three `@gate.ceremly.dev` users plus two superseded 2FA rows (the pre-fix G05
   fixture stored plaintext backup codes; the idempotent import correctly refused to overwrite it,
-  so the corrected payload shipped under `gate-two-factor-v2@`). Task 16's rehearsal reset removes
-  them.
+  so the corrected payload shipped under `gate-two-factor-v2@`). The live gate rotates the backup
+  codes of `gate-two-factor-v2@` on every run. Task 16's rehearsal reset removes all of it.
+- Staging also still carries `gate-two-factor@` (v1) and the two accounts created by the
+  pre-fix import, which are intentionally never overwritten — the idempotent import is what keeps
+  them from being silently mutated.
 
 ## Gate status
 
