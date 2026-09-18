@@ -1,14 +1,17 @@
-import { beforeAll, afterAll, vi } from "vitest";
-import { ConvexTest } from "convex-test";
+import { convexTest } from "convex-test";
+import schema from "./schema";
 
-let test: ConvexTest;
+// Test harness shared by `convex/**/*.test.ts`.
+//
+// The glob must live here (Convex root) so convex-test resolves function
+// modules relative to this file: `convexTest(schema)` on its own falls back to
+// convex-test's internal `import.meta.glob`, which is not transformed when the
+// package is consumed from node_modules under pnpm.
+//
+// `import.meta.glob` is a Vite (Vitest) transform: these tests only run under
+// Vitest, never in a deployed function bundle.
+export const modules = import.meta.glob("./**/*.*s");
 
-beforeAll(() => {
-  test = new ConvexTest(require("./schema"));
-});
-
-afterAll(() => {
-  test.teardown();
-});
-
-globalThis.__CONVEX_TEST__ = test;
+export function initConvexTest() {
+    return convexTest(schema, modules);
+}

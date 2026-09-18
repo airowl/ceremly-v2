@@ -3,7 +3,7 @@
 | Gate | Name | Status | Command | Evidence | Approved by | Approved at |
 |------|------|--------|---------|----------|-------------|-------------|
 | G01 | Cloudflare/Nuxt | PASS | `pnpm build:cloudflare && pnpm preview:cloudflare` | docs/migration/evidence/G01-cloudflare.md | — | — |
-| G02 | Vue binding | NOT_RUN | `pnpm vitest run test/migration/convex-vue-spike.test.ts` | docs/migration/evidence/G02-convex-vue.md | — | — |
+| G02 | Vue binding | PASS | `pnpm test:gate:g02` | docs/migration/evidence/G02-convex-vue.md | — | — |
 | G03 | Password | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G04 | Google | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
 | G05 | 2FA | NOT_RUN | `pnpm vitest run test/migration/auth-import.test.ts` | docs/migration/evidence/G03-G05-auth.md | — | — |
@@ -18,3 +18,4 @@
 
 **Notes:**
 - G01: PASS — Config test, client+server build, 79 prerendered routes, Worker entry, dry-run bindings, live SSR/headers/bot-trap verified on `wrangler dev`. sharp aliased to stub for cloudflare preset only (server/utils/sharp-stub.ts); real Images pipeline in Task 7.
+- G02: PASS (2026-09-18) — verified against the staging dev deployment `airowl/ceremly-staging` → `wary-spaniel-466` (eu-west-1). All Task 3 Step 4 cases pass: public query with `suspense()` on SSR, CSR `server: false` opt-out, typed mutation, realtime re-execution after a write, authenticated query identity (gate-only RS256 `customJwt` provider), anonymous fallback, exactly one forced token refresh, and survival of a transient session failure. Two constraints handed to Task 4: `installConvex` must call `setAuth` itself (convex-vue ignores its `auth` option) and `fetchToken` must never reject (unhandled rejection, client never connects). `Approved by` stays `—`: the gate is evidenced, not human-signed; sign-off belongs to GO/NO-GO (Task 17–18).

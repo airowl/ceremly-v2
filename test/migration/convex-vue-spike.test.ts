@@ -38,7 +38,9 @@ describe("convex-vue binding with auth token", () => {
 
     // Spy the subscription path before mount: no server is contacted.
     const mockUnsubscribe = vi.fn();
-    vi.spyOn(client, "onUpdate").mockReturnValue(mockUnsubscribe as any);
+    vi.spyOn(client, "onUpdate").mockReturnValue(
+      mockUnsubscribe as unknown as ReturnType<typeof client.onUpdate>,
+    );
 
     // The client points at a dead URL by design; silence its network-layer
     // reconnect chatter so test output stays pristine (assertions unaffected).
@@ -59,7 +61,7 @@ describe("convex-vue binding with auth token", () => {
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     // Shut the client down so its socket stops retrying the dead URL
     // (prevents post-test reconnect chatter).
-    await (client as any).close?.();
+    await (client as unknown as { close?: () => Promise<void> }).close?.();
     logSpy.mockRestore();
   });
 });

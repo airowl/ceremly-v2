@@ -17,6 +17,7 @@
     "dev:convex": "convex dev",
     "typecheck:convex": "convex codegen && tsc --noEmit -p convex/tsconfig.json",
     "test:migration": "vitest run test/migration convex/**/*.test.ts",
+    "test:gate:g02": "G02_GATE=live vitest run test/migration/g02-live",
     "build:cloudflare": "NUXT_NITRO_PRESET=cloudflare nuxt build",
     "preview:cloudflare": "pnpm build:cloudflare && wrangler dev",
     "deploy:cloudflare:staging": "pnpm build:cloudflare && wrangler deploy --env staging",
@@ -88,6 +89,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/ws": "8.18.1",
     "convex-test": "0.0.58",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
@@ -100,7 +102,8 @@
     "typescript": "^5.9.3",
     "vitest": "^2.1.9",
     "vue-tsc": "^3.1.2",
-    "wrangler": "4.131.2"
+    "wrangler": "4.131.2",
+    "ws": "8.19.0"
   },
   "packageManager": "pnpm@10.19.0",
   "pnpm": {

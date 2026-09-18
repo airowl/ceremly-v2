@@ -415,6 +415,12 @@ export default defineNuxtConfig({
             tsConfig: {
                 exclude: [
                     "../app/**/*",
+                    // convex/ è un progetto TS a sé (convex/tsconfig.json: target
+                    // ES2022 + tipi vite/client per `import.meta.glob` dei test),
+                    // verificato da `pnpm typecheck:convex`. Senza questo exclude
+                    // il project server — che include "../**/*" — lo typechecka
+                    // con i tipi del browser/server Nitro e fallisce.
+                    "../convex/**/*",
                     "../.vercel/**/*",
                     // i config root appartengono al project node (tsconfig.node.json),
                     // che carica i tipi dei moduli Nuxt (es. nuxt-security per

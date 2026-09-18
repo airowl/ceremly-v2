@@ -94,7 +94,9 @@ export const generateRuntimeConfig = () => {
             creemProductIdCelebration: process.env.NUXT_CREEM_PRODUCT_ID_CELEBRATION,
             creemProductIdAtelier: process.env.NUXT_CREEM_PRODUCT_ID_ATELIER,
             siteMode: process.env.NUXT_PUBLIC_SITE_MODE || "active",
-            convexUrl: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || "",
+            // Convex: client URL (convex-vue) vs HTTP actions URL (webhook/proxy auth).
+            convexUrl: process.env.NUXT_PUBLIC_CONVEX_URL || "",
+            convexSiteUrl: process.env.NUXT_PUBLIC_CONVEX_SITE_URL || process.env.NUXT_PUBLIC_CONVEX_URL || "",
             auth: {
                 redirectUserTo: "/",
                 redirectGuestTo: "/login",

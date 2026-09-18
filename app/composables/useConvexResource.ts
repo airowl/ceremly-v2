@@ -29,7 +29,11 @@ export function useConvexResource<Mutation extends FunctionReference<"mutation",
 
 // NOTE (migration G02): convex-vue@0.1.5 `mutate` resolves the bare
 // FunctionReturnType (index.d.mts:42, runtime index.mjs:57-66) — no unwrap needed.
-export function useConvexResource(query: any, args?: any) {
+// The implementation stays `any`-typed so it remains compatible with both
+// overloads above (TS2394 otherwise: the inferred union of the two branches is
+// not assignable to either overload's generic return type).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useConvexResource(query: any, args?: any): any {
   if (query.__type === "query") {
     return useConvexQuery(query, args ?? {});
   }

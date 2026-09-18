@@ -10,7 +10,9 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["vitest/globals"]
+    // "vite/client" porta il tipo di `import.meta.glob`, usato da
+    // convex/test.setup.ts per risolvere i moduli dei test.
+    "types": ["vitest/globals", "vite/client"]
   },
   "include": ["**/*.ts"]
 }
