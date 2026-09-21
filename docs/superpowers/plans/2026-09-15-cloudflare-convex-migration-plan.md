@@ -23,9 +23,11 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 7 / G08:** completato (2026-09-21). File e varianti immagine sono dominio Convex dietro un bridge firmato HMAC; il bucket, le chiavi R2 e il layout `{basePath}/thumb.webp` / `web.webp` restano invariati. 32 casi ermetici (ordine autorizzazione→validazione→provider, magic bytes prima di `ready`, dedup tenant-scoped, macchina a stati con due varianti max, cinque tentativi e `failed` terminale, contratto di firma tra Convex e Worker) più una run live del Worker costruito su `wrangler dev`: presign firmato → URL R2 reale, richieste non firmate/stale/tampered/replay rifiutate, e un PNG da 51 kB trasformato in `thumb.webp` (4,7 kB) e `web.webp` (19,2 kB). Evidenza: `docs/migration/evidence/G08-media.md`.
 - **Task 8 / G09:** completato (2026-09-21). Matrice eseguibile in `docs/migration/protection-matrix.md` (colonna *dichiarata* vs *osservata*), limiter Convex come unica porta d'ingresso per il budget con check e incremento nella stessa mutation, chiavi salvate solo come digest. 36 casi di gate più prove live su Worker e staging. Il gate ha trovato tre difetti reali (Assets layer di Workers senza header di sicurezza né cache immutabile → `public/_headers`; `/api/auth/*` come proxy trasparente; regole brute-force legacy perse nella config Convex di Better Auth → `storage: "database"`). Evidenza: `docs/migration/evidence/G09-protections.md`.
 - **Task 9 / G10:** parzialmente completato (2026-09-21) — modello e misure fatti, gate **`NOT_RUN`** perché gli alert di budget non sono configurabili da questo repository. `docs/migration/cost-model.md` contiene la formula, le assunzioni con provenienza, i prezzi datati e il confronto a 20/50/100/1.000 planner; `scripts/migration/load-model.ts` è puro e coperto da 17 casi, `scripts/migration/load-runner.ts` misura la fan-out reattiva sul deployment di staging (esattamente una ri-esecuzione per subscriber effettivo a 1/5/20 client, zero per una scrittura che non cambia il risultato).
-- **Task 10–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 10:** completato (2026-09-21) — modello di dominio completo in `convex/schema.ts` (validators runtime per i JSON che nel legacy esistevano solo nel compilatore) e import idempotente in ordine topologico (`internal.migrations.domainImport.importBatch`), con chiavi di idempotenza prese dai vincoli reali del legacy e controllo di coerenza di tenant. Mappa, regole di traduzione e deferral: `docs/migration/domain-schema.md`.
+- **Task 11:** completato (2026-09-21) — business logic e API di dominio in Convex (`events`, `guests`, `rsvp`, `reminders`, `projects`) con 38 characterization test scritti dal comportamento legacy, non dal codice nuovo; i moduli condivisi (`templates`, `rsvpPresets`, `rsvpLogic`) sono diventati re-export di `convex/lib/*` (una sorgente per il client e per il backend). Una deriva reale trovata leggendo il legacy e chiusa qui: `markSent` riscriveva `sentAt`, mentre il legacy lo preserva con `COALESCE`. Deviazioni, deriva e ciò che resta fuori dal task: `docs/migration/domain-api.md`.
+- **Task 12–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
-Il checkpoint hard dello Step 5 del Task 9 ha dato **8**, non 10: `G04` (OAuth Google) e `G10` (alert di budget) sono `NOT_RUN` per due accessi esterni che questo ambiente non ha, e per la regola del piano l'esecuzione si è **fermata** lì — il Task 10 non è stato iniziato. Entrambi i gate sono documentati nel ledger con la stessa disciplina (non eseguiti, non falliti, requisiti invariati) e si chiudono con un Google client di staging e un accesso alla dashboard; le quattro soglie di alert sono tabulate in `docs/migration/cost-model.md`.
+Il checkpoint hard dello Step 5 del Task 9 ha dato **8**, non 10: `G04` (OAuth Google) e `G10` (alert di budget) sono `NOT_RUN` per due accessi esterni che questo ambiente non ha, e per la regola del piano l'esecuzione si è **fermata** lì. Entrambi i gate sono documentati nel ledger con la stessa disciplina (non eseguiti, non falliti, requisiti invariati) e si chiudono con un Google client di staging e un accesso alla dashboard; le quattro soglie di alert sono tabulate in `docs/migration/cost-model.md`. I Task 10 e 11 sono stati eseguiti su **istruzione esplicita dell'utente di proseguire oltre il checkpoint**: la regola è stata sospesa, non ammorbidita — nessuno dei due gate è stato toccato per farli passare.
 
 ## Global Constraints
 
@@ -833,16 +835,18 @@ git commit -m "feat(migration): model and import Ceremly domain in Convex"
 - Create: `convex/reminders.ts`
 - Create: `convex/projects.ts`
 - Create: `convex/domain.test.ts`
+- Create: `convex/lib/domain.ts` (helper condivisi: ownership, limiti, token, slug, invarianti)
+- Move: `shared/constants/templates.ts`, `shared/constants/rsvpPresets.ts`, `shared/utils/rsvpLogic.ts` → `convex/lib/*` + re-export in `shared/`
 
 **Interfaces:**
 - Consumes: `requireRole`, `writeAudit`, schema completo.
 - Produces: query/mutation con gli stessi payload funzionali dei composable attuali.
 
-- [ ] **Step 1: Scrivere characterization test dal comportamento legacy**
+- [x] **Step 1: Scrivere characterization test dal comportamento legacy**
 
 Coprire create/list/get/update/delete evento e progetto, import guest con dedup email, soft-delete guest, invito pubblico via token, RSVP upsert, deadline/closed message, statistiche, mark-sent, reminder massimo 3, event tier lock e tenant isolation.
 
-- [ ] **Step 2: Esporre funzioni pubbliche senza `organizationId` arbitrario**
+- [x] **Step 2: Esporre funzioni pubbliche senza `organizationId` arbitrario**
 
 Contratti principali:
 
@@ -861,11 +865,11 @@ api.projects.list({ cursor, limit })
 
 L'organizzazione arriva sempre da `requireActiveOrganization`; `eventId` viene verificato contro la stessa organizzazione prima di ogni accesso.
 
-- [ ] **Step 3: Audit e idempotenza**
+- [x] **Step 3: Audit e idempotenza**
 
 Ogni mutation autenticata scrive audit nella stessa transaction Convex. RSVP usa guest ID come unicità logica; activity reminder usa `guestId+type+reminderId`; mark-sent e unlock/relock sono no-op se già nello stato finale.
 
-- [ ] **Step 4: Eseguire suite e commit**
+- [x] **Step 4: Eseguire suite e commit**
 
 Run: `pnpm vitest run convex/domain.test.ts && pnpm typecheck:convex`
 
@@ -873,6 +877,8 @@ Run: `pnpm vitest run convex/domain.test.ts && pnpm typecheck:convex`
 git add convex/events.ts convex/guests.ts convex/rsvp.ts convex/reminders.ts convex/projects.ts convex/domain.test.ts
 git commit -m "feat(migration): port tenant domain to Convex"
 ```
+
+*(2026-09-21: eseguito su istruzione esplicita dell'utente di **proseguire oltre il checkpoint** del Task 9 — `G04` e `G10` restano `NOT_RUN` e i due requisiti restano invariati. Mappa, regole portate alla lettera, deviazioni e deferral in `docs/migration/domain-api.md`. **Deriva trovata leggendo il legacy e chiusa qui**: `markSent` riscriveva `sentAt`, mentre il legacy usa `COALESCE(sent_at, now())` — la data del primo invito non si tocca; il test che la pinna fallisce senza la correzione (verificato rimuovendola). Deviazioni dichiarate: `rsvp.publicInvite` è una **mutation** (il GET del legacy aveva side effect e una query Convex non può scrivere), `guests.list` non è paginata ma restituisce l'aggregato dell'evento, `importRows` invece di `importCsv` (il legacy riceveva righe già validate: il parsing CSV non è mai stato nel servizio), `projects.list` usa `paginationOpts`. Vincoli che Convex non esprime, sostituiti e non abbandonati: unicità del token in scrittura (il legacy si affidava a un indice UNIQUE + retry sul 23505) ed email normalizzata in scrittura. `mark-sent` **non** è un no-op di tutta la chiamata — il legacy riscrive canale e aggiunge l'attività: ciò che è idempotente è la data; `unlock/relock` è del billing (Task 6/G07, non toccato qui). Fuori dal task, dichiarato: `processDueReminders`, l'invio email/WhatsApp e i builder di link/pixel (Task 13), `getGuestQrPng` e `exportGuestsCsv`, e `recordGuestOpen` del webhook Resend — che **non** è il pixel: il webhook fa `openCount+1` ed `emailOpenedAt` = ultima apertura, il pixel solo `emailOpenedAt` alla prima, quindi oggi l'ospite che apre solo l'email non entra in `firstOpenedAt`. `shared/constants/templates.ts`, `shared/constants/rsvpPresets.ts` e `shared/utils/rsvpLogic.ts` sono diventati re-export di `convex/lib/*` (una sorgente, non due copie; import solo di tipi, quindi il bundle client non trascina codice Convex). Verifica: `convex/domain.test.ts` 38 casi, suite `convex/` 161, `pnpm test:migration` 252 passati/27 saltati, `typecheck:convex` ed eslint puliti, `pnpm build` riuscito dopo lo spostamento dei moduli.)*
 
 ### Task 12: Profilo, GDPR, form pubblici e site mode
 

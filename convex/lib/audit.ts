@@ -22,8 +22,11 @@ export const AUDIT_CATEGORIES = [
     "event",
     "file",
     "guest",
+    "invite",
     "organization",
     "payment",
+    "project",
+    "reminder",
     "team",
     "user",
     "admin",
@@ -52,6 +55,16 @@ const AUDIT_ACTION_CATEGORY = {
     "checkout.completed": "payment",
     "event.unlocked": "event",
     "event.relocked": "event",
+    // Tenant domain (Task 11): event and guest CRUD, verbatim from the legacy
+    // taxonomy (`server/utils/audit/types.ts`) so migrated rows and rows written
+    // after the cutover are greppable together.
+    "event.created": "event",
+    "event.updated": "event",
+    "event.deleted": "event",
+    "guest.created": "guest",
+    "guest.updated": "guest",
+    "guest.deleted": "guest",
+    "guest.imported": "guest",
     // Files and media (Task 7). The five `file.*` names are the legacy taxonomy
     // (`server/utils/audit/types.ts`), so migrated records stay greppable next to
     // the historical ones; the two `file.variant_*` names are new (the legacy app
@@ -63,6 +76,13 @@ const AUDIT_ACTION_CATEGORY = {
     "file.deleted": "file",
     "file.variant_ready": "file",
     "file.variant_failed": "file",
+    // `invite`, `reminder` and `project` are categories the legacy declared but
+    // that had no writer yet on the Convex side.
+    "invite.sent": "invite",
+    "reminder.updated": "reminder",
+    "project.created": "project",
+    "project.updated": "project",
+    "project.deleted": "project",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;
