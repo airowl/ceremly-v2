@@ -34,6 +34,17 @@ export const generateRuntimeConfig = () => {
         // Better Auth in-process su Neon/Drizzle, `convex` è il proxy verso il
         // deployment Convex. Il cutover (Task 17) è l'unico punto che lo cambia.
         authBackend: process.env.NUXT_AUTH_BACKEND || "legacy",
+        // Task 12: contact / waiting list / RSVP pubblico. `legacy` (default) è il
+        // servizio in-process su Neon/Drizzle, `convex` è il bridge firmato verso le
+        // HTTP action Convex. Come `authBackend`, è il cutover a cambiarlo.
+        publicFormsBackend: process.env.NUXT_PUBLIC_FORMS_BACKEND || "legacy",
+        // Segreto condiviso con `convex env set PUBLIC_FORMS_SECRET`: firma i bridge
+        // anonimi **e** la chiave del digest dell'IP. Assente = i bridge rifiutano.
+        publicFormsSecret: process.env.NUXT_PUBLIC_FORMS_SECRET,
+        // Task 12: sorgente autorevole del site mode letta dal middleware.
+        // `legacy` (default) è l'override Upstash, `convex` è la lettura fail-closed
+        // dalla tabella `siteSettings`.
+        siteModeBackend: process.env.NUXT_SITE_MODE_BACKEND || "legacy",
         // Creem
         creemApiKey: process.env.NUXT_CREEM_API_KEY,
         creemWebhookSecret: process.env.NUXT_CREEM_WEBHOOK_SECRET,

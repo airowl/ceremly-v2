@@ -16,10 +16,14 @@
  * MAINTENANCE:
  *   - API: tutte 503 (tranne jobs/cron/public)
  *   - Pagine: tutte → /maintenance (che risponde 503 dal proprio setup)
+ * MAINTENANCE-READONLY:
+ *   - API: solo le scritture 503 (tranne /api/auth/**, che serve a poter leggere)
+ *   - Pagine: tutte raggiungibili, /maintenance esclusa
  */
 import {
     isMaintenancePage,
     isWaitingListBlockedPage,
+    isWriteMethod,
 } from "~~/shared/constants/siteMode";
 import { getServerSiteMode } from "../utils/siteMode";
 
@@ -78,6 +82,25 @@ export default defineEventHandler(async (event) => {
         }
         if (isWaitingListBlockedPage(path)) {
             return sendRedirect(event, "/", 302);
+        }
+        return;
+    }
+
+    // === MAINTENANCE-READONLY ===
+    //
+    // Solo le scritture chiudono; letture e pagine passano. Le eccezioni sono le
+    // stesse del resto del middleware (jobs/cron/public/admin/webhook), che escono
+    // prima; in più `/api/auth/**`, che è tecnicamente una scrittura (crea sessioni)
+    // ma senza la quale "le letture passano" sarebbe falso per la dashboard: un
+    // utente con la sessione scaduta non potrebbe più riaprirla. Resta fermo tutto
+    // ciò che scrive dati di dominio.
+    if (siteMode === "maintenance-readonly") {
+        if (isMaintenancePage(path)) return sendRedirect(event, "/", 302);
+        if (isApi && isWriteMethod(event.method) && !path.startsWith("/api/auth/")) {
+            throw createError({
+                statusCode: 503,
+                statusMessage: "Service Unavailable",
+            });
         }
         return;
     }

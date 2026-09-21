@@ -1,10 +1,16 @@
 /**
  * Site mode: single source of truth condivisa client/server.
  *
- * Tre stati:
- * - active:      SaaS pienamente operativo, nessuna restrizione.
- * - waitinglist: solo landing/legal/blog pubblici; dashboard e auth chiusi.
- * - maintenance: tutto reindirizzato alla pagina di manutenzione (503).
+ * Quattro stati:
+ * - active:                SaaS pienamente operativo, nessuna restrizione.
+ * - waitinglist:           solo landing/legal/blog pubblici; dashboard e auth chiusi.
+ * - maintenance:           tutto reindirizzato alla pagina di manutenzione (503).
+ * - maintenance-readonly:  **solo le scritture** bloccate (503); letture e pagine
+ *                          passano. Serve al caso che non ha un'alternativa: un
+ *                          intervento che richiede di fermare le scritture (una
+ *                          migrazione, un'indagine su dati incoerenti) senza
+ *                          togliere il sito a chi lo sta guardando. Nel legacy
+ *                          l'unica scelta era `maintenance`, cioè chiudere tutto.
  *
  * Le regole di gating vivono qui (non duplicate nei due middleware) e sono
  * locale-agnostiche: con i18n strategy `prefix_except_default` le route della
@@ -13,8 +19,30 @@
  */
 import { z } from "zod";
 
-export const SITE_MODES = ["active", "waitinglist", "maintenance"] as const;
+export const SITE_MODES = [
+    "active",
+    "waitinglist",
+    "maintenance",
+    "maintenance-readonly",
+] as const;
 export type SiteMode = (typeof SITE_MODES)[number];
+
+/**
+ * Metodi HTTP non idempotenti: in `maintenance-readonly` sono quelli che chiudono.
+ *
+ * L'elenco è una *allowlist di letture* rovesciata: tutto ciò che non è GET/HEAD/
+ * OPTIONS è trattato come scrittura. Un metodo sconosciuto o nuovo resta quindi
+ * bloccato per default, che è la direzione giusta per un interruttore di sicurezza.
+ */
+export const READONLY_ALLOWED_METHODS = ["GET", "HEAD", "OPTIONS"] as const;
+
+export function isWriteMethod(method: string | undefined): boolean {
+    // Un metodo assente non è "una lettura": è un input che non capiamo, e in un
+    // interruttore di sicurezza l'ignoto si chiude. (In pratica h3 lo fornisce
+    // sempre; questa riga esiste per il caso che non dovrebbe accadere.)
+    if (typeof method !== "string") return true;
+    return !(READONLY_ALLOWED_METHODS as readonly string[]).includes(method.toUpperCase());
+}
 
 /**
  * Schema permissivo: un valore ignoto/typo (es. "maintenence") collassa su

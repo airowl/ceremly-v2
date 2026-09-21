@@ -10,12 +10,14 @@
 
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
+import type * as dataExports from "../dataExports.js";
 import type * as email from "../email.js";
 import type * as events from "../events.js";
 import type * as files from "../files.js";
 import type * as guests from "../guests.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
+import type * as jobs from "../jobs.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_authorization from "../lib/authorization.js";
 import type * as lib_bridgeHmac from "../lib/bridgeHmac.js";
@@ -24,6 +26,7 @@ import type * as lib_domainBatchDigest from "../lib/domainBatchDigest.js";
 import type * as lib_env from "../lib/env.js";
 import type * as lib_identity from "../lib/identity.js";
 import type * as lib_inviteTemplates from "../lib/inviteTemplates.js";
+import type * as lib_jobQueue from "../lib/jobQueue.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
 import type * as lib_media from "../lib/media.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
@@ -31,14 +34,19 @@ import type * as lib_pricing from "../lib/pricing.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_rsvpLogic from "../lib/rsvpLogic.js";
 import type * as lib_rsvpPresets from "../lib/rsvpPresets.js";
+import type * as lib_spam from "../lib/spam.js";
+import type * as lib_storageBridge from "../lib/storageBridge.js";
 import type * as media from "../media.js";
 import type * as migrations_authImport from "../migrations/authImport.js";
 import type * as migrations_domainImport from "../migrations/domainImport.js";
 import type * as model_validators from "../model/validators.js";
 import type * as organizations from "../organizations.js";
+import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
+import type * as publicForms from "../publicForms.js";
 import type * as reminders from "../reminders.js";
 import type * as rsvp from "../rsvp.js";
+import type * as siteSettings from "../siteSettings.js";
 
 import type {
   ApiFromModules,
@@ -49,12 +57,14 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   billing: typeof billing;
+  dataExports: typeof dataExports;
   email: typeof email;
   events: typeof events;
   files: typeof files;
   guests: typeof guests;
   health: typeof health;
   http: typeof http;
+  jobs: typeof jobs;
   "lib/audit": typeof lib_audit;
   "lib/authorization": typeof lib_authorization;
   "lib/bridgeHmac": typeof lib_bridgeHmac;
@@ -63,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "lib/env": typeof lib_env;
   "lib/identity": typeof lib_identity;
   "lib/inviteTemplates": typeof lib_inviteTemplates;
+  "lib/jobQueue": typeof lib_jobQueue;
   "lib/magicBytes": typeof lib_magicBytes;
   "lib/media": typeof lib_media;
   "lib/migrationKey": typeof lib_migrationKey;
@@ -70,14 +81,19 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/rsvpLogic": typeof lib_rsvpLogic;
   "lib/rsvpPresets": typeof lib_rsvpPresets;
+  "lib/spam": typeof lib_spam;
+  "lib/storageBridge": typeof lib_storageBridge;
   media: typeof media;
   "migrations/authImport": typeof migrations_authImport;
   "migrations/domainImport": typeof migrations_domainImport;
   "model/validators": typeof model_validators;
   organizations: typeof organizations;
+  profile: typeof profile;
   projects: typeof projects;
+  publicForms: typeof publicForms;
   reminders: typeof reminders;
   rsvp: typeof rsvp;
+  siteSettings: typeof siteSettings;
 }>;
 
 /**

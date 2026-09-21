@@ -108,10 +108,31 @@ export default defineSchema({
         globalRole: v.union(v.literal("user"), v.literal("superAdmin")),
         locale: v.string(),
         activeOrganizationId: v.optional(v.id("organizations")),
+        /**
+         * Profilo (Task 12). `name` ed `image` restano del componente Better Auth
+         * — è Better Auth a servirli nella sessione che il client legge — mentre
+         * questi tre campi non hanno un posto nel suo schema fisso e vivono qui,
+         * come già fa `locale`.
+         */
+        phone: v.optional(v.string()),
+        bio: v.optional(v.string()),
+        timezone: v.optional(v.string()),
+        /**
+         * Cancellazione differita (diritto all'oblio, Task 12).
+         *
+         * `purgeAt` è indicizzato: nel legacy la scadenza era codificata dentro
+         * `banReason` e ogni giro del cron doveva parsare una stringa. Un campo
+         * con un indice è la stessa informazione senza il parsing — e i documenti
+         * *senza* `purgeAt` restano fuori dall'indice, che è esattamente il
+         * filtro che serve (solo gli account programmati sono candidati al purge).
+         */
+        deletionRequestedAt: v.optional(v.number()),
+        purgeAt: v.optional(v.number()),
     })
         .index("by_auth_user", ["authUserId"])
         .index("by_email", ["email"])
-        .index("by_legacy_id", ["legacyId"]),
+        .index("by_legacy_id", ["legacyId"])
+        .index("by_purge_at", ["purgeAt"]),
 
     organizations: defineTable({
         legacyId: v.optional(v.string()),
@@ -460,6 +481,15 @@ export default defineSchema({
         status: exportStatus,
         format: v.string(),
         downloadUrl: v.optional(v.string()),
+        /**
+         * Chiave dell'oggetto su R2 (`exports/{appUserId}/{yyyy-MM}/{id}.json`).
+         *
+         * Il legacy non aveva bisogno di questo campo perché l'intero JSON finiva
+         * in `downloadUrl` come data URL: nel modello Convex il documento non è il
+         * posto di un file, quindi il riferimento all'oggetto è esplicito e
+         * l'URL firmato si genera al momento della richiesta (Task 12).
+         */
+        storageKey: v.optional(v.string()),
         downloadToken: v.optional(v.string()),
         expiresAt: v.optional(v.number()),
         completedAt: v.optional(v.number()),
@@ -510,6 +540,16 @@ export default defineSchema({
         attempt: v.number(),
         maxAttempts: v.number(),
         nextAttemptAt: v.optional(v.number()),
+        /**
+         * Scadenza del diritto esclusivo di esecuzione (plan Task 12).
+         *
+         * Un job `running` con il lease valido è **in volo**: una seconda
+         * consegna dello stesso `jobId` non è un nuovo tentativo e non deve
+         * rifare il lavoro. Il lease scade, quindi un'esecuzione morta non
+         * blocca il job per sempre — è la stessa proprietà che serve al Task 13
+         * quando il retry persistito riprende i job `running` orfani.
+         */
+        leaseExpiresAt: v.optional(v.number()),
         startedAt: v.optional(v.number()),
         finishedAt: v.optional(v.number()),
         lastError: v.optional(v.string()),
@@ -659,6 +699,13 @@ export default defineSchema({
         .index("by_org_variant_status", ["organizationId", "variantStatus"])
         .index("by_variant_of", ["variantOf"])
         .index("by_variant_status", ["variantStatus", "variantUpdatedAt"])
+        /**
+         * "I file caricati da questo utente" — la sezione `files` dell'export
+         * GDPR (Task 12). Nel legacy era una query su `file.uploaded_by` senza
+         * indice dedicato; qui l'indice serve perché la scansione deve partire da
+         * un tenant, non da una tabella intera.
+         */
+        .index("by_uploaded_by", ["uploadedBy"])
         .index("by_legacy_id", ["legacyId"]),
 
     /**

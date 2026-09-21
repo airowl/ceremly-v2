@@ -22,7 +22,13 @@ process.env.NUXT_RESEND_WEBHOOK_SECRET ||= "whsec_test";
 //    lascerebbe databaseUrl undefined, rompendo i test DB-backed.
 type CreateErrorInput =
     | string
-    | { statusCode?: number; statusMessage?: string; message?: string };
+    | {
+          statusCode?: number;
+          statusMessage?: string;
+          message?: string;
+          /** h3 mette ogni altro campo qui: i bridge ci mettono `code`. */
+          data?: unknown;
+      };
 
 const g = globalThis as Record<string, unknown>;
 if (typeof g.createError !== "function") {
@@ -31,9 +37,13 @@ if (typeof g.createError !== "function") {
         const err = new Error(opts.statusMessage ?? opts.message ?? "Error") as Error & {
             statusCode?: number;
             statusMessage?: string;
+            data?: unknown;
         };
         if (opts.statusCode !== undefined) err.statusCode = opts.statusCode;
         if (opts.statusMessage !== undefined) err.statusMessage = opts.statusMessage;
+        // Come h3: `data` è il posto dei campi extra, e senza questo un bridge che
+        // espone un `code` di dominio lo perderebbe proprio nei test che lo verificano.
+        if (opts.data !== undefined) err.data = opts.data;
         return err;
     };
 }

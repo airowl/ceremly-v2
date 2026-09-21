@@ -25,7 +25,8 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 9 / G10:** parzialmente completato (2026-09-21) — modello e misure fatti, gate **`NOT_RUN`** perché gli alert di budget non sono configurabili da questo repository. `docs/migration/cost-model.md` contiene la formula, le assunzioni con provenienza, i prezzi datati e il confronto a 20/50/100/1.000 planner; `scripts/migration/load-model.ts` è puro e coperto da 17 casi, `scripts/migration/load-runner.ts` misura la fan-out reattiva sul deployment di staging (esattamente una ri-esecuzione per subscriber effettivo a 1/5/20 client, zero per una scrittura che non cambia il risultato).
 - **Task 10:** completato (2026-09-21) — modello di dominio completo in `convex/schema.ts` (validators runtime per i JSON che nel legacy esistevano solo nel compilatore) e import idempotente in ordine topologico (`internal.migrations.domainImport.importBatch`), con chiavi di idempotenza prese dai vincoli reali del legacy e controllo di coerenza di tenant. Mappa, regole di traduzione e deferral: `docs/migration/domain-schema.md`.
 - **Task 11:** completato (2026-09-21) — business logic e API di dominio in Convex (`events`, `guests`, `rsvp`, `reminders`, `projects`) con 38 characterization test scritti dal comportamento legacy, non dal codice nuovo; i moduli condivisi (`templates`, `rsvpPresets`, `rsvpLogic`) sono diventati re-export di `convex/lib/*` (una sorgente per il client e per il backend). Una deriva reale trovata leggendo il legacy e chiusa qui: `markSent` riscriveva `sentAt`, mentre il legacy lo preserva con `COALESCE`. Deviazioni, deriva e ciò che resta fuori dal task: `docs/migration/domain-api.md`.
-- **Task 12–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 12:** completato (2026-09-22) — profilo, export GDPR con URL firmato, cancellazione differita con purge a lotti, i tre form pubblici dietro il bridge HMAC anonimo (l'IP non entra mai in Convex, solo un digest) e site mode a quattro stati letto da Convex con fail-closed. 36 casi in `convex/auxiliaryFlows.test.ts` (dominio e porta HTTP), 17 di contratto in `test/migration/public-forms-{bridge,contract}.test.ts` e 8 di enforcement in `test/migration/site-mode-middleware.test.ts`. **Il task ha trovato un difetto con conseguenze serie**: lo sweep del purge cancellava ogni account appena creato (un range su un campo opzionale restituisce anche i documenti senza il campo, e `take` tagliava la scansione prima del filtro). Dettagli, misure e buchi residui: `docs/migration/auxiliary-flows.md`.
+- **Task 13–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
 Il checkpoint hard dello Step 5 del Task 9 ha dato **8**, non 10: `G04` (OAuth Google) e `G10` (alert di budget) sono `NOT_RUN` per due accessi esterni che questo ambiente non ha, e per la regola del piano l'esecuzione si è **fermata** lì. Entrambi i gate sono documentati nel ledger con la stessa disciplina (non eseguiti, non falliti, requisiti invariati) e si chiudono con un Google client di staging e un accesso alla dashboard; le quattro soglie di alert sono tabulate in `docs/migration/cost-model.md`. I Task 10 e 11 sono stati eseguiti su **istruzione esplicita dell'utente di proseguire oltre il checkpoint**: la regola è stata sospesa, non ammorbidita — nessuno dei due gate è stato toccato per farli passare.
 
@@ -898,29 +899,29 @@ git commit -m "feat(migration): port tenant domain to Convex"
 - Consumes: authz, rate limiter, job queue e R2 signing.
 - Produces: `enqueueJob(ctx, type, entityId)`, `api.profile.current`, `api.profile.update`, `api.profile.requestDeletion`, `api.dataExports.request`, `api.dataExports.status`, `api.publicForms.contact`, `api.publicForms.waitingList`, `api.siteSettings.getPublic`.
 
-- [ ] **Step 1: Scrivere test di profilo e cancellazione**
+- [x] **Step 1: Scrivere test di profilo e cancellazione**
 
 Verificare lettura/aggiornamento solo del proprio profilo, campi consentiti `name|phone|bio|locale|timezone|image`, rifiuto di ruolo/email arbitrari, richiesta export idempotente e cancellazione account differita/auditata. Il purge elimina dati personali secondo il comportamento corrente senza lasciare membership orfane.
 
-- [ ] **Step 2: Portare export GDPR e download**
+- [x] **Step 2: Portare export GDPR e download**
 
 `api.dataExports.request` crea un job `data-export`; l'action raccoglie profilo, membership/eventi accessibili, file metadata, audit e billing, salva JSON su R2 e persiste scadenza/token. `api.dataExports.downloadUrl` restituisce un URL firmato breve solo al proprietario e solo per export `succeeded` non scaduto.
 
 `convex/lib/jobQueue.ts` crea il record `pending` e chiama `ctx.scheduler.runAfter(0, internal.jobs.run, { jobId })`. In questo task `convex/jobs.ts` implementa già il runner `data-export` e `account-purge`; il Task 13 aggiunge email/media, retry generalizzato e cron senza cambiare la firma `enqueueJob`.
 
-- [ ] **Step 3: Mantenere bridge Worker sottili per write anonime**
+- [x] **Step 3: Mantenere bridge Worker sottili per write anonime**
 
 Contact, waiting list e RSVP pubblico restano route Nuxt di trasporto da massimo 25 righe: estraggono l'IP Cloudflare, calcolano un hash HMAC non reversibile, inoltrano payload e `edgeRequestId` a una HTTP action Convex e restituiscono la risposta. Validazione di dominio, rate limit, deduplica, write e audit vivono esclusivamente in Convex. Questo evita di fidarsi di un IP fornito dal browser e consente WAF/Rate Limiting Cloudflare.
 
-- [ ] **Step 4: Portare site mode a Convex**
+- [x] **Step 4: Portare site mode a Convex**
 
 `siteSettings` contiene una sola chiave `siteMode` con `active|waitinglist|maintenance|maintenance-readonly`. `api.siteSettings.getPublic` è read-only; la mutation richiede superAdmin e audit. Il middleware Worker legge il valore da Convex con timeout fail-closed: in caso di errore conserva maintenance se già osservata e non riapre silenziosamente le write.
 
-- [ ] **Step 5: Testare spam, deduplica e failure mode**
+- [x] **Step 5: Testare spam, deduplica e failure mode**
 
 Testare honeypot, tempo minimo form, email disposable, doppia iscrizione waiting list, RSVP replay, IP hash falsificato, Convex timeout e modalità maintenance-readonly. Nessun bridge importa repository, Drizzle o service legacy.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add convex/profile.ts convex/publicForms.ts convex/dataExports.ts convex/siteSettings.ts convex/lib/jobQueue.ts convex/jobs.ts convex/auxiliaryFlows.test.ts server/api/contact.post.ts server/api/waiting-list/subscribe.post.ts server/api/public/invite/'[token]'/rsvp.post.ts

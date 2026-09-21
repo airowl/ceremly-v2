@@ -85,13 +85,32 @@ export async function findMembership(
  * A missing profile means provisioning did not run (the Better Auth trigger
  * failed, or a user that predates Convex signed in): the caller is asked to run
  * `ensureProvisioned` once instead of being granted an implicit organization.
+ *
+ * An account scheduled for deletion (Task 12) is refused here, which is what makes
+ * the grace window real: the legacy banned the user with `banExpires = null` and
+ * revoked the sessions, so "scheduled" and "usable" were mutually exclusive. The
+ * only caller that may pass is the deletion request itself, which has to stay
+ * idempotent — hence the explicit opt-out rather than a second lookup path.
  */
-export async function requireAppUser(ctx: ReadCtx): Promise<Doc<"appUsers">> {
+export interface RequireAppUserOptions {
+    allowScheduledDeletion?: boolean;
+}
+
+export async function requireAppUser(
+    ctx: ReadCtx,
+    options: RequireAppUserOptions = {},
+): Promise<Doc<"appUsers">> {
     const identity = await requireIdentity(ctx);
     const appUser = await findAppUserByAuthId(ctx, identity.authUserId);
 
     if (!appUser) {
         throw forbidden("APP_USER_NOT_PROVISIONED", { authUserId: identity.authUserId });
+    }
+
+    if (appUser.deletionRequestedAt !== undefined && !options.allowScheduledDeletion) {
+        throw forbidden("ACCOUNT_SCHEDULED_FOR_DELETION", {
+            purgeAt: appUser.purgeAt ?? null,
+        });
     }
 
     return appUser;
@@ -106,11 +125,11 @@ export async function requireAppUser(ctx: ReadCtx): Promise<Doc<"appUsers">> {
  */
 export async function requireActiveOrganization(ctx: ReadCtx): Promise<AuthzContext> {
     const identity = await requireIdentity(ctx);
-    const appUser = await findAppUserByAuthId(ctx, identity.authUserId);
+    // Delega a `requireAppUser` invece di ripetere il lookup: la regola dell'account
+    // programmato per la cancellazione vive lì, e una seconda copia della ricerca
+    // sarebbe un secondo percorso che la salta (era il caso, misurato dal test).
+    const appUser = await requireAppUser(ctx);
 
-    if (!appUser) {
-        throw forbidden("APP_USER_NOT_PROVISIONED", { authUserId: identity.authUserId });
-    }
     if (!appUser.activeOrganizationId) {
         throw forbidden("NO_ACTIVE_ORGANIZATION");
     }

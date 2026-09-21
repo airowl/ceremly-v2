@@ -5,9 +5,9 @@ import { internal } from "./_generated/api";
 import { forbidden } from "./lib/identity";
 import { DOMAIN_WRITE_ROLES, requireRole } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
-import { signBridgeRequest } from "./lib/bridgeHmac";
 import { validateMagicBytes } from "./lib/magicBytes";
 import { assertRateLimit } from "./lib/rateLimit";
+import { BRIDGE_PATH, callBridge, errorMessage, tryBridge } from "./lib/storageBridge";
 import {
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE_BYTES,
@@ -33,51 +33,9 @@ import {
  * never validated. The actions are thin orchestrators (fetch + transitions).
  */
 
-const BRIDGE_PATH = {
-    presign: "/api/internal/storage/presign",
-    object: "/api/internal/storage/object",
-    media: "/api/internal/media/process",
-} as const;
-
-/**
- * Calls the signed Worker bridge.
- *
- * A missing URL/secret is a named refusal, not a silent skip: a deployment that
- * cannot reach storage must not accept an upload it cannot persist.
- */
-async function callBridge<T>(path: string, payload: unknown): Promise<T> {
-    const baseUrl = process.env.STORAGE_BRIDGE_URL;
-    const secret = process.env.STORAGE_BRIDGE_SECRET;
-
-    if (!baseUrl || !secret) {
-        throw forbidden("STORAGE_BRIDGE_NOT_CONFIGURED");
-    }
-
-    const signed = await signBridgeRequest({ secret, method: "POST", path, payload });
-    const response = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
-        method: "POST",
-        headers: signed.headers,
-        body: signed.body,
-    });
-
-    if (!response.ok) {
-        throw forbidden("STORAGE_BRIDGE_FAILED", { path, status: response.status });
-    }
-
-    return (await response.json()) as T;
-}
-
-/** Best-effort bridge call used only for cleanup after a failed upload. */
-async function tryBridge(path: string, payload: unknown): Promise<void> {
-    try {
-        await callBridge(path, payload);
-    } catch (error) {
-        console.error("[files] cleanup bridge call failed", error);
-    }
-}
-
-const errorMessage = (error: unknown): string =>
-    error instanceof Error ? error.message : String(error);
+// Il client del bridge (`BRIDGE_PATH`, `callBridge`, `tryBridge`, `errorMessage`)
+// vive in `lib/storageBridge.ts` dal Task 12: gli export GDPR fanno le stesse
+// chiamate, e due copie della firma sarebbero due posti dove può divergere.
 
 // ---------------------------------------------------------------------------
 // Authorization

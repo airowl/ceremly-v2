@@ -163,12 +163,16 @@ describe("canonical payload", () => {
     });
 
     it("covers the digest-relevant fields and nothing else", async () => {
-        const base = { ...realistic, sha256: "" };
+        // `sha256` non fa parte del tipo del batch — è il digest del payload, non un
+        // suo campo — quindi la variabile è tipata come l'envelope **più** quel campo:
+        // è la condizione che il test deve rappresentare, non un cast per farlo
+        // compilare.
+        const base: typeof realistic & { sha256: string } = { ...realistic, sha256: "" };
 
-        // `sha256` is not part of the covered value (a digest cannot cover itself).
-        expect(convexCanonicalPayload({ ...base, sha256: "ignored" as never })).toBe(
-            sharedCanonicalPayload(base),
-        );
+        // `sha256` is not part of the covered value (a digest cannot cover itself):
+        // changing it alone must not move the digest.
+        const otherDigest: typeof base = { ...base, sha256: "ignored" };
+        expect(convexCanonicalPayload(otherDigest)).toBe(sharedCanonicalPayload(base));
 
         // ...while the watermark, the index and the records are.
         expect(convexCanonicalPayload({ ...base, watermark: "later" })).not.toBe(

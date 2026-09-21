@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation } from "./_generated/server";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./lib/domain";
+import { assertRateLimit } from "./lib/rateLimit";
 import { getVisibleQuestions, validateRsvpSubmission } from "./lib/rsvpLogic";
 
 /**
@@ -161,6 +162,17 @@ const submitArgs = {
     companionsCount: v.number(),
     answers: v.record(v.string(), v.any()),
     declineMessage: v.optional(v.union(v.string(), v.null())),
+    /**
+     * Digest HMAC dell'IP, presente solo quando la chiamata arriva dal bridge del
+     * Worker (plan Task 12, Step 3).
+     *
+     * Il limite resta per **token** — è l'invito che va protetto dal flood — ma
+     * quando l'indirizzo è noto il bucket lo include, così un token condiviso
+     * dietro lo stesso NAT non consuma la quota di tutti gli altri ospiti. Il
+     * client che chiama la mutation direttamente (convex-vue) semplicemente non
+     * ha questa dimensione: il limite per token resta identico.
+     */
+    ipHash: v.optional(v.string()),
 };
 
 /**
@@ -175,6 +187,13 @@ const submitArgs = {
 export const submit = mutation({
     args: submitArgs,
     handler: async (ctx, args) => {
+        // Limite per token (30/min, la costante del legacy) prima di qualunque
+        // lavoro: una richiesta rifiutata non deve costare una lettura di invito.
+        await assertRateLimit(ctx, {
+            bucket: "rsvp",
+            key: args.ipHash ? `${args.token}|${args.ipHash}` : args.token,
+        });
+
         const { guest, event } = await findActiveInvite(ctx, args.token);
         const now = Date.now();
 

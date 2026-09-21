@@ -31,6 +31,9 @@ export const AUDIT_CATEGORIES = [
     "user",
     "admin",
     "security",
+    // Task 12: le due categorie dei form pubblici (legacy `audit/types.ts`).
+    "contact",
+    "waiting_list",
 ] as const;
 
 export type AuditCategory = (typeof AUDIT_CATEGORIES)[number];
@@ -83,6 +86,16 @@ const AUDIT_ACTION_CATEGORY = {
     "project.created": "project",
     "project.updated": "project",
     "project.deleted": "project",
+    // Profilo, GDPR e form pubblici (Task 12). I nomi sono quelli del legacy per
+    // restare greppabili accanto ai record migrati; `user.account_purged` esiste
+    // già nel legacy (il cron del purge non auditava, ma l'azione era dichiarata).
+    "user.profile_updated": "user",
+    "user.account_deleted": "user",
+    "user.account_purged": "user",
+    "user.data_export_requested": "user",
+    "contact.sent": "contact",
+    "waiting_list.subscribed": "waiting_list",
+    "admin.site_mode_changed": "admin",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;

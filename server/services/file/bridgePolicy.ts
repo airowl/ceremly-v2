@@ -53,6 +53,29 @@ export const PROCESSABLE_BRIDGE_TYPES: readonly string[] = [
 
 export const objectKeyPattern = /^(?:evt\/[A-Za-z0-9_-]{1,64}|global)\/\d{4}-\d{2}\/[A-Za-z0-9_-]{1,64}\/(?:original(?:\.[a-z0-9]{1,8})?|thumb\.webp|web\.webp)$/;
 
+/**
+ * Namespace degli export GDPR (plan Task 12, Step 2).
+ *
+ * `exports/{appUserId}/{yyyy-MM}/{exportId}.json`. È separato da `evt/` e
+ * `global/` perché il contenuto è di natura diversa: non è un asset caricato da
+ * un utente ma un documento personale generato dal backend, scritto dal bridge e
+ * leggibile solo via URL firmato breve. Tenerlo in un namespace proprio fa sì che
+ * il pattern `original.ext` non debba essere allargato per accettarlo — e che
+ * l'allow-list dei MIME delle immagini resti quella che è.
+ */
+export const EXPORT_KEY_PATTERN =
+    /^exports\/[A-Za-z0-9_-]{1,64}\/\d{4}-\d{2}\/[A-Za-z0-9_-]{1,64}\.json$/;
+
+/**
+ * Tetto di un export scritto dal bridge (10 MB).
+ *
+ * La raccolta è già limitata a 1.000 righe per sezione (come il legacy), quindi
+ * il tetto non è la difesa principale: è il limite oltre il quale un payload
+ * significa che qualcosa è cambiato a monte, ed è meglio un rifiuto con nome che
+ * un oggetto da decine di MB in un bucket personale.
+ */
+export const EXPORT_MAX_BYTES = 10 * 1024 * 1024;
+
 function fail(statusCode: number, statusMessage: string, code: string): never {
     throw createError({ statusCode, statusMessage, data: { code } });
 }
@@ -93,6 +116,31 @@ export function assertAllowedFileSize(policy: BridgeFilePolicy, fileSize: unknow
         fail(413, "File size exceeds the allowed maximum", "BRIDGE_SIZE_TOO_LARGE");
     }
     return fileSize;
+}
+
+/**
+ * Rejects any key outside the export namespace. Stesse regole di
+ * `assertStorageKey`: ancorata, senza `..`, senza query string.
+ */
+export function assertExportKey(key: unknown): string {
+    if (typeof key !== "string" || key.length === 0 || key.length > 512) {
+        fail(400, "Invalid export key", "BRIDGE_KEY_INVALID");
+    }
+    if (!EXPORT_KEY_PATTERN.test(key)) {
+        fail(400, "Export key outside the allowed namespace", "BRIDGE_KEY_NOT_ALLOWED");
+    }
+    return key;
+}
+
+/** Byte di un export, con il tetto applicato dal bridge (non dal chiamante). */
+export function assertExportSize(byteLength: unknown): number {
+    if (typeof byteLength !== "number" || !Number.isFinite(byteLength) || byteLength <= 0) {
+        fail(400, "Invalid export size", "BRIDGE_SIZE_INVALID");
+    }
+    if (byteLength > EXPORT_MAX_BYTES) {
+        fail(413, "Export exceeds the allowed maximum", "BRIDGE_SIZE_TOO_LARGE");
+    }
+    return byteLength;
 }
 
 export function assertBasePath(basePath: unknown): string {

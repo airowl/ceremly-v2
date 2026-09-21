@@ -1,8 +1,9 @@
 /**
- * Composable per gestire i tre stati del sito:
+ * Composable per gestire i quattro stati del sito:
  * - waitinglist: Landing page con waiting list attiva, nessun accesso a dashboard/auth
  * - active: SaaS completamente attivo, newsletter invece di waiting list
  * - maintenance: Solo pagina di manutenzione accessibile
+ * - maintenance-readonly: sito navigabile, scritture bloccate
  */
 
 import { resolveSiteMode, type SiteMode } from "~~/shared/constants/siteMode";
@@ -38,16 +39,24 @@ export const useSiteMode = () => {
     const isMaintenanceMode = computed(() => siteMode.value === "maintenance");
 
     /**
+     * Manutenzione in sola lettura: il sito è visibile e navigabile, le scritture
+     * no. La UI non deve nascondere la dashboard — nasconderla sarebbe l'unica
+     * differenza visibile rispetto a `maintenance`, cioè un secondo interruttore
+     * che fa la stessa cosa. Dove una scrittura fallisce lo dice l'API (503).
+     */
+    const isReadOnlyMode = computed(() => siteMode.value === "maintenance-readonly");
+
+    /**
      * Verifica se l'autenticazione è abilitata
      * (disabilitata in waitinglist e maintenance)
      */
-    const isAuthEnabled = computed(() => isActiveMode.value);
+    const isAuthEnabled = computed(() => isActiveMode.value || isReadOnlyMode.value);
 
     /**
      * Verifica se la dashboard è accessibile
-     * (solo in modalità active)
+     * (active, e in sola lettura durante maintenance-readonly)
      */
-    const isDashboardEnabled = computed(() => isActiveMode.value);
+    const isDashboardEnabled = computed(() => isActiveMode.value || isReadOnlyMode.value);
 
     /**
      * Verifica se mostrare la waiting list CTA
@@ -62,7 +71,7 @@ export const useSiteMode = () => {
     /**
      * Verifica se mostrare i link di autenticazione nella navbar/footer
      */
-    const shouldShowAuthLinks = computed(() => isActiveMode.value);
+    const shouldShowAuthLinks = computed(() => isActiveMode.value || isReadOnlyMode.value);
 
     return {
         // Stato
@@ -72,6 +81,7 @@ export const useSiteMode = () => {
         isWaitingListMode,
         isActiveMode,
         isMaintenanceMode,
+        isReadOnlyMode,
         isAuthEnabled,
         isDashboardEnabled,
 
