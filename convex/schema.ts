@@ -93,6 +93,54 @@ export default defineSchema({
         .index("by_org_email", ["organizationId", "email"])
         .index("by_email", ["email"]),
 
+    /**
+     * Minimal `events` slice for the billing spike (plan Task 6, Step 1).
+     *
+     * Task 10 completes this table with the invitation/RSVP fields **without
+     * renaming** what is here: `tier` is the one-time event state (`free` →
+     * `celebration`), `creemOrderId` links a refund back to the event to re-lock,
+     * `creemCheckoutId` is persisted when the checkout is created so a refund
+     * that arrives before `checkout.completed` can still find its event.
+     */
+    events: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        tier: v.union(v.literal("free"), v.literal("celebration")),
+        creemOrderId: v.optional(v.string()),
+        creemCheckoutId: v.optional(v.string()),
+        unlockedAt: v.optional(v.number()),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_creem_order_id", ["creemOrderId"])
+        .index("by_creem_checkout_id", ["creemCheckoutId"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Webhook replay ledger.
+     *
+     * The Creem component keeps no event log of its own, so nothing else stops a
+     * redelivered webhook from running the fulfillment twice. One row per
+     * (provider, providerEventId) makes the side effect exactly-once: a replay
+     * finds the row and returns the recorded outcome without touching any state.
+     */
+    webhookEvents: defineTable({
+        provider: v.string(),
+        providerEventId: v.string(),
+        type: v.string(),
+        outcome: v.union(
+            v.literal("unlocked"),
+            v.literal("already_unlocked"),
+            v.literal("relocked"),
+            v.literal("relock_noop"),
+            v.literal("ignored"),
+            v.literal("rejected_cross_tenant"),
+        ),
+        processedAt: v.number(),
+        details: v.optional(v.any()),
+    })
+        .index("by_provider_event", ["provider", "providerEventId"])
+        .index("by_provider_type", ["provider", "type"]),
+
     auditLogs: defineTable({
         actorAppUserId: v.optional(v.id("appUsers")),
         actorAuthUserId: v.optional(v.string()),

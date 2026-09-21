@@ -9,13 +9,26 @@ export const GATE_AUTH_KEY_ID = "g02-gate-key";
 export interface GateTokenOptions {
     privateKeyPem: string;
     subject: string;
+    /**
+     * Standard OIDC claim Better Auth's payload carries. Omitted, the domain falls
+     * back to a component lookup that only works for real Better Auth user ids —
+     * gate subjects are synthetic, so every gate that needs an email sends one.
+     */
+    email?: string;
+    name?: string;
     /** Seconds of validity; Convex rejects an expired token. */
     expiresInSeconds?: number;
 }
 
 const base64url = (value: string) => Buffer.from(value, "utf8").toString("base64url");
 
-export function signGateToken({ privateKeyPem, subject, expiresInSeconds = 600 }: GateTokenOptions): string {
+export function signGateToken({
+    privateKeyPem,
+    subject,
+    email,
+    name,
+    expiresInSeconds = 600,
+}: GateTokenOptions): string {
     const issuedAt = Math.floor(Date.now() / 1000);
     const header = { alg: "RS256", typ: "JWT", kid: GATE_AUTH_KEY_ID };
     const payload = {
@@ -24,6 +37,8 @@ export function signGateToken({ privateKeyPem, subject, expiresInSeconds = 600 }
         aud: GATE_AUTH_APPLICATION_ID,
         iat: issuedAt,
         exp: issuedAt + expiresInSeconds,
+        ...(email ? { email } : {}),
+        ...(name ? { name } : {}),
     };
 
     const signingInput = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;

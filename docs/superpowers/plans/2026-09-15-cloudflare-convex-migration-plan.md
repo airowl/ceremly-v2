@@ -19,9 +19,10 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 3 / G02:** completato e `PASS` (2026-09-18) contro il dev deployment di staging `airowl/ceremly-staging` → `wary-spaniel-466` (eu-west-1). Tutti i casi dello Step 4 sono verificati live: query pubblica SSR con `suspense()`, opt-out CSR, mutation tipizzata, realtime dopo una write, query autenticata (provider `customJwt` solo-gate), anonimo, refresh forzato singolo e sopravvivenza a un failure transiente della sessione. Evidenza: `docs/migration/evidence/G02-convex-vue.md`.
 - **Task 4 / G03–G05:** completato (2026-09-18) su staging. Better Auth vive nel componente Convex `betterAuth`, il proxy same-origin `/api/auth/*` è implementato dietro `NUXT_AUTH_BACKEND` (default `legacy`, così la produzione Vercel non si sposta) e l'import idempotente delle credenziali è verificato live: `G03=PASS`, `G05=PASS`, `G04=NOT_RUN` (riga OAuth Google bloccata). Evidenza: `docs/migration/evidence/G03-G05-auth.md`.
 - **Task 5 / G06:** completato (2026-09-21) su staging. Organizzazioni, membership e inviti sono tabelle applicative Convex con RBAC risolto server-side; 36 casi `convex-test` ermetici (isolamento cross-tenant, escalation, furto/scadenza/replay dell'invito, accept concorrenti, audit su ogni write) più un sign-up live che ha materializzato `appUsers` + organizzazione personale + membership owner dal trigger `user.create`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
-- **Task 6–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 6 / G07:** completato (2026-09-21) su staging, Creem **test mode**. Il billing è org-scoped — l'entity è sempre l'organizzazione attiva risolta server-side, nessun `entityId` dal client, metadata riservati non falsificabili. 22 casi `convex-test` ermetici (RBAC prima del provider, ledger one-row-per-event, replay no-op, refund che ri-locka e conserva l'order id, completion tardiva rifiutata) più 7 casi live (checkout test-mode reale, completion firmata che sblocca una volta sola, redelivery che non scrive, refund, portal, firma errata → `403`). Evidenza: `docs/migration/evidence/G07-creem.md`.
+- **Task 7–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
-Il prossimo lavoro autorizzato dal piano è il Task 6 (gate G07: billing Creem per organizzazione).
+Il prossimo lavoro autorizzato dal piano è il Task 7 (gate G08: R2 e varianti osservabili con Cloudflare Images).
 
 ## Global Constraints
 
@@ -578,13 +579,13 @@ git commit -m "feat(migration): enforce Convex tenant RBAC"
 - Consumes: `requireRole(ctx, ["owner"])`, organizzazione attiva.
 - Produces: `api.billing.checkoutsCreate`, `api.billing.customersPortalUrl`, `api.billing.planForActiveOrganization`, `internal.billing.syncBillingProducts`.
 
-- [ ] **Step 1: Scrivere test RBAC e idempotenza webhook**
+- [x] **Step 1: Scrivere test RBAC e idempotenza webhook**
 
 Verificare che `entityId` sia sempre l'ID Convex dell'organizzazione attiva, che un ID passato dal browser sia ignorato/rifiutato, che solo owner apra checkout/portal e che lo stesso evento webhook ripetuto non sblocchi due volte un evento né duplichi audit.
 
 Per lo spike aggiungere a `convex/schema.ts` la porzione minima `events` (`legacyId`, `organizationId`, `tier`, `creemOrderId`, `creemCheckoutId`, `unlockedAt`) e `webhookEvents` (`provider`, `providerEventId`, `processedAt`, `outcome`); il Task 10 completa la tabella senza rinominare questi campi.
 
-- [ ] **Step 2: Incapsulare l'API ufficiale**
+- [x] **Step 2: Incapsulare l'API ufficiale**
 
 ```ts
 export const creem = new Creem(components.creem);
@@ -605,15 +606,15 @@ export const checkoutsCreate = billingApi.checkouts.create;
 export const customersPortalUrl = billingApi.customers.portalUrl;
 ```
 
-- [ ] **Step 3: Registrare webhook e sync prodotti**
+- [x] **Step 3: Registrare webhook e sync prodotti**
 
 Chiamare `creem.registerRoutes(http)` nello stesso `convex/http.ts`; esporre `syncBillingProducts` come `internalAction` e avviarlo con `pnpm convex run billing:syncBillingProducts`. Mappare esattamente `free`, `celebration`, `atelier` dai product ID Convex env.
 
-- [ ] **Step 4: Reconciliation con lo stato esistente**
+- [x] **Step 4: Reconciliation con lo stato esistente**
 
 `reconcile-creem.ts` confronta customer ID, subscription ID, order ID, product, status, periodi ed entity org. Produce JSON con soli identificatori e mismatch; exit code `1` se esiste un mismatch.
 
-- [ ] **Step 5: Eseguire G07 e commit**
+- [x] **Step 5: Eseguire G07 e commit**
 
 Su Creem test mode: checkout celebration, subscription atelier, portal, webhook replay, cancel/refund e re-lock evento.
 

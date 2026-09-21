@@ -95,10 +95,18 @@ export async function getAuthEmail(ctx: ReadCtx, authUserId: string): Promise<st
         return normalizeEmail(identity.email);
     }
 
-    const user = (await ctx.runQuery(components.betterAuth.adapter.findOne, {
-        model: "user",
-        where: [{ field: "_id", value: authUserId }],
-    })) as { email?: unknown } | null;
+    let user: { email?: unknown } | null = null;
+    try {
+        user = (await ctx.runQuery(components.betterAuth.adapter.findOne, {
+            model: "user",
+            where: [{ field: "_id", value: authUserId }],
+        })) as { email?: unknown } | null;
+    } catch {
+        // A subject the component cannot even decode (a foreign issuer, or a test
+        // identity) is "no email available", not a server error: the caller gets a
+        // named code it can act on instead of a decoder stack trace.
+        user = null;
+    }
 
     const email = typeof user?.email === "string" ? user.email : "";
     if (email.length === 0) {

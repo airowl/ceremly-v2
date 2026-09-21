@@ -49,3 +49,33 @@ export const CEREMLY_TIER_LIMITS: Record<
 export const CELEBRATION_PRICE_CENTS = 3900;
 /** Prezzo Atelier (recurring mensile, centesimi EUR). */
 export const ATELIER_PRICE_CENTS = 2400;
+
+/**
+ * Piani che descrivono un'ORGANIZZAZIONE. 'celebration' è lo stato di un singolo
+ * evento e non compare qui: è la distinzione che regge il billing org-scoped
+ * (Task 6 della migrazione, `convex/billing.ts`).
+ */
+export const CEREMLY_ORG_PLANS = ["free", "atelier"] as const;
+export type CeremlyOrgPlan = (typeof CEREMLY_ORG_PLANS)[number];
+
+/**
+ * Nomi delle env che espongono i product ID Creem.
+ *
+ * Due famiglie, per costruzione: `NUXT_CREEM_PRODUCT_ID_*` è la configurazione
+ * del deployment Nuxt/Vercel legacy, `CREEM_PRODUCT_ID_*` è quella delle funzioni
+ * Convex (che non leggono mai `NUXT_*`). Gli script di migrazione e
+ * riconciliazione leggono entrambe da qui, così i due mondi non divergono in
+ * silenzio.
+ */
+export const CREEM_PRODUCT_ENV = {
+    legacy: {
+        celebration: "NUXT_CREEM_PRODUCT_ID_CELEBRATION",
+        atelier: "NUXT_CREEM_PRODUCT_ID_ATELIER",
+    },
+    convex: {
+        celebration: "CREEM_PRODUCT_ID_CELEBRATION",
+        atelier: "CREEM_PRODUCT_ID_ATELIER",
+    },
+} as const;
+
+export type CeremlyPaidTier = keyof typeof CREEM_PRODUCT_ENV.convex;

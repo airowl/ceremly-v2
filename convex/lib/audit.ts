@@ -22,6 +22,7 @@ export const AUDIT_CATEGORIES = [
     "event",
     "guest",
     "organization",
+    "payment",
     "team",
     "user",
     "admin",
@@ -42,6 +43,14 @@ const AUDIT_ACTION_CATEGORY = {
     "team.invite_accepted": "team",
     "team.member_removed": "team",
     "team.permissions_updated": "team",
+    // Billing (Task 6). `checkout.completed` / `event.unlocked` / `event.relocked`
+    // keep the legacy taxonomy so the migrated records stay greppable next to
+    // the historical ones; `billing.checkout_created` is new (the legacy app
+    // audited neither the checkout creation nor the portal).
+    "billing.checkout_created": "payment",
+    "checkout.completed": "payment",
+    "event.unlocked": "event",
+    "event.relocked": "event",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;

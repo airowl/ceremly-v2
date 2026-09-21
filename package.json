@@ -20,6 +20,8 @@
     "test:gate:g02": "G02_GATE=live vitest run test/migration/g02-live",
     "test:gate:g03-g05": "tsx scripts/migration/seed-auth-fixture.ts && tsx scripts/migration/export-auth.ts --out .gate/auth-export --fixtures && G03_GATE=live vitest run test/migration/g03-g05-live",
     "test:gate:g06": "vitest run convex/organizations.test.ts convex/auth.test.ts",
+    "test:gate:g07": "G07_GATE=live vitest run test/migration/g07-live-billing",
+    "reconcile:creem": "tsx scripts/migration/reconcile-creem.ts",
     "build:cloudflare": "NUXT_NITRO_PRESET=cloudflare nuxt build",
     "preview:cloudflare": "pnpm build:cloudflare && wrangler dev",
     "deploy:cloudflare:staging": "pnpm build:cloudflare && wrangler deploy --env staging",
