@@ -25,6 +25,36 @@ const invitationStatus = v.union(
     v.literal("expired"),
 );
 
+/** Upload lifecycle of a `files` row (plan Task 7). */
+const uploadStatus = v.union(
+    v.literal("pending"),
+    v.literal("active"),
+    v.literal("failed"),
+);
+
+/**
+ * Variant pipeline state of a processable original (plan Task 7, Step 3).
+ *
+ * `none` is the terminal state of anything that is not an image (and of the
+ * variant rows themselves); `failed` is terminal and visible, never a silent
+ * empty result — an image that could not be processed must be distinguishable
+ * from one that needs no processing.
+ */
+const variantStatus = v.union(
+    v.literal("none"),
+    v.literal("pending"),
+    v.literal("processing"),
+    v.literal("ready"),
+    v.literal("retrying"),
+    v.literal("failed"),
+);
+
+const fileVariantType = v.union(
+    v.literal("original"),
+    v.literal("thumb"),
+    v.literal("web"),
+);
+
 export default defineSchema({
     migrationHealth: defineTable({
         key: v.string(),
@@ -157,4 +187,59 @@ export default defineSchema({
         .index("by_actor", ["actorAppUserId"])
         .index("by_action", ["action"])
         .index("by_created_at", ["createdAt"]),
+
+    /**
+     * Files and their image variants (plan Task 7, spike G08).
+     *
+     * The R2 bucket, the object keys and the `{basePath}/thumb.webp` /
+     * `{basePath}/web.webp` layout are **unchanged** from the legacy app: this
+     * table replaces the Neon `file` row, not the objects. `path` holds the R2
+     * key of this object; `basePath` is the stable directory shared by the
+     * original and its variants (which is what lets a variant be written without
+     * re-deriving the key from the original name).
+     *
+     * A pending presigned upload exists *before* the bytes do (legacy parity: the
+     * checkout id / file row is written before payment / upload so a later step
+     * can still find it), which is why `uploadStatus` and `presignExpiresAt` are
+     * part of the row rather than a separate table.
+     *
+     * Every index a query uses starts with `organizationId` where the query is
+     * tenant-scoped: `by_org_sha256` is the dedup key, `by_org_pending` is the
+     * presign sweep, `by_variant_status` drives retry/admin.
+     */
+    files: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        uploadedBy: v.optional(v.id("appUsers")),
+        originalName: v.string(),
+        mimeType: v.string(),
+        fileType: v.string(),
+        size: v.number(),
+        /** R2 object key of this object (original or variant). */
+        path: v.string(),
+        /** Stable directory of the original; variants live beside it. */
+        basePath: v.string(),
+        url: v.optional(v.union(v.string(), v.null())),
+        isPublic: v.boolean(),
+        isActive: v.boolean(),
+        uploadStatus,
+        presignExpiresAt: v.optional(v.number()),
+        /** Content digest; the dedup key with `organizationId`. */
+        sha256: v.optional(v.string()),
+        variantOf: v.optional(v.id("files")),
+        variantType: fileVariantType,
+        variantStatus,
+        variantAttempts: v.number(),
+        variantError: v.optional(v.string()),
+        variantUpdatedAt: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_org_sha256", ["organizationId", "sha256"])
+        .index("by_org_upload_status", ["organizationId", "uploadStatus"])
+        .index("by_org_variant_status", ["organizationId", "variantStatus"])
+        .index("by_variant_of", ["variantOf"])
+        .index("by_variant_status", ["variantStatus", "variantUpdatedAt"])
+        .index("by_legacy_id", ["legacyId"]),
 });

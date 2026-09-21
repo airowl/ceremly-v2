@@ -20,6 +20,7 @@ export const AUDIT_CATEGORIES = [
     "auth",
     "email",
     "event",
+    "file",
     "guest",
     "organization",
     "payment",
@@ -51,6 +52,17 @@ const AUDIT_ACTION_CATEGORY = {
     "checkout.completed": "payment",
     "event.unlocked": "event",
     "event.relocked": "event",
+    // Files and media (Task 7). The five `file.*` names are the legacy taxonomy
+    // (`server/utils/audit/types.ts`), so migrated records stay greppable next to
+    // the historical ones; the two `file.variant_*` names are new (the legacy app
+    // only logged variant failures to the console).
+    "file.presign_requested": "file",
+    "file.upload_confirmed": "file",
+    "file.uploaded": "file",
+    "file.dedup_matched": "file",
+    "file.deleted": "file",
+    "file.variant_ready": "file",
+    "file.variant_failed": "file",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;

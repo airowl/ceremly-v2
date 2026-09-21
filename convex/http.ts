@@ -1,6 +1,8 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
 import { creem, normalizeCreemEvent } from "./billing";
+import { httpAction } from "./_generated/server";
+import { verifyBridgeRequest } from "./lib/bridgeHmac";
 import { internal } from "./_generated/api";
 
 // Task 4 (migration): Better Auth's own routes, registered on this deployment's
@@ -48,5 +50,77 @@ creem.registerRoutes(http, {
         },
     },
 });
+
+// Task 7 (migration): the media bridge's result callback.
+//
+// An `internalMutation` is not reachable over HTTP, so the Worker that generated
+// the variants reports back here. The only credential accepted is the same HMAC
+// the Convex action used to call the Worker — verified over method/path/timestamp/
+// nonce/body-digest, so a captured callback cannot be replayed outside the skew
+// window. `processVariantResult` is idempotent by (variantOf, variantType), which
+// is what makes a redelivered callback harmless.
+const MEDIA_CALLBACK_PATH = "/media/variant-result";
+
+http.route({
+    path: MEDIA_CALLBACK_PATH,
+    method: "POST",
+    handler: httpAction(async (ctx, request) => {
+        const secret = process.env.STORAGE_BRIDGE_SECRET;
+        if (!secret) {
+            return json({ ok: false, code: "STORAGE_BRIDGE_NOT_CONFIGURED" }, 503);
+        }
+
+        const body = await request.text();
+        const headers: Record<string, string> = {};
+        request.headers.forEach((value, key) => {
+            headers[key] = value;
+        });
+
+        const verification = await verifyBridgeRequest({
+            secret,
+            method: "POST",
+            path: MEDIA_CALLBACK_PATH,
+            headers,
+            body,
+        });
+        if (!verification.ok) {
+            return json({ ok: false, code: verification.code }, 401);
+        }
+
+        let payload: {
+            fileId: string;
+            ok: boolean;
+            variants?: Array<{ type: string; key: string; size: number; sha256?: string }>;
+            error?: string;
+        };
+        try {
+            payload = JSON.parse(body) as typeof payload;
+        } catch {
+            return json({ ok: false, code: "BRIDGE_BODY_INVALID" }, 400);
+        }
+
+        try {
+            const result = await ctx.runMutation(internal.media.processVariantResult, {
+                fileId: payload.fileId as never,
+                ok: payload.ok,
+                variants: payload.variants as never,
+                error: payload.error,
+            });
+            return json({ ok: true, ...result }, 200);
+        } catch (error) {
+            // A rejected callback is reported as a 422, never swallowed: the Worker
+            // must see that its result was refused so it can surface the failure.
+            const message = error instanceof Error ? error.message : String(error);
+            return json({ ok: false, code: "VARIANT_RESULT_REJECTED", message }, 422);
+        }
+    }),
+});
+
+function json(body: Record<string, unknown>, status: number): Response {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json" },
+    });
+}
 
 export default http;

@@ -20,9 +20,10 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 4 / G03–G05:** completato (2026-09-18) su staging. Better Auth vive nel componente Convex `betterAuth`, il proxy same-origin `/api/auth/*` è implementato dietro `NUXT_AUTH_BACKEND` (default `legacy`, così la produzione Vercel non si sposta) e l'import idempotente delle credenziali è verificato live: `G03=PASS`, `G05=PASS`, `G04=NOT_RUN` (riga OAuth Google bloccata). Evidenza: `docs/migration/evidence/G03-G05-auth.md`.
 - **Task 5 / G06:** completato (2026-09-21) su staging. Organizzazioni, membership e inviti sono tabelle applicative Convex con RBAC risolto server-side; 36 casi `convex-test` ermetici (isolamento cross-tenant, escalation, furto/scadenza/replay dell'invito, accept concorrenti, audit su ogni write) più un sign-up live che ha materializzato `appUsers` + organizzazione personale + membership owner dal trigger `user.create`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
 - **Task 6 / G07:** completato (2026-09-21) su staging, Creem **test mode**. Il billing è org-scoped — l'entity è sempre l'organizzazione attiva risolta server-side, nessun `entityId` dal client, metadata riservati non falsificabili. 22 casi `convex-test` ermetici (RBAC prima del provider, ledger one-row-per-event, replay no-op, refund che ri-locka e conserva l'order id, completion tardiva rifiutata) più 7 casi live (checkout test-mode reale, completion firmata che sblocca una volta sola, redelivery che non scrive, refund, portal, firma errata → `403`). Evidenza: `docs/migration/evidence/G07-creem.md`.
-- **Task 7–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 7 / G08:** completato (2026-09-21). File e varianti immagine sono dominio Convex dietro un bridge firmato HMAC; il bucket, le chiavi R2 e il layout `{basePath}/thumb.webp` / `web.webp` restano invariati. 32 casi ermetici (ordine autorizzazione→validazione→provider, magic bytes prima di `ready`, dedup tenant-scoped, macchina a stati con due varianti max, cinque tentativi e `failed` terminale, contratto di firma tra Convex e Worker) più una run live del Worker costruito su `wrangler dev`: presign firmato → URL R2 reale, richieste non firmate/stale/tampered/replay rifiutate, e un PNG da 51 kB trasformato in `thumb.webp` (4,7 kB) e `web.webp` (19,2 kB). Evidenza: `docs/migration/evidence/G08-media.md`.
+- **Task 8–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
-Il prossimo lavoro autorizzato dal piano è il Task 7 (gate G08: R2 e varianti osservabili con Cloudflare Images).
+Il prossimo lavoro autorizzato dal piano è il Task 8 (gate G09: matrice protezioni e rate limiting).
 
 ## Global Constraints
 
@@ -639,21 +640,21 @@ git commit -m "feat(migration): prove organization-scoped Creem billing"
 **Interfaces:**
 - Produces: `api.files.presignUpload`, `api.files.confirmUpload`, `api.files.downloadUrl`, `api.files.remove`, bridge Worker firmati `POST /api/internal/storage/presign`, `POST /api/internal/storage/object` e `POST /api/internal/media/process`, `internal.media.processVariantResult`, stati `pending|processing|ready|retrying|failed`.
 
-- [ ] **Step 1: Estendere schema file e job**
+- [x] **Step 1: Estendere schema file e job**
 
 Creare la tabella `files` in `convex/schema.ts`. Ogni originale processabile porta `variantStatus`, `variantAttempts`, `variantError`, `variantUpdatedAt`; ogni variante usa `variantOf`, `variantType`, chiave R2 derivata stabile e checksum. L'indice `by_variant_status` alimenta retry/admin.
 
-- [ ] **Step 2: Scrivere test di autorizzazione e stato**
+- [x] **Step 2: Scrivere test di autorizzazione e stato**
 
 Verificare presign solo per membro autorizzato, conferma solo per chiave emessa, magic bytes prima dello stato `ready`, idempotenza per `sha256+organizationId`, due varianti al massimo, retry fino a 5 e `failed` terminale visibile.
 
-- [ ] **Step 3: Processare con Images binding senza cambiare bucket**
+- [x] **Step 3: Processare con Images binding senza cambiare bucket**
 
 `api.files.presignUpload` è una action Convex: autorizza utente e quota, poi chiama `/api/internal/storage/presign` con payload canonico, timestamp, nonce e firma HMAC. Il Worker conserva le credenziali R2, limita expiry, content type, size e key prefix, e restituisce l'URL firmato; nonce e timestamp impediscono replay. `confirmUpload` usa `/api/internal/storage/object` per HEAD e lettura magic bytes prima di marcare il file pronto; lo stesso bridge esegue delete autorizzato. La variante download di `presign` emette URL brevi soltanto dopo l'autorizzazione Convex.
 
 Il Worker media usa lo stesso schema di firma, legge l'originale da `CEREMLY_R2`, genera `thumb` 400px WebP quality 80 e `web` 1600px WebP quality 85 tramite `env.IMAGES`, salva nelle chiavi esistenti `{basePath}/thumb.webp` e `{basePath}/web.webp`, quindi notifica Convex con firma HMAC. Nessun fallback silenzioso restituisce array vuoto.
 
-- [ ] **Step 4: Provare file legacy e failure injection**
+- [x] **Step 4: Provare file legacy e failure injection**
 
 Testare una chiave R2 esistente, un'immagine piccola, JPEG/PNG/WebP/AVIF, payload non immagine, timeout Images e retry manuale da funzione admin. Salvare conteggi e chiavi pseudonime in `docs/migration/evidence/G08-media.md`.
 
@@ -663,6 +664,8 @@ Testare una chiave R2 esistente, un'immagine piccola, JPEG/PNG/WebP/AVIF, payloa
 git add convex/files.ts convex/media.ts convex/media.test.ts server/api/internal/storage server/api/internal/media server/types/cloudflare.d.ts wrangler.jsonc docs/migration
 git commit -m "feat(migration): prove observable R2 image variants"
 ```
+
+*(2026-09-21: eseguito — `pnpm test:gate:g08` verde (32 casi) e `G08=PASS` nel ledger. Nota: `wrangler.jsonc` non è stato modificato — i binding `CEREMLY_R2` e `IMAGES` esistevano già da G01 e il secret del bridge è una variabile d'ambiente, non un valore committato. Il commit ha incluso anche `shared/migration/bridgeProtocol.ts`, `server/utils/storageBridge.ts`, `server/utils/storageBridgeObjects.ts`, `server/services/file/bridgePolicy.ts`, `server/types/images.ts`, `convex/lib/*` e `package.json`.)*
 
 ### Task 8: Spike G09 — matrice protezioni e rate limiting
 

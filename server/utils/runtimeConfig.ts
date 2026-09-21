@@ -7,7 +7,21 @@ import { config } from "dotenv";
 declare module "@nuxt/schema" {
     interface RuntimeConfig {
         fileManager: FileManagerConfig;
+        storageBridge: StorageBridgeRuntimeConfig;
     }
+}
+
+/**
+ * The Convex ⇄ Worker bridge (Task 7).
+ *
+ * `secret` is the same value the Convex deployment holds as
+ * `STORAGE_BRIDGE_SECRET`: it signs both directions (Convex → Worker calls, and
+ * the Worker → Convex media callback). It never reaches the browser.
+ */
+export interface StorageBridgeRuntimeConfig {
+    secret?: string;
+    /** Max accepted HMAC age, in milliseconds. */
+    maxSkewMs: number;
 }
 
 let runtimeConfigInstance: NitroRuntimeConfig;
@@ -41,6 +55,13 @@ export const generateRuntimeConfig = () => {
         databaseUrl: process.env.NUXT_DATABASE_URL,
         // Admin API
         adminApiKey: process.env.NUXT_ADMIN_API_KEY,
+        // Storage/media bridge (Task 7): the HMAC secret shared with the Convex
+        // deployment (`STORAGE_BRIDGE_SECRET` there, `NUXT_STORAGE_BRIDGE_SECRET`
+        // here). Absent = the bridge endpoints refuse every request.
+        storageBridge: {
+            secret: process.env.NUXT_STORAGE_BRIDGE_SECRET,
+            maxSkewMs: 60_000,
+        } satisfies StorageBridgeRuntimeConfig,
         // QStash (background jobs)
         qstashToken: process.env.NUXT_QSTASH_TOKEN,
         qstashCurrentSigningKey: process.env.NUXT_QSTASH_CURRENT_SIGNING_KEY,
