@@ -21,9 +21,11 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 5 / G06:** completato (2026-09-21) su staging. Organizzazioni, membership e inviti sono tabelle applicative Convex con RBAC risolto server-side; 36 casi `convex-test` ermetici (isolamento cross-tenant, escalation, furto/scadenza/replay dell'invito, accept concorrenti, audit su ogni write) più un sign-up live che ha materializzato `appUsers` + organizzazione personale + membership owner dal trigger `user.create`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
 - **Task 6 / G07:** completato (2026-09-21) su staging, Creem **test mode**. Il billing è org-scoped — l'entity è sempre l'organizzazione attiva risolta server-side, nessun `entityId` dal client, metadata riservati non falsificabili. 22 casi `convex-test` ermetici (RBAC prima del provider, ledger one-row-per-event, replay no-op, refund che ri-locka e conserva l'order id, completion tardiva rifiutata) più 7 casi live (checkout test-mode reale, completion firmata che sblocca una volta sola, redelivery che non scrive, refund, portal, firma errata → `403`). Evidenza: `docs/migration/evidence/G07-creem.md`.
 - **Task 7 / G08:** completato (2026-09-21). File e varianti immagine sono dominio Convex dietro un bridge firmato HMAC; il bucket, le chiavi R2 e il layout `{basePath}/thumb.webp` / `web.webp` restano invariati. 32 casi ermetici (ordine autorizzazione→validazione→provider, magic bytes prima di `ready`, dedup tenant-scoped, macchina a stati con due varianti max, cinque tentativi e `failed` terminale, contratto di firma tra Convex e Worker) più una run live del Worker costruito su `wrangler dev`: presign firmato → URL R2 reale, richieste non firmate/stale/tampered/replay rifiutate, e un PNG da 51 kB trasformato in `thumb.webp` (4,7 kB) e `web.webp` (19,2 kB). Evidenza: `docs/migration/evidence/G08-media.md`.
-- **Task 9–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 8 / G09:** completato (2026-09-21). Matrice eseguibile in `docs/migration/protection-matrix.md` (colonna *dichiarata* vs *osservata*), limiter Convex come unica porta d'ingresso per il budget con check e incremento nella stessa mutation, chiavi salvate solo come digest. 36 casi di gate più prove live su Worker e staging. Il gate ha trovato tre difetti reali (Assets layer di Workers senza header di sicurezza né cache immutabile → `public/_headers`; `/api/auth/*` come proxy trasparente; regole brute-force legacy perse nella config Convex di Better Auth → `storage: "database"`). Evidenza: `docs/migration/evidence/G09-protections.md`.
+- **Task 9 / G10:** parzialmente completato (2026-09-21) — modello e misure fatti, gate **`NOT_RUN`** perché gli alert di budget non sono configurabili da questo repository. `docs/migration/cost-model.md` contiene la formula, le assunzioni con provenienza, i prezzi datati e il confronto a 20/50/100/1.000 planner; `scripts/migration/load-model.ts` è puro e coperto da 17 casi, `scripts/migration/load-runner.ts` misura la fan-out reattiva sul deployment di staging (esattamente una ri-esecuzione per subscriber effettivo a 1/5/20 client, zero per una scrittura che non cambia il risultato).
+- **Task 10–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
-Il prossimo lavoro autorizzato dal piano è il Task 8 (gate G09: matrice protezioni e rate limiting).
+Il checkpoint hard dello Step 5 del Task 9 ha dato **8**, non 10: `G04` (OAuth Google) e `G10` (alert di budget) sono `NOT_RUN` per due accessi esterni che questo ambiente non ha, e per la regola del piano l'esecuzione si è **fermata** lì — il Task 10 non è stato iniziato. Entrambi i gate sono documentati nel ledger con la stessa disciplina (non eseguiti, non falliti, requisiti invariati) e si chiudono con un Google client di staging e un accesso alla dashboard; le quattro soglie di alert sono tabulate in `docs/migration/cost-model.md`.
 
 ## Global Constraints
 
@@ -723,7 +725,7 @@ git commit -m "feat(migration): map and enforce edge protection"
 **Interfaces:**
 - Produces: report per 20, 50, 100, 1.000 utenti con `explicitCalls`, `scheduledCalls`, `fileCalls`, `reactiveReexecutions`, DB bandwidth/storage, action compute, R2, Resend e traffico pubblico.
 
-- [ ] **Step 1: Scrivere il test della formula**
+- [x] **Step 1: Scrivere il test della formula**
 
 ```ts
 it("counts reactive fan-out instead of flat calls per planner", () => {
@@ -739,7 +741,7 @@ it("counts reactive fan-out instead of flat calls per planner", () => {
 });
 ```
 
-- [ ] **Step 2: Implementare il modello puro**
+- [x] **Step 2: Implementare il modello puro**
 
 ```ts
 export interface LoadInputs {
@@ -760,15 +762,15 @@ export function monthlyCalls(input: LoadInputs) {
 }
 ```
 
-- [ ] **Step 3: Eseguire carico sintetico staging**
+- [x] **Step 3: Eseguire carico sintetico staging**
 
 `load-runner.ts` riproduce mix misurato di login, dashboard, editor evento, guest import, RSVP, reminder, upload, checkout e admin. Per ogni scenario apre 1/5/20 subscription concorrenti e misura dashboard Convex/Cloudflare prima e dopo.
 
-- [ ] **Step 4: Produrre confronto e gate**
+- [x] **Step 4: Produrre confronto e gate**
 
 `cost-model.md` contiene assunzioni, misure, prezzi datati 2026-09-15, interpolazione mensile e margine 30%. `G10=PASS` richiede una fascia scelta esplicitamente e budget/usage alert configurati; nessuna stima usa “1.000 call/planner”.
 
-- [ ] **Step 5: Commit e checkpoint hard**
+- [x] **Step 5: Commit e checkpoint hard**
 
 ```bash
 git add scripts/migration/load-model.ts scripts/migration/load-runner.ts test/migration/load-model.test.ts docs/migration
@@ -778,6 +780,8 @@ git commit -m "test(migration): validate Convex cost model"
 Run: `rg -n '\| G(0[1-9]|10) \| PASS \|' docs/migration/gates.md | wc -l`
 
 Expected: `10`. Se il risultato è diverso, fermare l'esecuzione del piano.
+
+*(2026-09-21: eseguito — il checkpoint ha dato **8**, non 10, e per la regola del piano l'esecuzione si è **fermata** qui: il Task 10 non è iniziato. I due gate mancanti non sono falliti, sono non eseguibili da questo repository, e per entrambi la causa è un accesso esterno e non una lacuna del lavoro: **G04** aspetta un Google client con redirect URI su staging e una consent screen reale (vedi `docs/migration/evidence/G03-G05-auth.md`), **G10** aspetta un accesso alla dashboard — i limiti di spesa Convex sono solo dashboard (`convex --help` verificato: nessun comando di budget) e l'alerting Cloudflare richiede un API token che in `.env` non c'è, solo le chiavi S3 di R2. Entrambi registrati `NOT_RUN` nel ledger con la stessa disciplina, e i due requisiti restano invariati. Deviazioni dal piano, misurate: (a) l'input `subscribersPerWrite` del piano è stato scomposto in fan-out **per flusso** con un flag `watched`, perché un `writes × subscribers` globale non può rappresentare l'RSVP pubblico né lo sweep notturno, dove chi scrive non è chi guarda — il test asserisce che i totali per flusso sommino al totale aggregato; (b) il runner misura 1/5/20 subscriber e scopre che una scrittura che non cambia il valore sottoscritto costa **zero** ri-esecuzioni, quindi il termine del modello è `watched writes`, non `mutations`; (c) `scripts/migration/load-runner.ts` è nuovo rispetto al piano e `test/setup` non è stato toccato. Il modello è puro e testato (17 casi), il runner ha misurato latenze p50/p95 e payload reali, e il documento dichiara esplicitamente cosa non è misurato: le dashboard prima/dopo e i flussi `events`/`guests`/`rsvp`/`reminders`, che non esistono ancora (Tasks 10–12).)*
 
 ### Task 10: Schema Convex completo e import domain-safe
 
