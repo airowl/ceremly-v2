@@ -7,6 +7,7 @@ import { DOMAIN_WRITE_ROLES, requireRole } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { signBridgeRequest } from "./lib/bridgeHmac";
 import { validateMagicBytes } from "./lib/magicBytes";
+import { assertRateLimit } from "./lib/rateLimit";
 import {
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE_BYTES,
@@ -449,6 +450,15 @@ export const presignUpload = action({
             throw forbidden("FILE_TYPE_NOT_ALLOWED", { mimeType: args.mimeType });
         }
 
+        // Budget check after authorization and the cheap validation, before the
+        // bridge call: a presign mints a URL against the real bucket, so it is the
+        // expensive step to protect. Keyed by the *caller*, not by the file, so
+        // creating more rows cannot buy more budget. Plan Task 8 (`filePresign`).
+        await assertRateLimit(ctx, {
+            bucket: "filePresign",
+            key: `${authz.appUserId}:${authz.organizationId}`,
+        });
+
         if (args.eventId) {
             await ctx.runQuery(internal.files.assertEventAccess, {
                 organizationId: authz.organizationId,
@@ -506,6 +516,15 @@ export const confirmUpload = action({
     args: { fileId: v.id("files") },
     handler: async (ctx, args): Promise<ConfirmResult> => {
         const authz: UploadAuthz = await ctx.runQuery(internal.files.uploadAuthz, {});
+
+        // Confirm is what reads the object and can start variant work, so it has
+        // its own (looser) budget: an attacker cannot mint presigns past the
+        // limit, but a legitimate multi-file picker still confirms in a burst.
+        await assertRateLimit(ctx, {
+            bucket: "fileConfirm",
+            key: `${authz.appUserId}:${authz.organizationId}`,
+        });
+
         const pending: Doc<"files"> = await ctx.runQuery(internal.files.getPendingForConfirm, {
             fileId: args.fileId,
             appUserId: authz.appUserId,

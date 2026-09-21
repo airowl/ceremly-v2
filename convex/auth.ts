@@ -69,6 +69,43 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         baseURL: siteUrl(),
         secret: requireEnv("BETTER_AUTH_SECRET"),
         database: authComponent.adapter(ctx),
+        /**
+         * Brute-force protection (plan Task 8, spike G09).
+         *
+         * Ported from the legacy server (`server/utils/auth.ts`) because the
+         * migration would otherwise have *lost* it: with no `rateLimit` block,
+         * Better Auth falls back to its own defaults — `window: 10`, `max: 100`,
+         * and `storage: "memory"`. On serverless, memory is per isolate: the
+         * counter resets on every cold start and is not shared, which is not a
+         * limiter. The legacy deploy avoided that with `storage:
+         * "secondary-storage"` (Upstash); the Convex equivalent is
+         * `"database"`, which Better Auth routes through
+         * `createDatabaseStorageWrapper` → the component's own `rateLimit` table
+         * (that is why the table exists), so the count is shared across isolates.
+         *
+         * `enabled: true` is deliberate and deviates from Better Auth's default
+         * (`isProduction`): a brute-force guard that is off wherever
+         * `NODE_ENV !== "production"` is a guard that can silently be absent in
+         * exactly the environments where it is being rehearsed. Explicit is what
+         * makes the burst test in `convex/auth.test.ts` meaningful.
+         *
+         * The thresholds mirror the legacy custom rules verbatim — sign-in 10/min,
+         * password-reset request 5/min, reset 10/min — and the edge rule the plan's
+         * matrix assigns to `/api/auth/*` (Cloudflare) still owns volumetric
+         * abuse, because this limiter is keyed per IP+path and lives one hop
+         * behind the proxy.
+         */
+        rateLimit: {
+            enabled: true,
+            storage: "database",
+            window: 60,
+            max: 100,
+            customRules: {
+                "/sign-in/email": { window: 60, max: 10 },
+                "/request-password-reset": { window: 60, max: 5 },
+                "/reset-password": { window: 60, max: 10 },
+            },
+        },
         // No `crossDomain`: the browser talks to the Nuxt origin and the Worker
         // forwards `/api/auth/*` to this deployment (Task 4 Step 2), so SITE_URL
         // is the canonical, same-origin baseURL.

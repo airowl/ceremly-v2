@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { initConvexTest } from "./test.setup";
+import { initConvexTest, initConvexTestWithAuthComponent } from "./test.setup";
 import { createAuth } from "./auth";
+import { components } from "./_generated/api";
 import { DEFAULT_LOCALE } from "./organizations";
 
 type Test = ReturnType<typeof initConvexTest>;
@@ -61,6 +62,94 @@ async function runCreateTrigger(t: Test, user: { id: string; email: string; name
         vi.useRealTimers();
     }
 }
+
+/**
+ * One sign-in attempt through the real Better Auth handler, as the Worker proxy
+ * would deliver it. The IP is pinned with `x-forwarded-for` so the counter key is
+ * deterministic (Better Auth's default storage is memory, whose counters are
+ * invisible to a test).
+ */
+async function attemptSignIn(t: Awaited<ReturnType<typeof initConvexTestWithAuthComponent>>, ip = "203.0.113.9") {
+    return await t.action(async (ctx) => {
+        const auth = createAuth(ctx);
+        const response = await auth.handler(
+            new Request("https://staging.example/api/auth/sign-in/email", {
+                method: "POST",
+                headers: { "content-type": "application/json", "x-forwarded-for": ip },
+                body: JSON.stringify({ email: "rate-limit-gate@example.com", password: "not-the-password" }),
+            }),
+        );
+
+        return { status: response.status, retryAfter: response.headers.get("x-retry-after") };
+    });
+}
+
+/**
+ * G09 — the brute-force limiter on the auth surface (plan Task 8).
+ *
+ * The legacy server had explicit rules (sign-in 10/min, reset 5/min) on top of
+ * Upstash; without a ported config the Convex deployment would fall back to
+ * `memory` storage, which on serverless is per-isolate. This asserts both halves:
+ * the rules are the legacy ones, and the counters land in the component's database.
+ */
+describe("Better Auth rate limiting", () => {
+    it("keeps the legacy thresholds and stores counters in the database", async () => {
+        const t = initConvexTest();
+
+        const options = await t.action(async (ctx) => createAuth(ctx).options.rateLimit);
+
+        expect(options).toMatchObject({
+            enabled: true,
+            storage: "database",
+            window: 60,
+            max: 100,
+            customRules: {
+                "/sign-in/email": { window: 60, max: 10 },
+                "/request-password-reset": { window: 60, max: 5 },
+                "/reset-password": { window: 60, max: 10 },
+            },
+        });
+    });
+
+    it("refuses the eleventh sign-in attempt in the same window", async () => {
+        const t = await initConvexTestWithAuthComponent();
+
+        for (let attempt = 1; attempt <= 10; attempt += 1) {
+            const response = await attemptSignIn(t);
+            expect(response.status, `attempt ${attempt} must not be limited`).not.toBe(429);
+        }
+
+        const limited = await attemptSignIn(t);
+        expect(limited.status).toBe(429);
+        expect(Number(limited.retryAfter)).toBeGreaterThan(0);
+
+        // The counters are rows in the component's `rateLimit` table, not an
+        // in-process map: that is what makes the limit survive a cold start and
+        // hold across isolates.
+        const counters = await t.action(async (ctx) =>
+            await ctx.runQuery(components.betterAuth.adapter.findMany, {
+                model: "rateLimit",
+                where: [],
+                paginationOpts: { numItems: 50, cursor: null },
+            }),
+        );
+        expect(counters.page).not.toHaveLength(0);
+        expect(Math.max(...counters.page.map((row: { count: number }) => Number(row.count)))).toBeGreaterThanOrEqual(10);
+    });
+
+    it("limits each address on its own counter", async () => {
+        const t = await initConvexTestWithAuthComponent();
+
+        for (let attempt = 1; attempt <= 10; attempt += 1) {
+            await attemptSignIn(t, "198.51.100.4");
+        }
+        expect((await attemptSignIn(t, "198.51.100.4")).status).toBe(429);
+
+        // A different source address is not collateral damage. (Its attempts fail
+        // on credentials, which is the point: no 429.)
+        expect((await attemptSignIn(t, "198.51.100.5")).status).not.toBe(429);
+    });
+});
 
 describe("Better Auth provisioning trigger", () => {
     it("provisions the app user, workspace and owner membership on user.create", async () => {

@@ -21,7 +21,7 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 5 / G06:** completato (2026-09-21) su staging. Organizzazioni, membership e inviti sono tabelle applicative Convex con RBAC risolto server-side; 36 casi `convex-test` ermetici (isolamento cross-tenant, escalation, furto/scadenza/replay dell'invito, accept concorrenti, audit su ogni write) più un sign-up live che ha materializzato `appUsers` + organizzazione personale + membership owner dal trigger `user.create`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
 - **Task 6 / G07:** completato (2026-09-21) su staging, Creem **test mode**. Il billing è org-scoped — l'entity è sempre l'organizzazione attiva risolta server-side, nessun `entityId` dal client, metadata riservati non falsificabili. 22 casi `convex-test` ermetici (RBAC prima del provider, ledger one-row-per-event, replay no-op, refund che ri-locka e conserva l'order id, completion tardiva rifiutata) più 7 casi live (checkout test-mode reale, completion firmata che sblocca una volta sola, redelivery che non scrive, refund, portal, firma errata → `403`). Evidenza: `docs/migration/evidence/G07-creem.md`.
 - **Task 7 / G08:** completato (2026-09-21). File e varianti immagine sono dominio Convex dietro un bridge firmato HMAC; il bucket, le chiavi R2 e il layout `{basePath}/thumb.webp` / `web.webp` restano invariati. 32 casi ermetici (ordine autorizzazione→validazione→provider, magic bytes prima di `ready`, dedup tenant-scoped, macchina a stati con due varianti max, cinque tentativi e `failed` terminale, contratto di firma tra Convex e Worker) più una run live del Worker costruito su `wrangler dev`: presign firmato → URL R2 reale, richieste non firmate/stale/tampered/replay rifiutate, e un PNG da 51 kB trasformato in `thumb.webp` (4,7 kB) e `web.webp` (19,2 kB). Evidenza: `docs/migration/evidence/G08-media.md`.
-- **Task 8–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 9–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
 Il prossimo lavoro autorizzato dal piano è il Task 8 (gate G09: matrice protezioni e rate limiting).
 
@@ -681,7 +681,7 @@ git commit -m "feat(migration): prove observable R2 image variants"
 **Interfaces:**
 - Produces: `assertRateLimit(ctx, { key, bucket, limit, windowMs })`; matrice rotta→protezione per auth, RSVP, contact, waiting list, presign/upload e admin.
 
-- [ ] **Step 1: Scrivere la matrice completa**
+- [x] **Step 1: Scrivere la matrice completa**
 
 Righe obbligatorie e chiave:
 
@@ -693,20 +693,24 @@ Righe obbligatorie e chiave:
 | presign/confirm | Worker limit | obbligatorio | appUserId + organizationId |
 | admin | WAF | obbligatorio | superAdmin appUserId |
 
-- [ ] **Step 2: Testare atomico consume/reject**
+- [x] **Step 2: Testare atomico consume/reject**
 
 Creare `rateLimitBuckets` con indice `by_key_window`. `assertRateLimit` usa una mutation Convex e bucket temporali indicizzati; N richieste passano, N+1 genera `RATE_LIMITED` con `retryAfterMs`. Due chiamate concorrenti non superano il limite.
 
-- [ ] **Step 3: Verificare header e bot trap sul Worker**
+- [x] **Step 3: Verificare header e bot trap sul Worker**
 
 Il test HTTP asserisce CSP, HSTS due anni, `X-Content-Type-Options: nosniff`, limite body 1MB, limite upload 5MB, fake server headers e redirect delle bot trap. Le sole eccezioni CSP sono auth proxy e webhook/documentate.
 
-- [ ] **Step 4: Registrare G09 e commit**
+- [x] **Step 4: Registrare G09 e commit**
 
 ```bash
 git add docs/migration/protection-matrix.md convex/lib/rateLimit.ts convex/lib/rateLimit.test.ts test/migration/security-headers.test.ts nuxt.config.ts wrangler.jsonc docs/migration/gates.md
 git commit -m "feat(migration): map and enforce edge protection"
 ```
+
+*(2026-09-21: eseguito — `pnpm test:gate:g09` verde (36 casi: 15 header/matrix, 14 limiter, 7 auth) e `G09=PASS` nel ledger. Deviazioni dal piano, tutte misurate: (a) `nuxt.config.ts` **non** è stato modificato — il gate ha trovato che le route servite dalla Assets layer di Workers (`/` prerenderizzata e `/_nuxt/**`) non ricevevano alcun header di sicurezza né la cache immutabile, e il fix corretto è `public/_headers` (meccanismo supportato da Cloudflare per le risposte statiche), non un nuovo `routeRules`; (b) `wrangler.jsonc` **non** è stato modificato — nessuna regola WAF/Rate Limiting di zona è dichiarabile lì, e il binding `ratelimits` dei Workers non è stato introdotto perché non sarebbe verificabile senza un deploy; la matrice lo registra come obbligo di deploy; (c) in più rispetto al piano: `convex/auth.ts` (le regole brute-force legacy erano andate perse e sono state riportate con `storage: "database"`), `convex/test.setup.ts` (`initConvexTestWithAuthComponent`, necessario per pilotare il vero handler Better Auth in `convex-test`), `public/_headers`, `package.json` (`test:gate:g09`).)*
+
+- **Task 8 / G09:** completato (2026-09-21). Matrice completa in `docs/migration/protection-matrix.md` e limiter Convex come unica porta d'ingresso per il budget: check e incremento in una sola mutation (12 chiamanti concorrenti, budget 4 → esattamente 4 ammessi), chiave memorizzata solo come `sha256(bucket\0key)`, finestra fissa allineata all'epoca, `pruneExpired` per lo sweep del Task 13. 36 casi di gate più prove live su Worker e staging. Il gate ha trovato tre difetti reali: le route servite dalla Assets layer (`/` prerenderizzata, `/_nuxt/**`) non ricevevano header di sicurezza né cache immutabile — risolto con `public/_headers`; `/api/auth/*` è un proxy trasparente senza header applicativi, quindi quella riga resta all'edge; e la config Convex di Better Auth aveva perso le regole brute-force legacy (riportate verbatim, `storage: "database"`). Evidenza: `docs/migration/evidence/G09-protections.md`.
 
 ### Task 9: Spike G10 — modello economico con fan-out reattivo
 

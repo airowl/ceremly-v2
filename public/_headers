@@ -1,0 +1,38 @@
+# Cloudflare Workers static-asset headers (plan Task 8, spike G09).
+#
+# WHY THIS FILE EXISTS: with the `cloudflare-module` preset, prerendered routes
+# (`/`, `/en`, the marketing pages, `/blogs` index…) and everything under
+# `/_nuxt/` are served by the Workers *Assets* layer, which never reaches the
+# Nitro handler. `routeRules` headers — and therefore `nuxt-security` — do not
+# apply to those responses. Measured on `wrangler dev` before this file existed:
+# `GET /` returned only `cache-control`/`content-type`/`etag` (no HSTS, no
+# `nosniff`, no fake `Server`) and `/_nuxt/<entry>.js` returned the default
+# `max-age=0, must-revalidate` instead of the immutable policy the route rule
+# declares. Those are exactly the responses a browser hits first, so the gap is
+# not cosmetic: HSTS cannot be delivered by a `<meta>` tag.
+#
+# `nuxt-security` still owns the *rendered* responses (the CSP is injected as a
+# `<meta http-equiv>` into prerendered HTML and as a response header for SSR),
+# and this file deliberately does not add a second `Content-Security-Policy`:
+# two policies intersect, so the app stays the single authority for CSP.
+#
+# Cloudflare parses this file instead of serving it, and it is only consumed by
+# the Workers assets runtime (Vercel ignores it; the file is inert there).
+
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  X-Powered-By: PHP/5.2.17
+  Server: Apache/2.2.15
+
+# Hashed build assets: the `/_nuxt/**` route rule declares this, but that rule is
+# only reachable through the Nitro handler — which these URLs never touch.
+/_nuxt/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

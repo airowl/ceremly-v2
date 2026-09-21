@@ -22,6 +22,7 @@
     "test:gate:g06": "vitest run convex/organizations.test.ts convex/auth.test.ts",
     "test:gate:g07": "G07_GATE=live vitest run test/migration/g07-live-billing",
     "test:gate:g08": "vitest run convex/media.test.ts test/migration/storage-bridge-contract.test.ts test/migration/magic-bytes-contract.test.ts",
+    "test:gate:g09": "G09_GATE=live vitest run test/migration/security-headers.test.ts && vitest run convex/lib/rateLimit.test.ts convex/auth.test.ts",
     "reconcile:creem": "tsx scripts/migration/reconcile-creem.ts",
     "build:cloudflare": "NUXT_NITRO_PRESET=cloudflare nuxt build",
     "preview:cloudflare": "pnpm build:cloudflare && wrangler dev",

@@ -242,4 +242,37 @@ export default defineSchema({
         .index("by_variant_of", ["variantOf"])
         .index("by_variant_status", ["variantStatus", "variantUpdatedAt"])
         .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Fixed-window rate limit counters (plan Task 8, spike G09).
+     *
+     * One row per `(bucket, keyHash, windowStart)`: the window is aligned to the
+     * epoch (`floor(now / windowMs) * windowMs`), so "the current window" is a
+     * point lookup on an index rather than a scan, and the counter cannot be
+     * reset by a caller who picks a different key shape. `keyHash` is the SHA-256
+     * of the caller-supplied identifier — the raw value (an IP, an email) is
+     * never persisted, which is what makes storing counters compatible with the
+     * GDPR posture of the rest of the app.
+     *
+     * The row is the *only* state: the legacy limiter was `get` then `set` across
+     * two round trips, so two concurrent requests could both read the same count
+     * and both be admitted. Here the check and the increment are one document
+     * write inside one Convex transaction, which is what makes the limit hold
+     * under concurrency.
+     *
+     * `by_expires_at` exists for the sweep: buckets are cheap but not free, and a
+     * long tail of one-hit windows must not accumulate forever.
+     */
+    rateLimitBuckets: defineTable({
+        bucket: v.string(),
+        keyHash: v.string(),
+        windowStart: v.number(),
+        windowMs: v.number(),
+        limit: v.number(),
+        count: v.number(),
+        expiresAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_bucket_key_window", ["bucket", "keyHash", "windowStart"])
+        .index("by_expires_at", ["expiresAt"]),
 });

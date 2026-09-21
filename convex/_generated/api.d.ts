@@ -23,6 +23,7 @@ import type * as lib_magicBytes from "../lib/magicBytes.js";
 import type * as lib_media from "../lib/media.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
 import type * as lib_pricing from "../lib/pricing.js";
+import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as media from "../media.js";
 import type * as migrations_authImport from "../migrations/authImport.js";
 import type * as organizations from "../organizations.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "lib/media": typeof lib_media;
   "lib/migrationKey": typeof lib_migrationKey;
   "lib/pricing": typeof lib_pricing;
+  "lib/rateLimit": typeof lib_rateLimit;
   media: typeof media;
   "migrations/authImport": typeof migrations_authImport;
   organizations: typeof organizations;
