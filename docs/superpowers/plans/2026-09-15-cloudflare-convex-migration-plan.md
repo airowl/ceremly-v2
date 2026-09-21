@@ -777,9 +777,11 @@ git add scripts/migration/load-model.ts scripts/migration/load-runner.ts test/mi
 git commit -m "test(migration): validate Convex cost model"
 ```
 
-Run: `rg -n '\| G(0[1-9]|10) \| PASS \|' docs/migration/gates.md | wc -l`
+Run: `rg -c '\| G(0[1-9]|10) \| [^|]*\| PASS \|' docs/migration/gates.md`
 
 Expected: `10`. Se il risultato è diverso, fermare l'esecuzione del piano.
+
+*(2026-09-21: la riga di comando originale era `rg -n '\| G(0[1-9]|10) \| PASS \|' ... | wc -l` e presuppone un ledger a tre colonne (`| G01 | PASS |`). Il ledger reale ne ha sette (Gate, Name, Status, Command, Evidence, Approved by, Approved at), quindi quel pattern restituisce **0 qualunque sia lo stato dei gate** — un checkpoint che non può fallire è peggio di nessun checkpoint. Corretto qui sopra: la query giusta dà **8** (10 righe, `G04` e `G10` `NOT_RUN`).)*
 
 *(2026-09-21: eseguito — il checkpoint ha dato **8**, non 10, e per la regola del piano l'esecuzione si è **fermata** qui: il Task 10 non è iniziato. I due gate mancanti non sono falliti, sono non eseguibili da questo repository, e per entrambi la causa è un accesso esterno e non una lacuna del lavoro: **G04** aspetta un Google client con redirect URI su staging e una consent screen reale (vedi `docs/migration/evidence/G03-G05-auth.md`), **G10** aspetta un accesso alla dashboard — i limiti di spesa Convex sono solo dashboard (`convex --help` verificato: nessun comando di budget) e l'alerting Cloudflare richiede un API token che in `.env` non c'è, solo le chiavi S3 di R2. Entrambi registrati `NOT_RUN` nel ledger con la stessa disciplina, e i due requisiti restano invariati. Deviazioni dal piano, misurate: (a) l'input `subscribersPerWrite` del piano è stato scomposto in fan-out **per flusso** con un flag `watched`, perché un `writes × subscribers` globale non può rappresentare l'RSVP pubblico né lo sweep notturno, dove chi scrive non è chi guarda — il test asserisce che i totali per flusso sommino al totale aggregato; (b) il runner misura 1/5/20 subscriber e scopre che una scrittura che non cambia il valore sottoscritto costa **zero** ri-esecuzioni, quindi il termine del modello è `watched writes`, non `mutations`; (c) `scripts/migration/load-runner.ts` è nuovo rispetto al piano e `test/setup` non è stato toccato. Il modello è puro e testato (17 casi), il runner ha misurato latenze p50/p95 e payload reali, e il documento dichiara esplicitamente cosa non è misurato: le dashboard prima/dopo e i flussi `events`/`guests`/`rsvp`/`reminders`, che non esistono ancora (Tasks 10–12).)*
 
