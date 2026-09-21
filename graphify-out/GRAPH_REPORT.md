@@ -1,12 +1,12 @@
-# Graph Report - /Users/airowlgasga/coding/project/ceremly-v2  (2026-09-18)
+# Graph Report - /Users/airowlgasga/coding/project/ceremly-v2  (2026-09-21)
 
 ## Corpus Check
-- 470 files · ~601,199 words
+- 476 files · ~612,543 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5627 nodes · 5907 edges · 648 communities detected
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 575 edges (avg confidence: 0.8)
+- 5673 nodes · 5988 edges · 648 communities detected
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 592 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -661,7 +661,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `getDB()` - 102 edges
-2. `logAudit()` - 34 edges
+2. `logAudit()` - 35 edges
 3. `FASE 3 — Deploy Vercel serverless + background (QStash + Vercel Cron) Implementation Plan` - 24 edges
 4. `STACK-AND-CONVENTIONS (riferimento trasversale)` - 23 edges
 5. `FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan` - 19 edges
@@ -724,8 +724,8 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.01
-Nodes (227): createBetterAuth(), getAuthSession(), requireAuth(), useServerAuth(), onUnlock(), createCelebrationCheckout(), getOrgId(), getClientIp() (+219 more)
+Cohesion: 0.02
+Nodes (211): createBetterAuth(), getAuthSession(), requireAuth(), useServerAuth(), onUnlock(), createCelebrationCheckout(), getOrgId(), extractCreemIds() (+203 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
@@ -737,27 +737,27 @@ Nodes (127): Contact Properties, Property fallbackValue, Immutable key and type,
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
-Nodes (103): Supabase Integration Patterns (Pinia), Basic Pattern, Cleanup on Component Unmount, Client Access, Common Query Methods, Correct Pattern, Count Only, DELETE (+95 more)
+Nodes (109): analyze_codebase.py script, Authentic Over Template philosophy, Context-aware OG layouts per page type, generate_og_images.py script, Playwright (image rendering), OG Image Creator (README), OG Image Creator (SKILL), 1. Analyze First (+101 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (91): React Email Skill, react-email CLI (email command), PreviewProps Convention, render() Function, Static Files Dev/Prod baseURL Pattern, Tailwind with pixelBasedPreset, resend api-keys Command Reference, API key token returned once on create (+83 more)
+Cohesion: 0.02
+Nodes (103): Supabase Integration Patterns (Pinia), Basic Pattern, Cleanup on Component Unmount, Client Access, Common Query Methods, Correct Pattern, Count Only, DELETE (+95 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.03
-Nodes (86): base Schema (not public), Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Service Role Client (supabase.ts), Architectural principle: Strada A (event-driven serverless), Architecture, Ceremly Audit Logging (logAudit) (+78 more)
+Nodes (91): React Email Skill, react-email CLI (email command), PreviewProps Convention, render() Function, Static Files Dev/Prod baseURL Pattern, Tailwind with pixelBasedPreset, resend api-keys Command Reference, API key token returned once on create (+83 more)
 
 ### Community 6 - "Community 6"
+Cohesion: 0.03
+Nodes (86): base Schema (not public), Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Service Role Client (supabase.ts), Architectural principle: Strada A (event-driven serverless), Architecture, Ceremly Audit Logging (logAudit) (+78 more)
+
+### Community 7 - "Community 7"
 Cohesion: 0.04
 Nodes (83): Alt Text Rule (meaningful vs decorative), 4.5:1 Color Contrast (WCAG AA), Email Accessibility, Single h1 / Heading Hierarchy, lang and dir Attributes, Linked Image Is Never Decorative Rule, title Tag in Head, Skill Enforcement Levels (suggest/block) (+75 more)
 
-### Community 7 - "Community 7"
-Cohesion: 0.03
-Nodes (80): Pinia Stores Development Skill, Multi-Tenancy pattern (workspace context), Plan Limits pattern, Server guard pattern (process.server), Setup syntax pattern (defineStore composition), Supabase access via useNuxtApp().$supabase, createSharedComposable (VueUse), Composables (nuxt-frontend resource) (+72 more)
-
 ### Community 8 - "Community 8"
 Cohesion: 0.03
-Nodes (76): analyze_codebase.py script, Authentic Over Template philosophy, Context-aware OG layouts per page type, generate_og_images.py script, Playwright (image rendering), OG Image Creator (README), OG Image Creator (SKILL), 1. Analyze First (+68 more)
+Nodes (80): Pinia Stores Development Skill, Multi-Tenancy pattern (workspace context), Plan Limits pattern, Server guard pattern (process.server), Setup syntax pattern (defineStore composition), Supabase access via useNuxtApp().$supabase, createSharedComposable (VueUse), Composables (nuxt-frontend resource) (+72 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.03
@@ -776,100 +776,100 @@ Cohesion: 0.04
 Nodes (56): Admin API requirements (user custom limits), getEffectiveLimits merge (custom over plan), Audit log system requirements, resource.verb audit taxonomy, Email templates requirements, React.createElement .ts templates (avoid Vue JSX conflict), File storage system requirements, Magic-bytes file validation (+48 more)
 
 ### Community 13 - "Community 13"
+Cohesion: 0.07
+Nodes (31): getCategoryFromAction(), writeAudit(), createAuth(), assertAccountRecord(), assertTwoFactorRecord(), assertUserRecord(), importAuthRecordsIdempotently(), nullable() (+23 more)
+
+### Community 14 - "Community 14"
 Cohesion: 0.05
 Nodes (50): Consent Checkboxes (Marketing), Double Opt-In, Email Capture Best Practices, Email Validation (Client + Server), Single Opt-In, Verification Email, CAN-SPAM Act (US), CASL (Canada) (+42 more)
 
-### Community 14 - "Community 14"
+### Community 15 - "Community 15"
+Cohesion: 0.09
+Nodes (34): getClientIp(), sendContactMessage(), cleanExpiredMemoryCache(), getResendInstance(), buildEmailContent(), getDefaultSender(), getEventsSender(), getSender() (+26 more)
+
+### Community 16 - "Community 16"
 Cohesion: 0.04
 Nodes (45): Additional Component Tests, Additional Pressure Tests, Baseline (Establish Failure), Combined Scenario Tests, Email Client Limitations Tests, File Size & Performance Tests, Internationalization Tests, Pressure Test (Stress Test) (+37 more)
 
-### Community 15 - "Community 15"
+### Community 17 - "Community 17"
 Cohesion: 0.04
 Nodes (45): 1. Crawlability & Indexing, 2. Page-Level Meta Tags, 3. Open Graph & Social, 4. Structured Data, 5. Content & Semantic Structure, 6. Technical Performance, 7. URL Structure, 8. International SEO (if applicable) (+37 more)
 
-### Community 16 - "Community 16"
+### Community 18 - "Community 18"
 Cohesion: 0.05
 Nodes (43): 1. Letter/Monogram (Default), 2. Icons (Lucide Integration), 3. Emoji, Anti-Patterns, Available Icons, Available Templates, Content Types, Corner Radius (+35 more)
 
-### Community 17 - "Community 17"
+### Community 19 - "Community 19"
 Cohesion: 0.05
 Nodes (39): 1. Guardrail Skills, 1. Session Tracking, 2. Domain Skills, 2. File Markers, 3. Environment Variables, [ADVANCED.md](ADVANCED.md), Anthropic Best Practices, BLOCK (Critical Guardrails) (+31 more)
 
-### Community 18 - "Community 18"
+### Community 20 - "Community 20"
 Cohesion: 0.05
 Nodes (38): 0. Decisioni architetturali, 10. Definition of Done, 1. Design system "Soft Meadow", 2. Schema database (Drizzle, `server/database/schema/`), 3.1 InviteBlock, 3.2 RsvpQuestion, 3.3 Answers, 3.4 Logica condizionale — `shared/utils/rsvpLogic.ts` (+30 more)
 
-### Community 19 - "Community 19"
+### Community 21 - "Community 21"
 Cohesion: 0.05
 Nodes (36): Admin, App (branding is env-driven), Auth, Configure your .env file (see .env.example for all variables), Copy environment variables, Database, Database (Drizzle ORM + Neon Postgres), Database (Neon) (+28 more)
 
-### Community 20 - "Community 20"
+### Community 22 - "Community 22"
 Cohesion: 0.06
 Nodes (35): 1. File Path Doesn't Match Patterns, 1. Hook Not Registered, 1. Keywords Don't Match, 1. Keywords Too Generic, 1. Too Many Patterns, 2. Bash Wrapper Not Executable, 2. Complex Regex, 2. Excluded by pathExclusions (+27 more)
 
-### Community 21 - "Community 21"
+### Community 23 - "Community 23"
 Cohesion: 0.06
 Nodes (34): Best Practices, Best Practices, Best Practices, Best Practices, Best Practices Summary, Common Content Patterns, Common Path Patterns, Common Pattern Examples (+26 more)
 
-### Community 22 - "Community 22"
+### Community 24 - "Community 24"
 Cohesion: 0.06
 Nodes (34): 1. Always Use RLS-Enabled Client, 2. Handle CORS for All Endpoints, 3. Validate All Input, 4. Use Standard Response Helpers, 5. Apply Rate Limiting, 6. Check Plan Limits Before Resource Creation, 7. Use Soft Delete Pattern, Anti-Patterns to Avoid (+26 more)
 
-### Community 23 - "Community 23"
+### Community 25 - "Community 25"
 Cohesion: 0.06
 Nodes (34): Additional SEO Tags, Advanced Directives, App-Like Behavior, Article-Specific Tags, Author and Publisher, Basic Indexing Control, Bot-Specific Directives, Browser and PWA Tags (+26 more)
 
-### Community 24 - "Community 24"
+### Community 26 - "Community 26"
 Cohesion: 0.06
 Nodes (33): analyze_seo.py, Anti-Patterns to Avoid, Astro, Canonical URLs, Codebase Analysis Workflow, Essential Meta Tags (Every Page), Framework Quick Reference, generate_sitemap.py (+25 more)
 
-### Community 25 - "Community 25"
-Cohesion: 0.06
-Nodes (33): SPA social crawler limitation (SSR/prerender), Active Modules, Basic Setup, Basic Setup, Build Command, Build Configuration, Configuration, Core Configuration (+25 more)
-
-### Community 26 - "Community 26"
-Cohesion: 0.06
-Nodes (31): Account Management, Account Update Notifications, Authentication-Focused App, Authentication & Security, Developer Tools / API Platform, E-commerce / Marketplace, E-commerce & Transactions, Email Combinations by App Type (+23 more)
-
 ### Community 27 - "Community 27"
 Cohesion: 0.06
-Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
+Nodes (31): Account Management, Account Update Notifications, Authentication-Focused App, Authentication & Security, Developer Tools / API Platform, E-commerce / Marketplace, E-commerce & Transactions, Email Combinations by App Type (+23 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.06
 Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.07
-Nodes (30): Color Customization, Component Customization, Configuration, Core Components, Dark Mode, Nuxt UI (nuxt-frontend resource), Feedback Components, Form Components (+22 more)
+Cohesion: 0.06
+Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.07
-Nodes (31): Hard vs Soft Bounce Handling, Create Webhook via API, email.received Inbound Event, Resend Webhook Event Types, Raw Body Requirement for Verification, Webhook Retry Schedule (Exponential Backoff), Webhook Signature Verification (Svix), Resend Webhooks (+23 more)
+Nodes (30): Color Customization, Component Customization, Configuration, Core Components, Dark Mode, Nuxt UI (nuxt-frontend resource), Feedback Components, Form Components (+22 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.07
-Nodes (29): Actions, Authentication, Best Practices, Computed Getters, Do's, Don'ts, Error Handling Pattern, Events Management (+21 more)
+Nodes (31): Hard vs Soft Bounce Handling, Create Webhook via API, email.received Inbound Event, Resend Webhook Event Types, Raw Body Requirement for Verification, Webhook Retry Schedule (Exponential Backoff), Webhook Signature Verification (Svix), Resend Webhooks (+23 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.07
 Nodes (29): Table of Contents, Two-Phase Authentication Flow, Architecture Overview, Backend Validation, Complete Flow, Complete Implementation, Multi-Tenancy Patterns (pinia-stores resource), Don't Duplicate Workspace ID (+21 more)
 
 ### Community 33 - "Community 33"
+Cohesion: 0.07
+Nodes (29): Actions, Authentication, Best Practices, Computed Getters, Do's, Don'ts, Error Handling Pattern, Events Management (+21 more)
+
+### Community 34 - "Community 34"
 Cohesion: 0.11
 Nodes (16): buildTranslations(), ChangeEmailEmail(), buildTranslations(), ContactConfirmationEmail(), buildTranslations(), ContactNotificationEmail(), multiline(), buildTranslations() (+8 more)
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.07
 Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.07
 Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
-
-### Community 36 - "Community 36"
-Cohesion: 0.12
-Nodes (19): brandMark(), buildHtml(), clampDesc(), esc(), get(), globe(), iconSvg(), main() (+11 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.07
@@ -1004,8 +1004,8 @@ Cohesion: 0.09
 Nodes (22): Come iniziare con il boilerplate SaaS (IT), Getting Started with the SaaS Boilerplate (EN), Blog System Requirements, Architecture Notes, Blog System (@nuxt/content v3), Blog System Requirements, Components, Content (+14 more)
 
 ### Community 70 - "Community 70"
-Cohesion: 0.13
-Nodes (12): createAuth(), assertAccountRecord(), assertTwoFactorRecord(), assertUserRecord(), importAuthRecordsIdempotently(), normalizeEmail(), nullable(), toEpochMs() (+4 more)
+Cohesion: 0.09
+Nodes (21): Architecture, Available Bubble Menus, Bubble Menus, Built-in Themes, CSS Setup, Custom Extensions, Default Commands, Email Export (+13 more)
 
 ### Community 71 - "Community 71"
 Cohesion: 0.09
@@ -1013,31 +1013,31 @@ Nodes (21): Architecture, Available Bubble Menus, Bubble Menus, Built-in Themes,
 
 ### Community 72 - "Community 72"
 Cohesion: 0.09
-Nodes (21): Architecture, Available Bubble Menus, Bubble Menus, Built-in Themes, CSS Setup, Custom Extensions, Default Commands, Email Export (+13 more)
+Nodes (21): Active Views (Soft Delete), Architecture Overview, Complete Flow, Core Tables, Database Schema, Directory Structure, Environment Configuration, Import Pattern (+13 more)
 
 ### Community 73 - "Community 73"
 Cohesion: 0.09
-Nodes (21): Active Views (Soft Delete), Architecture Overview, Complete Flow, Core Tables, Database Schema, Directory Structure, Environment Configuration, Import Pattern (+13 more)
+Nodes (21): Adding Custom Validators, Available Validators, Basic Validation Chain, Complete Event Creation Validation, Conditional Validation, Custom Validation, Examples, Guest RSVP Validation (+13 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.09
-Nodes (21): Adding Custom Validators, Available Validators, Basic Validation Chain, Complete Event Creation Validation, Conditional Validation, Custom Validation, Examples, Guest RSVP Validation (+13 more)
+Nodes (21): 1. Server-Side Guard, 2. Supabase Access, 3. State Management, 4. Component Naming, 5. Page Meta, 6. Form Validation, 7. Cross-Component Communication, Anti-Patterns (+13 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.09
-Nodes (21): 1. Server-Side Guard, 2. Supabase Access, 3. State Management, 4. Component Naming, 5. Page Meta, 6. Form Validation, 7. Cross-Component Communication, Anti-Patterns (+13 more)
+Nodes (21): Common Mistakes, Domain Setup, Download Attachment Content, Forwarding Emails, Get a Single Attachment, Get Attachment Metadata and Download URLs, Handling Attachments, Listing Received Emails (+13 more)
 
 ### Community 76 - "Community 76"
 Cohesion: 0.09
-Nodes (21): Common Mistakes, Domain Setup, Download Attachment Content, Forwarding Emails, Get a Single Attachment, Get Attachment Metadata and Download URLs, Handling Attachments, Listing Received Emails (+13 more)
-
-### Community 77 - "Community 77"
-Cohesion: 0.09
 Nodes (21): 1. Obiettivo, 2.1 File env (gitignored; solo `.env.example` è committato), 2.2 Come l'app riconosce l'ambiente, 2.3 Bug attivo: `.env.production` inesistente, 2.4 Neon (già a 2 branch), 2.5 Vercel (progetto `ceremly-v2`, team `airowls-projects`), 2.6 Email (invariato, fuori scope), 2. Stato attuale (verificato sul codice e su Vercel, 2026-06-21) (+13 more)
 
-### Community 78 - "Community 78"
+### Community 77 - "Community 77"
 Cohesion: 0.1
 Nodes (22): cairosvg (SVG renderer), Favicon Design Templates, Discover Existing Brand Icons First, Drop Shadow Effect, Favicon Visual Effects Technical Guide, Favicon Effects Stack (Layers), Pro-Grade Favicon Generator Skill, High-Resolution Rendering + Lanczos Downscale (+14 more)
+
+### Community 78 - "Community 78"
+Cohesion: 0.16
+Nodes (17): brandMark(), buildHtml(), clampDesc(), esc(), globe(), iconSvg(), main(), titleSize() (+9 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.1
@@ -1056,32 +1056,32 @@ Cohesion: 0.1
 Nodes (20): authenticateUser (Legacy), authenticateUser vs authenticateWithClient, authenticateWithClient (Recommended), Authentication Errors, Authentication Patterns, Complete CRUD with Auth, Error Handling, Examples (+12 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.1
-Nodes (19): Basic Pattern, Best Practices, Cleanup Pattern, Composables, Core Composables, Creating Composables, Data Fetching Pattern, Do's (+11 more)
+Cohesion: 0.11
+Nodes (19): Brand Voice, Ceremly (Digital Invites + RSVP), Ceremly Product Marketing Context, Competitive Landscape, Customer Language, Differentiation, Fake Social Proof Warning, Goals (+11 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.1
-Nodes (19): Common Error Codes, Complete Examples, cURL, Error Handling, Go, Go, Go, Idempotency Keys (+11 more)
+Nodes (19): Basic Pattern, Best Practices, Cleanup Pattern, Composables, Core Composables, Creating Composables, Data Fetching Pattern, Do's (+11 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.1
-Nodes (19): FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan, File Structure, Gap residui noti (consegnati a 1c/1d), Prerequisiti / Gate, Riepilogo verifiche (cosa prova cosa), Task 10 — Org attiva di sessione (databaseHooks.session.create.before), Task 11 — Smoke: signup→org + login + org attiva (manuale, gate CRITICO), Task 12 — Verifica assertiva: signup→org ha prodotto org + member owner (+11 more)
+Nodes (19): Common Error Codes, Complete Examples, cURL, Error Handling, Go, Go, Go, Idempotency Keys (+11 more)
 
 ### Community 86 - "Community 86"
 Cohesion: 0.1
-Nodes (19): Contratti ASSUNTI da 1b/1c/1d (allineamento obbligatorio — se 1c/1d definiscono firme diverse, riallineare PRIMA di eseguire), Cosa questo piano esplicitamente NON copre, Decisioni di fase (chiuse, NON rivalutare), FASE 4 — Entità-esempio `projects` (CRUD multi-tenant org-scoped) Implementation Plan, File Structure, ⚠️ GATE HARD — Prerequisiti 1b/1c/1d (oggi NON implementati), Sezione finale — Pattern resi espliciti (è l'entità che si clona), Task 10 — i18n: chiavi funzionali `dashboard.projects.*` (+11 more)
+Nodes (19): FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan, File Structure, Gap residui noti (consegnati a 1c/1d), Prerequisiti / Gate, Riepilogo verifiche (cosa prova cosa), Task 10 — Org attiva di sessione (databaseHooks.session.create.before), Task 11 — Smoke: signup→org + login + org attiva (manuale, gate CRITICO), Task 12 — Verifica assertiva: signup→org ha prodotto org + member owner (+11 more)
 
 ### Community 87 - "Community 87"
 Cohesion: 0.1
-Nodes (19): Avvertenze runtime-contingenti (riepilogo), Contratti vincolanti (consumati da FASE 4 — NON deviare), Cosa 1c esplicitamente NON copre, FASE 1c — RBAC + middleware + route org Implementation Plan, File Structure, Prerequisiti / Gate, ⚠️ Requisito di sicurezza #1 (in cima alla checklist — da code review 1a, commit `13d8b63`), Task 10 — TEST: `verify-rbac.ts` (getOrgRole + cross-org null + assertOwnership 403) (+11 more)
+Nodes (19): Contratti ASSUNTI da 1b/1c/1d (allineamento obbligatorio — se 1c/1d definiscono firme diverse, riallineare PRIMA di eseguire), Cosa questo piano esplicitamente NON copre, Decisioni di fase (chiuse, NON rivalutare), FASE 4 — Entità-esempio `projects` (CRUD multi-tenant org-scoped) Implementation Plan, File Structure, ⚠️ GATE HARD — Prerequisiti 1b/1c/1d (oggi NON implementati), Sezione finale — Pattern resi espliciti (è l'entità che si clona), Task 10 — i18n: chiavi funzionali `dashboard.projects.*` (+11 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.1
-Nodes (19): 4.1 `server/utils/db.ts` — riscrittura nucleo, 4.2 `server/utils/drivers.ts` — rimozione TCP, 4.3 `server/utils/auth.ts` — nessuna modifica funzionale, 4.4 `package.json` — pulizia deps, 4.5 `server/database/drizzle.config.ts` — invariato + nota, 4.6 `.env.example` — connection string + rimozione CF, Checkpoint FASE 2, Convenzioni già chiuse (NON rivalutare) (+11 more)
+Nodes (19): Avvertenze runtime-contingenti (riepilogo), Contratti vincolanti (consumati da FASE 4 — NON deviare), Cosa 1c esplicitamente NON copre, FASE 1c — RBAC + middleware + route org Implementation Plan, File Structure, Prerequisiti / Gate, ⚠️ Requisito di sicurezza #1 (in cima alla checklist — da code review 1a, commit `13d8b63`), Task 10 — TEST: `verify-rbac.ts` (getOrgRole + cross-org null + assertOwnership 403) (+11 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.11
-Nodes (19): Brand Voice, Ceremly (Digital Invites + RSVP), Ceremly Product Marketing Context, Competitive Landscape, Customer Language, Differentiation, Fake Social Proof Warning, Goals (+11 more)
+Cohesion: 0.1
+Nodes (19): 4.1 `server/utils/db.ts` — riscrittura nucleo, 4.2 `server/utils/drivers.ts` — rimozione TCP, 4.3 `server/utils/auth.ts` — nessuna modifica funzionale, 4.4 `package.json` — pulizia deps, 4.5 `server/database/drizzle.config.ts` — invariato + nota, 4.6 `.env.example` — connection string + rimozione CF, Checkpoint FASE 2, Convenzioni già chiuse (NON rivalutare) (+11 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.11
@@ -1160,92 +1160,92 @@ Cohesion: 0.11
 Nodes (17): 1. Import tipo InviteTheme, 2. CeremlyEvent: palette → theme, 3. PublicInvitePayload: Pick aggiornato, After:, Before:, Changes Made, Commit, Concerns (+9 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.38
-Nodes (16): buildEmailContent(), appHost(), appName(), baseUrl(), legalLinks(), renderBoth(), renderChangeEmailEmail(), renderContactConfirmationEmail() (+8 more)
-
-### Community 110 - "Community 110"
 Cohesion: 0.12
 Nodes (16): Checkpoint 1a, Commit della fase (manuali — li fa l'utente), Cosa esplicitamente NON copre questa spec, Error handling (1a), FASE 1 — Tenancy: events → organizations (Design), Gerarchia delle fonti (risolta), Già chiuso da IMPLEMENTATION (non rivalutato in questa fase), Ground truth: plugin organization Better Auth v1.4.5 (+8 more)
 
-### Community 111 - "Community 111"
+### Community 110 - "Community 110"
 Cohesion: 0.12
 Nodes (16): Compatibilità, Contesto, Costanti (`shared/constants/inviteTheme.ts`), File impattati, Migrazione 0010 (data-preserving), Modello dati (approccio A), Obiettivo, Out of scope (YAGNI) (+8 more)
 
-### Community 112 - "Community 112"
+### Community 111 - "Community 111"
 Cohesion: 0.12
 Nodes (16): Completezza, Concerns, Cosa implementato, File cambiati, File modificati, GREEN (Fase 4 dopo modifiche schema), Modifiche specifiche, Output pulito (+8 more)
 
-### Community 113 - "Community 113"
+### Community 112 - "Community 112"
 Cohesion: 0.12
 Nodes (15): 1. Discover and Analyze, 2. Design Strategy, 3. Generate Images, 4. Verify and Optimize, Anti-Patterns to Avoid, Astro, Framework-Specific Guidance, Next.js (+7 more)
 
-### Community 114 - "Community 114"
+### Community 113 - "Community 113"
 Cohesion: 0.12
 Nodes (15): Authoring checklist, Email Accessibility, Every link must have discernible text (Serious), Hit 4.5:1 color contrast, then check dark mode (Serious), Include a `<title>` tag (Serious), Link text must describe the destination (Moderate), Mark layout tables as presentational (Serious), Priority order (+7 more)
 
-### Community 115 - "Community 115"
+### Community 114 - "Community 114"
 Cohesion: 0.12
 Nodes (15): Base Schema, Common JWT Access Patterns, Key Concepts, MCP Integration, Multi-Tenancy Pattern, Overview, Permission Naming Convention, Plan Limits (+7 more)
 
-### Community 116 - "Community 116"
+### Community 115 - "Community 115"
 Cohesion: 0.12
 Nodes (15): API Key Setup, cURL (No SDK), Detecting Project Language, Elixir, Go, Installation Commands, Java, Minimum SDK Versions (+7 more)
 
-### Community 117 - "Community 117"
+### Community 116 - "Community 116"
 Cohesion: 0.12
 Nodes (15): API Reference, Architecture Notes, Configuration, Current Implementation, Email Types Supported, Email Utility (`email.ts`), Error Handling, `getDefaultSender(): string` (+7 more)
 
-### Community 118 - "Community 118"
+### Community 117 - "Community 117"
 Cohesion: 0.12
 Nodes (15): Global Constraints, Note operative (post-piano), Task 0: Baseline — commit del lavoro tema preset (0009), Task 10: Pagina pubblica invito, Task 11: Verifica finale (typecheck + suite + smoke), Task 1: Utility colore (contrasto + soft derivato), Task 2: Costanti — tipo InviteTheme + catalogo font, refactor preset, Task 3: Schema validazione (+7 more)
 
-### Community 119 - "Community 119"
+### Community 118 - "Community 118"
 Cohesion: 0.12
 Nodes (15): 0.1 — Inizializza Nuxt 4, 0.2 — Configura il deploy Vercel, 0.3 — Crea la struttura cartelle completa, 0.4 — Env validation (CRITICO), 0.5 — `.env.example`, 0.6 — Setup Drizzle (solo client, no schema), 0.7 — Tooling, 0.8 — Health check (+7 more)
 
-### Community 120 - "Community 120"
+### Community 119 - "Community 119"
 Cohesion: 0.12
 Nodes (15): 3.1 — Studio doc (obbligatorio, prima di scrivere codice), 3.2 — Schema subscription (legato all'organization), 3.3 — Configura il plugin Creem in Better Auth, 3.4 — Modulo di astrazione `server/billing/`, 3.5 — Checkout, 3.6 — Webhook (CRITICO), 3.7 — Gating per piano, 3.8 — Free trial (+7 more)
 
-### Community 121 - "Community 121"
+### Community 120 - "Community 120"
 Cohesion: 0.13
 Nodes (0): 
 
-### Community 122 - "Community 122"
+### Community 121 - "Community 121"
 Cohesion: 0.13
 Nodes (14): Common Error Codes, Error Handling, Error Handling Pattern, Exponential Backoff, Idempotency, Key Generation Strategies, Queuing for Reliability, Related (+6 more)
 
-### Community 123 - "Community 123"
+### Community 122 - "Community 122"
 Cohesion: 0.13
 Nodes (14): CAN-SPAM (United States), CASL (Canada), Consent Management, Data Retention, Email Compliance, GDPR (European Union), International Sending, List-Unsubscribe Header (Required for Bulk Senders) (+6 more)
 
-### Community 124 - "Community 124"
+### Community 123 - "Community 123"
 Cohesion: 0.13
 Nodes (14): Automated Cleanup, Data Retention, Email Logs, Implementation, List Hygiene, List Management, Metrics to Monitor, Pre-Send Check (+6 more)
 
-### Community 125 - "Community 125"
+### Community 124 - "Community 124"
 Cohesion: 0.13
 Nodes (14): Bounce Handling, Complaint Handling, DKIM (DomainKeys Identified Mail), DMARC, Email Authentication, Email Deliverability, Infrastructure, IP Warming (+6 more)
 
-### Community 126 - "Community 126"
+### Community 125 - "Community 125"
 Cohesion: 0.13
 Nodes (14): Logs, Common Mistakes, cURL, cURL, List Logs, Node.js, Node.js, Pagination (+6 more)
 
-### Community 127 - "Community 127"
+### Community 126 - "Community 126"
 Cohesion: 0.13
 Nodes (14): 1. Cos'è Ceremly, 2. Situazione attuale e obiettivo, 3. Design system "Soft Meadow", 4. Vincoli tecnici (CRITICI — il codice deve essere drop-in), 5. Template da ridisegnare (props + scopo + tono), 6. Tono di voce per la copy, 7. Output atteso, 8. Checklist di qualità (verifica prima di consegnare) (+6 more)
 
-### Community 128 - "Community 128"
+### Community 127 - "Community 127"
 Cohesion: 0.13
 Nodes (14): Checkpoint finale FASE 2 (riepilogo gate), Cosa questa fase esplicitamente NON copre, Dipendenze a valle, FASE 2 — Driver DB: node-postgres → Neon HTTP serverless Implementation Plan, File Structure (file creati/modificati e responsabilità), Prerequisiti / Gate (cosa deve essere landed/configurato PRIMA), Task 1 — `server/utils/db.ts`: swap nucleo a neon-http, Task 2 — `server/utils/drivers.ts`: rimozione driver TCP + Hyperdrive (+6 more)
 
-### Community 129 - "Community 129"
+### Community 128 - "Community 128"
 Cohesion: 0.13
 Nodes (14): Global Constraints, Note di rischio per l'esecuzione, Resend Webhooks Implementation Plan, Self-Review, Task 10: Setup operativo Resend (manuale) + docs, Task 1: Setup Vitest (infra di test), Task 2: Config & env (secret webhook + from tracciato), Task 3: Schema — `email_suppressions` + `email_events` (+6 more)
 
-### Community 130 - "Community 130"
+### Community 129 - "Community 129"
 Cohesion: 0.13
 Nodes (14): 2.1 — Configura Better Auth, 2.2 — Attiva il plugin organization, 2.3 — Auto-creazione org personale al signup (CRITICO), 2.4 — Middleware di authentication, 2.5 — Layer di authorization (Policy/Gate-style), 2.6 — Gating UI lato frontend, 2.7 — Pagine auth di base, Checkpoint di verifica (+6 more)
+
+### Community 130 - "Community 130"
+Cohesion: 0.2
+Nodes (8): addUser(), appUserByEmail(), bootstrap(), identityOf(), joinOrganization(), session(), userIdByEmail(), initConvexTest()
 
 ### Community 131 - "Community 131"
 Cohesion: 0.14
@@ -1380,16 +1380,16 @@ Cohesion: 0.18
 Nodes (10): Changes Applied, Commit, Concerns, event.service.ts, Files Modified, publicInvite.service.ts, Self-Review, Task 6 Report: Service (updateEvent + payload pubblico) (+2 more)
 
 ### Community 164 - "Community 164"
+Cohesion: 0.27
+Nodes (6): RsvpChart(), formatDate(), template(), x(), xTicks(), y()
+
+### Community 165 - "Community 165"
 Cohesion: 0.22
 Nodes (2): handleEnable(), startSetupWithPassword()
 
-### Community 165 - "Community 165"
+### Community 166 - "Community 166"
 Cohesion: 0.2
 Nodes (0): 
-
-### Community 166 - "Community 166"
-Cohesion: 0.27
-Nodes (6): RsvpChart(), formatDate(), template(), x(), xTicks(), y()
 
 ### Community 167 - "Community 167"
 Cohesion: 0.2
@@ -1769,11 +1769,11 @@ Nodes (0):
 
 ### Community 261 - "Community 261"
 Cohesion: 0.67
-Nodes (2): Design Thinking, Frontend Aesthetics Guidelines
+Nodes (0): 
 
 ### Community 262 - "Community 262"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (2): Design Thinking, Frontend Aesthetics Guidelines
 
 ### Community 263 - "Community 263"
 Cohesion: 1.0
@@ -3318,87 +3318,85 @@ Nodes (1): Svix-id dedup + env-domain isolation
 ## Knowledge Gaps
 - **2978 isolated node(s):** `Get HTML template based on page type.`, `Simple mustache-like template rendering.`, `Generate complete HTML for a route's OG image.`, `Determine if a hex color is dark.`, `Generate OG image from HTML using Playwright.` (+2973 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 262`** (2 nodes): `manualChunks()`, `nuxt.config.ts`
+- **Thin community `Community 263`** (2 nodes): `manualChunks()`, `nuxt.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 263`** (2 nodes): `useOrganization()`, `useOrganization.ts`
+- **Thin community `Community 264`** (2 nodes): `useOrganization()`, `useOrganization.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 264`** (2 nodes): `useSiteMode.ts`, `useSiteMode()`
+- **Thin community `Community 265`** (2 nodes): `useSiteMode.ts`, `useSiteMode()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 265`** (2 nodes): `useBlog()`, `useBlog.ts`
+- **Thin community `Community 266`** (2 nodes): `useBlog()`, `useBlog.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 266`** (2 nodes): `useScrollReveal.ts`, `useScrollReveal()`
+- **Thin community `Community 267`** (2 nodes): `useScrollReveal.ts`, `useScrollReveal()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 267`** (2 nodes): `useButtonSuccess()`, `useButtonSuccess.ts`
+- **Thin community `Community 268`** (2 nodes): `useButtonSuccess()`, `useButtonSuccess.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 268`** (2 nodes): `useConvexResource()`, `useConvexResource.ts`
+- **Thin community `Community 269`** (2 nodes): `useConvexResource()`, `useConvexResource.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 269`** (2 nodes): `usePublicInvite()`, `usePublicInvite.ts`
+- **Thin community `Community 270`** (2 nodes): `usePublicInvite()`, `usePublicInvite.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 270`** (2 nodes): `_useDashboard()`, `useDashboard.ts`
+- **Thin community `Community 271`** (2 nodes): `_useDashboard()`, `useDashboard.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 271`** (2 nodes): `useRefetching()`, `useRefetching.ts`
+- **Thin community `Community 272`** (2 nodes): `useRefetching()`, `useRefetching.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 272`** (2 nodes): `installConvex()`, `convex.ts`
+- **Thin community `Community 273`** (2 nodes): `installConvex()`, `convex.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 273`** (2 nodes): `scrollToWaitlist()`, `AppHeader.vue`
+- **Thin community `Community 274`** (2 nodes): `scrollToWaitlist()`, `AppHeader.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 274`** (2 nodes): `onSelect()`, `TeamsMenu.client.vue`
+- **Thin community `Community 275`** (2 nodes): `onSelect()`, `TeamsMenu.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 275`** (2 nodes): `changeLinks()`, `dashboard.vue`
+- **Thin community `Community 276`** (2 nodes): `changeLinks()`, `dashboard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 276`** (2 nodes): `stripBg()`, `status.vue`
+- **Thin community `Community 277`** (2 nodes): `stripBg()`, `status.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 277`** (2 nodes): `goToPage()`, `index.vue`
+- **Thin community `Community 278`** (2 nodes): `goToPage()`, `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 278`** (2 nodes): `if()`, `index.vue`
+- **Thin community `Community 279`** (2 nodes): `if()`, `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 279`** (2 nodes): `await()`, `[id].vue`
+- **Thin community `Community 280`** (2 nodes): `await()`, `[id].vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 280`** (2 nodes): `pad()`, `cookie.vue`
+- **Thin community `Community 281`** (2 nodes): `pad()`, `cookie.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 281`** (2 nodes): `client()`, `auth-client.test.ts`
+- **Thin community `Community 282`** (2 nodes): `client()`, `auth-client.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 282`** (2 nodes): `generateTotp()`, `totp.ts`
+- **Thin community `Community 283`** (2 nodes): `generateTotp()`, `totp.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 283`** (2 nodes): `reset()`, `reset.ts`
+- **Thin community `Community 284`** (2 nodes): `reset()`, `reset.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 284`** (2 nodes): `generateRuntimeConfig()`, `runtimeConfig.ts`
+- **Thin community `Community 285`** (2 nodes): `generateRuntimeConfig()`, `runtimeConfig.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 285`** (2 nodes): `notAvailable()`, `sharp-stub.ts`
+- **Thin community `Community 286`** (2 nodes): `notAvailable()`, `sharp-stub.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 286`** (2 nodes): `past()`, `eventRepository.cleanup.test.ts`
+- **Thin community `Community 287`** (2 nodes): `past()`, `eventRepository.cleanup.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 287`** (2 nodes): `isJobName()`, `types.ts`
+- **Thin community `Community 288`** (2 nodes): `isJobName()`, `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 288`** (2 nodes): `fakeEvent()`, `reconcile-unlock.test.ts`
+- **Thin community `Community 289`** (2 nodes): `fakeEvent()`, `reconcile-unlock.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 289`** (2 nodes): `fakeEvent()`, `unlock.post.test.ts`
+- **Thin community `Community 290`** (2 nodes): `fakeEvent()`, `unlock.post.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 290`** (2 nodes): `fakeEvent()`, `cleanup-stale-events.test.ts`
+- **Thin community `Community 291`** (2 nodes): `fakeEvent()`, `cleanup-stale-events.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 291`** (2 nodes): `expectStatus()`, `reminder.service.test.ts`
+- **Thin community `Community 292`** (2 nodes): `expectStatus()`, `reminder.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 292`** (2 nodes): `expectStatus()`, `guest.service.test.ts`
+- **Thin community `Community 293`** (2 nodes): `expectStatus()`, `guest.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 293`** (2 nodes): `expectStatus()`, `event.service.test.ts`
+- **Thin community `Community 294`** (2 nodes): `expectStatus()`, `event.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 294`** (2 nodes): `makePaidCheckout()`, `eventReconcile.service.test.ts`
+- **Thin community `Community 295`** (2 nodes): `makePaidCheckout()`, `eventReconcile.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 295`** (2 nodes): `getEventTypeLabel()`, `eventTypes.ts`
+- **Thin community `Community 296`** (2 nodes): `getEventTypeLabel()`, `eventTypes.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 296`** (2 nodes): `formatCurrencyAmount()`, `currency.ts`
+- **Thin community `Community 297`** (2 nodes): `formatCurrencyAmount()`, `currency.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 297`** (2 nodes): `adminLimitField()`, `admin.ts`
+- **Thin community `Community 298`** (2 nodes): `adminLimitField()`, `admin.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 298`** (2 nodes): `Icon()`, `icons.jsx`
+- **Thin community `Community 299`** (2 nodes): `Icon()`, `icons.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 299`** (2 nodes): `AppShell()`, `app-shell.jsx`
+- **Thin community `Community 300`** (2 nodes): `AppShell()`, `app-shell.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 300`** (2 nodes): `BrandShowcase()`, `brand.jsx`
+- **Thin community `Community 301`** (2 nodes): `BrandShowcase()`, `brand.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 301`** (2 nodes): `dataModel.d.ts`, `schema.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 302`** (2 nodes): `initConvexTest()`, `test.setup.ts`
+- **Thin community `Community 302`** (2 nodes): `dataModel.d.ts`, `schema.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 303`** (2 nodes): `Task 1: Utility colore (contrasto + soft derivato)`, `task-1-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -4094,17 +4092,17 @@ Nodes (1): Svix-id dedup + env-domain isolation
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDB()` connect `Community 0` to `Community 11`, `Community 54`, `Community 143`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `logAudit()` connect `Community 0` to `Community 11`?**
-  _High betweenness centrality (0.001) - this node is a cross-community bridge._
+- **Why does `logAudit()` connect `Community 0` to `Community 11`, `Community 13`, `Community 15`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `getDB()` connect `Community 0` to `Community 143`, `Community 11`, `Community 54`, `Community 15`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `getCategoryFromAction()` connect `Community 13` to `Community 0`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Are the 99 inferred relationships involving `getDB()` (e.g. with `main()` and `main()`) actually correct?**
   _`getDB()` has 99 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 33 inferred relationships involving `logAudit()` (e.g. with `logEmailEvent()` and `sendEmail()`) actually correct?**
-  _`logAudit()` has 33 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 34 inferred relationships involving `logAudit()` (e.g. with `logEmailEvent()` and `sendEmail()`) actually correct?**
+  _`logAudit()` has 34 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Get HTML template based on page type.`, `Simple mustache-like template rendering.`, `Generate complete HTML for a route's OG image.` to the rest of the system?**
   _2978 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.02 - nodes in this community are weakly interconnected._
