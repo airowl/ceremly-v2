@@ -12,9 +12,13 @@ import type * as auth from "../auth.js";
 import type * as email from "../email.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
+import type * as lib_audit from "../lib/audit.js";
+import type * as lib_authorization from "../lib/authorization.js";
 import type * as lib_env from "../lib/env.js";
+import type * as lib_identity from "../lib/identity.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
 import type * as migrations_authImport from "../migrations/authImport.js";
+import type * as organizations from "../organizations.js";
 
 import type {
   ApiFromModules,
@@ -27,9 +31,13 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   health: typeof health;
   http: typeof http;
+  "lib/audit": typeof lib_audit;
+  "lib/authorization": typeof lib_authorization;
   "lib/env": typeof lib_env;
+  "lib/identity": typeof lib_identity;
   "lib/migrationKey": typeof lib_migrationKey;
   "migrations/authImport": typeof migrations_authImport;
+  organizations: typeof organizations;
 }>;
 
 /**

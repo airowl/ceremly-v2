@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import type { DBAdapter } from "better-auth/adapters";
 import type { BetterAuthOptions } from "better-auth/minimal";
 import { internalMutation } from "../_generated/server";
+import { normalizeEmail } from "../lib/identity";
 import { assertMigrationKey } from "../lib/migrationKey";
 import { authComponent, createAuth } from "../auth";
 
@@ -91,8 +92,12 @@ export interface AuthImportResult {
  * (`db/internal-adapter.mjs` → `findUserByEmail`), and lowercases on sign-up.
  * An imported mixed-case address would therefore be unreachable at sign-in, so
  * the import normalizes it and reports how many addresses it touched.
+ *
+ * The implementation moved to `lib/identity` in Task 5, where the organization
+ * domain needs the same rule; it is re-exported here so the import contract (and
+ * the test that pins it) stays where it was.
  */
-export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+export { normalizeEmail };
 
 const toEpochMs = (value: number | string | Date | null | undefined): number => {
     if (value === null || value === undefined) return 0;

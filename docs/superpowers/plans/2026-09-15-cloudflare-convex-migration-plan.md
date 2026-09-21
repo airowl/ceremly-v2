@@ -18,9 +18,10 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 2 / G01:** completato e `PASS`: build e preview Nuxt/Cloudflare sono state provate localmente; `wrangler.jsonc` resta una configurazione staging con binding D1 placeholder, non un deploy Cloudflare confermato.
 - **Task 3 / G02:** completato e `PASS` (2026-09-18) contro il dev deployment di staging `airowl/ceremly-staging` → `wary-spaniel-466` (eu-west-1). Tutti i casi dello Step 4 sono verificati live: query pubblica SSR con `suspense()`, opt-out CSR, mutation tipizzata, realtime dopo una write, query autenticata (provider `customJwt` solo-gate), anonimo, refresh forzato singolo e sopravvivenza a un failure transiente della sessione. Evidenza: `docs/migration/evidence/G02-convex-vue.md`.
 - **Task 4 / G03–G05:** completato (2026-09-18) su staging. Better Auth vive nel componente Convex `betterAuth`, il proxy same-origin `/api/auth/*` è implementato dietro `NUXT_AUTH_BACKEND` (default `legacy`, così la produzione Vercel non si sposta) e l'import idempotente delle credenziali è verificato live: `G03=PASS`, `G05=PASS`, `G04=NOT_RUN` (riga OAuth Google bloccata). Evidenza: `docs/migration/evidence/G03-G05-auth.md`.
-- **Task 5–18:** non avviati. Runtime, dati applicativi e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 5 / G06:** completato (2026-09-21) su staging. Organizzazioni, membership e inviti sono tabelle applicative Convex con RBAC risolto server-side; 36 casi `convex-test` ermetici (isolamento cross-tenant, escalation, furto/scadenza/replay dell'invito, accept concorrenti, audit su ogni write) più un sign-up live che ha materializzato `appUsers` + organizzazione personale + membership owner dal trigger `user.create`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
+- **Task 6–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
-Il prossimo lavoro autorizzato dal piano è il Task 5 (gate G06: organizzazioni applicative e RBAC Convex).
+Il prossimo lavoro autorizzato dal piano è il Task 6 (gate G07: billing Creem per organizzazione).
 
 ## Global Constraints
 
@@ -480,6 +481,14 @@ git commit -m "feat(migration): prove Better Auth credential migration"
 
 ### Task 5: Spike G06 — organizzazioni applicative e RBAC Convex
 
+> **Stato 2026-09-21: completato.** `G06=PASS`: 36 test ermetici (`pnpm test:gate:g06`) più verifica live del trigger su `airowl/ceremly-staging` → `wary-spaniel-466`. Evidenza: `docs/migration/evidence/G06-org-rbac.md`.
+>
+> **Deviazioni misurate dal testo sotto** (dettagli e motivazioni nell'evidenza):
+> - `appUsers` ha anche `email` (normalizzata, indicizzata) oltre ai campi elencati nello Step 1: senza di essa "è già membro?" e "l'invito è indirizzato a me?" richiederebbero un giro sul componente Better Auth, e il confronto deve avvenire come lo fa Better Auth (`toLowerCase`). `ensureProvisioned` risincronizza la copia dal JWT a ogni login, quindi `changeEmail` arriva comunque al dominio.
+> - la tabella inviti ha anche `tokenHash`, `inviterUserId`, `expiresAt`, `createdAt`, `acceptedAt/By`, `canceledAt`, e `auditLogs` viene aggiunta perché lo Step 4 richiede un record per ogni write.
+> - `forbidden(code)` restituisce `ConvexError({ code, … })`: il codice è la parte stabile su cui il client decide, i dettagli restano per i log.
+> - "un member non scrive" è implementato come *nessuna scrittura amministrativa* (org, membership, inviti) mantenendo la regola legacy `roleCanWrite` per i dati di dominio: la migrazione non deve togliere a un member l'accesso in scrittura che ha oggi in produzione.
+
 **Files:**
 - Create: `convex/lib/identity.ts`
 - Create: `convex/lib/authorization.ts`
@@ -491,7 +500,7 @@ git commit -m "feat(migration): prove Better Auth credential migration"
 **Interfaces:**
 - Produces: `requireIdentity(ctx)`, `requireActiveOrganization(ctx)`, `requireRole(ctx, roles)`, `getAuthEmail(ctx, authUserId): Promise<string>`, `forbidden(code): ConvexError`, `findAppUserByAuthId(ctx, authUserId)`, `findMembership(ctx, organizationId, userId)`, `writeAudit(ctx, input)`, `api.organizations.setActive`, `api.organizations.inviteMember`, `api.organizations.acceptInvitation`.
 
-- [ ] **Step 1: Aggiungere le tabelle tenant minime**
+- [x] **Step 1: Aggiungere le tabelle tenant minime** — più `invitations` e `auditLogs`, richieste dagli Step 2 e 4; indici tenant-first (`by_org_user`, `by_organization_role`, `by_org_status`, `by_org_email`, `by_token_hash`).
 
 ```ts
 appUsers: defineTable({
@@ -516,7 +525,7 @@ memberships: defineTable({
 }).index("by_org_user", ["organizationId", "userId"]).index("by_user", ["userId"]),
 ```
 
-- [ ] **Step 2: Scrivere prima i test di isolamento**
+- [x] **Step 2: Scrivere prima i test di isolamento** — `convex/organizations.test.ts` (32 casi): ogni requisito elencato qui ha un test dedicato, ed è il gate G06.
 
 Con `convexTest(schema, modules)` creare Alice/org A e Bob/org B. Verificare: Alice non legge B, un member non scrive, admin scrive ma non elimina org, owner gestisce membership, `setActive` rifiuta org senza membership e il client non può forzare `organizationId` negli args. Coprire inoltre invito pending con token hash, scadenza, accept idempotente, email case-insensitive, divieto self-invite e impossibilità di accettare un invito destinato a un'altra email.
 
@@ -524,7 +533,7 @@ Run: `pnpm vitest run convex/organizations.test.ts`
 
 Expected: FAIL finché gli helper non esistono.
 
-- [ ] **Step 3: Implementare gli helper con unico indice tenant**
+- [x] **Step 3: Implementare gli helper con unico indice tenant** — `convex/lib/identity.ts`, `convex/lib/authorization.ts`: `requireRole` è la via di accesso a ogni write tenant-scoped, con membership ri-verificata a ogni chiamata (un puntatore stantio nega, non autorizza).
 
 ```ts
 export async function requireRole(
@@ -540,18 +549,20 @@ export async function requireRole(
 }
 ```
 
-- [ ] **Step 4: Auditare ogni mutation e provare la concorrenza**
+- [x] **Step 4: Auditare ogni mutation e provare la concorrenza** — `writeAudit` scrive nella stessa transazione della write (una write senza audit non esiste); due accept concorrenti convergono su una sola membership e un solo record `team.invite_accepted`. Il trigger `user.create` è in `convex/auth.ts`; il self-heal è `api.organizations.ensureProvisioned`, idempotente e verificato live.
 
 Due richieste concorrenti di creazione membership devono produrre una sola membership logica; ogni create/update/delete/setActive scrive audit con attore, org, target e dettagli.
 
 Il trigger di creazione Better Auth crea `appUser`, organizzazione personale e membership owner; il primo login esegue self-heal idempotente se uno dei tre record manca. L'accettazione invito può cambiare l'organizzazione attiva soltanto dopo aver creato/verificato la membership.
 
-- [ ] **Step 5: Gate e commit**
+- [x] **Step 5: Gate e commit**
 
 ```bash
 git add convex/schema.ts convex/lib convex/organizations.ts convex/organizations.test.ts docs/migration
 git commit -m "feat(migration): enforce Convex tenant RBAC"
 ```
+
+*(2026-09-21: eseguito — `pnpm test:gate:g06` verde (36 casi) e `G06=PASS` nel ledger; G02 e G03–G05 ri-eseguiti senza regressioni.)*
 
 ### Task 6: Spike G07 — billing Creem per organizzazione
 

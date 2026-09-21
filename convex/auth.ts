@@ -44,6 +44,26 @@ const scheduleAuthEmail = (
     void ctx.scheduler.runAfter(0, internal.email.sendAuthEmail, email);
 };
 
+const scheduleAppUserProvisioning = (
+    ctx: GenericCtx<DataModel>,
+    user: { id: string; email: string; name?: string | null },
+) => {
+    if (isQueryCtx(ctx)) {
+        return;
+    }
+
+    try {
+        void ctx.scheduler.runAfter(0, internal.organizations.provisionAuthUser, {
+            authUserId: user.id,
+            email: user.email,
+            ...(user.name ? { name: user.name } : {}),
+        });
+    } catch (error) {
+        // See the comment on `databaseHooks` below: never fail a sign-up here.
+        console.error("[auth] unable to schedule app user provisioning", error);
+    }
+};
+
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
     betterAuth({
         baseURL: siteUrl(),
@@ -109,6 +129,25 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         account: {
             accountLinking: {
                 enabled: true,
+            },
+        },
+        // Task 5 provisioning trigger. A sign-up creates the app-owned profile
+        // (`appUsers`), the personal organization and its owner membership.
+        //
+        // Scheduled rather than inline, and wrapped: Better Auth runs `after`
+        // hooks inside `runWithAdapter`, i.e. *after* the user row is written but
+        // still on the request path — a throw here would turn a successful
+        // sign-up into a 500. The authoritative path is the idempotent
+        // `api.organizations.ensureProvisioned` called on first login, so a
+        // failed schedule degrades to "provisioned at next login", never to a
+        // user without an organization.
+        databaseHooks: {
+            user: {
+                create: {
+                    after: async (user: { id: string; email: string; name?: string | null }) => {
+                        scheduleAppUserProvisioning(ctx, user);
+                    },
+                },
             },
         },
         plugins: [
