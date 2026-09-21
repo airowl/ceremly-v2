@@ -658,7 +658,7 @@ Il Worker media usa lo stesso schema di firma, legge l'originale da `CEREMLY_R2`
 
 Testare una chiave R2 esistente, un'immagine piccola, JPEG/PNG/WebP/AVIF, payload non immagine, timeout Images e retry manuale da funzione admin. Salvare conteggi e chiavi pseudonime in `docs/migration/evidence/G08-media.md`.
 
-- [ ] **Step 5: Gate e commit**
+- [x] **Step 5: Gate e commit**
 
 ```bash
 git add convex/files.ts convex/media.ts convex/media.test.ts server/api/internal/storage server/api/internal/media server/types/cloudflare.d.ts wrangler.jsonc docs/migration
