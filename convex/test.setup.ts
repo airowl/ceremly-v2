@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { createRequire } from "node:module";
 import schema from "./schema";
+import type { Doc, Id } from "./_generated/dataModel";
 
 // Test harness shared by `convex/**/*.test.ts`.
 //
@@ -28,6 +29,41 @@ const componentRoot = requireFromHere
     .resolve("@convex-dev/better-auth/package.json")
     .replace(/\/package\.json$/, "");
 const componentModules = import.meta.glob("../node_modules/@convex-dev/better-auth/dist/component/**/*.js");
+
+/**
+ * A minimal but *valid* `events` row.
+ *
+ * Task 10 completed the table: an event now carries its invitation content
+ * (`type`, `templateKey`, `title`, `slug`, `status`, blocks, RSVP config), so a
+ * suite that only needs an event to exist — billing, media scoping — builds it
+ * here instead of restating eleven required fields. The legacy behaviour these
+ * suites assert is unchanged; what changed is that an event without a title or a
+ * slug is no longer representable, which is the point of the completed model.
+ */
+export function eventFixture(
+    organizationId: Id<"organizations">,
+    overrides: Partial<
+        Omit<Doc<"events">, "_id" | "_creationTime" | "organizationId">
+    > = {},
+): Omit<Doc<"events">, "_id" | "_creationTime"> {
+    return {
+        organizationId,
+        type: "matrimonio",
+        templateKey: "toscana-basic",
+        title: "Evento di prova",
+        // A distinct slug per fixture: the legacy `slug UNIQUE` is enforced in
+        // the domain layer, and two suites creating "the" event must not collide.
+        slug: `evento-${Math.random().toString(36).slice(2, 10)}`,
+        status: "draft",
+        blocks: [],
+        rsvpConfig: [],
+        distribution: {},
+        tier: "free",
+        createdAt: 0,
+        updatedAt: 0,
+        ...overrides,
+    };
+}
 
 /**
  * `initConvexTest` with the auth component registered.

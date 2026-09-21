@@ -797,23 +797,23 @@ Expected: `10`. Se il risultato è diverso, fermare l'esecuzione del piano.
 - Consumes: gate `G01`-`G10=PASS`, `MigrationBatch<T>`.
 - Produces: tabelle applicative e `internal.migrations.domainImport.importBatch` idempotente.
 
-- [ ] **Step 1: Trascrivere tutte le tabelle correnti**
+- [x] **Step 1: Trascrivere tutte le tabelle correnti**
 
 Definire: `appUsers`, `organizations`, `memberships`, `organizationInvitations`, `events`, `guests`, `rsvpResponses`, `guestActivities`, `eventReminders`, `projects`, `files`, `auditLogs`, `emailSuppressions`, `emailEvents`, `contactMessages`, `waitingList`, `dataExports`, `customLimits`, `jobExecutions`, `webhookEvents`, `siteSettings`, `rateLimitBuckets`, `migrationRecords`. Ogni record migrato ha `legacyId`; timestamp PostgreSQL diventano epoch millisecondi; JSON mantiene le shape di `shared/types/ceremly.ts` e `shared/constants/inviteTheme.ts`.
 
-- [ ] **Step 2: Definire indici equivalenti ai path reali**
+- [x] **Step 2: Definire indici equivalenti ai path reali**
 
 Indici minimi: legacy ID, slug evento, token guest, org+status, org+createdAt, event+email normalizzata, guest RSVP, event reminder, provider event ID, job status+nextAttemptAt, email message ID, export user+status. Non usare `.filter()` su query tenant se un indice composto può iniziare da `organizationId`.
 
-- [ ] **Step 3: Scrivere test idempotenza e foreign key logiche**
+- [x] **Step 3: Scrivere test idempotenza e foreign key logiche**
 
 Importare due volte lo stesso batch e verificare count invariato; rifiutare membership senza user/org, guest senza event/org coerenti, RSVP senza guest, variante senza parent e record con `legacyId` duplicato.
 
-- [ ] **Step 4: Implementare import per ordine topologico**
+- [x] **Step 4: Implementare import per ordine topologico**
 
 Ordine vincolante: utenti applicativi → organizzazioni → membership/inviti → eventi/progetti → guest/reminder → RSVP/activity → file → email/audit/export/limiti → billing references. Ogni batch salva `table`, `batchIndex`, `sha256`, `importedAt` in `migrationRecords` prima di rispondere success.
 
-- [ ] **Step 5: Verificare e commit**
+- [x] **Step 5: Verificare e commit**
 
 Run: `pnpm convex codegen && pnpm vitest run convex/migrations/domainImport.test.ts && pnpm typecheck:convex`
 
@@ -821,6 +821,8 @@ Run: `pnpm convex codegen && pnpm vitest run convex/migrations/domainImport.test
 git add convex/schema.ts convex/model convex/migrations
 git commit -m "feat(migration): model and import Ceremly domain in Convex"
 ```
+
+*(2026-09-21: eseguito su istruzione esplicita dell'utente di **proseguire oltre il checkpoint** del Task 9 — `G04` e `G10` restano `NOT_RUN` e i due requisiti restano invariati: la regola "il gate precedente non passa ⇒ non si parte" è stata sospesa dalla richiesta, non ammorbidita. Mappa completa, regole di traduzione, deferral e deviazioni in `docs/migration/domain-schema.md`. Deviazioni misurate: **`customLimits` non è stata creata** perché `user_custom_limits` è stata eliminata dal modello (`drizzle/migrations/manual/drop_user_custom_limits.sql`) — il piano la elencava ancora, ma non c'è nulla da migrare; `organizationInvitations` resta `invitations` (nome del Task 5); gli indici parziali del legacy sono diventati un campo `pending` esplicito (`eventReminders`) e un campo `reminderId` indicizzato (`guestActivities`), perché Convex **non indicizza i documenti privi del campo**, quindi "tutti i non inviati" non è esprimibile come query su `sentAt`; gli inviti `pending` e i file senza organizzazione sono **deferiti e contati** (`deferred`), non importati con un default inventato. Verifica: `convex/migrations/domainImport.test.ts` 30 casi, `test/migration/domain-batch-contract.test.ts` 12 casi, suite `convex/` 123 casi, `pnpm test:migration` 214 passati/27 saltati, `typecheck:convex` e eslint puliti. Due file di test esistenti (`convex/billing.test.ts`, `convex/media.test.ts`) usavano eventi senza titolo né slug: ora costruiscono la riga con `eventFixture`, perché un evento senza contenuto d'invito non è più rappresentabile — che è il punto del modello completato.)*
 
 ### Task 11: Portare business logic e API dominio in Convex
 

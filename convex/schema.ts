@@ -1,5 +1,18 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+    attendingStatus,
+    eventDistribution,
+    eventStatus,
+    eventTypeKey,
+    exportStatus,
+    guestActivityType,
+    inviteBlock,
+    inviteTheme,
+    rsvpAnswers,
+    rsvpQuestion,
+    sentChannel,
+} from "./model/validators";
 
 // Application schema. Better Auth owns identity in its own component, Creem owns
 // billing state in its own component (Task 4): what is defined here is the
@@ -10,6 +23,22 @@ import { v } from "convex/values";
 // Every tenant-scoped table carries `organizationId` and every index that a
 // query uses starts with it, so an unscoped read is a compile-time mistake
 // rather than a leak.
+//
+// Task 10 completes the application model (events, guests, RSVP, reminders,
+// projects, webhook/email/journal tables) and fixes the two translation rules
+// the rest of this file follows:
+//
+// 1. **Timestamp PostgreSQL → epoch millisecondi** (`v.number()`): the single
+//    representation the rest of the model already uses (`files.createdAt`,
+//    `auditLogs.createdAt`).
+// 2. **Colonna nullable → campo opzionale** (`v.optional`), con l'API che
+//    materializza `null` in uscita. Una colonna nullable non ha un terzo stato
+//    da distinguere: rendere `null` "assente" evita di indicizzare `null` e
+//    tiene una sola convenzione per tutto il modello.
+//
+// Dove il vincolo del database non ha un equivalente Convex, il sostituto è
+// dichiarato accanto alla tabella (unicità di `slug`, indici parziali, indici
+// funzionali su `lower(email)`) e applicato nel codice di dominio.
 
 const organizationRole = v.union(
     v.literal("owner"),
@@ -95,6 +124,8 @@ export default defineSchema({
         .index("by_legacy_id", ["legacyId"]),
 
     memberships: defineTable({
+        /** Legacy `member.id`: what the domain import dedupes on. */
+        legacyId: v.optional(v.string()),
         organizationId: v.id("organizations"),
         userId: v.id("appUsers"),
         role: organizationRole,
@@ -102,15 +133,28 @@ export default defineSchema({
     })
         .index("by_org_user", ["organizationId", "userId"])
         .index("by_organization_role", ["organizationId", "role"])
-        .index("by_user", ["userId"]),
+        .index("by_user", ["userId"])
+        .index("by_legacy_id", ["legacyId"]),
 
     invitations: defineTable({
+        /** Legacy `invitation.id`: what the domain import dedupes on. */
+        legacyId: v.optional(v.string()),
         organizationId: v.id("organizations"),
         email: v.string(),
         role: organizationRole,
         status: invitationStatus,
-        /** SHA-256 of the invite token: the plaintext token is never persisted. */
-        tokenHash: v.string(),
+        /**
+         * SHA-256 of the invite token: the plaintext token is never persisted.
+         *
+         * Optional because of the migration (Task 10): the legacy `invitation`
+         * table stored no token at all, so an invitation imported in a terminal
+         * state (`accepted` / `canceled` / `expired`) has no hash to carry. It must
+         * not get a sentinel either — a *derivable* hash would be an accept-able
+         * credential nobody was ever sent, and a document without the field is
+         * simply absent from `by_token_hash`, which is the behaviour wanted here.
+         * Pending invitations are not imported at all (they must be re-issued).
+         */
+        tokenHash: v.optional(v.string()),
         inviterUserId: v.id("appUsers"),
         expiresAt: v.number(),
         createdAt: v.number(),
@@ -121,29 +165,389 @@ export default defineSchema({
         .index("by_token_hash", ["tokenHash"])
         .index("by_org_status", ["organizationId", "status"])
         .index("by_org_email", ["organizationId", "email"])
-        .index("by_email", ["email"]),
+        .index("by_email", ["email"])
+        .index("by_legacy_id", ["legacyId"]),
 
     /**
-     * Minimal `events` slice for the billing spike (plan Task 6, Step 1).
+     * Eventi Ceremly (SPEC §2) — entità radice del dominio inviti.
      *
-     * Task 10 completes this table with the invitation/RSVP fields **without
-     * renaming** what is here: `tier` is the one-time event state (`free` →
-     * `celebration`), `creemOrderId` links a refund back to the event to re-lock,
-     * `creemCheckoutId` is persisted when the checkout is created so a refund
-     * that arrives before `checkout.completed` can still find its event.
+     * Nata come slice minimale per lo spike billing (plan Task 6); Task 10 la
+     * completa con i campi invito/RSVP **senza rinominare** ciò che c'era:
+     * `tier` è lo stato one-time dell'evento (`free` → `celebration`),
+     * `creemOrderId` ricollega un refund all'evento da re-lockare,
+     * `creemCheckoutId` è persistito alla creazione del checkout così un refund
+     * che arriva prima di `checkout.completed` trova comunque il suo evento.
+     *
+     * Il legacy dichiarava `slug UNIQUE`: Convex non supporta indici unici, quindi
+     * `by_slug` è un indice di ricerca e l'unicità è applicata nel codice di
+     * dominio (create/update/import verificano prima di scrivere). È l'unico modo
+     * di avere la stessa garanzia: un indice non-unico che *non* viene controllato
+     * è esattamente il bug che il vincolo Postgres preveniva.
      */
     events: defineTable({
         legacyId: v.optional(v.string()),
         organizationId: v.id("organizations"),
+        type: eventTypeKey,
+        templateKey: v.string(),
+        theme: v.optional(inviteTheme),
+        inviteFont: v.optional(v.string()),
+        title: v.string(),
+        slug: v.string(),
+        eventDate: v.optional(v.number()),
+        /** Solo display, es. `"16:00"` (nessun fuso: è l'ora scritta sull'invito). */
+        eventTime: v.optional(v.string()),
+        locationName: v.optional(v.string()),
+        locationAddress: v.optional(v.string()),
+        status: eventStatus,
+        blocks: v.array(inviteBlock),
+        rsvpConfig: v.array(rsvpQuestion),
+        rsvpDeadline: v.optional(v.number()),
+        rsvpClosedMessage: v.optional(v.string()),
+        distribution: eventDistribution,
         tier: v.union(v.literal("free"), v.literal("celebration")),
         creemOrderId: v.optional(v.string()),
         creemCheckoutId: v.optional(v.string()),
         unlockedAt: v.optional(v.number()),
+        cleanupWarnedAt: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
     })
         .index("by_organization", ["organizationId"])
+        .index("by_organization_status", ["organizationId", "status"])
+        .index("by_organization_created", ["organizationId", "createdAt"])
+        .index("by_slug", ["slug"])
         .index("by_creem_order_id", ["creemOrderId"])
         .index("by_creem_checkout_id", ["creemCheckoutId"])
         .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Ospiti di un evento (SPEC §2) — l'ospite NON ha account: accede via token
+     * opaco. `removedAt` è il soft-delete (link inattivo, risposta conservata).
+     *
+     * `email` è memorizzata normalizzata (trim + lowercase). Il vincolo legacy
+     * era `UNIQUE (event_id, lower(email)) WHERE email IS NOT NULL AND removed_at
+     * IS NULL` — un indice funzionale su espressione con predicato parziale, che
+     * Convex non sa esprimere. Qui la chiave è `(eventId, email)` sul valore già
+     * normalizzato, e l'unicità è applicata dove serve (import, creazione,
+     * re-import CSV) ignorando gli ospiti rimossi: la normalizzazione è la stessa
+     * regola che `lib/identity` applica alle email di account, quindi due email
+     * che Postgres considerava uguali restano uguali anche qui.
+     */
+    guests: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        firstName: v.string(),
+        lastName: v.string(),
+        email: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        /** es. "Famiglia". */
+        groupName: v.optional(v.string()),
+        /** Note visibili solo all'organizzatore. */
+        notes: v.optional(v.string()),
+        /** Token opaco permanente dell'invito (10 char base62 nel legacy). */
+        token: v.string(),
+        sentAt: v.optional(v.number()),
+        sentChannel: v.optional(sentChannel),
+        emailOpenedAt: v.optional(v.number()),
+        firstOpenedAt: v.optional(v.number()),
+        openCount: v.number(),
+        remindersDisabled: v.boolean(),
+        removedAt: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"])
+        .index("by_event_email", ["eventId", "email"])
+        .index("by_token", ["token"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Risposte RSVP (SPEC §2) — una sola riga per ospite, che rappresenta sempre
+     * l'ultima versione (upsert su `guestId`). `answers` ha chiave `question.id`.
+     */
+    rsvpResponses: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        guestId: v.id("guests"),
+        attending: attendingStatus,
+        companionsCount: v.number(),
+        answers: rsvpAnswers,
+        /** Messaggio opzionale di chi declina. */
+        declineMessage: v.optional(v.string()),
+        /** Prima compilazione: non cambia agli aggiornamenti. */
+        submittedAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"])
+        .index("by_guest", ["guestId"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Timeline attività ospite (SPEC §2) — append-only, ospite senza account.
+     *
+     * `reminderId` è un campo dedicato, non `meta.reminderId`: il legacy teneva
+     * l'idempotenza dei reminder in un indice unico *su espressione JSONB*
+     * (`(meta->>'reminderId') WHERE type = 'reminder_sent'`), che Convex non può
+     * indicizzare. Estrarlo in una colonna promuove quel vincolo a un indice
+     * reale `(guestId, type, reminderId)` — la stessa garanzia, senza dipendere da
+     * un valore annidato.
+     */
+    guestActivities: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        guestId: v.id("guests"),
+        type: guestActivityType,
+        meta: v.record(v.string(), v.any()),
+        /** Valorizzato solo per `reminder_sent`: chiave di idempotenza. */
+        reminderId: v.optional(v.id("eventReminders")),
+        createdAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"])
+        .index("by_guest", ["guestId"])
+        .index("by_guest_reminder", ["guestId", "type", "reminderId"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Reminder programmati per evento (SPEC §2) — max 3 per evento, applicato nel
+     * servizio. `daysBefore` = giorni prima della `rsvpDeadline`.
+     *
+     * `pending` sostituisce l'indice parziale legacy
+     * (`WHERE enabled = true AND sent_at IS NULL`): in Convex un documento senza il
+     * campo indicizzato **non compare** nell'indice, quindi "tutti i reminder non
+     * ancora inviati" non è esprimibile come query su `sentAt`. Un flag esplicito
+     * rende la hot path del cron un intervallo su indice invece di una scansione.
+     *
+     * `processingAt` è il lease del cron (impostato all'inizio, scade dopo 5
+     * minuti, azzerato su successo o fallimento): due esecuzioni concorrenti non
+     * inviano lo stesso reminder due volte.
+     */
+    eventReminders: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        daysBefore: v.number(),
+        subject: v.string(),
+        /** Placeholder `{nome}` / `{link}`. */
+        message: v.string(),
+        enabled: v.boolean(),
+        /** true finché il reminder non è stato inviato (`sentAt` assente). */
+        pending: v.boolean(),
+        sentAt: v.optional(v.number()),
+        processingAt: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"])
+        .index("by_enabled_pending", ["enabled", "pending"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /** Entità di esempio org-scoped (CRUD completo: `server/api/projects/`). */
+    projects: defineTable({
+        legacyId: v.optional(v.string()),
+        organizationId: v.id("organizations"),
+        name: v.string(),
+        description: v.optional(v.string()),
+        status: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_organization_created", ["organizationId", "createdAt"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Soppressioni email — GLOBALE (account-level), non org-scoped: un hard bounce
+     * o una complaint sono oggettivi e valgono per qualsiasi mittente.
+     */
+    emailSuppressions: defineTable({
+        legacyId: v.optional(v.string()),
+        /** Normalizzata: è la chiave univoca (`UNIQUE` nel legacy). */
+        email: v.string(),
+        /** `hard_bounce` | `complaint` | `manual`. */
+        reason: v.string(),
+        bounceSubtype: v.optional(v.string()),
+        source: v.string(),
+        createdAt: v.number(),
+    })
+        .index("by_email", ["email"])
+        .index("by_reason", ["reason"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Eventi email (append-only) dal webhook Resend.
+     *
+     * Le tre reference sono `v.id` risolte all'import: nel legacy erano colonne
+     * `text` senza FK, ma sono l'unico modo di rispondere a "questa email è stata
+     * aperta?" per un ospite, e un riferimento a un id di un altro namespace
+     * sarebbe un filtro che non trova nulla.
+     */
+    emailEvents: defineTable({
+        legacyId: v.optional(v.string()),
+        messageId: v.string(),
+        type: v.string(),
+        recipient: v.string(),
+        organizationId: v.optional(v.id("organizations")),
+        emailType: v.optional(v.string()),
+        guestId: v.optional(v.id("guests")),
+        eventId: v.optional(v.id("events")),
+        clickedUrl: v.optional(v.string()),
+        payload: v.optional(v.any()),
+        occurredAt: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_message_id", ["messageId"])
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"])
+        .index("by_type", ["type"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Messaggi dal form contatti — globale, con soft-delete (`isArchived`).
+     * `legacyId` è la serializzazione della chiave `serial` del legacy: la chiave
+     * non è più un intero, ma il record resta ricollegabile alla riga di origine.
+     */
+    contactMessages: defineTable({
+        legacyId: v.optional(v.string()),
+        name: v.string(),
+        email: v.string(),
+        subject: v.string(),
+        message: v.string(),
+        language: v.string(),
+        isArchived: v.boolean(),
+        archivedAt: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_created_at", ["createdAt"])
+        .index("by_email", ["email"])
+        .index("by_archived_created", ["isArchived", "createdAt"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Waiting list pre-lancio — globale, email univoca.
+     *
+     * `ipAddress` e `userAgent` sono copiati per parità col legacy. Sono dati
+     * personali senza una finalità operativa: il piano li tratta come voce di
+     * retention da decidere prima del cutover, non come campo da nascondere —
+     * ora sono visibili in un posto solo, con un nome solo.
+     */
+    waitingList: defineTable({
+        legacyId: v.optional(v.string()),
+        email: v.string(),
+        language: v.string(),
+        createdAt: v.number(),
+        source: v.optional(v.string()),
+        utmSource: v.optional(v.string()),
+        utmMedium: v.optional(v.string()),
+        utmCampaign: v.optional(v.string()),
+        ipAddress: v.optional(v.string()),
+        userAgent: v.optional(v.string()),
+    })
+        .index("by_email", ["email"])
+        .index("by_created_at", ["createdAt"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /** Export GDPR richiesti dall'utente (Task 12 costruisce il flusso). */
+    dataExports: defineTable({
+        legacyId: v.optional(v.string()),
+        userId: v.id("appUsers"),
+        status: exportStatus,
+        format: v.string(),
+        downloadUrl: v.optional(v.string()),
+        downloadToken: v.optional(v.string()),
+        expiresAt: v.optional(v.number()),
+        completedAt: v.optional(v.number()),
+        errorMessage: v.optional(v.string()),
+        fileSize: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_user_status", ["userId", "status"])
+        .index("by_status", ["status"])
+        .index("by_download_token", ["downloadToken"])
+        .index("by_legacy_id", ["legacyId"]),
+
+    /**
+     * Modalità sito (active | waitinglist | maintenance) — override runtime, la
+     * cui sorgente nel legacy era una chiave Upstash Redis (`site:mode`).
+     *
+     * Task 12 collega il lettore (`getServerSiteMode`); qui esiste solo lo stato,
+     * perché un override che vive in una cache volatile non è ispezionabile né
+     * ricostruibile, e la modalità sito decide cosa vede il pubblico.
+     */
+    siteSettings: defineTable({
+        key: v.string(),
+        value: v.string(),
+        updatedAt: v.number(),
+    }).index("by_key", ["key"]),
+
+    /**
+     * Esecuzioni di job asincroni (Task 13: retry, backoff, DLQ). Nel legacy non
+     * esisteva alcuna tabella di job: il polling worker non è compatibile con
+     * Strada A, quindi la coda è HTTP e questo è lo stato che rende un tentativo
+     * ispezionabile.
+     *
+     * `nextAttemptAt` fa parte dell'indice insieme a `status`: la scansione dei
+     * job da riprovare è `status = 'pending' AND nextAttemptAt <= now`, e un job
+     * senza `nextAttemptAt` (terminal) resta fuori dall'indice — che è il
+     * comportamento voluto.
+     */
+    jobExecutions: defineTable({
+        name: v.string(),
+        status: v.union(
+            v.literal("pending"),
+            v.literal("running"),
+            v.literal("succeeded"),
+            v.literal("failed"),
+            v.literal("dead"),
+        ),
+        attempt: v.number(),
+        maxAttempts: v.number(),
+        nextAttemptAt: v.optional(v.number()),
+        startedAt: v.optional(v.number()),
+        finishedAt: v.optional(v.number()),
+        lastError: v.optional(v.string()),
+        /** Chiave di dedup del produttore (es. `email:<messageId>`). */
+        dedupeKey: v.optional(v.string()),
+        payload: v.optional(v.any()),
+        result: v.optional(v.any()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_status_next_attempt", ["status", "nextAttemptAt"])
+        .index("by_name_dedupe", ["name", "dedupeKey"])
+        .index("by_created_at", ["createdAt"]),
+
+    /**
+     * Journal degli import di dominio (plan Task 10, Step 4).
+     *
+     * Una riga per batch **anche quando il batch è vuoto**: è ciò che rende
+     * verificabile l'ordine topologico (un batch può partire solo se i suoi
+     * prerequisiti hanno già una riga qui) e rende una ri-esecuzione distinguibile
+     * da una prima esecuzione. `sha256` è il digest del payload così com'è arrivato:
+     * `importBatch` lo ricalcola e rifiuta il batch se non combacia, quindi il
+     * valore non è un'annotazione ma la prova che i byte importati sono quelli
+     * esportati.
+     */
+    migrationRecords: defineTable({
+        table: v.string(),
+        batchIndex: v.number(),
+        sha256: v.string(),
+        version: v.optional(v.string()),
+        watermark: v.optional(v.string()),
+        records: v.number(),
+        imported: v.number(),
+        skipped: v.number(),
+        importedAt: v.number(),
+    })
+        .index("by_table_batch", ["table", "batchIndex"])
+        .index("by_sha256", ["sha256"]),
 
     /**
      * Webhook replay ledger.
@@ -172,6 +576,8 @@ export default defineSchema({
         .index("by_provider_type", ["provider", "type"]),
 
     auditLogs: defineTable({
+        /** Legacy `audit_log.id` (a `serial`): what the domain import dedupes on. */
+        legacyId: v.optional(v.string()),
         actorAppUserId: v.optional(v.id("appUsers")),
         actorAuthUserId: v.optional(v.string()),
         organizationId: v.optional(v.id("organizations")),
@@ -181,12 +587,24 @@ export default defineSchema({
         targetId: v.optional(v.string()),
         status: v.union(v.literal("success"), v.literal("failure")),
         details: v.optional(v.any()),
+        /**
+         * Origine della richiesta, copiata dal legacy per parità storica.
+         *
+         * Dichiaratamente **non** popolata dagli audit scritti da Convex: una
+         * mutation non vede l'IP del chiamante (`ctx.auth` porta l'identità, non
+         * la connessione). Restano qui perché cancellare l'IP delle righe già
+         * esistenti perderebbe evidenza di sicurezza — la lacuna riguarda le righe
+         * nuove, ed è registrata come tale invece di essere mascherata.
+         */
+        ipAddress: v.optional(v.string()),
+        userAgent: v.optional(v.string()),
         createdAt: v.number(),
     })
         .index("by_organization", ["organizationId"])
         .index("by_actor", ["actorAppUserId"])
         .index("by_action", ["action"])
-        .index("by_created_at", ["createdAt"]),
+        .index("by_created_at", ["createdAt"])
+        .index("by_legacy_id", ["legacyId"]),
 
     /**
      * Files and their image variants (plan Task 7, spike G08).

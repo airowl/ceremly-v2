@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_authorization from "../lib/authorization.js";
 import type * as lib_bridgeHmac from "../lib/bridgeHmac.js";
+import type * as lib_domainBatchDigest from "../lib/domainBatchDigest.js";
 import type * as lib_env from "../lib/env.js";
 import type * as lib_identity from "../lib/identity.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
@@ -26,6 +27,8 @@ import type * as lib_pricing from "../lib/pricing.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as media from "../media.js";
 import type * as migrations_authImport from "../migrations/authImport.js";
+import type * as migrations_domainImport from "../migrations/domainImport.js";
+import type * as model_validators from "../model/validators.js";
 import type * as organizations from "../organizations.js";
 
 import type {
@@ -44,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "lib/audit": typeof lib_audit;
   "lib/authorization": typeof lib_authorization;
   "lib/bridgeHmac": typeof lib_bridgeHmac;
+  "lib/domainBatchDigest": typeof lib_domainBatchDigest;
   "lib/env": typeof lib_env;
   "lib/identity": typeof lib_identity;
   "lib/magicBytes": typeof lib_magicBytes;
@@ -53,6 +57,8 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimit": typeof lib_rateLimit;
   media: typeof media;
   "migrations/authImport": typeof migrations_authImport;
+  "migrations/domainImport": typeof migrations_domainImport;
+  "model/validators": typeof model_validators;
   organizations: typeof organizations;
 }>;
 

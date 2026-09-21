@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { initConvexTest } from "./test.setup";
+import { eventFixture, initConvexTest } from "./test.setup";
 import {
     MAX_FILE_SIZE_BYTES,
     MAX_VARIANT_ATTEMPTS,
@@ -254,7 +254,7 @@ describe("file authorization", () => {
         const { organizationId: bobOrgId } = await addUser(t, bob);
 
         const foreignEvent = await t.run(async (c) =>
-            c.db.insert("events", { organizationId: bobOrgId, tier: "free" }),
+            c.db.insert("events", eventFixture(bobOrgId)),
         );
 
         // The event belongs to Bob: Alice must not be able to scope a key to it.

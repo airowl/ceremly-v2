@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { register } from "@creem_io/convex/test";
 import { api, components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { initConvexTest } from "./test.setup";
+import { eventFixture, initConvexTest } from "./test.setup";
 import { buildCheckoutMetadata, isAtelierSubscription, type WebhookOutcome } from "./billing";
 
 /**
@@ -65,12 +65,14 @@ const insertEvent = (
     fields: Partial<{ tier: "free" | "celebration"; creemOrderId: string; creemCheckoutId: string }> = {},
 ) =>
     ctx.run(async (c) =>
-        await c.db.insert("events", {
-            organizationId,
-            tier: fields.tier ?? "free",
-            ...(fields.creemOrderId ? { creemOrderId: fields.creemOrderId } : {}),
-            ...(fields.creemCheckoutId ? { creemCheckoutId: fields.creemCheckoutId } : {}),
-        }),
+        await c.db.insert(
+            "events",
+            eventFixture(organizationId, {
+                tier: fields.tier ?? "free",
+                ...(fields.creemOrderId ? { creemOrderId: fields.creemOrderId } : {}),
+                ...(fields.creemCheckoutId ? { creemCheckoutId: fields.creemCheckoutId } : {}),
+            }),
+        ),
     );
 
 const eventById = (ctx: Test, eventId: Id<"events">) =>
