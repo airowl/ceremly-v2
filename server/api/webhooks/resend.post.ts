@@ -1,9 +1,27 @@
 import { verifyResendEvent, isOwnDomain, handleResendEvent } from "~~/server/services/emailWebhook.service";
 import { cacheClient } from "~~/server/utils/drivers";
+import { forwardResendWebhookToConvex, isConvexEmailBackend } from "~~/server/utils/emailWebhookBridge";
 
 const DEDUPE_TTL_SECONDS = 86400; // 24h
 
+/**
+ * Webhook Resend.
+ *
+ * Due backend, scelti da `NUXT_EMAIL_BACKEND` (Task 13):
+ * - `legacy` (default): verifica in-process, dedup su Upstash, scrittura su Neon.
+ * - `convex`: **ponte** verso `convex/http.ts`, che verifica la stessa firma con il
+ *   proprio `RESEND_WEBHOOK_SECRET` e scrive in una sola transazione. Qui non resta
+ *   nessuna logica di business: solo i byte e le intestazioni `svix-*`.
+ *
+ * La firma è verificata nel backend che *scrive*, non nel ponte: un ponte che
+ * verificasse e poi inoltrasse avrebbe bisogno del segreto, e due posti con lo stesso
+ * segreto sono due posti da cui può trapelare.
+ */
 export default defineEventHandler(async (event) => {
+    if (isConvexEmailBackend()) {
+        return await forwardResendWebhookToConvex(event);
+    }
+
     const payload = await readRawBody(event); // mai readBody (romperebbe la firma)
     if (!payload) throw createError({ statusCode: 400, statusMessage: "Empty body" });
 

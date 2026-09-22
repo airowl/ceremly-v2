@@ -45,6 +45,13 @@ export const generateRuntimeConfig = () => {
         // `legacy` (default) è l'override Upstash, `convex` è la lettura fail-closed
         // dalla tabella `siteSettings`.
         siteModeBackend: process.env.NUXT_SITE_MODE_BACKEND || "legacy",
+        // Task 13: chi consegna le email e chi riceve il webhook Resend.
+        // `legacy` (default) è Resend chiamato da qui e la route di webhook che
+        // verifica la firma in-process; `convex` è la coda Convex (con retry
+        // persistito e stato in `jobExecutions`) e l'inoltro del webhook grezzo al
+        // `RESEND_WEBHOOK_SECRET` del deployment. Il cutover è l'unico punto che lo
+        // cambia.
+        emailBackend: process.env.NUXT_EMAIL_BACKEND || "legacy",
         // Creem
         creemApiKey: process.env.NUXT_CREEM_API_KEY,
         creemWebhookSecret: process.env.NUXT_CREEM_WEBHOOK_SECRET,

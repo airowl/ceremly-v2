@@ -5,6 +5,8 @@ import { creem, normalizeCreemEvent } from "./billing";
 import { httpAction } from "./_generated/server";
 import { verifyBridgeRequest } from "./lib/bridgeHmac";
 import { isIpHashShaped } from "./lib/spam";
+import { verifySvixSignature } from "./lib/svix";
+import { isOwnAddressDomain } from "./emailEvents";
 import { api, internal } from "./_generated/api";
 
 // Task 4 (migration): Better Auth's own routes, registered on this deployment's
@@ -114,6 +116,105 @@ http.route({
             // must see that its result was refused so it can surface the failure.
             const message = error instanceof Error ? error.message : String(error);
             return json({ ok: false, code: "VARIANT_RESULT_REJECTED", message }, 422);
+        }
+    }),
+});
+
+// Task 13 (migration): the signed Resend webhook.
+//
+// Same URL shape as the legacy route (`/api/webhooks/resend` on the Nuxt side, here
+// `/resend/events` on the Convex site). At cutover the Resend dashboard points
+// straight at this URL; during the rehearsal the Worker route forwards the raw body
+// and the `svix-*` headers verbatim, so the signature stays verifiable here — the
+// Convex deployment is the only place holding `RESEND_WEBHOOK_SECRET`.
+//
+// The handler is transport: verify, parse, delegate. Everything that *does*
+// something (suppression, append-only event row, guest open counters, replay
+// ledger) is one mutation, so a redelivery cannot half-apply and the dedupe is in
+// the same transaction as the write.
+const RESEND_WEBHOOK_PATH = "/resend/events";
+
+http.route({
+    path: RESEND_WEBHOOK_PATH,
+    method: "POST",
+    handler: httpAction(async (ctx, request) => {
+        const secret = process.env.RESEND_WEBHOOK_SECRET;
+        if (!secret) {
+            // A deployment without the secret must refuse loudly: answering 200
+            // would tell Resend "delivered" for events nobody can verify.
+            return json({ ok: false, code: "RESEND_WEBHOOK_NOT_CONFIGURED" }, 503);
+        }
+
+        // Raw body, never a re-serialized object: the signature covers the exact bytes.
+        const body = await request.text();
+
+        const verification = await verifySvixSignature({
+            secret,
+            id: request.headers.get("svix-id") ?? "",
+            timestamp: request.headers.get("svix-timestamp") ?? "",
+            signature: request.headers.get("svix-signature") ?? "",
+            payload: body,
+        });
+        if (!verification.ok) {
+            return json({ ok: false, code: verification.code }, 401);
+        }
+
+        let event: {
+            type?: string;
+            created_at?: string;
+            data?: {
+                email_id?: string;
+                from?: string;
+                to?: string[];
+                click?: { link?: string };
+                bounce?: { subType?: string };
+            };
+        };
+        try {
+            event = JSON.parse(body) as typeof event;
+        } catch {
+            return json({ ok: false, code: "RESEND_BODY_INVALID" }, 400);
+        }
+
+        const recipient = event.data?.to?.[0] ?? "";
+        // No recipient means nothing to suppress and nothing to attribute: the legacy
+        // answered 200 for the same reason (subscribed events always carry `to`).
+        if (!recipient) return json({ ok: true, skipped: "no-recipient" }, 200);
+
+        // Environment isolation: the Resend account is account-wide, so a staging
+        // webhook can carry production sends. Only our own sender domains are processed.
+        //
+        // La lista dei propri mittenti è **la stessa** che `convex/email.ts` usa per
+        // spedire: una seconda lista di indirizzi "nostri" sarebbe una seconda cosa da
+        // tenere allineata, e la prima volta che divergono il webhook scarterebbe le
+        // proprie email (o processerebbe quelle di un altro ambiente).
+        const ownEmails = [process.env.EMAIL_FROM, process.env.EVENTS_EMAIL_FROM].filter(
+            (value): value is string => typeof value === "string" && value.length > 0,
+        );
+        if (!isOwnAddressDomain(event.data?.from ?? "", ownEmails)) {
+            return json({ ok: true, skipped: "foreign-domain" }, 200);
+        }
+
+        const createdAtMs = event.created_at ? Date.parse(event.created_at) : Number.NaN;
+
+        try {
+            const result = await ctx.runMutation(internal.emailEvents.ingestWebhook, {
+                svixId: request.headers.get("svix-id") ?? "",
+                type: event.type ?? "",
+                emailId: event.data?.email_id ?? "",
+                recipient,
+                ...(Number.isFinite(createdAtMs) ? { occurredAt: createdAtMs } : {}),
+                ...(event.data?.click?.link ? { clickedUrl: event.data.click.link } : {}),
+                ...(event.data?.bounce?.subType ? { bounceSubType: event.data.bounce.subType } : {}),
+                payload: event,
+            });
+
+            return json({ ok: true, ...result }, 200);
+        } catch (error) {
+            // A 500 makes Resend retry, which is correct: the mutation is atomic, so a
+            // retry either applies the whole event or nothing.
+            const message = error instanceof Error ? error.message : String(error);
+            return json({ ok: false, code: "RESEND_INGEST_FAILED", message }, 500);
         }
     }),
 });

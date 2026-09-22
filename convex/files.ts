@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { action, internalMutation, internalQuery } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { forbidden } from "./lib/identity";
@@ -529,16 +529,43 @@ export const confirmUpload = action({
             return { fileId: finalized.fileId, deduplicated: false, variantStatus: "none" };
         }
 
+        // Stessa action del job `image-variant` (Task 13): il percorso immediato e il
+        // recupero del cron non possono divergere se sono lo stesso codice.
+        const processed: { status: VariantProcessingStatus } = await ctx.runAction(
+            internal.files.processVariants,
+            { fileId: args.fileId },
+        );
+
+        return { fileId: finalized.fileId, deduplicated: false, variantStatus: processed.status };
+    },
+});
+
+export type VariantProcessingStatus = "pending" | "processing" | "none" | "retrying";
+
+/**
+ * Avvia la generazione delle varianti di un originale (plan Task 13).
+ *
+ * Estratta dal percorso di `confirmUpload` perché il job `image-variant` — quello
+ * che il cron usa per recuperare gli upload i cui job sono andati persi — deve fare
+ * **esattamente** la stessa cosa. Due copie di questa sequenza sarebbero due posti
+ * dove la regola di retry può divergere, e la divergenza si vedrebbe solo sui file
+ * recuperati.
+ *
+ * `none` significa "niente da fare" (non è un'immagine, o è già in lavorazione):
+ * non è un errore e non deve far ritentare un job.
+ */
+export const processVariants = internalAction({
+    args: { fileId: v.id("files") },
+    handler: async (ctx, args): Promise<{ status: VariantProcessingStatus }> => {
         const started: {
             shouldProcess: boolean;
             path: string;
             basePath: string;
             mimeType: string;
+            organizationId: Id<"organizations">;
         } = await ctx.runMutation(internal.media.startProcessing, { fileId: args.fileId });
 
-        if (!started.shouldProcess) {
-            return { fileId: finalized.fileId, deduplicated: false, variantStatus: "none" };
-        }
+        if (!started.shouldProcess) return { status: "none" };
 
         try {
             await callBridge(BRIDGE_PATH.media, {
@@ -546,10 +573,10 @@ export const confirmUpload = action({
                 key: started.path,
                 basePath: started.basePath,
                 mimeType: started.mimeType,
-                organizationId: authz.organizationId,
+                organizationId: started.organizationId,
                 variants: VARIANT_SPECS,
             });
-            return { fileId: finalized.fileId, deduplicated: false, variantStatus: "processing" };
+            return { status: "processing" };
         } catch (error) {
             // The Worker could not process: record the attempt and let the retry
             // rule decide between `retrying` and the terminal `failed`.
@@ -557,8 +584,99 @@ export const confirmUpload = action({
                 fileId: args.fileId,
                 error: errorMessage(error),
             });
-            return { fileId: finalized.fileId, deduplicated: false, variantStatus: "retrying" };
+            return { status: "retrying" };
         }
+    },
+});
+
+// ---------------------------------------------------------------------------
+// Orphan cleanup (plan Task 13, Step 4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Rivendica un lotto di upload mai confermati, restituendo ciò che serve a
+ * cancellarne gli oggetti.
+ *
+ * Il claim è un **lease su `presignExpiresAt`**, non uno stato nuovo. Il legacy
+ * marcava la riga `cleaning` prima di cancellare l'oggetto: se il processo moriva in
+ * mezzo, la riga restava `cleaning` per sempre e l'oggetto non veniva più ripulito da
+ * nessuno. Spostare avanti la scadenza produce lo stesso effetto immediato (la riga
+ * non è più candidata) senza perdere la riga quando qualcosa va storto: il lease
+ * scade e il giro successivo riprova.
+ */
+export const claimOrphanFiles = internalMutation({
+    args: { limit: v.optional(v.number()), graceHours: v.optional(v.number()) },
+    handler: async (
+        ctx,
+        args,
+    ): Promise<Array<{ fileId: Id<"files">; path: string; leaseAt: number }>> => {
+        const limit = args.limit ?? 50;
+        const graceMs = (args.graceHours ?? 1) * 60 * 60 * 1000;
+        const now = Date.now();
+        const cutoff = now - graceMs;
+
+        // Intervallo indicizzato esatto, non `take` + filtro: la condizione è quella
+        // del cron, e `by_upload_status` la copre per intero.
+        const candidates = await ctx.db
+            .query("files")
+            .withIndex("by_upload_status", (q) =>
+                q.eq("uploadStatus", "pending").lt("presignExpiresAt", cutoff),
+            )
+            .take(limit);
+
+        const claimed: Array<{ fileId: Id<"files">; path: string; leaseAt: number }> = [];
+
+        for (const file of candidates) {
+            // Il filtro resta anche se l'indice dovrebbe già averlo applicato, ed è
+            // la lezione del Task 12: `dueAccounts` si fidava della semantica di un
+            // range su un campo opzionale e cancellava account appena creati. Una
+            // query che cancella non deve dipendere da quale dei due comportamenti
+            // dell'indice vale: `undefined` non è una scadenza, quindi non si rivendica.
+            if (file.presignExpiresAt === undefined || file.presignExpiresAt >= cutoff) continue;
+
+            await ctx.db.patch(file._id, { presignExpiresAt: now, updatedAt: now });
+            claimed.push({ fileId: file._id, path: file.path, leaseAt: now });
+        }
+
+        return claimed;
+    },
+});
+
+/**
+ * Cancella la riga di un orfano il cui oggetto è sparito davvero.
+ *
+ * Il `leaseAt` è il testimone del lease: se nel frattempo la riga è stata toccata
+ * (qualcuno l'ha confermata, o un altro giro l'ha rivendicata) la cancellazione non
+ * avviene — "questa riga è mia" deve essere verificabile, non supposto.
+ */
+export const purgeOrphanFile = internalMutation({
+    args: { fileId: v.id("files"), leaseAt: v.number() },
+    handler: async (ctx, args): Promise<{ deleted: boolean }> => {
+        const file = await ctx.db.get(args.fileId);
+        if (!file) return { deleted: false };
+        if (file.uploadStatus !== "pending" || file.presignExpiresAt !== args.leaseAt) {
+            return { deleted: false };
+        }
+
+        await ctx.db.delete(file._id);
+        return { deleted: true };
+    },
+});
+
+/** Rilascia il lease rendendo la riga candidabile subito al giro successivo. */
+export const releaseOrphanFile = internalMutation({
+    args: { fileId: v.id("files"), leaseAt: v.number() },
+    handler: async (ctx, args): Promise<void> => {
+        const file = await ctx.db.get(args.fileId);
+        if (!file) return;
+        if (file.uploadStatus !== "pending" || file.presignExpiresAt !== args.leaseAt) return;
+
+        // `0` e non `leaseAt - 1`: la ri-ammissione è "scaduto da sempre". Un oggetto
+        // che non si riesce a cancellare deve tornare **in testa** alla coda, non
+        // aspettare un'altra grace period per ogni fallimento — altrimenti un guasto
+        // di R2 rallenta la pulizia di un fattore pari alla grace stessa. Il lease
+        // serve solo a impedire che due giri si sovrappongano, ed è già stato speso.
+        await ctx.db.patch(file._id, { presignExpiresAt: 0, updatedAt: Date.now() });
     },
 });
 

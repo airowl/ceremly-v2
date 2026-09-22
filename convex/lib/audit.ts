@@ -64,6 +64,10 @@ const AUDIT_ACTION_CATEGORY = {
     "event.created": "event",
     "event.updated": "event",
     "event.deleted": "event",
+    // Avviso di cleanup (Task 13): il legacy lo scriveva già con questo nome
+    // (`eventCleanup.service`), ed è l'unico modo di sapere *quando* l'organizzatore
+    // è stato avvisato senza fidarsi di `cleanupWarnedAt` da solo.
+    "event.cleanup_warned": "event",
     "guest.created": "guest",
     "guest.updated": "guest",
     "guest.deleted": "guest",
@@ -96,6 +100,13 @@ const AUDIT_ACTION_CATEGORY = {
     "contact.sent": "contact",
     "waiting_list.subscribed": "waiting_list",
     "admin.site_mode_changed": "admin",
+    /** Ripresa manuale di un job `dead` da parte di un superAdmin (Task 13). */
+    "admin.job_retried": "admin",
+    // Email (Task 13). I due nomi sono quelli del legacy (`server/utils/email.ts`
+    // auditava ogni invio e ogni fallimento con `email.sent`/`email.failed`), quindi
+    // i record scritti da Convex e quelli storici restano greppabili insieme.
+    "email.sent": "email",
+    "email.failed": "email",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;

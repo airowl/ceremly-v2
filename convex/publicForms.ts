@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
 import { writeAudit } from "./lib/audit";
 import { assertRateLimit } from "./lib/rateLimit";
@@ -70,6 +71,7 @@ export const contact = internalMutation({
         const now = Date.now();
 
         // 1-2. Bot riconosciuti: finto successo, nessuna scrittura, nessun oracolo.
+        //    Nessuna email parte: il finto successo è nella risposta, non negli effetti.
         if (isHoneypotTriggered(args.website) || isSubmittedTooFast(args._t, now)) {
             return { success: true, message: "Contact form submitted successfully", stored: false };
         }
@@ -137,6 +139,47 @@ export const contact = internalMutation({
             },
         });
 
+        // Task 13: le due email del form contatti. Sono action schedulate (non job) e
+        // non attese: una mutation non può invocare un'action, e bloccare la risposta
+        // del form sull'invio Resend è ciò che il legacy faceva e che qui si evita.
+        // Conseguenza dichiarata: la risposta dice "messaggio ricevuto", e la
+        // consegna vive nell'audit `email.sent`/`email.failed` — non in un `true`
+        // che nessuno ha verificato.
+        await ctx.scheduler.runAfter(0, internal.email.sendTemplate, {
+            request: {
+                template: "contact-confirmation",
+                to: email,
+                language,
+                userName: args.name.trim(),
+                subject: args.subject.trim(),
+            },
+        });
+
+        // Destinatario della notifica admin: nessun fallback inventato. Se la env
+        // manca la notifica si salta con un log rumoroso (il messaggio è persistito),
+        // invece di spedire a un placeholder `example.com`.
+        const adminEmail = process.env.CONTACT_ADMIN_EMAIL ?? "";
+        if (adminEmail) {
+            await ctx.scheduler.runAfter(0, internal.email.sendTemplate, {
+                request: {
+                    template: "contact-notification",
+                    to: adminEmail,
+                    senderName: args.name.trim(),
+                    senderEmail: email,
+                    subject: args.subject.trim(),
+                    message: args.message.trim(),
+                    language,
+                    submittedAtMs: now,
+                },
+                // Rispondere alla notifica risponde a chi ha scritto.
+                replyTo: email,
+            });
+        } else {
+            console.error(
+                "[publicForms] CONTACT_ADMIN_EMAIL non configurata: notifica admin saltata (messaggio comunque salvato)",
+            );
+        }
+
         return { success: true, message: "Contact form submitted successfully", stored: true };
     },
 });
@@ -159,8 +202,12 @@ export const waitingList = internalMutation({
         const now = Date.now();
         const email = args.email.trim().toLowerCase();
 
+        // Finto successo per i bot: `emailSent: true` è parte del finto successo, come
+        // nel legacy. Un bot non deve poter dedurre la detection dal corpo della
+        // risposta, e l'unico modo di non dirlo è rispondere esattamente come a un
+        // iscritto vero. Gli effetti restano zero (nessuna riga, nessuna email).
         if (isHoneypotTriggered(args.website) || isSubmittedTooFast(args._t, now)) {
-            return { success: true, alreadySubscribed: false, emailSent: false, stored: false };
+            return { success: true, alreadySubscribed: false, emailSent: true, stored: false };
         }
 
         try {
@@ -222,10 +269,23 @@ export const waitingList = internalMutation({
             },
         });
 
-        // `emailSent: false` è la verità di questo task: l'email di benvenuto è del
-        // Task 13 (template React Email + coda). Il campo esiste nel contratto
-        // legacy e non viene falsificato con un `true` che nessuno ha inviato.
-        return { success: true, alreadySubscribed: false, emailSent: false, stored: true };
+        // Task 13: l'email di benvenuto è schedidata nella stessa transazione della
+        // scrittura, quindi `emailSent: true` significa "consegnata al percorso di
+        // invio", non "il provider ha risposto 200". Il legacy la attendeva e poteva
+        // riportare l'esito; qui il vantaggio è che un fallimento diventa un audit
+        // `email.failed` con retry, invece di un booleano che nessuno guarda.
+        await ctx.scheduler.runAfter(0, internal.email.sendTemplate, {
+            request: {
+                template: "waiting-list",
+                to: email,
+                // Normalizzata, non passata com'è: il contratto del renderer accetta
+                // `it` | `en`, e un locale inatteso (`"fr"`) deve ricadere su una
+                // lingua che esiste invece di far fallire la validazione dell'action.
+                language: args.language === "en" ? "en" : "it",
+            },
+        });
+
+        return { success: true, alreadySubscribed: false, emailSent: true, stored: true };
     },
 });
 

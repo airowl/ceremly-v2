@@ -26,7 +26,8 @@ Questo piano e gli artefatti sotto indicati sono presenti solo su `main` (non su
 - **Task 10:** completato (2026-09-21) — modello di dominio completo in `convex/schema.ts` (validators runtime per i JSON che nel legacy esistevano solo nel compilatore) e import idempotente in ordine topologico (`internal.migrations.domainImport.importBatch`), con chiavi di idempotenza prese dai vincoli reali del legacy e controllo di coerenza di tenant. Mappa, regole di traduzione e deferral: `docs/migration/domain-schema.md`.
 - **Task 11:** completato (2026-09-21) — business logic e API di dominio in Convex (`events`, `guests`, `rsvp`, `reminders`, `projects`) con 38 characterization test scritti dal comportamento legacy, non dal codice nuovo; i moduli condivisi (`templates`, `rsvpPresets`, `rsvpLogic`) sono diventati re-export di `convex/lib/*` (una sorgente per il client e per il backend). Una deriva reale trovata leggendo il legacy e chiusa qui: `markSent` riscriveva `sentAt`, mentre il legacy lo preserva con `COALESCE`. Deviazioni, deriva e ciò che resta fuori dal task: `docs/migration/domain-api.md`.
 - **Task 12:** completato (2026-09-22) — profilo, export GDPR con URL firmato, cancellazione differita con purge a lotti, i tre form pubblici dietro il bridge HMAC anonimo (l'IP non entra mai in Convex, solo un digest) e site mode a quattro stati letto da Convex con fail-closed. 36 casi in `convex/auxiliaryFlows.test.ts` (dominio e porta HTTP), 17 di contratto in `test/migration/public-forms-{bridge,contract}.test.ts` e 8 di enforcement in `test/migration/site-mode-middleware.test.ts`. **Il task ha trovato un difetto con conseguenze serie**: lo sweep del purge cancellava ogni account appena creato (un range su un campo opzionale restituisce anche i documenti senza il campo, e `take` tagliava la scansione prima del filtro). Dettagli, misure e buchi residui: `docs/migration/auxiliary-flows.md`.
-- **Task 13–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
+- **Task 13:** completato (2026-09-22) — la coda QStash è sostituita da job Convex durevoli con retry persistito: macchina a stati `pending → running → retrying → running | dead`, backoff `min(60_000 * 2**attempts, 24h)`, lease di 10 minuti che rende una seconda consegna uno scarto invece di un tentativo, e `dead → pending` riservato a un superAdmin. I sei tipi del legacy sono portati (inviti, reminder, export, varianti, avviso cleanup, purge), i template React Email sono **spostati** in `convex/emailTemplates/` (una sola copia, con `server/emailTemplates/index.ts` ridotto ad adapter sul renderer puro) e i sei cron sono dichiarati in `convex/crons.ts`. Il webhook Resend è firmato Svix (verificato in V8 su Web Crypto e **differenziato contro l'SDK reale**), deduplicato sul `svix-id` nella stessa transazione della scrittura, e inoltrato dal Worker dietro `NUXT_EMAIL_BACKEND`. 30 casi in `convex/jobs.test.ts`, 8 in `convex/lib/svix.test.ts`, 5 in `test/migration/email-webhook-bridge.test.ts`. Deviazioni dichiarate (email di auth/contatto/waiting list come action schedulate, cascata di cancellazione a lotti, `emailSent` con significato nuovo) e buchi residui: `docs/migration/email-jobs-cron.md`. **Resta aperto un handoff del gate G06**: la consegna dell'email di invito a un'organizzazione e lo sweep degli inviti scaduti, entrambi attribuiti al Task 13 dal ledger, non sono qui — la prima richiede di decidere il contratto URL della pagina `/invite/*` (frontend, Task 14), la seconda è igiene del dato perché la scadenza è già valutata in lettura. Fino ad allora un invito creato dal backend Convex è silenzioso.
+- **Task 14–18:** non avviati. Runtime, dati applicativi di dominio e billing restano su Neon/Drizzle; la configurazione locale usa `NUXT_NITRO_PRESET=node-server`.
 
 Il checkpoint hard dello Step 5 del Task 9 ha dato **8**, non 10: `G04` (OAuth Google) e `G10` (alert di budget) sono `NOT_RUN` per due accessi esterni che questo ambiente non ha, e per la regola del piano l'esecuzione si è **fermata** lì. Entrambi i gate sono documentati nel ledger con la stessa disciplina (non eseguiti, non falliti, requisiti invariati) e si chiudono con un Google client di staging e un accesso alla dashboard; le quattro soglie di alert sono tabulate in `docs/migration/cost-model.md`. I Task 10 e 11 sono stati eseguiti su **istruzione esplicita dell'utente di proseguire oltre il checkpoint**: la regola è stata sospesa, non ammorbidita — nessuno dei due gate è stato toccato per farli passare.
 
@@ -952,36 +953,50 @@ git commit -m "feat(migration): port profile GDPR and public flows to Convex"
 - Modify: `server/api/webhooks/resend.post.ts`
 - Modify: `convex/auth.ts`
 
+File aggiunti durante il task (il piano non li prevedeva, ognuno con una ragione
+che sta nel suo header):
+
+- Create: `convex/emailEvents.ts` — stato email (soppressioni, righe seed, ingestione
+  del webhook). Separato da `convex/email.ts` perché una funzione `"use node"` può
+  esportare **solo action**, e la coda ha bisogno di mutation.
+- Create: `convex/lib/emailSubjects.ts` — gli oggetti delle email senza dipendenze:
+  chi costruisce un job (V8) non può importare un modulo che tira dentro React.
+- Create: `convex/lib/svix.ts` — verifica della firma Svix su Web Crypto (un
+  `httpAction` non può importare l'SDK Node di Resend).
+- Create: `convex/lib/svix.test.ts` — differenziale contro l'SDK `svix` reale.
+- Create: `server/utils/emailWebhookBridge.ts` — ponte del webhook verso Convex.
+- Create: `test/migration/email-webhook-bridge.test.ts` — contratto del ponte.
+- Modify: `convex/lib/jobQueue.ts` (tipi, `retryDelayMs`, `retrying` come stato vivo),
+  `convex/schema.ts` (stato `retrying`, `providerId`, `svixId`, indici `by_updated_at`,
+  `by_event_created`, `by_upload_status`), `convex/files.ts` (estrazione di
+  `processVariants` + claim/purge/release degli orfani), `convex/media.ts`
+  (`variantsNeedingWork`, `organizationId` in `startProcessing`), `convex/reminders.ts`
+  (stato del cron), `convex/publicForms.ts` (email di contatto e waiting list),
+  `server/emailTemplates/index.ts` (adapter sul renderer spostato),
+  `server/utils/runtimeConfig.ts` (`emailBackend`), `convex/auxiliaryFlows.test.ts`.
+
 **Interfaces:**
 - Consumes: `enqueueJob(ctx, type, entityId)` dal Task 12.
 - Produces: `internal.jobs.run`, `internal.jobs.recordOutcome`, `api.jobs.retryDead`.
 
-- [ ] **Step 1: Scrivere test state machine job**
+- [x] **Step 1: Scrivere test state machine job** — `convex/jobs.test.ts`, 8 casi: le quattro transizioni, il lease (una seconda consegna in volo è uno scarto, non un tentativo), la ripresa dopo lease scaduto, la dedup per chiave con `retrying` contato come vivo, `dead→pending` solo da superAdmin con budget che riparte, e il rifiuto di un tipo non registrato. Il backoff è verificato con l'uguaglianza esatta `nextAttemptAt - updatedAt === retryDelayMs(attempt)`, cioè sulla formula e non su un ordine di grandezza. Test verificato **rosso** cambiando `2 ** attempts` in `attempts` (atteso 60000, ottenuto 120000).
 
-Stati validi: `pending→running→succeeded`, `running→retrying→running`, `running→dead`, `dead→pending` solo da superAdmin. Il backoff è `min(60_000 * 2 ** attempts, 86_400_000)`, massimo 5 tentativi. La stessa idempotency key non crea due job.
+- [x] **Step 2: Implementare mutation/action split** — `markRunning` rivendica con lease di 10 minuti e restituisce nome+payload; `recordOutcome` scrive l'esito e **calcola** il ritardo del prossimo tentativo dove il numero di tentativi è autorevole; `run` è l'unica action orchestratrice e schedula il retry. Due campi nuovi nello schema, entrambi deliberati: lo stato `retrying` (distinto da `pending`, altrimenti un job appena accodato e uno che ha già consumato tentativi sono indistinguibili) e `providerId` (separato da `result` perché un campo dentro un oggetto libero non è interrogabile). Nessun segreto nello stato: la chiave Resend resta nell'action.
 
-- [ ] **Step 2: Implementare mutation/action split**
-
-La mutation crea/claim il job e schedula `internal.jobs.run` con solo `jobId`. L'action invoca Resend o il Worker media; una mutation registra provider ID o errore sanitizzato e pianifica il prossimo tentativo. Nessun segreto entra in `jobExecutions`.
-
-- [ ] **Step 3: Portare i job esistenti**
+- [x] **Step 3: Portare i job esistenti**
 
 Tipi esatti: `send-invite-email`, `send-reminder-email`, `data-export`, `image-variant`, `event-cleanup-warning`, `account-purge`. Conservare suppression Resend, email event webhook, audit e idempotenza correnti.
 
 Spostare i template React Email elencati da `server/emailTemplates/` a `convex/emailTemplates/`, mantenere input e snapshot test, e importarli soltanto dalle action Node di `convex/email.ts`. I template non leggono runtime config Nuxt: ricevono app name, URL e locale come props validate.
 
-Registrare in `convex/http.ts` la route firmata Resend e rendere `server/api/webhooks/resend.post.ts` un bridge temporaneo senza business logic durante rehearsal. Al cutover il dashboard Resend punta direttamente al Convex site URL; replay dello stesso `svix-id`/message event non duplica `emailEvents`.
+Registrare in `convex/http.ts` la route firmata Resend e rendere `server/api/webhooks/resend.post.ts` un bridge temporaneo senza business logic durante rehearsal. Al cutover il dashboard Resend punta direttamente al Convex site URL; replay dello stesso `svix-id`/message event non duplica `emailEvents`. — Fatto: i sei tipi sono registrati, i template sono in `convex/emailTemplates/` (spostati con `git mv`, con `server/emailTemplates/index.ts` ridotto ad adapter sul renderer puro), la route `/resend/events` verifica la firma Svix in V8 e il ponte inoltra i byte grezzi dietro `NUXT_EMAIL_BACKEND=convex`. La dedup è sul `svixId`, **non** sul `messageId`: più eventi distinti (delivered, opened, clicked) condividono lo stesso messaggio, e dedup su quello ne perderebbe.
 
-- [ ] **Step 4: Definire cron Convex**
+- [x] **Step 4: Definire cron Convex** — `convex/crons.ts` dichiara sei voci (reminder 07:00, cleanup file 03:00, eventi stale 04:00, purge account 05:00, requeue varianti ogni ora al minuto 30, ripresa job ogni ora). Le implementazioni sono in `convex/jobs.ts` — `crons.ts` dichiara e basta — e nessuna fa loop: ognuna seleziona un lotto indicizzato e accoda, oppure drena un blocco limitato. In più `cronRecoverStalledJobs`, che non era nell'elenco ma è ciò che rende il retry **persistito** e non solo pianificato: senza, una consegna persa dallo scheduler resterebbe persa.
 
-`convex/crons.ts` registra reminder giornaliero 07:00 UTC, cleanup file 03:00 UTC, eventi stale, requeue varianti e purge account. Le funzioni cron selezionano piccoli batch indicizzati e schedulano job; non eseguono loop illimitati.
-
-- [ ] **Step 5: Test e commit**
-
-Usare fake timers e `finishAllScheduledFunctions`; simulare Resend 429/500/success e webhook duplicato.
+- [x] **Step 5: Test e commit** — `convex/jobs.test.ts` (30 casi) con timer finti e `finishInProgressScheduledFunctions` per osservare un tentativo per volta (con `finishAllScheduledFunctions` la catena di retry si esaurisce in un colpo e "è in `retrying`" diventa impossibile da affermare), più `convex/lib/svix.test.ts` (8 casi, differenziale contro l'SDK) e `test/migration/email-webhook-bridge.test.ts` (5 casi).
 
 ```bash
-git add convex/email.ts convex/emailTemplates convex/jobs.ts convex/crons.ts convex/jobs.test.ts convex/http.ts convex/auth.ts server/api/webhooks/resend.post.ts
+git add convex/email.ts convex/emailEvents.ts convex/emailTemplates convex/lib/emailSubjects.ts convex/lib/svix.ts convex/lib/jobQueue.ts convex/jobs.ts convex/jobs.test.ts convex/crons.ts convex/http.ts convex/auth.ts convex/schema.ts convex/files.ts convex/media.ts convex/reminders.ts convex/publicForms.ts convex/auxiliaryFlows.test.ts server/emailTemplates server/utils/emailWebhookBridge.ts server/utils/runtimeConfig.ts server/api/webhooks/resend.post.ts .env.example test/migration/email-webhook-bridge.test.ts
 git commit -m "feat(migration): replace QStash with durable Convex jobs"
 ```
 

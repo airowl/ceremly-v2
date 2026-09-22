@@ -883,8 +883,13 @@ describe("public forms", () => {
         });
 
         expect(first).toMatchObject({ success: true, alreadySubscribed: false, stored: true });
-        // `emailSent: false` è la verità di questo task: l'invio è del Task 13.
-        expect(first.emailSent).toBe(false);
+        // Task 13: l'email di benvenuto è schedidata nella stessa transazione della
+        // scrittura, quindi `emailSent` è vero. Cambia il significato del campo — non
+        // piú "Resend ha risposto 200" ma "consegnata al percorso di invio" — e il test
+        // lo pinna com'è: un `false` che nessuno legge piú sarebbe stato il modo
+        // silenzioso di lasciare il campo scollegato dall'invio vero e proprio, che
+        // `convex/jobs.test.ts` verifica invece chiamando l'action con un fetch finto.
+        expect(first.emailSent).toBe(true);
         expect(second).toMatchObject({ success: true, alreadySubscribed: true, stored: false });
         expect(await rows(t, "waitingList")).toHaveLength(1);
         expect(await auditActions(t)).toContain("waiting_list.subscribed");

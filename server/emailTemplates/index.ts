@@ -1,167 +1,117 @@
-// Email Templates - React Email based templates
-// Export all email templates and render utility
+// Adapter legacy dei template email (plan Task 13).
+//
+// I template React Email vivono in `convex/emailTemplates/` — sono gli stessi che
+// invierà il backend Convex, e tenerne due copie significherebbe due rendering che
+// possono divergere. Questo file esiste per una sola ragione: il codice legacy
+// (`server/utils/email.ts`, i service, la coda QStash) legge la configurazione da
+// `useRuntimeConfig()`, che in Convex non esiste. Qui quella configurazione viene
+// letta e iniettata nel renderer puro come prop esplicita.
+//
+// La firma esportata è quella di prima, quindi nessun chiamante legacy cambia.
+// Quando il legacy sparisce (Task 17) sparisce anche questo file.
 
-import { render } from '@react-email/render';
-import * as React from 'react';
-import { VerificationEmail } from './VerificationEmail';
-import { ResetPasswordEmail } from './ResetPasswordEmail';
-import { ChangeEmailEmail } from './ChangeEmailEmail';
-import { WaitingListEmail } from './WaitingListEmail';
-import { ContactConfirmationEmail } from './ContactConfirmationEmail';
-import { ContactNotificationEmail } from './ContactNotificationEmail';
-import { OrgInviteEmail } from './OrgInviteEmail';
-import { GuestInviteEmail } from './GuestInviteEmail';
-import { GuestReminderEmail } from './GuestReminderEmail';
-import { EventCleanupWarning } from './EventCleanupWarning';
-import { runtimeConfig } from '../utils/runtimeConfig';
+import { runtimeConfig } from "../utils/runtimeConfig";
+import {
+    emailSubjects,
+    renderEmail,
+    resolveBrand,
+    type EmailRequest,
+    type EmailBrand,
+    type RenderedEmail,
+    type SupportedLanguage,
+} from "../../convex/emailTemplates";
 
-export type SupportedLanguage = 'it' | 'en';
-
-// Rendered email: both HTML and a plain-text alternative (better deliverability,
-// avoids spam filters). Generated once per template via renderBoth().
-export interface RenderedEmail {
-    html: string;
-    text: string;
-}
+export { emailSubjects };
+export type { RenderedEmail, SupportedLanguage };
 
 // Brand name from env (env-driven, fallback empty string)
-const appName = (): string => runtimeConfig.public.appName || '';
-
-// Host pubblico (es. "ceremly.app") derivato da baseURL, per i footer Ceremly
-const appHost = (): string => {
-    const base = runtimeConfig.public.baseURL as string | undefined;
-    if (!base) return '';
-    try {
-        return new URL(base).host;
-    } catch {
-        return '';
-    }
-};
+const appName = (): string => runtimeConfig.public.appName || "";
 
 // Base URL del sito (senza trailing slash) per link assoluti nelle email.
-const baseUrl = (): string => ((runtimeConfig.public.baseURL as string) || '').replace(/\/$/, '');
+const baseUrl = (): string => ((runtimeConfig.public.baseURL as string) || "").replace(/\/$/, "");
 
-// Link alle pagine legali reali (non-prefissati: stesso documento per ogni lingua).
-const legalLinks = (): { privacy: string; tos: string; dpa: string } => ({
-    privacy: `${baseUrl()}/legal/privacy`,
-    tos: `${baseUrl()}/legal/tos`,
-    dpa: `${baseUrl()}/legal/dpa`,
-});
+const brand = (): EmailBrand => resolveBrand({ appName: appName(), siteUrl: baseUrl() });
 
-// Render sia HTML sia testo da un singolo React element (React Email plainText).
-async function renderBoth(element: React.ReactElement): Promise<RenderedEmail> {
-    return {
-        html: await render(element),
-        text: await render(element, { plainText: true }),
-    };
-}
-
-// Re-export components
-export { VerificationEmail } from './VerificationEmail';
-export { ResetPasswordEmail } from './ResetPasswordEmail';
-export { ChangeEmailEmail } from './ChangeEmailEmail';
-export { WaitingListEmail } from './WaitingListEmail';
-export { ContactConfirmationEmail } from './ContactConfirmationEmail';
-export { ContactNotificationEmail } from './ContactNotificationEmail';
-export { OrgInviteEmail } from './OrgInviteEmail';
-export { GuestInviteEmail } from './GuestInviteEmail';
-export { GuestReminderEmail } from './GuestReminderEmail';
-export { EventCleanupWarning } from './EventCleanupWarning';
+const renderFor = (request: EmailRequest): Promise<RenderedEmail> =>
+    renderEmail(request, brand()).then(({ html, text }) => ({ html, text }));
 
 /**
  * Render verification email (HTML + text)
  */
-export async function renderVerificationEmail(options: {
+export function renderVerificationEmail(options: {
     language?: SupportedLanguage;
     verificationUrl: string;
     userName?: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(VerificationEmail, {
-        language: options.language || 'it',
-        verificationUrl: options.verificationUrl,
-        userName: options.userName,
-        appName: appName(),
-        legalLinks: legalLinks(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "verification", ...options });
 }
 
 /**
  * Render reset password email (HTML + text)
  */
-export async function renderResetPasswordEmail(options: {
+export function renderResetPasswordEmail(options: {
     language?: SupportedLanguage;
     resetUrl: string;
     userName?: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(ResetPasswordEmail, {
-        language: options.language || 'it',
-        resetUrl: options.resetUrl,
-        userName: options.userName,
-        appName: appName(),
-        legalLinks: legalLinks(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "reset-password", ...options });
 }
 
 /**
  * Render change-email confirmation email (sent to the CURRENT address) — HTML + text
  */
-export async function renderChangeEmailEmail(options: {
+export function renderChangeEmailEmail(options: {
     language?: SupportedLanguage;
     confirmUrl: string;
     newEmail: string;
     userName?: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(ChangeEmailEmail, {
-        language: options.language || 'it',
-        confirmUrl: options.confirmUrl,
-        newEmail: options.newEmail,
-        userName: options.userName,
-        appName: appName(),
-        legalLinks: legalLinks(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "change-email", ...options });
 }
 
 /**
  * Render waiting list email (HTML + text)
  */
-export async function renderWaitingListEmail(options: {
+export function renderWaitingListEmail(options: {
     language?: SupportedLanguage;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(WaitingListEmail, {
-        language: options.language || 'it',
-        appName: appName(),
-        siteUrl: baseUrl(),
-        legalLinks: legalLinks(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "waiting-list", ...options });
 }
 
 /**
  * Render contact confirmation email (sent to user) — HTML + text
  */
-export async function renderContactConfirmationEmail(options: {
+export function renderContactConfirmationEmail(options: {
     language?: SupportedLanguage;
     userName: string;
     subject: string;
     siteUrl?: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(ContactConfirmationEmail, {
-        language: options.language || 'it',
+    if (options.siteUrl) {
+        const custom = resolveBrand({ appName: appName(), siteUrl: options.siteUrl });
+        return renderEmail(
+            {
+                template: "contact-confirmation",
+                language: options.language,
+                userName: options.userName,
+                subject: options.subject,
+            },
+            custom,
+        ).then(({ html, text }) => ({ html, text }));
+    }
+
+    return renderFor({
+        template: "contact-confirmation",
+        language: options.language,
         userName: options.userName,
         subject: options.subject,
-        siteUrl: options.siteUrl || baseUrl(),
-        appName: appName(),
     });
-    return renderBoth(element);
 }
 
 /**
  * Render contact notification email (sent to admin) — HTML + text
  */
-export async function renderContactNotificationEmail(options: {
+export function renderContactNotificationEmail(options: {
     senderName: string;
     senderEmail: string;
     subject: string;
@@ -169,137 +119,64 @@ export async function renderContactNotificationEmail(options: {
     language: string;
     submittedAt: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(ContactNotificationEmail, {
-        senderName: options.senderName,
-        senderEmail: options.senderEmail,
-        subject: options.subject,
-        message: options.message,
-        language: options.language,
-        submittedAt: options.submittedAt,
-        appName: appName(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "contact-notification", ...options });
 }
 
 /**
  * Render organization invite email (phase 1b) — HTML + text
  */
-export async function renderOrgInviteEmail(options: {
+export function renderOrgInviteEmail(options: {
     language?: SupportedLanguage;
     inviteUrl: string;
     orgName: string;
     invitedByName: string;
     expiresInDays?: number;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(OrgInviteEmail, {
-        language: options.language || 'it',
-        inviteUrl: options.inviteUrl,
-        orgName: options.orgName,
-        invitedByName: options.invitedByName,
-        expiresInDays: options.expiresInDays || 7,
-        appName: appName(),
-        legalLinks: legalLinks(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "org-invite", ...options });
 }
 
 /**
  * Render guest invite email (Ceremly, SPEC §6 — owner B3) — HTML + text.
  * `message` arriva con i placeholder {nome}/{link} già sostituiti.
  */
-export async function renderGuestInviteEmail(options: {
+export function renderGuestInviteEmail(options: {
     eventTitle: string;
     firstName: string;
     message: string;
     ctaUrl: string;
     pixelUrl: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(GuestInviteEmail, {
-        eventTitle: options.eventTitle,
-        firstName: options.firstName,
-        message: options.message,
-        ctaUrl: options.ctaUrl,
-        pixelUrl: options.pixelUrl,
-        appName: appName(),
-        appHost: appHost(),
+    return renderFor({
+        template: "guest-invite",
+        subject: emailSubjects.guestInvite(options.eventTitle),
+        ...options,
     });
-    return renderBoth(element);
 }
 
 /**
  * Render guest reminder email (Ceremly, SPEC §6 — owner B3) — HTML + text.
  * `message` arriva con i placeholder {nome}/{link} già sostituiti.
  */
-export async function renderGuestReminderEmail(options: {
+export function renderGuestReminderEmail(options: {
     eventTitle: string;
     firstName: string;
     message: string;
     ctaUrl: string;
     pixelUrl: string;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(GuestReminderEmail, {
-        eventTitle: options.eventTitle,
-        firstName: options.firstName,
-        message: options.message,
-        ctaUrl: options.ctaUrl,
-        pixelUrl: options.pixelUrl,
-        appName: appName(),
-        appHost: appHost(),
+    return renderFor({
+        template: "guest-reminder",
+        subject: emailSubjects.guestReminder(options.eventTitle),
+        ...options,
     });
-    return renderBoth(element);
 }
 
 /** Render avviso cleanup evento (SPEC §9.2) — HTML + text, i18n IT/EN. */
-export async function renderEventCleanupWarningEmail(options: {
+export function renderEventCleanupWarningEmail(options: {
     language?: SupportedLanguage;
     eventTitle: string;
     dashboardUrl: string;
     daysLeft: number;
 }): Promise<RenderedEmail> {
-    const element = React.createElement(EventCleanupWarning, {
-        language: options.language || 'it',
-        eventTitle: options.eventTitle,
-        dashboardUrl: options.dashboardUrl,
-        daysLeft: options.daysLeft,
-        appName: appName(),
-        appHost: appHost(),
-    });
-    return renderBoth(element);
+    return renderFor({ template: "event-cleanup-warning", ...options });
 }
-
-// Email subject lines by language (brand injected via appName)
-export const emailSubjects = {
-    verification: {
-        it: 'Confermiamo che sei tu',
-        en: "Let's confirm it's you",
-    },
-    resetPassword: {
-        it: 'Reimposta la password',
-        en: 'Reset your password',
-    },
-    changeEmail: {
-        it: 'Confermi il nuovo indirizzo?',
-        en: 'Confirm your new address?',
-    },
-    waitingList: {
-        it: 'Ci sei. Ti avvisiamo noi.',
-        en: "You're in. We'll be in touch.",
-    },
-    contactConfirmation: {
-        it: 'Ci pensiamo noi',
-        en: "We're on it",
-    },
-    contactNotification: (subject: string) => `[Contatto] ${subject}`,
-    orgInvite: (orgName: string) => ({
-        it: `Ti hanno invitato nel team — ${orgName}`,
-        en: `You're invited to the team — ${orgName}`,
-    }),
-    // Ceremly (solo italiano, SPEC §0): fallback quando l'organizzatore non ha
-    // definito un oggetto in event.distribution / nel reminder.
-    guestInvite: (eventTitle: string) => `Sei invitato: ${eventTitle}`,
-    guestReminder: (eventTitle: string) => `Promemoria — ${eventTitle}`,
-    eventCleanupWarning: (eventTitle: string) => ({
-        it: `Stiamo per archiviare "${eventTitle}"`,
-        en: `We're about to archive "${eventTitle}"`,
-    }),
-};

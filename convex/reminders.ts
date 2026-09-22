@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireActiveOrganization } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden } from "./lib/identity";
@@ -172,5 +172,179 @@ export const save = mutation({
             .collect();
 
         return reminders.sort((left, right) => left.createdAt - right.createdAt);
+    },
+});
+
+// ---------------------------------------------------------------------------
+// Stato del cron (plan Task 13, Step 4)
+// ---------------------------------------------------------------------------
+//
+// Le transizioni di stato di un reminder sono di questo file perché è qui che vive
+// il significato di `pending`/`processingAt`; il cron in `convex/jobs.ts` le
+// orchestra e non le reimplementa.
+
+/** Lease del cron: dopo questo tempo un claim è considerato morto. */
+const PROCESSING_LEASE_MS = 5 * 60 * 1000;
+
+/**
+ * Reminder "dovuti": enabled, mai inviati, non in processing, di un evento attivo
+ * con `rsvpDeadline` **dentro la finestra** di `daysBefore` e non ancora passata.
+ *
+ * Query di sistema, cross-org per costruzione: nessun `organizationId` in ingresso,
+ * perché il chiamante è il cron. Le funzioni a valle restano org-scoped — l'org
+ * arriva dalla riga del reminder, che è già filtrata.
+ *
+ * L'indice `by_enabled_pending` è la traduzione Convex dell'indice parziale del
+ * legacy: `pending` è un campo esplicito proprio perché i documenti senza il campo
+ * non entrano nell'indice.
+ */
+export const dueReminders = internalQuery({
+    args: { limit: v.optional(v.number()) },
+    handler: async (
+        ctx,
+        args,
+    ): Promise<
+        Array<{
+            reminderId: Id<"eventReminders">;
+            organizationId: Id<"organizations">;
+            eventId: Id<"events">;
+        }>
+    > => {
+        const now = Date.now();
+        const limit = args.limit ?? 20;
+
+        const pending = await ctx.db
+            .query("eventReminders")
+            .withIndex("by_enabled_pending", (q) => q.eq("enabled", true).eq("pending", true))
+            .take(limit * 5);
+
+        const due: Array<{
+            reminderId: Id<"eventReminders">;
+            organizationId: Id<"organizations">;
+            eventId: Id<"events">;
+        }> = [];
+
+        for (const reminder of pending) {
+            // Il lease scaduto è riprendibile: è ciò che rende un cron morto a metà
+            // innocuo invece che bloccante.
+            if (reminder.processingAt !== undefined && reminder.processingAt > now - PROCESSING_LEASE_MS) {
+                continue;
+            }
+
+            const event = await ctx.db.get(reminder.eventId);
+            if (!event || event.status !== "active") continue;
+            if (event.rsvpDeadline === undefined) continue;
+            // A deadline passata il form è chiuso: un promemoria sarebbe fuorviante.
+            if (now > event.rsvpDeadline) continue;
+            if (now < event.rsvpDeadline - reminder.daysBefore * 24 * 60 * 60 * 1000) continue;
+
+            due.push({
+                reminderId: reminder._id,
+                organizationId: reminder.organizationId,
+                eventId: reminder.eventId,
+            });
+
+            if (due.length >= limit) break;
+        }
+
+        return due;
+    },
+});
+
+/** Claim atomico con lease: `false` se un altro giro lo sta già processando. */
+export const claimForProcessing = internalMutation({
+    args: { reminderId: v.id("eventReminders") },
+    handler: async (ctx, args): Promise<boolean> => {
+        const reminder = await ctx.db.get(args.reminderId);
+        if (!reminder) return false;
+        if (reminder.sentAt !== undefined) return false;
+
+        const now = Date.now();
+        if (reminder.processingAt !== undefined && reminder.processingAt > now - PROCESSING_LEASE_MS) {
+            return false;
+        }
+
+        await ctx.db.patch(reminder._id, { processingAt: now, updatedAt: now });
+        return true;
+    },
+});
+
+/** Rilascia il lease: il giro successivo riprova dallo stato attuale. */
+export const releaseProcessing = internalMutation({
+    args: { reminderId: v.id("eventReminders") },
+    handler: async (ctx, args): Promise<void> => {
+        const reminder = await ctx.db.get(args.reminderId);
+        if (!reminder) return;
+
+        await ctx.db.patch(reminder._id, { processingAt: undefined, updatedAt: Date.now() });
+    },
+});
+
+/**
+ * Marca il reminder come inviato e rilascia il lease — **solo** se non era già
+ * inviato: un secondo giro che arriva tardi non deve poter riscrivere `sentAt`.
+ */
+export const markSent = internalMutation({
+    args: { reminderId: v.id("eventReminders") },
+    handler: async (ctx, args): Promise<boolean> => {
+        const reminder = await ctx.db.get(args.reminderId);
+        if (!reminder || reminder.sentAt !== undefined) return false;
+
+        const now = Date.now();
+        await ctx.db.patch(reminder._id, {
+            sentAt: now,
+            processingAt: undefined,
+            pending: false,
+            updatedAt: now,
+        });
+
+        return true;
+    },
+});
+
+/**
+ * Ospiti da sollecitare: non rimossi, con email, con i reminder attivi e **senza**
+ * risposta. Il legacy lo esprimeva con una `LEFT JOIN` su `rsvp_responses` e
+ * `IS NULL`; qui la sottrazione è esplicita, perché senza join non c'è il rischio
+ * di dimenticare il ramo "nessuna risposta" in un `WHERE`.
+ *
+ * La finestra è limitata (`limit * 2` ospiti letti) e il limite è dichiarato: un
+ * evento con più di 400 ospiti viene sollecitato in più giri, non in uno. Il cron
+ * gira una volta al giorno su una finestra di giorni, quindi il caso non peggiora
+ * con le dimensioni dell'evento — mentre un `collect` senza tetto lo farebbe.
+ */
+export const pendingGuests = internalQuery({
+    args: {
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        limit: v.optional(v.number()),
+    },
+    handler: async (ctx, args): Promise<Array<Id<"guests">>> => {
+        const limit = args.limit ?? 200;
+
+        const guests = await ctx.db
+            .query("guests")
+            .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+            .take(limit * 2);
+
+        const answered = await ctx.db
+            .query("rsvpResponses")
+            .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+            .collect();
+        const answeredIds = new Set(answered.map((row) => row.guestId as string));
+
+        const pending: Array<Id<"guests">> = [];
+        for (const guest of guests) {
+            if (guest.organizationId !== args.organizationId) continue;
+            if (guest.removedAt !== undefined) continue;
+            if (guest.remindersDisabled) continue;
+            if (!guest.email || guest.email.length === 0) continue;
+            if (answeredIds.has(guest._id as string)) continue;
+
+            pending.push(guest._id);
+            if (pending.length >= limit) break;
+        }
+
+        return pending;
     },
 });

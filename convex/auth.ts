@@ -23,25 +23,47 @@ import authConfig from "./auth.config";
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 /**
+ * The three auth emails, described by template rather than by pre-rendered body.
+ *
+ * Task 13 replaced the inline `{ subject, url, body }` payload with the template
+ * request union: the subjects and the Italian copy used to live here as string
+ * literals *and* inside the React Email templates, which is two places for the
+ * same sentence. Now the copy has one home (`convex/emailTemplates`) and this file
+ * only says which template and with which URL.
+ */
+type AuthEmailRequest =
+    | { template: "verification"; to: string; verificationUrl: string; userName?: string }
+    | { template: "reset-password"; to: string; resetUrl: string; userName?: string }
+    | {
+          template: "change-email";
+          to: string;
+          confirmUrl: string;
+          newEmail: string;
+          userName?: string;
+      };
+
+/**
  * Schedules an auth email (verification / reset / change-email confirmation).
  *
  * Fire-and-forget on purpose: Better Auth calls these callbacks as a side
  * effect *after* the user row is committed, so a throw here would turn a valid
  * sign-up into a 500 (the legacy implementation documented the same trap).
- * Delivery errors stay visible in the Convex logs and, from Task 13 on, in
- * `jobExecutions` with retry/DLQ.
+ * Delivery errors stay visible in the Convex logs.
+ *
+ * These three do **not** go through `jobExecutions`: the plan's job registry is the
+ * set of six legacy job names (Task 13, Step 3), and an auth email has no
+ * downstream consumer waiting on retry semantics — a failed verification email is
+ * re-requested by the user, and the failure is already an audit row
+ * (`email.failed`). A durable job here would add a type the plan does not have.
  */
-const scheduleAuthEmail = (
-    ctx: GenericCtx<DataModel>,
-    email: { to: string; subject: string; url: string; body: string },
-) => {
+const scheduleAuthEmail = (ctx: GenericCtx<DataModel>, request: AuthEmailRequest) => {
     // Narrowing away the query context is what makes `scheduler` reachable:
     // a query could never legitimately send mail, so refusing is correct.
     if (isQueryCtx(ctx)) {
         throw new Error("createAuth needs a mutation or action context to schedule emails");
     }
 
-    void ctx.scheduler.runAfter(0, internal.email.sendAuthEmail, email);
+    void ctx.scheduler.runAfter(0, internal.email.sendTemplate, { request });
 };
 
 const scheduleAppUserProvisioning = (
@@ -114,10 +136,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
             requireEmailVerification: true,
             sendResetPassword: async ({ user, url }) => {
                 scheduleAuthEmail(ctx, {
+                    template: "reset-password",
                     to: user.email,
-                    subject: "Reimposta la password",
-                    url,
-                    body: "Apri il link per scegliere una nuova password.",
+                    resetUrl: url,
+                    ...(user.name ? { userName: user.name } : {}),
                 });
             },
         },
@@ -126,10 +148,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
             autoSignInAfterVerification: true,
             sendVerificationEmail: async ({ user, url }) => {
                 scheduleAuthEmail(ctx, {
+                    template: "verification",
                     to: user.email,
-                    subject: "Conferma il tuo indirizzo email",
-                    url,
-                    body: "Apri il link per confermare il tuo indirizzo email.",
+                    verificationUrl: url,
+                    ...(user.name ? { userName: user.name } : {}),
                 });
             },
         },
@@ -144,15 +166,16 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
                     newEmail,
                     url,
                 }: {
-                    user: { email: string };
+                    user: { email: string; name?: string | null };
                     newEmail: string;
                     url: string;
                 }) => {
                     scheduleAuthEmail(ctx, {
+                        template: "change-email",
                         to: user.email,
-                        subject: "Conferma il cambio email",
-                        url,
-                        body: `Apri il link per confermare il passaggio a ${newEmail}.`,
+                        confirmUrl: url,
+                        newEmail,
+                        ...(user.name ? { userName: user.name } : {}),
                     });
                 },
             },

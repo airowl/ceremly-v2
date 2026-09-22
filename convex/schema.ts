@@ -239,6 +239,17 @@ export default defineSchema({
         .index("by_slug", ["slug"])
         .index("by_creem_order_id", ["creemOrderId"])
         .index("by_creem_checkout_id", ["creemCheckoutId"])
+        /**
+         * Scansione del cleanup eventi stale (plan Task 13, Step 4).
+         *
+         * Ogni ramo del predicato legacy richiede `updated_at` vecchio, quindi
+         * l'insieme dei candidati è un sottoinsieme di "eventi inattivi da 30 giorni"
+         * — e un intervallo su questo indice li prende tutti, ordinati dal più
+         * vecchio. `updatedAt` è obbligatorio nello schema: nessun documento resta
+         * fuori dall'indice (il difetto che nel Task 12 ha reso `by_purge_at` una
+         * trappola per i documenti senza il campo).
+         */
+        .index("by_updated_at", ["updatedAt"])
         .index("by_legacy_id", ["legacyId"]),
 
     /**
@@ -330,6 +341,15 @@ export default defineSchema({
     })
         .index("by_organization", ["organizationId"])
         .index("by_event", ["eventId"])
+        /**
+         * "Questo evento ha attività recenti?" — la `NOT EXISTS` del legacy.
+         *
+         * L'indice è composto perché la domanda è un intervallo temporale dentro un
+         * evento: con il solo `by_event` la risposta richiederebbe un `collect`
+         * dell'intera timeline, e un `take(1)` filtrato in JS direbbe "nessuna
+         * attività" per un evento che ne ha una fuori dal primo documento.
+         */
+        .index("by_event_created", ["eventId", "createdAt"])
         .index("by_guest", ["guestId"])
         .index("by_guest_reminder", ["guestId", "type", "reminderId"])
         .index("by_legacy_id", ["legacyId"]),
@@ -412,6 +432,15 @@ export default defineSchema({
     emailEvents: defineTable({
         legacyId: v.optional(v.string()),
         messageId: v.string(),
+        /**
+         * Id della consegna webhook (`svix-id`) che ha prodotto questa riga.
+         *
+         * È la chiave di idempotenza del webhook Resend: due consegne dello stesso
+         * evento hanno lo stesso `svix-id` e devono produrre una sola riga. Non si
+         * può deduplicare su `messageId` — più eventi distinti (delivered, opened,
+         * clicked) condividono lo stesso messaggio, e dedup su quello ne perderebbe.
+         */
+        svixId: v.optional(v.string()),
         type: v.string(),
         recipient: v.string(),
         organizationId: v.optional(v.id("organizations")),
@@ -427,6 +456,7 @@ export default defineSchema({
         .index("by_organization", ["organizationId"])
         .index("by_event", ["eventId"])
         .index("by_type", ["type"])
+        .index("by_svix_id", ["svixId"])
         .index("by_legacy_id", ["legacyId"]),
 
     /**
@@ -533,6 +563,21 @@ export default defineSchema({
         status: v.union(
             v.literal("pending"),
             v.literal("running"),
+            /**
+             * Fallito ma con budget residuo (plan Task 13, Step 1): il job ha un
+             * `nextAttemptAt` e una consegna già pianificata.
+             *
+             * Distinto da `pending` apposta. `pending` significa "in coda, mai
+             * partito"; `retrying` significa "partito, fallito, torna". Collassarli
+             * renderebbe invisibile la differenza fra un job nuovo e uno che ha già
+             * consumato tentativi — che è esattamente la domanda dell'operatore che
+             * guarda la coda alle 3 di notte.
+             *
+             * `failed` resta nella union per i record scritti dal Task 12 e perché la
+             * rimozione di un valore dal validatore farebbe fallire la lettura delle
+             * righe storiche; nessun percorso nuovo lo scrive.
+             */
+            v.literal("retrying"),
             v.literal("succeeded"),
             v.literal("failed"),
             v.literal("dead"),
@@ -557,6 +602,15 @@ export default defineSchema({
         dedupeKey: v.optional(v.string()),
         payload: v.optional(v.any()),
         result: v.optional(v.any()),
+        /**
+         * Id del messaggio presso il provider (Resend), quando il job ne produce uno.
+         *
+         * Non è un segreto e non è un dettaglio interno del provider: è l'unico modo
+         * di correlare un job all'email che ha spedito — cioè rispondere a "questa
+         * email è partita?" senza dedurlo dalla riga seed. Separato da `result`
+         * perché un campo dentro un oggetto libero non è interrogabile.
+         */
+        providerId: v.optional(v.string()),
         createdAt: v.number(),
         updatedAt: v.number(),
     })
@@ -699,6 +753,14 @@ export default defineSchema({
         .index("by_org_variant_status", ["organizationId", "variantStatus"])
         .index("by_variant_of", ["variantOf"])
         .index("by_variant_status", ["variantStatus", "variantUpdatedAt"])
+        /**
+         * Orfani da ripulire (plan Task 13, Step 4): intervallo su `presignExpiresAt`
+         * dentro lo stato `pending`. L'indice per organizzazione non serve qui — il
+         * cron guarda tutti i tenant — e `presignExpiresAt` è scritto all'inserimento
+         * di ogni upload pendente, quindi nessuna riga resta fuori dall'indice (la
+         * trappola dei documenti senza il campo indicizzato, già incontrata due volte).
+         */
+        .index("by_upload_status", ["uploadStatus", "presignExpiresAt"])
         /**
          * "I file caricati da questo utente" — la sezione `files` dell'export
          * GDPR (Task 12). Nel legacy era una query su `file.uploaded_by` senza

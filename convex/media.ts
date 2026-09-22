@@ -3,7 +3,14 @@ import { internalMutation, internalQuery } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { forbidden } from "./lib/identity";
 import { writeAudit } from "./lib/audit";
-import { MAX_VARIANT_ATTEMPTS, VARIANT_LIMIT, nextVariantState, variantKey, type VariantType } from "./lib/media";
+import {
+    MAX_VARIANT_ATTEMPTS,
+    VARIANT_LIMIT,
+    isProcessableImage,
+    nextVariantState,
+    variantKey,
+    type VariantType,
+} from "./lib/media";
 
 /**
  * Image-variant pipeline (plan Task 7, Step 3).
@@ -31,7 +38,13 @@ export const startProcessing = internalMutation({
     handler: async (
         ctx,
         args,
-    ): Promise<{ shouldProcess: boolean; path: string; basePath: string; mimeType: string }> => {
+    ): Promise<{
+        shouldProcess: boolean;
+        path: string;
+        basePath: string;
+        mimeType: string;
+        organizationId: Id<"organizations">;
+    }> => {
         const file = await ctx.db.get(args.fileId);
         if (!file || file.variantType !== "original") {
             throw forbidden("FILE_NOT_FOUND", { fileId: args.fileId });
@@ -46,6 +59,11 @@ export const startProcessing = internalMutation({
                 path: file.path,
                 basePath: file.basePath,
                 mimeType: file.mimeType,
+                // Task 13: il chiamante unico (job `image-variant`) non ha una
+                // sessione da cui leggere il tenant, e il bridge vuole
+                // l'organizzazione nel payload firmato. Restituirla qui tiene la
+                // decisione dove sta l'ownership: sulla riga del file.
+                organizationId: file.organizationId,
             };
         }
 
@@ -58,7 +76,54 @@ export const startProcessing = internalMutation({
         // `path` (not just `basePath`) travels with the payload: the original's
         // extension comes from the uploaded name, so re-deriving it in the Worker
         // from the MIME type would guess wrong for `.jpeg`/`.jpe` uploads.
-        return { shouldProcess: true, path: file.path, basePath: file.basePath, mimeType: file.mimeType };
+        return {
+            shouldProcess: true,
+            path: file.path,
+            basePath: file.basePath,
+            mimeType: file.mimeType,
+            organizationId: file.organizationId,
+        };
+    },
+});
+
+/**
+ * Originali immagine che aspettano ancora le varianti (plan Task 13, Step 4).
+ *
+ * È la query del cron `requeue-image-variants`: nel legacy era
+ * `is_active AND variant_type='original' AND variants_generated_at IS NULL AND
+ * mime LIKE 'image/%'`. In Convex lo stato è esplicito (`pending` | `retrying`),
+ * quindi non serve un campo "generated_at": un originale pronto è `ready` e uno che
+ * non è un'immagine è `none`, e nessuno dei due compare qui.
+ *
+ * `take(limit * 4)` prima del filtro è un compromesso dichiarato: filtrare dopo il
+ * taglio può perdere candidati, ma i documenti letti in più non costano una
+ * scansione e il cron gira ogni ora. L'alternativa — un indice che includa
+ * `variantType` **e** il MIME — sarebbe un indice per un predicato che il bridge
+ * rivalida comunque.
+ */
+export const variantsNeedingWork = internalQuery({
+    args: { limit: v.optional(v.number()) },
+    handler: async (ctx, args): Promise<Array<Id<"files">>> => {
+        const limit = args.limit ?? 25;
+        const ids: Array<Id<"files">> = [];
+
+        for (const status of ["pending", "retrying"] as const) {
+            const rows = await ctx.db
+                .query("files")
+                .withIndex("by_variant_status", (q) => q.eq("variantStatus", status))
+                .take(limit * 4);
+
+            for (const row of rows) {
+                if (!row.isActive) continue;
+                if (row.variantType !== "original") continue;
+                if (!isProcessableImage(row.mimeType)) continue;
+
+                ids.push(row._id);
+                if (ids.length >= limit) return ids;
+            }
+        }
+
+        return ids;
     },
 });
 

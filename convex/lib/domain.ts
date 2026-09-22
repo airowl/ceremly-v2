@@ -4,6 +4,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { components } from "../_generated/api";
 import { forbidden } from "./identity";
 import { isAtelierSubscription } from "../billing";
+import { siteUrl } from "./env";
 import { TIER_LIMITS, type CeremlyTier, type TierLimits } from "./pricing";
 import type { Infer } from "convex/values";
 // Usati solo in posizione di tipo (`Infer<typeof ...>`): il modulo dei validator
@@ -276,3 +277,36 @@ export function assertRsvpConfigInvariants(config: RsvpQuestionDocument[]): void
 
     assertBoundedContent(config, "Domande RSVP");
 }
+
+// ---------------------------------------------------------------------------
+// Invio inviti (plan Task 13)
+// ---------------------------------------------------------------------------
+
+/**
+ * Corpo di fallback quando `event.distribution` non ha ancora un `emailBody`.
+ * Testo letterale del legacy: è ciò che l'ospite ha già ricevuto.
+ */
+export const FALLBACK_INVITE_BODY =
+    "Ciao {nome},\n\nc'è un invito che ti aspetta. Apri il link per scoprire tutti i dettagli e confermare la tua presenza:\n{link}";
+
+/**
+ * Sostituzione dei placeholder `{nome}` / `{link}` del testo dell'organizzatore.
+ *
+ * `split().join()` e non `replace`: il legacy lo faceva così, e con `replace` un
+ * testo che ripete il placeholder verrebbe sostituito una volta sola.
+ */
+export function applyInvitePlaceholders(text: string, values: { nome: string; link: string }): string {
+    return text.split("{nome}").join(values.nome).split("{link}").join(values.link);
+}
+
+/** Link personale dell'ospite: `{SITE_URL}/e/{slug}/{token}`. */
+export const buildGuestInviteLink = (slug: string, token: string): string =>
+    `${siteUrl().replace(/\/+$/, "")}/e/${slug}/${token}`;
+
+/** Pixel di tracking apertura: `{SITE_URL}/api/public/pixel/{token}.gif`. */
+export const buildGuestPixelUrl = (token: string): string =>
+    `${siteUrl().replace(/\/+$/, "")}/api/public/pixel/${token}.gif`;
+
+/** URL della dashboard di un evento, per le email di avviso cleanup. */
+export const buildEventDashboardUrl = (eventId: string): string =>
+    `${siteUrl().replace(/\/+$/, "")}/dashboard/events/${eventId}`;
