@@ -461,6 +461,7 @@
     "projects": {
       "title": "Progetti",
       "subtitle": "Gestisci i progetti della tua organizzazione",
+      "truncated": "Mostrati i primi 500 progetti dell'organizzazione.",
       "search": "Cerca progetti...",
       "create": "Nuovo progetto",
       "empty": {

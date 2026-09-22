@@ -12,24 +12,15 @@ definePageMeta({
 
 const { t, locale } = useI18n()
 const toast = useToast()
-const { create, update, remove } = useProjects()
+// Task 14: dati da Convex (query viva + mutation). `projects` si aggiorna da
+// sola, quindi non c'è più `useAsyncData` né `refresh()` dopo le scritture.
+const { projects, truncated, isLoading, error, create, update, remove } = useProjects()
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UIcon = resolveComponent('UIcon')
 
 const search = ref('')
-
-// --- Projects data (CSR) ---
-const { data: projects, status, error, refresh } = await useAsyncData(
-    'projects-list',
-    async () => {
-        if (import.meta.server) return []
-        const res = await $fetch<{ projects: ProjectItem[] }>('/api/projects')
-        return res.projects ?? []
-    },
-    { server: false }
-)
 
 const filteredProjects = computed(() => {
     const all = projects.value ?? []
@@ -105,11 +96,10 @@ async function onSubmit(event: FormSubmitEvent<FormSchema>) {
             toast.add({ title: t('dashboard.projects.modal.createSuccess'), color: 'success' })
         }
         isModalOpen.value = false
-        await refresh()
-    } catch (err: any) {
+    } catch (err) {
         toast.add({
             title: t('dashboard.projects.modal.error'),
-            description: err.data?.message || err.message,
+            description: convexErrorMessage(err),
             color: 'error'
         })
     } finally {
@@ -135,11 +125,10 @@ async function confirmDelete() {
         toast.add({ title: t('dashboard.projects.delete.success'), color: 'success' })
         isDeleteOpen.value = false
         deleteTarget.value = null
-        await refresh()
-    } catch (err: any) {
+    } catch (err) {
         toast.add({
             title: t('dashboard.projects.delete.error'),
-            description: err.data?.message || err.message,
+            description: convexErrorMessage(err),
             color: 'error'
         })
     } finally {
@@ -229,12 +218,12 @@ const columns: TableColumn<ProjectItem>[] = [
             <p class="text-muted text-sm mb-6">{{ $t('dashboard.projects.subtitle') }}</p>
 
             <!-- Loading State -->
-            <AppTableSkeleton v-if="status === 'pending'" :rows="5" :columns="5" />
+            <AppTableSkeleton v-if="isLoading" :rows="5" :columns="5" />
 
             <!-- Error State -->
             <div v-else-if="error" class="text-center py-12">
                 <UIcon name="i-lucide-alert-circle" class="size-12 text-error mx-auto mb-4" />
-                <p class="text-muted">{{ error.message }}</p>
+                <p class="text-muted">{{ error }}</p>
             </div>
 
             <!-- Empty State -->
@@ -249,6 +238,9 @@ const columns: TableColumn<ProjectItem>[] = [
 
             <!-- Projects Table -->
             <div v-else class="bg-default rounded-xl border border-default overflow-hidden">
+                <p v-if="truncated" class="px-4 pt-3 text-xs text-muted">
+                    {{ $t('dashboard.projects.truncated') }}
+                </p>
                 <UTable
                     :data="filteredProjects"
                     :columns="columns"

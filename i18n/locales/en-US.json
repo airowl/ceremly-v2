@@ -461,6 +461,7 @@
     "projects": {
       "title": "Projects",
       "subtitle": "Manage your organization's projects",
+      "truncated": "Showing the first 500 projects of the organization.",
       "search": "Search projects...",
       "create": "New project",
       "empty": {

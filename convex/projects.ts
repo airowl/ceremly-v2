@@ -30,6 +30,33 @@ export const list = query({
     },
 });
 
+/**
+ * Tetto della vista UI (Task 14).
+ *
+ * `list` resta paginato — è il contratto per chi consuma l'API — ma la pagina
+ * progetti mostra client-side search su tutto l'elenco, quindi le serve una
+ * lista sola e **viva**: seguire i cursori dal client significherebbe tenere
+ * aperta una sottoscrizione per pagina e congelare le precedenti a ogni
+ * avanzamento (una pagina vecchia non riceve aggiornamenti). Una query, un
+ * tetto dichiarato, e `truncated` che lo dice alla UI invece di mentire.
+ */
+export const UI_LIST_LIMIT = 500;
+
+export const listAll = query({
+    args: {},
+    handler: async (ctx) => {
+        const authz = await requireActiveOrganization(ctx);
+
+        const rows = await ctx.db
+            .query("projects")
+            .withIndex("by_organization_created", (q) => q.eq("organizationId", authz.organizationId))
+            .order("desc")
+            .take(UI_LIST_LIMIT);
+
+        return { projects: rows, truncated: rows.length === UI_LIST_LIMIT };
+    },
+});
+
 export const get = query({
     args: { projectId: v.id("projects") },
     handler: async (ctx, args) => {

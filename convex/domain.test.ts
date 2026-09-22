@@ -6,6 +6,7 @@ import { initConvexTest } from "./test.setup";
 import { getTemplatesByType } from "./lib/inviteTemplates";
 import { RSVP_PRESETS } from "./lib/rsvpPresets";
 import { resolveEventLimits } from "./lib/domain";
+import { UI_LIST_LIMIT } from "./projects";
 
 /**
  * Characterization tests for the tenant domain in Convex (plan Task 11).
@@ -1063,6 +1064,64 @@ describe("audit and projects", () => {
         const project = await s.query(api.projects.get, { projectId: created.projectId });
         expect(project.description).toBeUndefined();
         expect(project.status).toBe("active");
+    });
+
+    /**
+     * `listAll` è la vista UI aggiunta dal Task 14: una lista sola e viva, con un
+     * tetto **dichiarato** invece che silenzioso. Le tre proprietà che la rendono
+     * usabile al posto dei cursori sono qui.
+     */
+    it("lists the whole organization and says so when the cap bites", async () => {
+        const { t, s, organizationId } = await bootstrap();
+        await s.mutation(api.projects.create, { input: { name: "Primo" } });
+        await s.mutation(api.projects.create, { input: { name: "Secondo" } });
+
+        const small = await s.query(api.projects.listAll, {});
+        // L'ordine è `createdAt` desc come la lista eventi legacy; il confronto
+        // usa i nomi per non dipendere da due `insert` nello stesso millisecondo.
+        expect(small.projects.map((project) => project.name).sort()).toEqual([
+            "Primo",
+            "Secondo",
+        ]);
+        expect(small.truncated).toBe(false);
+
+        // Il tetto si verifica al confine, non "a occhio": si supera di uno e si
+        // guarda `truncated`, che è l'unica cosa che la UI può mostrare. Le righe
+        // extra si inseriscono direttamente perché la mutation ha limiti di piano.
+        await t.run(async (ctx) => {
+            for (let i = 0; i < UI_LIST_LIMIT; i++) {
+                await ctx.db.insert("projects", {
+                    organizationId,
+                    name: `Progetto ${i}`,
+                    status: "active",
+                    createdAt: 1_700_000_000_000 + i,
+                    updatedAt: 1_700_000_000_000 + i,
+                });
+            }
+        });
+
+        const capped = await s.query(api.projects.listAll, {});
+        expect(capped.projects).toHaveLength(UI_LIST_LIMIT);
+        expect(capped.truncated).toBe(true);
+    });
+
+    it("listAll sees only the caller's organization", async () => {
+        const { t, s } = await bootstrap();
+        await s.mutation(api.projects.create, { input: { name: "Mio" } });
+
+        const bobSession = session(t, bob);
+        await bobSession.mutation(api.organizations.ensureProvisioned, {});
+
+        const mine = await s.query(api.projects.listAll, {});
+        const theirs = await bobSession.query(api.projects.listAll, {});
+
+        expect(mine.projects.map((project) => project.name)).toEqual(["Mio"]);
+        expect(theirs.projects).toEqual([]);
+    });
+
+    it("listAll needs an organization, like every other tenant query", async () => {
+        const t = initConvexTest();
+        await expectCode(t.query(api.projects.listAll, {}), "UNAUTHENTICATED");
     });
 });
 

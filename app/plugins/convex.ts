@@ -24,15 +24,18 @@ export function installConvex(app: App, url: string, fetchToken: FetchConvexToke
  *
  * The server path of `useConvexQuery` (and `useConvexHttpQuery`) talks to Convex
  * through `ConvexHttpClient`; the websocket `ConvexClient` is never used there,
- * because a server render subscribes to nothing. Building one anyway would put a
- * `new WebSocket(...)` in every Worker request on a runtime that has no global
- * `WebSocket` — so the context is created with `manualInit` and only
- * `httpClientRef` is filled in.
+ * because a server render subscribes to nothing. Constructing it anyway is not
+ * inert: `BaseConvexClient`'s constructor builds a `WebSocketManager`, whose
+ * constructor calls `connect()` — and `connect()` immediately does
+ * `new WebSocket(uri)` (`node_modules/convex/dist/browser.bundle.js`, class
+ * `WebSocketManager` → `connect`). On Node that is a real socket per server
+ * render; on Workers there is no global `WebSocket` at all. So the context is
+ * created with `manualInit` and only `httpClientRef` is filled in.
  *
  * Consequence, deliberate: on the server `useConvexQuery` must be called with
- * `{ server: false }` (it returns inert refs) or with the HTTP query API. A
- * query that tries the websocket path on the server throws "Client not
- * initialized" instead of silently hanging.
+ * `{ server: false }` (it returns inert refs before touching either client) or
+ * with the HTTP query API. A query that tries the websocket path on the server
+ * throws "Client not initialized" instead of silently hanging.
  */
 export function installConvexHttp(app: App, url: string) {
   app.use(convexVue, { url, manualInit: true, server: true });
