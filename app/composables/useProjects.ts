@@ -1,3 +1,4 @@
+import { computed } from "vue";
 import { useConvexMutation, useConvexQuery } from "convex-vue";
 import { api } from "~~/convex/_generated/api";
 import { useConvexError } from "~/composables/useConvexError";

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Dashboard evento "Andamento" — port fedele di docs/ui/project/screens/event-dashboard.jsx
 // (incluso RsvpChart svg con hover interattivo e GuestDetailDrawer).
-// Dati reali: GET /api/events/:id/stats (polling 30s), GET /api/events/:id,
+// Dati reali: Convex (Task 14) — `api.events.stats`, `api.events.get`,
 // GET /api/events/:id/guests (+ /:guestId per il drawer).
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import KpiCard from "~/components/ceremly/KpiCard.vue";
@@ -9,7 +9,6 @@ import StatusPill from "~/components/ceremly/StatusPill.vue";
 import { getEventTypeLabel } from "~~/shared/constants/eventTypes";
 import type {
     AttendingStatus,
-    EventStats,
     GuestRsvpStatus,
     GuestWithStatus,
     RsvpAnswers,
@@ -36,37 +35,27 @@ const eventCtx = useState<{ id: string; title: string; type: string } | null>(
 );
 crumbs.value = ["Eventi", "Evento", "Andamento"];
 
-// ─── Stats (fetch + polling 30s) ───────────────────────────────────────
-const { getStats } = useEventStats();
-const stats = ref<EventStats | null>(null);
-const statsLoading = ref(true);
-const statsError = ref<string | null>(null);
+// ─── Stats (Task 14: query viva, niente più polling) ───────────────────
+// Il polling a 30s è sparito insieme al suo timer: la query si ri-esegue quando
+// i dati cambiano (un RSVP appena arrivato si vede subito, non entro 30s).
+const {
+    stats,
+    isLoading: statsLoading,
+    error: statsQueryError,
+    retry: retryStats,
+} = useEventStats(eventId);
+const statsError = computed(() =>
+    statsQueryError.value ? t("ceremly.event.detail.errorLoadStats") : null,
+);
+
+// ``Aggiornato Ns fa'' resta: con una query viva non c'è un `fetch`, ma c'è un
+// istante in cui i dati sono cambiati, ed è quello che l'etichetta misura.
 const lastFetchedAt = ref<number | null>(null);
+watch(stats, (value) => {
+    if (value) lastFetchedAt.value = Date.now();
+});
 
-async function refreshStats(silent = false) {
-    if (!silent) {
-        statsLoading.value = true;
-        statsError.value = null;
-    }
-    try {
-        stats.value = await getStats(eventId.value);
-        lastFetchedAt.value = Date.now();
-        statsError.value = null;
-    } catch (e) {
-        // Silent (polling): mantieni gli ultimi dati, errore visibile solo se non c'è nulla.
-        if (!silent || !stats.value) {
-            const err = e as { data?: { statusMessage?: string; message?: string } };
-            statsError.value
-                = err.data?.statusMessage
-                    || err.data?.message
-                    || t("ceremly.event.detail.errorLoadStats");
-        }
-    } finally {
-        statsLoading.value = false;
-    }
-}
 
-const polling = usePolling(() => refreshStats(true), 30_000);
 
 // ─── "Ultimo aggiornamento: Ns fa" (contatore reattivo, tick 1s) ───────
 const nowTick = ref(Date.now());
@@ -535,9 +524,7 @@ async function maybeReconcileUnlock() {
 
 onMounted(() => {
     void maybeReconcileUnlock();
-    void refreshStats();
     void loadGuests();
-    polling.start();
     tickTimer = setInterval(() => {
         nowTick.value = Date.now();
     }, 1000);
@@ -603,7 +590,7 @@ onUnmounted(() => {
                 class="cer-btn ghost small"
                 type="button"
                 style="margin-top: 12px;"
-                @click="refreshStats()"
+                @click="retryStats()"
             >
                 {{ $t('common.retry') }}
             </button>

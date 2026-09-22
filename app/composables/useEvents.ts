@@ -1,5 +1,5 @@
 import { useConvexClient, useConvexMutation, useConvexQuery } from "convex-vue";
-import { toValue, type MaybeRefOrGetter } from "vue";
+import { computed, ref, toValue, type MaybeRefOrGetter } from "vue";
 import { api } from "~~/convex/_generated/api";
 import type { Doc } from "~~/convex/_generated/dataModel";
 import { convexErrorMessage, useConvexError } from "~/composables/useConvexError";

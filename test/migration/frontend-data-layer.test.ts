@@ -49,7 +49,6 @@ const ALLOWED_API_PREFIXES = ["/api/auth"];
  */
 const PENDING: Record<string, string> = {
     "app/composables/useEventGuests.ts": "Step 3 (ospiti/RSVP)",
-    "app/composables/useEventStats.ts": "Step 3 (ospiti/RSVP)",
     "app/composables/usePublicInvite.ts": "Step 3 (invito pubblico)",
     "app/composables/useSubscription.ts": "Step 4 (organizzazione e billing)",
     "app/stores/profileStore.ts": "Step 5 (profilo ed export)",

@@ -1,4 +1,7 @@
-import type { ComputedRef, Ref } from "vue";
+// Import espliciti (non auto-import): questi moduli sono importati anche dal
+// progetto TypeScript che controlla `test/**`, dove le global di Nuxt non
+// esistono — e lì `computed` non risolverebbe.
+import { computed, type ComputedRef, type Ref } from "vue";
 
 /**
  * Messaggi d'errore Convex in forma leggibile (Task 14).
