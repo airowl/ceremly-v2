@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createApp, defineComponent, h } from "vue";
 import { createPinia } from "pinia";
-import { installConvex } from "~/plugins/convex";
+import { installConvex } from "~/lib/convexInstall";
 import { useConvexQuery } from "convex-vue";
 import { makeFunctionReference } from "convex/server";
 

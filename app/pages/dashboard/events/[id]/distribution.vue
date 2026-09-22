@@ -2,7 +2,7 @@
 // Distribuzione inviti — port fedele di docs/ui/project/screens/distribution.jsx:
 // composer email con anteprima inbox, copia&incolla WhatsApp, colonna destinatari.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
-import type { CeremlyEvent, GuestWithStatus } from "~~/shared/types/ceremly";
+import type { GuestWithStatus } from "~~/shared/types/ceremly";
 import type { GuestListSummary } from "~/composables/useEventGuests";
 
 definePageMeta({ layout: "ceremly" });
@@ -28,7 +28,8 @@ const TYPE_LABELS = computed<Record<string, string>>(() => ({
     compleanno: t("ceremly.eventType.compleanno.label"),
 }));
 
-const eventData = ref<CeremlyEvent | null>(null);
+const { event: eventData } = useEvent(eventId);
+const { updateEvent } = useEventActions();
 
 watchEffect(() => {
     const label = eventData.value ? TYPE_LABELS.value[eventData.value.type] ?? eventData.value.title : t("ceremly.event.distribution.crumbEvent");
@@ -59,21 +60,32 @@ const waTemplate = ref("");
 const FALLBACK_WA_TEMPLATE
     = "Ciao {nome}! C'è un invito che ti aspetta — trovi tutti i dettagli e la conferma qui: {link}";
 
+/**
+ * I campi editabili si riempiono **una volta sola**, alla prima lettura: una
+ * query viva che li riscrivesse a ogni scrittura (anche di un'altra scheda)
+ * cancellerebbe quello che l'utente sta scrivendo. `eventCtx` invece segue
+ * sempre, perché è solo contesto di navigazione.
+ */
+const distributionSeeded = ref(false);
+watch(eventData, (event) => {
+    if (!event) return;
+    eventCtx.value = { id: event.id, title: event.title, type: event.type };
+    if (distributionSeeded.value) return;
+    distributionSeeded.value = true;
+    subject.value = event.distribution.emailSubject;
+    body.value = event.distribution.emailBody;
+    waTemplate.value = event.distribution.whatsappTemplate || FALLBACK_WA_TEMPLATE;
+}, { immediate: true });
+
 async function loadAll() {
     loading.value = true;
     loadError.value = null;
     try {
-        const [evRes, res] = await Promise.all([
-            $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`),
-            listGuests(eventId.value),
-        ]);
-        eventData.value = evRes.event;
-        eventCtx.value = { id: evRes.event.id, title: evRes.event.title, type: evRes.event.type };
+        // Task 14: l'evento arriva dalla query viva (i campi del form si
+        // riempiono nel watch qui sotto, così restano modificabili).
+        const res = await listGuests(eventId.value);
         guests.value = res.guests;
         summary.value = res.summary;
-        subject.value = evRes.event.distribution?.emailSubject ?? "";
-        body.value = evRes.event.distribution?.emailBody ?? "";
-        waTemplate.value = evRes.event.distribution?.whatsappTemplate || FALLBACK_WA_TEMPLATE;
         if (emailTargets.value.length === 0 && waTargets.value.length > 0) {
             channel.value = "whatsapp";
         }
@@ -325,16 +337,12 @@ async function saveWaTemplate() {
     if (!eventData.value) return;
     try {
         await waBtn.run(async () => {
-            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-                method: "PUT",
-                body: {
-                    distribution: {
-                        ...eventData.value!.distribution,
-                        whatsappTemplate: waTemplate.value,
-                    },
+            await updateEvent(eventId.value, {
+                distribution: {
+                    ...eventData.value!.distribution,
+                    whatsappTemplate: waTemplate.value,
                 },
             });
-            eventData.value = res.event;
         });
         toast.add({ title: t("ceremly.event.distribution.toastWaSavedTitle"), description: t("ceremly.event.distribution.toastWaSavedDesc"), color: "success" });
     } catch (e) {

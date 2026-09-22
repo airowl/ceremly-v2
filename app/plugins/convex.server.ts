@@ -1,5 +1,5 @@
 import { defineNuxtPlugin } from "#app";
-import { installConvexHttp } from "~/plugins/convex";
+import { installConvexHttp } from "~/lib/convexInstall";
 
 /**
  * Server-only Convex install (Task 14): the plugin context with the **HTTP

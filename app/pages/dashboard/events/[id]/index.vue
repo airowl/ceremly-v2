@@ -9,7 +9,6 @@ import StatusPill from "~/components/ceremly/StatusPill.vue";
 import { getEventTypeLabel } from "~~/shared/constants/eventTypes";
 import type {
     AttendingStatus,
-    CeremlyEvent,
     EventStats,
     GuestRsvpStatus,
     GuestWithStatus,
@@ -81,19 +80,18 @@ const lastUpdatedLabel = computed(() => {
 });
 
 // ─── Evento (data header + rsvpConfig per umanizzare le risposte) ──────
-const eventData = ref<CeremlyEvent | null>(null);
-const eventError = ref<string | null>(null);
+// Task 14: query viva al posto della GET una-tantum. Il "ricarica dopo il
+// reconcile" sparisce: la scrittura è già la sorgente della lista.
+const { event: eventData, error: eventQueryError } = useEvent(eventId);
+const eventError = computed(() =>
+    eventQueryError.value ? t("ceremly.event.detail.errorLoadEvent") : null,
+);
 
-async function loadEvent() {
-    try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`);
-        eventData.value = res.event;
-        crumbs.value = ["Eventi", getEventTypeLabel(res.event.type), "Andamento"];
-        eventCtx.value = { id: res.event.id, title: res.event.title, type: res.event.type };
-    } catch {
-        eventError.value = t("ceremly.event.detail.errorLoadEvent");
-    }
-}
+watch(eventData, (event) => {
+    if (!event) return;
+    crumbs.value = ["Eventi", getEventTypeLabel(event.type), "Andamento"];
+    eventCtx.value = { id: event.id, title: event.title, type: event.type };
+}, { immediate: true });
 
 const dateLine = computed(() => {
     if (!eventData.value) return eventError.value ? "—" : "…";
@@ -528,9 +526,8 @@ async function maybeReconcileUnlock() {
     // Rimuovi il parametro subito (evita ri-esecuzione su refresh manuale)
     void router.replace({ query: { ...route.query, unlocked: undefined } });
     try {
+        // Il tier aggiornato arriva da solo: `eventData` è una query viva.
         await $fetch(`/api/events/${eventId.value}/reconcile-unlock`, { method: "POST" });
-        // Ricarica l'evento per riflettere il nuovo tier (es. 'celebration')
-        await loadEvent();
     } catch {
         // Silenzioso: la pagina si carica normalmente, il tier sarà aggiornato al prossimo load
     }
@@ -539,7 +536,6 @@ async function maybeReconcileUnlock() {
 onMounted(() => {
     void maybeReconcileUnlock();
     void refreshStats();
-    void loadEvent();
     void loadGuests();
     polling.start();
     tickTimer = setInterval(() => {

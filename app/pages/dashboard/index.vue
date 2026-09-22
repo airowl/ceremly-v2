@@ -6,7 +6,6 @@ import CerIcon from "~/components/ceremly/CerIcon.vue";
 import EventCard from "~/components/ceremly/EventCard.vue";
 import KpiCard from "~/components/ceremly/KpiCard.vue";
 import { EVENT_TYPES } from "~~/shared/constants/eventTypes";
-import type { EventWithCounts } from "~~/shared/types/ceremly";
 import { useEvents } from "~/composables/useEvents";
 
 definePageMeta({
@@ -20,25 +19,15 @@ useHead({ title: t("ceremly.dashboard.pageTitle") });
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 crumbs.value = [t("ceremly.dashboard.breadcrumb")];
 
-// ─── Dati reali ──────────────────────────────────────────────────────
-const { listEvents } = useEvents();
-const events = ref<EventWithCounts[]>([]);
-const pending = ref(true);
-const loadError = ref<string | null>(null);
-
-async function load() {
-    pending.value = true;
-    loadError.value = null;
-    try {
-        events.value = await listEvents();
-    } catch {
-        loadError.value = t("ceremly.dashboard.loadErrorMessage");
-    } finally {
-        pending.value = false;
-    }
-}
-
-onMounted(load);
+// ─── Dati reali (Task 14: query Convex viva) ────────────────────────
+// Prima: `listEvents()` in `onMounted` + `refresh` manuale. Ora la lista si
+// aggiorna da sola (anche da un'altra scheda) e `retry()` ri-sottoscrive.
+const { events, isLoading: eventsPending, error: eventsError, retry } = useEvents();
+const pending = eventsPending;
+const loadError = computed(() =>
+    eventsError.value ? t("ceremly.dashboard.loadErrorMessage") : null,
+);
+const load = retry;
 
 // ─── Sezioni ─────────────────────────────────────────────────────────
 const activeEvents = computed(() =>

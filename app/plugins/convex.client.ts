@@ -1,6 +1,6 @@
 import { defineNuxtPlugin } from "#app";
 import { createConvexTokenFetcher } from "~/lib/auth-client";
-import { installConvex } from "~/plugins/convex";
+import { installConvex } from "~/lib/convexInstall";
 
 /**
  * Browser Convex client, with the Better Auth JWT attached (Task 14).

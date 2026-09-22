@@ -65,22 +65,27 @@ function errorMessage(e: unknown): string | undefined {
 const selectedIndex = computed(() => config.value.findIndex(q => q.id === selectedId.value));
 const selected = computed<RsvpQuestion | null>(() => config.value[selectedIndex.value] ?? null);
 
+// Task 14: lettura **una-tantum** — le domande vengono copiate in stato
+// editabile (`config`), quindi una query viva le riscriverebbe mentre l'utente
+// le modifica.
+const { getEventOnce, updateEvent } = useEventActions();
+
 async function load() {
     loading.value = true;
     loadError.value = null;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`);
-        eventData.value = res.event;
-        config.value = JSON.parse(JSON.stringify(res.event.rsvpConfig ?? [])) as RsvpQuestion[];
+        const event = await getEventOnce(eventId.value);
+        eventData.value = event;
+        config.value = JSON.parse(JSON.stringify(event.rsvpConfig ?? [])) as RsvpQuestion[];
         savedSnapshot.value = JSON.stringify(config.value);
         selectedId.value = config.value[0]?.id ?? "attendance";
-        eventCtx.value = { id: res.event.id, title: res.event.title, type: res.event.type };
-        const typeKey = `ceremly.eventType.${res.event.type}.label`;
-        crumbs.value = [t("ceremly.event.rsvp.breadcrumbEvents"), te(typeKey) ? t(typeKey) : res.event.title, t("ceremly.event.rsvp.breadcrumbRsvp")];
+        eventCtx.value = { id: event.id, title: event.title, type: event.type };
+        const typeKey = `ceremly.eventType.${event.type}.label`;
+        crumbs.value = [t("ceremly.event.rsvp.breadcrumbEvents"), te(typeKey) ? t(typeKey) : event.title, t("ceremly.event.rsvp.breadcrumbRsvp")];
         rebuildOptionRows();
         resetDemo();
     } catch (e) {
-        loadError.value = errorMessage(e) || t("ceremly.event.rsvp.loadError");
+        loadError.value = convexErrorMessage(e, t("ceremly.event.rsvp.loadError"));
     } finally {
         loading.value = false;
     }
@@ -409,11 +414,9 @@ async function commitDeadline() {
     const current = toDateInputValue(eventData.value?.rsvpDeadline);
     if (deadlineDraft.value === current) return;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-            method: "PUT",
-            body: { rsvpDeadline: deadlineDraft.value || null },
+        eventData.value = await updateEvent(eventId.value, {
+            rsvpDeadline: deadlineDraft.value || null,
         });
-        eventData.value = res.event;
         toast.add({ title: t("ceremly.event.rsvp.toastDeadlineUpdated"), color: "success" });
     } catch (e) {
         toast.add({
@@ -499,11 +502,7 @@ async function save() {
     }
     try {
         await saveBtn.run(async () => {
-            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-                method: "PUT",
-                body: { rsvpConfig: payload },
-            });
-            eventData.value = res.event;
+            eventData.value = await updateEvent(eventId.value, { rsvpConfig: payload });
             config.value = payload;
             savedSnapshot.value = JSON.stringify(payload);
             saveErrors.value = [];

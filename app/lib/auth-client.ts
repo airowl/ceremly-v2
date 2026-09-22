@@ -9,7 +9,7 @@ import {
 import { createAuthClient } from "better-auth/vue";
 // The token contract lives with the Convex binding (Task 3) so there is exactly
 // one definition of what `setAuth` receives.
-import type { FetchConvexToken } from "~/plugins/convex";
+import type { FetchConvexToken } from "~/lib/convexInstall";
 
 export type { FetchConvexToken };
 

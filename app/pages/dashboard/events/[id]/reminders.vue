@@ -3,7 +3,7 @@
 // Sinistra: deadline RSVP + fino a 3 ReminderCard editabili (R1/R2/R3).
 // Destra: destinatari, esclusioni per ospite (remindersDisabled), card "Niente spam".
 // Salvataggio: PUT /api/events/:id/reminders (bulk) + PUT rsvpDeadline se cambiata.
-import type { CeremlyEvent, EventReminderData, GuestWithStatus } from "~~/shared/types/ceremly";
+import type { EventReminderData, GuestWithStatus } from "~~/shared/types/ceremly";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerToggle from "~/components/ceremly/CerToggle.vue";
@@ -42,12 +42,33 @@ interface LocalReminder {
 const loading = ref(true);
 const loadError = ref<string | null>(null);
 const saveBtn = useButtonSuccess();
-const eventData = ref<CeremlyEvent | null>(null);
+const { event: eventData } = useEvent(eventId);
+const { updateEvent } = useEventActions();
+
+watch(eventData, (event) => {
+    if (!event) return;
+    eventCtx.value = { id: event.id, title: event.title, type: event.type };
+    crumbs.value = [t("ceremly.event.reminders.crumbEvents"), TYPE_LABELS[event.type] ?? event.title, t("ceremly.event.reminders.pageTitle")];
+}, { immediate: true });
 const reminders = ref<LocalReminder[]>([]);
 const guests = ref<GuestWithStatus[]>([]);
 const savedRemindersSnapshot = ref("[]");
 const deadlineInput = ref("");
 const savedDeadlineInput = ref("");
+
+
+/**
+ * Il deadline del form segue l'evento, ma **solo** quando non c'è una modifica
+ * in corso: una query viva che riscrivesse il campo mentre l'utente lo sta
+ * editando sarebbe un difetto, non una funzione. `savedDeadlineInput` è la
+ * sentinella di "modifica in corso" (la stessa che usa il pulsante Salva).
+ */
+watch(eventData, (event) => {
+    if (!event) return;
+    if (deadlineInput.value !== savedDeadlineInput.value) return;
+    deadlineInput.value = toDateInputValue(event.rsvpDeadline);
+    savedDeadlineInput.value = deadlineInput.value;
+}, { immediate: true });
 
 const crumbs = useState<string[]>("ceremly-crumbs", () => []);
 const eventCtx = useState<{ id: string, title: string, type: string } | null>("ceremly-event-ctx", () => null);
@@ -87,18 +108,14 @@ async function load() {
     loading.value = true;
     loadError.value = null;
     try {
-        const [evRes, remRes, guestsRes] = await Promise.all([
-            $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`),
+        // Task 14: l'evento è una query viva (non più una GET nel Promise.all);
+        // reminder e ospiti seguono ancora il loro trasporto legacy.
+        const [remRes, guestsRes] = await Promise.all([
             $fetch<{ reminders: EventReminderData[] }>(`/api/events/${eventId.value}/reminders`),
             listGuests(eventId.value),
         ]);
-        eventData.value = evRes.event;
         guests.value = guestsRes.guests ?? [];
         setRemindersFromServer(remRes.reminders ?? []);
-        deadlineInput.value = toDateInputValue(evRes.event.rsvpDeadline);
-        savedDeadlineInput.value = deadlineInput.value;
-        eventCtx.value = { id: evRes.event.id, title: evRes.event.title, type: evRes.event.type };
-        crumbs.value = [t("ceremly.event.reminders.crumbEvents"), TYPE_LABELS[evRes.event.type] ?? evRes.event.title, t("ceremly.event.reminders.pageTitle")];
     } catch (e) {
         loadError.value = errorMessage(e) || t("ceremly.event.reminders.loadError");
     } finally {
@@ -289,11 +306,7 @@ async function saveAll() {
         await saveBtn.run(async () => {
             // 1. Deadline (se cambiata)
             if (deadlineInput.value !== savedDeadlineInput.value) {
-                const evRes = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-                    method: "PUT",
-                    body: { rsvpDeadline: deadlineInput.value || null },
-                });
-                eventData.value = evRes.event;
+                await updateEvent(eventId.value, { rsvpDeadline: deadlineInput.value || null });
                 savedDeadlineInput.value = deadlineInput.value;
             }
 

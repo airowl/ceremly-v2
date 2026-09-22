@@ -1,24 +1,15 @@
 <script setup lang="ts">
-import type { EventWithCounts } from "~~/shared/types/ceremly";
 
 const { t, locale } = useI18n();
 const { subscription, isAtelier, hasActiveSubscription, openCustomerPortal, refreshSubscription } = useSubscription();
-const { listEvents } = useEvents();
+// Task 14: lista eventi da Convex (`events` è una query viva).
+const { events, isLoading: eventsLoading, retry: retryEvents } = useEvents();
 const { fetchSession } = useAuth();
 const localePath = useLocalePath();
 const toast = useToast();
 
 // Eventi sbloccati (Celebrazione)
-const events = ref<EventWithCounts[]>([]);
-const eventsLoading = ref(true);
 const unlockedEvents = computed(() => events.value.filter(e => e.tier === "celebration"));
-
-async function loadEvents() {
-    eventsLoading.value = true;
-    try { events.value = await listEvents(); }
-    catch { events.value = []; }
-    finally { eventsLoading.value = false; }
-}
 
 // Tier corrente
 const currentTierLabel = computed(() => isAtelier.value ? t("subscription.tier.atelier") : t("subscription.tier.free"));
@@ -52,13 +43,13 @@ async function handleSync() {
     try {
         await refreshSubscription();
         await fetchSession();
-        await loadEvents();
+        retryEvents();
         toast.add({ title: t("subscription.synced"), color: "success" });
     } catch { toast.add({ title: t("subscription.syncError"), color: "error" }); }
     finally { isSyncing.value = false; }
 }
 
-onMounted(async () => { await Promise.all([refreshSubscription(), loadEvents()]); });
+onMounted(async () => { await refreshSubscription(); });
 </script>
 
 <template>

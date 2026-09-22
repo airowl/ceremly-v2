@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createSSRApp, defineComponent, h } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { useConvexQuery } from "convex-vue";
-import { installConvex } from "~/plugins/convex";
+import { installConvex } from "~/lib/convexInstall";
 import { api } from "../../convex/_generated/api";
 
 // Gate G02 (plan Task 3 Step 4) requires the public query SSR case against a

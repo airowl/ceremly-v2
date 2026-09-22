@@ -166,22 +166,18 @@ async function submit() {
         });
         await navigateTo(`/dashboard/events/${created.id}/editor`);
     } catch (e) {
-        const err = e as {
-            statusCode?: number;
-            status?: number;
-            data?: { statusCode?: number, statusMessage?: string, message?: string };
-        };
-        const status = err.statusCode ?? err.status ?? err.data?.statusCode;
-        if (status === 402) {
-            planLimitMessage.value
-                = err.data?.statusMessage
-                    || err.data?.message
-                    || t("ceremly.event.new.errorPlanLimit");
+        // Il limite di piano non è più un 402 HTTP: Convex lancia
+        // `ACTIVE_EVENT_LIMIT_REACHED` (`convex/events.ts`), quindi il ramo si
+        // decide sul codice d'errore e non sullo status — uno status che il
+        // trasporto non porta più.
+        const data = (e as { data?: { code?: string; message?: string } } | null)?.data;
+        if (data?.code === "ACTIVE_EVENT_LIMIT_REACHED") {
+            // Il messaggio del backend vince quando c'è; il codice no: è una
+            // costante macchina, e mostrarla all'utente sarebbe mostrare lessico
+            // interno al posto della frase tradotta.
+            planLimitMessage.value = data.message ?? t("ceremly.event.new.errorPlanLimit");
         } else {
-            createError.value
-                = err.data?.statusMessage
-                    || err.data?.message
-                    || t("ceremly.event.new.errorCreate");
+            createError.value = convexErrorMessage(e, t("ceremly.event.new.errorCreate"));
         }
     } finally {
         creating.value = false;

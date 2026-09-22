@@ -8,7 +8,6 @@ import CerCelebrationPaywall from "~/components/ceremly/CerCelebrationPaywall.vu
 import { getVisibleQuestions } from "~~/shared/utils/rsvpLogic";
 import { parseCsv, mapGuestRows, type CsvError, type CsvGuestRow } from "~~/shared/utils/csv";
 import type {
-    CeremlyEvent,
     GuestWithStatus,
     RsvpAnswers,
     RsvpPerPersonAnswer,
@@ -45,7 +44,14 @@ function getTypeLabel(type: string): string {
     return translated !== key ? translated : type;
 }
 
-const eventData = ref<CeremlyEvent | null>(null);
+// Task 14: l'evento è una query viva; gli ospiti seguono ancora il composable
+// legacy (`useEventGuests`), che è la parte successiva dello stesso step.
+const { event: eventData } = useEvent(eventId);
+
+watch(eventData, (event) => {
+    if (!event) return;
+    eventCtx.value = { id: event.id, title: event.title, type: event.type };
+}, { immediate: true });
 
 watchEffect(() => {
     const label = eventData.value
@@ -75,14 +81,9 @@ async function loadAll() {
     loading.value = true;
     loadError.value = null;
     try {
-        const [res, evRes] = await Promise.all([
-            listGuests(eventId.value),
-            $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`),
-        ]);
+        const res = await listGuests(eventId.value);
         guests.value = res.guests;
         summary.value = res.summary;
-        eventData.value = evRes.event;
-        eventCtx.value = { id: evRes.event.id, title: evRes.event.title, type: evRes.event.type };
     } catch (e) {
         loadError.value = errOf(e).data?.statusMessage || errOf(e).message || t("ceremly.event.guests.loadError");
     } finally {

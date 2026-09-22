@@ -140,6 +140,27 @@ async function tallyGuestsByEvent(
     return tallies;
 }
 
+/**
+ * Il blocco `counts` delle card evento, in un punto solo.
+ *
+ * Estratto nel Task 14 perché ora lo usano due query (`list` e `listAll`): il
+ * commento su `pending` è una decisione di prodotto, e due copie di una decisione
+ * sono due decisioni che possono divergere.
+ */
+function countsOf(tally: GuestTally) {
+    return {
+        guests: tally.guests,
+        confirmed: tally.confirmed,
+        declined: tally.declined,
+        maybe: tally.maybe,
+        // "In attesa" = ospiti senza risposta; i `maybe` hanno
+        // risposto e sono esposti a parte.
+        pending: Math.max(0, tally.guests - tally.responded),
+        opened: tally.opened,
+        sent: tally.sent,
+    };
+}
+
 // ---------------------------------------------------------------------------
 // CRUD
 // ---------------------------------------------------------------------------
@@ -164,23 +185,46 @@ export const list = query({
 
         return {
             ...page,
-            page: page.page.map((event) => {
-                const tally = tallies.get(event._id) ?? emptyTally();
-                return {
-                    ...event,
-                    counts: {
-                        guests: tally.guests,
-                        confirmed: tally.confirmed,
-                        declined: tally.declined,
-                        maybe: tally.maybe,
-                        // "In attesa" = ospiti senza risposta; i `maybe` hanno
-                        // risposto e sono esposti a parte.
-                        pending: Math.max(0, tally.guests - tally.responded),
-                        opened: tally.opened,
-                        sent: tally.sent,
-                    },
-                };
-            }),
+            page: page.page.map((event) => ({
+                ...event,
+                counts: countsOf(tallies.get(event._id) ?? emptyTally()),
+            })),
+        };
+    },
+});
+
+/**
+ * Tetto della vista UI (Task 14), come `projects.listAll`.
+ *
+ * La home e la pagina abbonamento mostrano l'elenco completo con i KPI aggregati
+ * client-side, quindi vogliono una lista sola e viva: i cursori dal client
+ * significherebbero una sottoscrizione per pagina, con le pagine precedenti
+ * congelate a ogni avanzamento. `truncated` dice alla UI quando il tetto morde.
+ *
+ * I conteggi vengono dagli stessi `tallyGuestsByEvent` di `list`: due query dello
+ * stesso dominio che contano in modo diverso sarebbero due verità.
+ */
+export const UI_LIST_LIMIT = 500;
+
+export const listAll = query({
+    args: {},
+    handler: async (ctx) => {
+        const authz = await requireActiveOrganization(ctx);
+
+        const events = await ctx.db
+            .query("events")
+            .withIndex("by_organization_created", (q) => q.eq("organizationId", authz.organizationId))
+            .order("desc")
+            .take(UI_LIST_LIMIT);
+
+        const tallies = await tallyGuestsByEvent(ctx, authz.organizationId);
+
+        return {
+            events: events.map((event) => ({
+                ...event,
+                counts: countsOf(tallies.get(event._id) ?? emptyTally()),
+            })),
+            truncated: events.length === UI_LIST_LIMIT,
         };
     },
 });

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createApp, defineComponent, h } from "vue";
 import { useConvexMutation, useConvexQuery } from "convex-vue";
 import { WebSocket as WsWebSocket } from "ws";
-import { installConvex, type FetchConvexToken } from "~/plugins/convex";
+import { installConvex, type FetchConvexToken } from "~/lib/convexInstall";
 import { GATE_AUTH_ISSUER } from "../../convex/auth.config";
 import { api } from "../../convex/_generated/api";
 import { gatePrivateKeyPem, signGateToken } from "./gate-jwt";

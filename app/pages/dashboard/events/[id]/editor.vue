@@ -128,12 +128,16 @@ function normalizeBlocks(list: InviteBlock[]): InviteBlock[] {
 }
 
 // ─── Fetch evento ────────────────────────────────────────────────────
+// Task 14: lettura **una-tantum** (non una query viva). I blocchi, il tema e il
+// font vengono copiati in stato editabile: una query viva li riscriverebbe sotto
+// le dita dell'utente, anche per una scrittura arrivata da un'altra scheda.
+const { getEventOnce, updateEvent } = useEventActions();
+
 async function loadEvent() {
     pending.value = true;
     loadError.value = null;
     try {
-        const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`);
-        const ev = res.event;
+        const ev = await getEventOnce(eventId.value);
         eventData.value = ev;
         blocks.value = normalizeBlocks(structuredClone(ev.blocks ?? []));
         rsvpDeadline.value = ev.rsvpDeadline ? String(ev.rsvpDeadline).slice(0, 10) : "";
@@ -144,8 +148,7 @@ async function loadEvent() {
         eventCtx.value = { id: ev.id, title: ev.title, type: ev.type };
         savedSnapshot.value = snapshot();
     } catch (e: unknown) {
-        const err = e as { data?: { statusMessage?: string; message?: string }; message?: string };
-        loadError.value = err.data?.statusMessage || err.data?.message || err.message || t("ceremly.event.editor.error.network");
+        loadError.value = convexErrorMessage(e, t("ceremly.event.editor.error.network"));
     } finally {
         pending.value = false;
     }
@@ -409,25 +412,20 @@ async function save(): Promise<boolean> {
     }
     try {
         await saveBtn.run(async () => {
-            const res = await $fetch<{ event: CeremlyEvent }>(`/api/events/${eventId.value}`, {
-                method: "PUT",
-                body: {
-                    blocks: blocks.value,
-                    rsvpDeadline: rsvpDeadline.value || null,
-                    theme: theme.value,
-                    inviteFont: fontFamily.value,
-                },
+            eventData.value = await updateEvent(eventId.value, {
+                blocks: blocks.value,
+                rsvpDeadline: rsvpDeadline.value || null,
+                theme: theme.value,
+                inviteFont: fontFamily.value,
             });
-            eventData.value = res.event;
             savedSnapshot.value = snapshot();
         });
         toast.add({ title: t("ceremly.event.editor.toast.save.successTitle"), description: t("ceremly.event.editor.toast.save.successDesc"), icon: "i-lucide-check", color: "success" });
         return true;
     } catch (e: unknown) {
-        const err = e as { data?: { statusMessage?: string; message?: string } };
         toast.add({
             title: t("ceremly.event.editor.toast.save.errorTitle"),
-            description: err.data?.statusMessage || err.data?.message || t("ceremly.event.editor.toast.save.errorDesc"),
+            description: convexErrorMessage(e, t("ceremly.event.editor.toast.save.errorDesc")),
             icon: "i-lucide-alert-circle",
             color: "error",
         });
