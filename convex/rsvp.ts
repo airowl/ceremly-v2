@@ -70,6 +70,9 @@ async function findActiveInvite(ctx: MutationCtx, token: string): Promise<Active
 
     const event = await ctx.db.get(guest.eventId);
     if (!event || event.status === "draft") throw inviteNotFound();
+    // Final review I1: an event of a deleted organization is gone, even while
+    // the `organization-purge` job is still draining its rows.
+    if (!(await ctx.db.get(event.organizationId))) throw inviteNotFound();
 
     const response = await ctx.db
         .query("rsvpResponses")

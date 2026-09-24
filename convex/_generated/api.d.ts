@@ -50,6 +50,7 @@ import type * as lib_limitOverrides from "../lib/limitOverrides.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
 import type * as lib_media from "../lib/media.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
+import type * as lib_organizationGraph from "../lib/organizationGraph.js";
 import type * as lib_previewToken from "../lib/previewToken.js";
 import type * as lib_pricing from "../lib/pricing.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
@@ -122,6 +123,7 @@ declare const fullApi: ApiFromModules<{
   "lib/magicBytes": typeof lib_magicBytes;
   "lib/media": typeof lib_media;
   "lib/migrationKey": typeof lib_migrationKey;
+  "lib/organizationGraph": typeof lib_organizationGraph;
   "lib/previewToken": typeof lib_previewToken;
   "lib/pricing": typeof lib_pricing;
   "lib/rateLimit": typeof lib_rateLimit;

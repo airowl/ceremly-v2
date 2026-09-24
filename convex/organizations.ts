@@ -27,6 +27,7 @@ import { writeAudit } from "./lib/audit";
 import { requireEnv } from "./lib/env";
 import { deriveInvitationToken } from "./lib/invitationToken";
 import { deleteLimitOverrides } from "./lib/limitOverrides";
+import { drainOrganizationGraph } from "./lib/organizationGraph";
 import { JOB_TYPES, enqueueJob } from "./lib/jobQueue";
 import { components } from "./_generated/api";
 
@@ -807,6 +808,13 @@ export const updateOrganization = mutation({
  * organization they belong to (oldest membership first — the legacy fallback
  * was "first in list"), or left without one if there is none (the next login
  * self-heals a personal workspace).
+ *
+ * Final review I1: the rest of the graph (events, guests, RSVP, activities,
+ * reminders, projects, files and their R2 objects) goes too, like the legacy
+ * foreign-key cascade. It does not fit one transaction for a large
+ * organization, so it is drained by the durable `organization-purge` job. From
+ * this mutation on, the public invite, the reminder cron and the guest email
+ * jobs treat an event of a missing organization as gone.
  */
 export const deleteOrganization = mutation({
     args: { organizationId: v.optional(v.id("organizations")) },
@@ -879,6 +887,14 @@ export const deleteOrganization = mutation({
         await deleteLimitOverrides(ctx, organizationId);
 
         await ctx.db.delete(organizationId);
+
+        // Final review I1: the rest of the graph, batched, R2 objects first.
+        const purge = await enqueueJob(ctx, {
+            type: JOB_TYPES.organizationPurge,
+            payload: { organizationId },
+            dedupeKey: `organization-purge:${organizationId}`,
+        });
+
         await writeAudit(ctx, {
             action: "organization.deleted",
             actorAppUserId: authz.appUserId,
@@ -889,6 +905,7 @@ export const deleteOrganization = mutation({
                 memberships: memberships.length,
                 invitations: invitations.length,
                 explicitTarget: args.organizationId !== undefined,
+                purgeJobId: purge.jobId,
             },
         });
 
@@ -900,6 +917,73 @@ export const deleteOrganization = mutation({
             // Where the caller landed (null: no organization left).
             activeOrganizationId: caller?.activeOrganizationId ?? null,
         };
+    },
+});
+
+// ---------------------------------------------------------------------------
+// organization-purge job internals (final review I1)
+// ---------------------------------------------------------------------------
+
+/** Next batch of files of a deleted organization, and whether it still exists. */
+export const organizationPurgeFiles = internalQuery({
+    args: { organizationId: v.id("organizations"), limit: v.number() },
+    handler: async (
+        ctx,
+        args,
+    ): Promise<{ organizationExists: boolean; files: Array<{ fileId: Id<"files">; path: string }> }> => {
+        if (await ctx.db.get(args.organizationId)) return { organizationExists: true, files: [] };
+        const files = await ctx.db
+            .query("files")
+            .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+            .take(Math.min(Math.max(args.limit, 1), 100));
+        return { organizationExists: false, files: files.map((file) => ({ fileId: file._id, path: file.path })) };
+    },
+});
+
+/** Deletes file rows whose R2 object the job has already deleted. */
+export const deleteOrganizationFiles = internalMutation({
+    args: { organizationId: v.id("organizations"), fileIds: v.array(v.id("files")) },
+    handler: async (ctx, args): Promise<number> => {
+        if (await ctx.db.get(args.organizationId)) throw forbidden("ORGANIZATION_EXISTS", {});
+        let deleted = 0;
+        for (const fileId of args.fileIds) {
+            const file = await ctx.db.get(fileId);
+            // Tenant check: only rows of the organization being purged.
+            if (!file || file.organizationId !== args.organizationId) continue;
+            await ctx.db.delete(fileId);
+            deleted += 1;
+        }
+        return deleted;
+    },
+});
+
+/** One bounded pass over the rest of a deleted organization's graph. */
+export const drainDeletedOrganization = internalMutation({
+    args: { organizationId: v.id("organizations"), batch: v.number() },
+    handler: async (ctx, args): Promise<{ removed: number; leftover: boolean }> => {
+        if (await ctx.db.get(args.organizationId)) throw forbidden("ORGANIZATION_EXISTS", {});
+        return await drainOrganizationGraph(ctx, args.organizationId, Math.min(Math.max(args.batch, 1), 200));
+    },
+});
+
+/** Audit of a completed organization purge (counts only). */
+export const recordOrganizationPurged = internalMutation({
+    args: { organizationId: v.id("organizations"), filesDeleted: v.number(), rowsRemoved: v.number() },
+    handler: async (ctx, args): Promise<void> => {
+        await writeAudit(ctx, {
+            action: "organization.purged",
+            targetType: "organization",
+            targetId: args.organizationId,
+            details: { filesDeleted: args.filesDeleted, rowsRemoved: args.rowsRemoved },
+        });
+    },
+});
+
+/** Hands a large purge over to a fresh job (no dedupe key: the current one is still running). */
+export const continueOrganizationPurge = internalMutation({
+    args: { organizationId: v.id("organizations") },
+    handler: async (ctx, args): Promise<void> => {
+        await enqueueJob(ctx, { type: JOB_TYPES.organizationPurge, payload: { organizationId: args.organizationId } });
     },
 });
 

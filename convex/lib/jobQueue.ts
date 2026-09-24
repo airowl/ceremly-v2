@@ -62,6 +62,15 @@ export const JOB_TYPES = {
      * declared in `docs/migration/frontend-convex.md`.
      */
     sendOrgInviteEmail: "send-org-invite-email",
+    /**
+     * Organization delete cascade (final review I1). `organizations.deleteOrganization`
+     * removes the organization row at once and queues this job, which deletes the
+     * organization's R2 objects through the bridge and then drains events,
+     * guests, RSVP, activities, reminders, projects, files and invitations in
+     * batches. Payload `{ organizationId }` only. Ninth type: declared in
+     * `docs/migration/frontend-convex.md`.
+     */
+    organizationPurge: "organization-purge",
     /** Generazione varianti immagine via bridge media (legacy QStash `image-variant`). */
     imageVariant: "image-variant",
     /** Avviso di cleanup di un evento stale, prima della cancellazione. */
@@ -89,6 +98,7 @@ export const JOB_MAX_ATTEMPTS: Record<JobType, number> = {
     [JOB_TYPES.sendReminderEmail]: 5,
     [JOB_TYPES.sendTestInviteEmail]: 5,
     [JOB_TYPES.sendOrgInviteEmail]: 5,
+    [JOB_TYPES.organizationPurge]: 5,
     [JOB_TYPES.imageVariant]: 3,
     [JOB_TYPES.eventCleanupWarning]: 5,
 };

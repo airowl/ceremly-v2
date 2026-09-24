@@ -231,9 +231,9 @@ membro, purge dell'account in un'organizzazione che sopravvive (le righe con
 una sua bozza) ed eliminazione dell'organizzazione. Non entra nell'export GDPR: l'export
 non include nemmeno le righe analoghe per evento (reminder, attività), e la richiesta è
 già tracciata dall'audit `invite.test_requested`, che l'export include (righe con
-l'utente come attore). Debito **preesistente**, non introdotto qui:
-`organizations.deleteOrganization` non cancella gli eventi dell'organizzazione (restano
-orfani con i loro figli); le richieste di test invece ora spariscono.
+l'utente come attore). Il debito preesistente (`deleteOrganization` lasciava orfani gli
+eventi con i loro figli) è **chiuso dalla final review I1**: vedi sotto, "Cascata della
+cancellazione di un'organizzazione".
 
 ### L'anteprima firmata
 
@@ -454,6 +454,19 @@ Convex è silenzioso, perché consegnarlo significava decidere il contratto URL 
   job lo verifica e fa uno skip terminale `token_mismatch` invece di spedire un link
   morto. Presupposto operativo nuovo: **`inviteMember` richiede `BETTER_AUTH_SECRET`
   nella deployment Convex** (c'è già: lo usa l'auth).
+- **Cascata della cancellazione di un'organizzazione (final review I1, nono tipo di job).**
+  `deleteOrganization` cancella subito, nella stessa transazione, organizzazione,
+  membership, inviti (tutti gli stati), richieste di test e override dei limiti, e accoda
+  `organization-purge` (payload `{ organizationId }`, `dedupeKey`
+  `organization-purge:{id}`, 5 tentativi). Il job cancella gli oggetti R2 dei file via
+  bridge **prima** delle righe (un delete fallito lancia: retry con backoff, la riga resta)
+  e drena a lotti eventi, ospiti, RSVP, attività, reminder, progetti e file
+  (`convex/lib/organizationGraph.ts`, lo stesso modulo usato dal purge account e dal cron
+  degli eventi stale); oltre 20 passaggi accoda la propria continuazione. Rifiuta di
+  toccare un'organizzazione che esiste ancora. Audit `organization.purged` con i conteggi.
+  Dal momento della delete, prima ancora che il job giri, l'invito pubblico risponde
+  `INVITE_NOT_FOUND`, `reminders.dueReminders` non seleziona reminder dell'organizzazione e i
+  job email degli ospiti fanno skip. Test: `convex/organizationDelete.test.ts`.
 - La pagina legge `organizations.getInvitationByToken` (**pubblica**: chi non ha
   sessione vede chi lo ha invitato e dove, come prima; il token da 256 bit è la
   credenziale; token ignoto e vuoto sono lo stesso `null`; nessun id interno né hash

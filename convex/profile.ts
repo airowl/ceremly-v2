@@ -7,7 +7,7 @@ import type { MutationCtx } from "./_generated/server";
 import { requireAppUser } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden, type ReadCtx } from "./lib/identity";
-import { deleteLimitOverrides } from "./lib/limitOverrides";
+import { deleteOrganizationGraph } from "./lib/organizationGraph";
 
 /**
  * Profilo utente e cancellazione account (plan Task 12, Step 1).
@@ -539,92 +539,3 @@ export const purgeApply = internalMutation({
         return { purgedOrgs, transferred, purgedUser };
     },
 });
-
-/** Cascade dell'intero grafo di un'organizzazione (legacy `deleteOrganizationGraph`). */
-async function deleteOrganizationGraph(
-    ctx: MutationCtx,
-    organizationId: Id<"organizations">,
-): Promise<void> {
-    const events = await ctx.db
-        .query("events")
-        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-        .collect();
-
-    for (const event of events) {
-        const guests = await ctx.db
-            .query("guests")
-            .withIndex("by_event", (q) => q.eq("eventId", event._id))
-            .collect();
-        for (const guest of guests) {
-            for (const response of await ctx.db
-                .query("rsvpResponses")
-                .withIndex("by_guest", (q) => q.eq("guestId", guest._id))
-                .collect()) {
-                await ctx.db.delete(response._id);
-            }
-            for (const activity of await ctx.db
-                .query("guestActivities")
-                .withIndex("by_guest", (q) => q.eq("guestId", guest._id))
-                .collect()) {
-                await ctx.db.delete(activity._id);
-            }
-            await ctx.db.delete(guest._id);
-        }
-
-        for (const reminder of await ctx.db
-            .query("eventReminders")
-            .withIndex("by_event", (q) => q.eq("eventId", event._id))
-            .collect()) {
-            await ctx.db.delete(reminder._id);
-        }
-
-        for (const request of await ctx.db
-            .query("inviteTestRequests")
-            .withIndex("by_event", (q) => q.eq("eventId", event._id))
-            .collect()) {
-            await ctx.db.delete(request._id);
-        }
-
-        await ctx.db.delete(event._id);
-    }
-
-    for (const project of await ctx.db
-        .query("projects")
-        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-        .collect()) {
-        await ctx.db.delete(project._id);
-    }
-
-    // Task 15: the admin limit override goes with the organization.
-    await deleteLimitOverrides(ctx, organizationId);
-
-    for (const file of await ctx.db
-        .query("files")
-        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-        .collect()) {
-        await ctx.db.delete(file._id);
-    }
-
-    // Inviti dell'organizzazione: spariscono con lei (nel legacy la cascade
-    // arrivava dalle foreign key). L'indice è `by_org_status`, quindi si itera sui
-    // due stati che possono esistere ancora.
-    for (const status of ["pending", "accepted"] as const) {
-        for (const invitation of await ctx.db
-            .query("invitations")
-            .withIndex("by_org_status", (q) =>
-                q.eq("organizationId", organizationId).eq("status", status),
-            )
-            .collect()) {
-            await ctx.db.delete(invitation._id);
-        }
-    }
-
-    for (const membership of await ctx.db
-        .query("memberships")
-        .withIndex("by_organization_role", (q) => q.eq("organizationId", organizationId))
-        .collect()) {
-        await ctx.db.delete(membership._id);
-    }
-
-    await ctx.db.delete(organizationId);
-}

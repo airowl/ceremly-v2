@@ -234,6 +234,8 @@ export const dueReminders = internalQuery({
 
             const event = await ctx.db.get(reminder.eventId);
             if (!event || event.status !== "active") continue;
+            // Final review I1: nothing is sent on behalf of a deleted organization.
+            if (!(await ctx.db.get(event.organizationId))) continue;
             if (event.rsvpDeadline === undefined) continue;
             // A deadline passata il form è chiuso: un promemoria sarebbe fuorviante.
             if (now > event.rsvpDeadline) continue;

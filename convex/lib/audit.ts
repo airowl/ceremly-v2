@@ -42,6 +42,7 @@ const AUDIT_ACTION_CATEGORY = {
     "organization.created": "organization",
     "organization.updated": "organization",
     "organization.deleted": "organization",
+    "organization.purged": "organization",
     "organization.activated": "organization",
     "organization.member_provisioned": "organization",
     "organization.membership_repaired": "organization",

@@ -16,6 +16,7 @@ import {
 import { emailSubjects } from "./lib/emailSubjects";
 import { forbidden } from "./lib/identity";
 import { JOB_TYPES, enqueueJob, retryDelayMs } from "./lib/jobQueue";
+import { deleteEventChildren } from "./lib/organizationGraph";
 import { BRIDGE_PATH, callBridge, errorMessage, tryBridge } from "./lib/storageBridge";
 import { PREVIEW_TOKEN } from "./lib/previewToken";
 import { requireEnv, siteUrl } from "./lib/env";
@@ -327,6 +328,7 @@ async function dispatch(
     if (name === JOB_TYPES.sendReminderEmail) return await runSendReminderEmail(ctx, payload);
     if (name === JOB_TYPES.sendTestInviteEmail) return await runSendTestInviteEmail(ctx, payload);
     if (name === JOB_TYPES.sendOrgInviteEmail) return await runSendOrgInviteEmail(ctx, payload);
+    if (name === JOB_TYPES.organizationPurge) return await runOrganizationPurge(ctx, payload);
     if (name === JOB_TYPES.imageVariant) return await runImageVariant(ctx, payload);
     if (name === JOB_TYPES.eventCleanupWarning) return await runEventCleanupWarning(ctx, payload);
 
@@ -526,6 +528,8 @@ export const guestEmailContext = internalQuery({
 
         const event = await ctx.db.get(guest.eventId);
         if (!event) return null;
+        // Final review I1: a deleted organization's guests get no email.
+        if (!(await ctx.db.get(event.organizationId))) return null;
 
         const response = await ctx.db
             .query("rsvpResponses")
@@ -825,6 +829,75 @@ async function runSendReminderEmail(
     await ctx.runMutation(internal.jobs.recordReminderActivity, { guestId, reminderId });
 
     return { sent: true, ...(result.messageId ? { providerId: result.messageId } : {}) };
+}
+
+// ---------------------------------------------------------------------------
+// organization-purge (final review I1)
+// ---------------------------------------------------------------------------
+
+/** Passes of (files → graph) per job run before handing over to a fresh job. */
+const ORG_PURGE_ROUNDS = 20;
+const ORG_PURGE_FILE_BATCH = 50;
+const ORG_PURGE_ROW_BATCH = 100;
+
+/**
+ * Drains a deleted organization's graph.
+ *
+ * Each round deletes up to a batch of R2 objects **before** their rows (a failed
+ * delete throws: the job retries with backoff and the row keeps the reference),
+ * then one bounded pass over the rest of the graph. A very large organization
+ * does not fit one run: after `ORG_PURGE_ROUNDS` the job queues its own
+ * continuation and succeeds.
+ */
+async function runOrganizationPurge(
+    ctx: ActionCtx,
+    payload: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+    const organizationId = payload.organizationId as Id<"organizations"> | undefined;
+    if (!organizationId) throw new Error("ORGANIZATION_PURGE_JOB_WITHOUT_ORGANIZATION_ID");
+
+    let filesDeleted = 0;
+    let rowsRemoved = 0;
+
+    for (let round = 0; round < ORG_PURGE_ROUNDS; round += 1) {
+        const batch: {
+            organizationExists: boolean;
+            files: Array<{ fileId: Id<"files">; path: string }>;
+        } = await ctx.runQuery(internal.organizations.organizationPurgeFiles, {
+            organizationId,
+            limit: ORG_PURGE_FILE_BATCH,
+        });
+        // Never on a live organization: a misrouted payload must not wipe one.
+        if (batch.organizationExists) return { skipped: "organization_exists" };
+
+        for (const file of batch.files) {
+            await callBridge(BRIDGE_PATH.object, { op: "delete", key: file.path });
+        }
+        if (batch.files.length > 0) {
+            filesDeleted += await ctx.runMutation(internal.organizations.deleteOrganizationFiles, {
+                organizationId,
+                fileIds: batch.files.map((file) => file.fileId),
+            });
+        }
+
+        const pass: { removed: number; leftover: boolean } = await ctx.runMutation(
+            internal.organizations.drainDeletedOrganization,
+            { organizationId, batch: ORG_PURGE_ROW_BATCH },
+        );
+        rowsRemoved += pass.removed;
+
+        if (!pass.leftover && batch.files.length < ORG_PURGE_FILE_BATCH) {
+            await ctx.runMutation(internal.organizations.recordOrganizationPurged, {
+                organizationId,
+                filesDeleted,
+                rowsRemoved,
+            });
+            return { purged: true, filesDeleted, rowsRemoved };
+        }
+    }
+
+    await ctx.runMutation(internal.organizations.continueOrganizationPurge, { organizationId });
+    return { purged: false, continued: true, filesDeleted, rowsRemoved };
 }
 
 // ---------------------------------------------------------------------------
@@ -1176,90 +1249,6 @@ export const cronCleanupStaleEvents = internalMutation({
         return { warned, skippedAtelier, deleted, drained };
     },
 });
-
-/**
- * Cancella i figli di un evento a lotti, e dice se ne restano.
- *
- * L'ordine non conta per l'integrità (non ci sono foreign key), ma conta per
- * l'osservabilità: se il processo si interrompe a metà, ciò che resta è un evento
- * senza figli, non un figlio senza evento.
- */
-async function deleteEventChildren(
-    ctx: MutationCtx,
-    eventId: Id<"events">,
-    batch: number,
-): Promise<{ removed: number; leftover: boolean }> {
-    let removed = 0;
-
-    const responses = await ctx.db
-        .query("rsvpResponses")
-        .withIndex("by_event", (q) => q.eq("eventId", eventId))
-        .take(batch);
-    for (const row of responses) {
-        await ctx.db.delete(row._id);
-        removed += 1;
-    }
-
-    const activities = await ctx.db
-        .query("guestActivities")
-        .withIndex("by_event", (q) => q.eq("eventId", eventId))
-        .take(batch);
-    for (const row of activities) {
-        await ctx.db.delete(row._id);
-        removed += 1;
-    }
-
-    const reminders = await ctx.db
-        .query("eventReminders")
-        .withIndex("by_event", (q) => q.eq("eventId", eventId))
-        .take(batch);
-    for (const row of reminders) {
-        await ctx.db.delete(row._id);
-        removed += 1;
-    }
-
-    const testRequests = await ctx.db
-        .query("inviteTestRequests")
-        .withIndex("by_event", (q) => q.eq("eventId", eventId))
-        .take(batch);
-    for (const row of testRequests) {
-        await ctx.db.delete(row._id);
-        removed += 1;
-    }
-
-    const guests = await ctx.db
-        .query("guests")
-        .withIndex("by_event", (q) => q.eq("eventId", eventId))
-        .take(batch);
-    for (const row of guests) {
-        await ctx.db.delete(row._id);
-        removed += 1;
-    }
-
-    // Un solo documento residuo basta a dire "non ancora": l'evento resta candidato
-    // al prossimo giro, quindi una cancellazione parziale non si perde.
-    const leftovers = [
-        await ctx.db.query("guests").withIndex("by_event", (q) => q.eq("eventId", eventId)).take(1),
-        await ctx.db
-            .query("rsvpResponses")
-            .withIndex("by_event", (q) => q.eq("eventId", eventId))
-            .take(1),
-        await ctx.db
-            .query("guestActivities")
-            .withIndex("by_event", (q) => q.eq("eventId", eventId))
-            .take(1),
-        await ctx.db
-            .query("eventReminders")
-            .withIndex("by_event", (q) => q.eq("eventId", eventId))
-            .take(1),
-        await ctx.db
-            .query("inviteTestRequests")
-            .withIndex("by_event", (q) => q.eq("eventId", eventId))
-            .take(1),
-    ];
-
-    return { removed, leftover: leftovers.some((rows) => rows.length > 0) };
-}
 
 /**
  * Cron reminder (07:00 UTC): il cron **accoda**, non invia.
