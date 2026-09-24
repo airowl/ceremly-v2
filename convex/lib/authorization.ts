@@ -185,3 +185,21 @@ export async function countOwners(
 
     return owners.length;
 }
+
+/**
+ * The caller, required to be a superAdmin (plan Task 15).
+ *
+ * The one gate of every admin function: it runs before any read or write, on
+ * top of `requireAppUser` — so an anonymous caller is `UNAUTHENTICATED`, an
+ * unprovisioned one `APP_USER_NOT_PROVISIONED`, an account scheduled for
+ * deletion is refused even when it holds the role, and an ordinary user gets
+ * `SUPER_ADMIN_REQUIRED`. The role is a global one: no organization role is
+ * enough, and the active organization plays no part.
+ */
+export async function requireSuperAdmin(ctx: ReadCtx): Promise<Doc<"appUsers">> {
+    const appUser = await requireAppUser(ctx);
+    if (appUser.globalRole !== "superAdmin") {
+        throw forbidden("SUPER_ADMIN_REQUIRED", { role: appUser.globalRole });
+    }
+    return appUser;
+}

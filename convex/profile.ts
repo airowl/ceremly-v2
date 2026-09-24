@@ -6,6 +6,7 @@ import type { MutationCtx } from "./_generated/server";
 import { requireAppUser } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden, type ReadCtx } from "./lib/identity";
+import { deleteLimitOverrides } from "./lib/limitOverrides";
 
 /**
  * Profilo utente e cancellazione account (plan Task 12, Step 1).
@@ -592,6 +593,9 @@ async function deleteOrganizationGraph(
         .collect()) {
         await ctx.db.delete(project._id);
     }
+
+    // Task 15: the admin limit override goes with the organization.
+    await deleteLimitOverrides(ctx, organizationId);
 
     for (const file of await ctx.db
         .query("files")

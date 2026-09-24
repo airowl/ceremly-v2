@@ -3,7 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
 import { internalAction, internalMutation, internalQuery, mutation } from "./_generated/server";
-import { requireAppUser } from "./lib/authorization";
+import { requireSuperAdmin } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import {
     FALLBACK_INVITE_BODY,
@@ -174,48 +174,60 @@ export const recordOutcome = internalMutation({
 export const retryDead = mutation({
     args: { jobId: v.id("jobExecutions") },
     handler: async (ctx, args): Promise<{ retried: boolean; reason?: string }> => {
-        const appUser = await requireAppUser(ctx);
-        if (appUser.globalRole !== "superAdmin") {
-            throw forbidden("SUPER_ADMIN_REQUIRED");
-        }
-
-        const job = await ctx.db.get(args.jobId);
-        if (!job) throw forbidden("JOB_NOT_FOUND", { jobId: args.jobId });
-
-        // Un job vivo non si "riprende": o è già in coda (niente da fare) o è in
-        // volo (riprenderlo lo duplicherebbe).
-        if (job.status !== "dead" && job.status !== "failed") {
-            return { retried: false, reason: `status_${job.status}` };
-        }
-
-        const now = Date.now();
-        await ctx.db.patch(job._id, {
-            status: "pending",
-            attempt: 0,
-            nextAttemptAt: now,
-            leaseExpiresAt: undefined,
-            finishedAt: undefined,
-            lastError: undefined,
-            updatedAt: now,
-        });
-
-        await writeAudit(ctx, {
-            action: "admin.job_retried",
-            actorAppUserId: appUser._id,
-            targetType: "job",
-            targetId: job._id,
-            details: {
-                name: job.name,
-                previousAttempts: job.attempt,
-                lastError: job.lastError ?? null,
-            },
-        });
-
-        await ctx.scheduler.runAfter(0, internal.jobs.run, { jobId: job._id });
-
-        return { retried: true };
+        const appUser = await requireSuperAdmin(ctx);
+        return await retryDeadJob(ctx, appUser, args.jobId, null);
     },
 });
+
+/**
+ * The `dead → pending` transition, shared by `retryDead` and the admin console
+ * (`admin.retryJob`, Task 15), so the two cannot drift. The caller has already
+ * checked the superAdmin role; `operatorReason` lands in the audit when given.
+ */
+export async function retryDeadJob(
+    ctx: MutationCtx,
+    actor: Doc<"appUsers">,
+    jobId: Id<"jobExecutions">,
+    operatorReason: string | null,
+): Promise<{ retried: boolean; reason?: string }> {
+    const job = await ctx.db.get(jobId);
+    if (!job) throw forbidden("JOB_NOT_FOUND", { jobId });
+
+    // Un job vivo non si "riprende": o è già in coda (niente da fare) o è in
+    // volo (riprenderlo lo duplicherebbe).
+    if (job.status !== "dead" && job.status !== "failed") {
+        return { retried: false, reason: `status_${job.status}` };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(job._id, {
+        status: "pending",
+        attempt: 0,
+        nextAttemptAt: now,
+        leaseExpiresAt: undefined,
+        finishedAt: undefined,
+        lastError: undefined,
+        updatedAt: now,
+    });
+
+    await writeAudit(ctx, {
+        action: "admin.job_retried",
+        actorAppUserId: actor._id,
+        actorAuthUserId: actor.authUserId,
+        targetType: "job",
+        targetId: job._id,
+        details: {
+            ...(operatorReason === null ? {} : { reason: operatorReason }),
+            name: job.name,
+            previousAttempts: job.attempt,
+            lastError: job.lastError ?? null,
+        },
+    });
+
+    await ctx.scheduler.runAfter(0, internal.jobs.run, { jobId: job._id });
+
+    return { retried: true };
+}
 
 export const run = internalAction({
     args: { jobId: v.id("jobExecutions") },

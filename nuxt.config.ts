@@ -146,6 +146,13 @@ export default defineNuxtConfig({
         // Dashboard & Events management - client-side only
         "/dashboard/**": { ssr: false, prerender: false },
 
+        // Admin console (Task 15): CSR only — the Convex websocket client and the
+        // Better Auth token live in the browser; the server-side gate is Convex.
+        "/admin": { ssr: false, prerender: false },
+        "/admin/**": { ssr: false, prerender: false },
+        "/en/admin": { ssr: false, prerender: false },
+        "/en/admin/**": { ssr: false, prerender: false },
+
         // Pagina invito ospite — SSR pubblico (OG preview su WhatsApp/Telegram)
         "/e/**": { ssr: true, prerender: false },
 
@@ -232,6 +239,8 @@ export default defineNuxtConfig({
         // Exclude dashboard, auth, and admin routes
         exclude: [
             "/dashboard/**",
+            "/admin/**",
+            "/en/admin/**",
             "/login",
             "/signup",
             "/invite/**",
@@ -251,6 +260,8 @@ export default defineNuxtConfig({
         disallow: [
             "/api/",
             "/dashboard/",
+            "/admin/",
+            "/en/admin/",
             "/login",
             "/signup",
             "/invite/",

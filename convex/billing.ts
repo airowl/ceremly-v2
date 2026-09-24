@@ -22,6 +22,7 @@ import {
 
 import { writeAudit } from "./lib/audit";
 import { limitsForOrgPlan, productIdForTier, type OrgPlan, type PaidTier } from "./lib/pricing";
+import { applyLimitOverride, findLimitOverride } from "./lib/limitOverrides";
 
 /**
  * Who may pay (Task 14 part b, fix rounds 1–2 — controller ruling).
@@ -376,7 +377,11 @@ export const planForActiveOrganization = query({
         return {
             organizationId: authz.organizationId,
             plan,
-            limits: limitsForOrgPlan(plan),
+            // Task 15: the limits the domain actually enforces, override included.
+            limits: applyLimitOverride(
+                limitsForOrgPlan(plan),
+                await findLimitOverride(ctx, authz.organizationId),
+            ),
             canManageBilling: SUBSCRIPTION_BILLING_ROLES.includes(authz.role),
             canUnlockEvents: CELEBRATION_CHECKOUT_ROLES.includes(authz.role),
             subscription: subscription

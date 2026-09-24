@@ -132,7 +132,12 @@ export default defineSchema({
         .index("by_auth_user", ["authUserId"])
         .index("by_email", ["email"])
         .index("by_legacy_id", ["legacyId"])
-        .index("by_purge_at", ["purgeAt"]),
+        .index("by_purge_at", ["purgeAt"])
+        /**
+         * Admin console (Task 15): "is there already a superAdmin?" for the
+         * bootstrap, and the superAdmin count on the dashboard, without a scan.
+         */
+        .index("by_global_role", ["globalRole"]),
 
     organizations: defineTable({
         legacyId: v.optional(v.string()),
@@ -415,6 +420,30 @@ export default defineSchema({
         .index("by_event", ["eventId"])
         // Account purge: the requester's draft text goes with the requester.
         .index("by_requested_by", ["requestedBy"]),
+
+    /**
+     * Per-organization limit overrides set from the admin console (Task 15).
+     *
+     * The legacy `user_custom_limits` table was dropped with the B2B pricing model
+     * (`docs/migration/domain-schema.md`, deviation 1), so nothing is imported
+     * here: this is the Convex replacement the console needs. It is keyed by
+     * organization, not by user, because every limit is enforced per organization.
+     *
+     * An absent field means "the plan limit applies"; `-1` means unlimited, as in
+     * `lib/pricing.ts`. `reason`/`updatedByAppUserId`/`updatedAt` describe the
+     * last change; the full history lives in `auditLogs` (`admin.limits_updated`).
+     * The row is never deleted by the console — clearing every field restores the
+     * plan limits — and it goes away with the organization's cascade.
+     */
+    organizationLimitOverrides: defineTable({
+        organizationId: v.id("organizations"),
+        maxGuestsPerEvent: v.optional(v.number()),
+        maxActiveEvents: v.optional(v.number()),
+        maxReminders: v.optional(v.number()),
+        reason: v.string(),
+        updatedByAppUserId: v.id("appUsers"),
+        updatedAt: v.number(),
+    }).index("by_organization", ["organizationId"]),
 
     /** Entità di esempio org-scoped (CRUD completo: `server/api/projects/`). */
     projects: defineTable({

@@ -109,6 +109,10 @@ const AUDIT_ACTION_CATEGORY = {
     "admin.site_mode_changed": "admin",
     /** Ripresa manuale di un job `dead` da parte di un superAdmin (Task 13). */
     "admin.job_retried": "admin",
+    // Admin console (Task 15). The reason the operator typed is in `details.reason`.
+    "admin.super_admin_bootstrapped": "admin",
+    "admin.role_changed": "admin",
+    "admin.limits_updated": "admin",
     // Email (Task 13). I due nomi sono quelli del legacy (`server/utils/email.ts`
     // auditava ogni invio e ogni fallimento con `email.sent`/`email.failed`), quindi
     // i record scritti da Convex e quelli storici restano greppabili insieme.

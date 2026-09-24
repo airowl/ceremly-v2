@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
 import type * as crons from "../crons.js";
@@ -43,6 +44,7 @@ import type * as lib_identity from "../lib/identity.js";
 import type * as lib_invitationToken from "../lib/invitationToken.js";
 import type * as lib_inviteTemplates from "../lib/inviteTemplates.js";
 import type * as lib_jobQueue from "../lib/jobQueue.js";
+import type * as lib_limitOverrides from "../lib/limitOverrides.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
 import type * as lib_media from "../lib/media.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
@@ -73,6 +75,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   auth: typeof auth;
   billing: typeof billing;
   crons: typeof crons;
@@ -108,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   "lib/invitationToken": typeof lib_invitationToken;
   "lib/inviteTemplates": typeof lib_inviteTemplates;
   "lib/jobQueue": typeof lib_jobQueue;
+  "lib/limitOverrides": typeof lib_limitOverrides;
   "lib/magicBytes": typeof lib_magicBytes;
   "lib/media": typeof lib_media;
   "lib/migrationKey": typeof lib_migrationKey;

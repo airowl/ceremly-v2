@@ -15,6 +15,7 @@ import {
     resolveOrganizationTier,
 } from "./lib/domain";
 import { TIER_LIMITS } from "./lib/pricing";
+import { findLimitOverride } from "./lib/limitOverrides";
 import { getDefaultDistribution, getTemplate } from "./lib/inviteTemplates";
 import { RSVP_PRESETS } from "./lib/rsvpPresets";
 import {
@@ -330,7 +331,13 @@ export const create = mutation({
 
         // Limite eventi attivi: gli eventi Free non chiusi occupano lo slot, gli
         // sbloccati (`celebration`) no. Un'org Atelier non ha limite.
-        if ((await resolveOrganizationTier(ctx, authz.organizationId)) !== "atelier") {
+        // Task 15: an admin override of `maxActiveEvents` replaces the plan value.
+        const override = await findLimitOverride(ctx, authz.organizationId);
+        const planMaxActive = (await resolveOrganizationTier(ctx, authz.organizationId)) === "atelier"
+            ? -1
+            : TIER_LIMITS.free.maxActiveEvents;
+        const maxActiveEvents = override?.maxActiveEvents ?? planMaxActive;
+        if (maxActiveEvents !== -1) {
             const active = await ctx.db
                 .query("events")
                 .withIndex("by_organization", (q) => q.eq("organizationId", authz.organizationId))
@@ -339,9 +346,9 @@ export const create = mutation({
                 (event) => event.tier === "free" && event.status !== "closed",
             ).length;
 
-            if (activeFree >= TIER_LIMITS.free.maxActiveEvents) {
+            if (activeFree >= maxActiveEvents) {
                 throw forbidden("ACTIVE_EVENT_LIMIT_REACHED", {
-                    limit: TIER_LIMITS.free.maxActiveEvents,
+                    limit: maxActiveEvents,
                 });
             }
         }

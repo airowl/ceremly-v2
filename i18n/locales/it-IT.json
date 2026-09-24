@@ -3758,5 +3758,205 @@
       "errorTitle": "Qualcosa non ha funzionato",
       "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo."
     }
+  },
+  "adminConsole": {
+    "title": "Console amministrazione",
+    "nav": {
+      "overview": "Panoramica",
+      "users": "Utenti",
+      "organizations": "Organizzazioni",
+      "events": "Eventi",
+      "jobs": "Job ed export",
+      "audit": "Audit",
+      "backToApp": "Torna all'app"
+    },
+    "denied": {
+      "title": "Accesso negato",
+      "description": "Questa area è riservata agli amministratori della piattaforma.",
+      "action": "Vai alla dashboard"
+    },
+    "loading": "Caricamento…",
+    "error": "Impossibile caricare i dati",
+    "empty": "Nessun risultato",
+    "capped": "valore minimo: il conteggio ha raggiunto il limite di lettura",
+    "prev": "Precedente",
+    "next": "Successiva",
+    "search": "Cerca",
+    "close": "Chiudi",
+    "details": "Dettagli",
+    "reason": {
+      "label": "Motivazione (obbligatoria)",
+      "placeholder": "Perché stai facendo questa modifica?",
+      "hint": "La motivazione viene registrata nell'audit insieme a te, al destinatario e all'orario."
+    },
+    "saved": "Modifica salvata",
+    "overview": {
+      "users": "Utenti",
+      "superAdmins": "Amministratori",
+      "scheduledForDeletion": "In cancellazione",
+      "organizations": "Organizzazioni",
+      "events": "Eventi",
+      "rsvp": "Risposte RSVP",
+      "conversion": "Conversione a Celebrazione",
+      "celebration": "Eventi Celebrazione",
+      "atelier": "Abbonamenti Atelier attivi",
+      "jobsDead": "Job falliti definitivamente",
+      "jobsRetrying": "Job in nuovo tentativo",
+      "jobsPending": "Job in coda",
+      "exportsFailed": "Export falliti",
+      "billing": "Stato billing",
+      "subscriptionStatuses": "Stati degli abbonamenti",
+      "webhookOutcomes": "Esiti webhook recenti",
+      "lastWebhook": "Ultimo webhook",
+      "byStatus": "Per stato",
+      "attending": "Sì / No / Forse",
+      "scannedOrgs": "Organizzazioni analizzate"
+    },
+    "siteMode": {
+      "title": "Modalità del sito",
+      "current": "Modalità attuale",
+      "overridden": "impostata manualmente",
+      "default": "predefinita",
+      "apply": "Applica",
+      "reset": "Ripristina predefinita",
+      "modes": {
+        "active": "Attivo",
+        "waitinglist": "Lista d'attesa",
+        "maintenance": "Manutenzione",
+        "maintenance-readonly": "Manutenzione in sola lettura"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Inizio dell'indirizzo email",
+      "email": "Email",
+      "role": "Ruolo",
+      "locale": "Lingua",
+      "createdAt": "Creato il",
+      "deletion": "Cancellazione",
+      "scheduled": "Programmata",
+      "roles": {
+        "user": "Utente",
+        "superAdmin": "Amministratore"
+      },
+      "memberships": "Organizzazioni",
+      "exports": "Export GDPR",
+      "recentAudit": "Attività recente",
+      "changeRole": "Cambia ruolo globale",
+      "newRole": "Nuovo ruolo",
+      "apply": "Applica ruolo",
+      "ownRole": "Non puoi cambiare il tuo ruolo."
+    },
+    "organizations": {
+      "searchPlaceholder": "Inizio dello slug",
+      "name": "Nome",
+      "slug": "Slug",
+      "createdAt": "Creata il",
+      "members": "Membri",
+      "events": "Eventi",
+      "plan": "Piano",
+      "plans": {
+        "free": "Free",
+        "atelier": "Atelier"
+      },
+      "subscriptions": "Abbonamenti (sola lettura)",
+      "noSubscriptions": "Nessun abbonamento",
+      "customer": "Cliente Creem",
+      "subscriptionHint": "Le modifiche agli abbonamenti si fanno dalla dashboard Creem o dal portale cliente.",
+      "status": "Stato",
+      "product": "Prodotto",
+      "periodEnd": "Fine periodo",
+      "cancelAtPeriodEnd": "Disdetta a fine periodo",
+      "limits": "Limiti",
+      "planLimit": "Piano",
+      "effectiveLimit": "Effettivo",
+      "override": "Personalizzato",
+      "overrideHint": "Lascia vuoto per usare il limite del piano; -1 significa illimitato.",
+      "lastChange": "Ultima modifica",
+      "saveLimits": "Salva limiti",
+      "viewEvents": "Vedi eventi",
+      "viewAudit": "Vedi audit",
+      "limitNames": {
+        "maxGuestsPerEvent": "Ospiti per evento",
+        "maxActiveEvents": "Eventi attivi",
+        "maxReminders": "Promemoria per evento"
+      }
+    },
+    "events": {
+      "searchPlaceholder": "Inizio dello slug",
+      "title": "Titolo",
+      "slug": "Slug",
+      "organization": "Organizzazione",
+      "status": "Stato",
+      "tier": "Livello",
+      "eventDate": "Data",
+      "createdAt": "Creato il",
+      "statuses": {
+        "draft": "Bozza",
+        "active": "Attivo",
+        "closed": "Chiuso"
+      },
+      "tiers": {
+        "free": "Free",
+        "celebration": "Celebrazione"
+      },
+      "guests": "Ospiti attivi",
+      "rsvp": "RSVP",
+      "limits": "Limiti effettivi",
+      "billing": "Pagamento",
+      "hasOrder": "Ordine registrato",
+      "hasCheckout": "Checkout creato",
+      "filteredByOrg": "Filtrati per organizzazione",
+      "clearFilter": "Rimuovi filtro"
+    },
+    "jobs": {
+      "title": "Job",
+      "name": "Tipo",
+      "status": "Stato",
+      "attempts": "Tentativi",
+      "lastError": "Ultimo errore",
+      "updatedAt": "Aggiornato",
+      "payload": "Campi del payload",
+      "statuses": {
+        "pending": "In coda",
+        "running": "In esecuzione",
+        "retrying": "Nuovo tentativo",
+        "succeeded": "Riusciti",
+        "failed": "Falliti",
+        "dead": "Falliti definitivamente"
+      },
+      "retry": "Rimetti in coda",
+      "retried": "Job rimesso in coda",
+      "notRetried": "Il job non è in uno stato ripristinabile"
+    },
+    "exports": {
+      "title": "Export GDPR",
+      "user": "Utente",
+      "status": "Stato",
+      "size": "Dimensione",
+      "error": "Errore",
+      "createdAt": "Richiesto il",
+      "expiresAt": "Scade il",
+      "statuses": {
+        "pending": "In attesa",
+        "processing": "In lavorazione",
+        "completed": "Completati",
+        "failed": "Falliti",
+        "expired": "Scaduti"
+      }
+    },
+    "audit": {
+      "title": "Registro audit",
+      "action": "Azione",
+      "actionPlaceholder": "Nome esatto dell'azione, es. admin.role_changed",
+      "actor": "Autore",
+      "target": "Destinatario",
+      "reason": "Motivazione",
+      "createdAt": "Quando",
+      "details": "Dettagli",
+      "status": "Esito",
+      "system": "sistema",
+      "filters": "Filtri attivi",
+      "clearFilters": "Rimuovi filtri"
+    }
   }
 }

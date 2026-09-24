@@ -3758,5 +3758,205 @@
       "errorTitle": "Something went wrong",
       "errorDesc": "We could not start the payment. Please try again in a few seconds."
     }
+  },
+  "adminConsole": {
+    "title": "Admin console",
+    "nav": {
+      "overview": "Overview",
+      "users": "Users",
+      "organizations": "Organizations",
+      "events": "Events",
+      "jobs": "Jobs and exports",
+      "audit": "Audit",
+      "backToApp": "Back to the app"
+    },
+    "denied": {
+      "title": "Access denied",
+      "description": "This area is reserved to platform administrators.",
+      "action": "Go to the dashboard"
+    },
+    "loading": "Loading…",
+    "error": "Could not load the data",
+    "empty": "No results",
+    "capped": "lower bound: the count reached its read cap",
+    "prev": "Previous",
+    "next": "Next",
+    "search": "Search",
+    "close": "Close",
+    "details": "Details",
+    "reason": {
+      "label": "Reason (required)",
+      "placeholder": "Why are you making this change?",
+      "hint": "The reason is recorded in the audit log together with you, the target and the time."
+    },
+    "saved": "Change saved",
+    "overview": {
+      "users": "Users",
+      "superAdmins": "Administrators",
+      "scheduledForDeletion": "Scheduled for deletion",
+      "organizations": "Organizations",
+      "events": "Events",
+      "rsvp": "RSVP responses",
+      "conversion": "Conversion to Celebration",
+      "celebration": "Celebration events",
+      "atelier": "Active Atelier subscriptions",
+      "jobsDead": "Dead jobs",
+      "jobsRetrying": "Jobs retrying",
+      "jobsPending": "Queued jobs",
+      "exportsFailed": "Failed exports",
+      "billing": "Billing status",
+      "subscriptionStatuses": "Subscription statuses",
+      "webhookOutcomes": "Recent webhook outcomes",
+      "lastWebhook": "Last webhook",
+      "byStatus": "By status",
+      "attending": "Yes / No / Maybe",
+      "scannedOrgs": "Organizations scanned"
+    },
+    "siteMode": {
+      "title": "Site mode",
+      "current": "Current mode",
+      "overridden": "set manually",
+      "default": "default",
+      "apply": "Apply",
+      "reset": "Restore default",
+      "modes": {
+        "active": "Active",
+        "waitinglist": "Waiting list",
+        "maintenance": "Maintenance",
+        "maintenance-readonly": "Read-only maintenance"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Start of the email address",
+      "email": "Email",
+      "role": "Role",
+      "locale": "Language",
+      "createdAt": "Created",
+      "deletion": "Deletion",
+      "scheduled": "Scheduled",
+      "roles": {
+        "user": "User",
+        "superAdmin": "Administrator"
+      },
+      "memberships": "Organizations",
+      "exports": "GDPR exports",
+      "recentAudit": "Recent activity",
+      "changeRole": "Change global role",
+      "newRole": "New role",
+      "apply": "Apply role",
+      "ownRole": "You cannot change your own role."
+    },
+    "organizations": {
+      "searchPlaceholder": "Start of the slug",
+      "name": "Name",
+      "slug": "Slug",
+      "createdAt": "Created",
+      "members": "Members",
+      "events": "Events",
+      "plan": "Plan",
+      "plans": {
+        "free": "Free",
+        "atelier": "Atelier"
+      },
+      "subscriptions": "Subscriptions (read-only)",
+      "noSubscriptions": "No subscription",
+      "customer": "Creem customer",
+      "subscriptionHint": "Subscription changes are made in the Creem dashboard or the customer portal.",
+      "status": "Status",
+      "product": "Product",
+      "periodEnd": "Period end",
+      "cancelAtPeriodEnd": "Cancels at period end",
+      "limits": "Limits",
+      "planLimit": "Plan",
+      "effectiveLimit": "Effective",
+      "override": "Custom",
+      "overrideHint": "Leave empty to use the plan limit; -1 means unlimited.",
+      "lastChange": "Last change",
+      "saveLimits": "Save limits",
+      "viewEvents": "View events",
+      "viewAudit": "View audit",
+      "limitNames": {
+        "maxGuestsPerEvent": "Guests per event",
+        "maxActiveEvents": "Active events",
+        "maxReminders": "Reminders per event"
+      }
+    },
+    "events": {
+      "searchPlaceholder": "Start of the slug",
+      "title": "Title",
+      "slug": "Slug",
+      "organization": "Organization",
+      "status": "Status",
+      "tier": "Tier",
+      "eventDate": "Date",
+      "createdAt": "Created",
+      "statuses": {
+        "draft": "Draft",
+        "active": "Active",
+        "closed": "Closed"
+      },
+      "tiers": {
+        "free": "Free",
+        "celebration": "Celebration"
+      },
+      "guests": "Active guests",
+      "rsvp": "RSVP",
+      "limits": "Effective limits",
+      "billing": "Payment",
+      "hasOrder": "Order recorded",
+      "hasCheckout": "Checkout created",
+      "filteredByOrg": "Filtered by organization",
+      "clearFilter": "Clear filter"
+    },
+    "jobs": {
+      "title": "Jobs",
+      "name": "Type",
+      "status": "Status",
+      "attempts": "Attempts",
+      "lastError": "Last error",
+      "updatedAt": "Updated",
+      "payload": "Payload fields",
+      "statuses": {
+        "pending": "Queued",
+        "running": "Running",
+        "retrying": "Retrying",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "dead": "Dead"
+      },
+      "retry": "Re-queue",
+      "retried": "Job re-queued",
+      "notRetried": "The job is not in a retryable state"
+    },
+    "exports": {
+      "title": "GDPR exports",
+      "user": "User",
+      "status": "Status",
+      "size": "Size",
+      "error": "Error",
+      "createdAt": "Requested",
+      "expiresAt": "Expires",
+      "statuses": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed",
+        "expired": "Expired"
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "action": "Action",
+      "actionPlaceholder": "Exact action name, e.g. admin.role_changed",
+      "actor": "Actor",
+      "target": "Target",
+      "reason": "Reason",
+      "createdAt": "When",
+      "details": "Details",
+      "status": "Outcome",
+      "system": "system",
+      "filters": "Active filters",
+      "clearFilters": "Clear filters"
+    }
   }
 }

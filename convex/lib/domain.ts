@@ -6,6 +6,7 @@ import { forbidden } from "./identity";
 import { isAtelierSubscription } from "../billing";
 import { siteUrl } from "./env";
 import { TIER_LIMITS, type CeremlyTier, type TierLimits } from "./pricing";
+import { applyLimitOverride, findLimitOverride } from "./limitOverrides";
 import type { Infer } from "convex/values";
 // Usati solo in posizione di tipo (`Infer<typeof ...>`): il modulo dei validator
 // non entra nel bundle di questo file.
@@ -118,9 +119,12 @@ export async function resolveEventLimits(
     event: Pick<Doc<"events">, "organizationId" | "tier">,
 ): Promise<EventLimits> {
     const organizationTier = await resolveOrganizationTier(ctx, event.organizationId);
-    if (organizationTier === "atelier") return limitsFor("atelier");
+    const base = organizationTier === "atelier"
+        ? limitsFor("atelier")
+        : limitsFor(event.tier === "celebration" ? "celebration" : "free");
 
-    return limitsFor(event.tier === "celebration" ? "celebration" : "free");
+    // Task 15: an admin override of this organization wins over the plan value.
+    return applyLimitOverride(base, await findLimitOverride(ctx, event.organizationId));
 }
 
 // ---------------------------------------------------------------------------

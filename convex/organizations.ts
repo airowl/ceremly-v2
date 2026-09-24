@@ -23,6 +23,7 @@ import {
 import { writeAudit } from "./lib/audit";
 import { requireEnv } from "./lib/env";
 import { deriveInvitationToken } from "./lib/invitationToken";
+import { deleteLimitOverrides } from "./lib/limitOverrides";
 import { JOB_TYPES, enqueueJob } from "./lib/jobQueue";
 import { components } from "./_generated/api";
 
@@ -854,6 +855,9 @@ export const deleteOrganization = mutation({
             .collect()) {
             await ctx.db.delete(request._id);
         }
+
+        // Task 15: the admin limit override has no meaning without the organization.
+        await deleteLimitOverrides(ctx, organizationId);
 
         await ctx.db.delete(organizationId);
         await writeAudit(ctx, {

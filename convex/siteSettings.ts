@@ -1,8 +1,10 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { internalQuery, mutation, query } from "./_generated/server";
-import { requireAppUser } from "./lib/authorization";
+import type { MutationCtx } from "./_generated/server";
+import { requireSuperAdmin } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
-import { forbidden, type ReadCtx } from "./lib/identity";
+import type { ReadCtx } from "./lib/identity";
 
 /**
  * Site mode (plan Task 12, Step 4).
@@ -91,41 +93,10 @@ export const getForWorker = internalQuery({
 export const set = mutation({
     args: { mode: siteModeValidator },
     handler: async (ctx, args): Promise<{ mode: SiteMode; previous: SiteMode }> => {
-        const appUser = await requireAppUser(ctx);
-        if (appUser.globalRole !== "superAdmin") {
-            // Stessa regola dell'endpoint admin legacy: il kill-switch del sito è
-            // un'azione globale, e un ruolo di organizzazione non basta.
-            throw forbidden("SUPER_ADMIN_REQUIRED", { role: appUser.globalRole });
-        }
-
-        const override = await readOverride(ctx);
-        const previous = override === null ? DEFAULT_SITE_MODE : resolveSiteMode(override);
-
-        const existing = await ctx.db
-            .query("siteSettings")
-            .withIndex("by_key", (q) => q.eq("key", SITE_MODE_KEY))
-            .unique();
-
-        if (existing) {
-            await ctx.db.patch(existing._id, { value: args.mode, updatedAt: Date.now() });
-        } else {
-            await ctx.db.insert("siteSettings", {
-                key: SITE_MODE_KEY,
-                value: args.mode,
-                updatedAt: Date.now(),
-            });
-        }
-
-        await writeAudit(ctx, {
-            action: "admin.site_mode_changed",
-            actorAppUserId: appUser._id,
-            actorAuthUserId: appUser.authUserId,
-            targetType: "site_mode",
-            targetId: SITE_MODE_KEY,
-            details: { from: previous, to: args.mode },
-        });
-
-        return { mode: args.mode, previous };
+        // Stessa regola dell'endpoint admin legacy: il kill-switch del sito è
+        // un'azione globale, e un ruolo di organizzazione non basta.
+        const appUser = await requireSuperAdmin(ctx);
+        return await writeSiteMode(ctx, appUser, args.mode, null);
     },
 });
 
@@ -133,28 +104,52 @@ export const set = mutation({
 export const clear = mutation({
     args: {},
     handler: async (ctx): Promise<{ mode: SiteMode; previous: SiteMode }> => {
-        const appUser = await requireAppUser(ctx);
-        if (appUser.globalRole !== "superAdmin") {
-            throw forbidden("SUPER_ADMIN_REQUIRED", { role: appUser.globalRole });
-        }
-
-        const existing = await ctx.db
-            .query("siteSettings")
-            .withIndex("by_key", (q) => q.eq("key", SITE_MODE_KEY))
-            .unique();
-
-        const previous = existing ? resolveSiteMode(existing.value) : DEFAULT_SITE_MODE;
-        if (existing) await ctx.db.delete(existing._id);
-
-        await writeAudit(ctx, {
-            action: "admin.site_mode_changed",
-            actorAppUserId: appUser._id,
-            actorAuthUserId: appUser.authUserId,
-            targetType: "site_mode",
-            targetId: SITE_MODE_KEY,
-            details: { from: previous, to: DEFAULT_SITE_MODE, cleared: true },
-        });
-
-        return { mode: DEFAULT_SITE_MODE, previous };
+        const appUser = await requireSuperAdmin(ctx);
+        return await writeSiteMode(ctx, appUser, null, null);
     },
 });
+
+/**
+ * Writes (or, with `mode === null`, clears) the override and audits it.
+ *
+ * Shared by `set`/`clear` and the admin console (`admin.setSiteMode`, Task 15)
+ * so the audit shape is one. The caller has already checked the superAdmin
+ * role; `operatorReason` lands in the audit when given.
+ */
+export async function writeSiteMode(
+    ctx: MutationCtx,
+    actor: Doc<"appUsers">,
+    mode: SiteMode | null,
+    operatorReason: string | null,
+): Promise<{ mode: SiteMode; previous: SiteMode }> {
+    const existing = await ctx.db
+        .query("siteSettings")
+        .withIndex("by_key", (q) => q.eq("key", SITE_MODE_KEY))
+        .unique();
+    const previous = existing ? resolveSiteMode(existing.value) : DEFAULT_SITE_MODE;
+
+    if (mode === null) {
+        if (existing) await ctx.db.delete(existing._id);
+    } else if (existing) {
+        await ctx.db.patch(existing._id, { value: mode, updatedAt: Date.now() });
+    } else {
+        await ctx.db.insert("siteSettings", { key: SITE_MODE_KEY, value: mode, updatedAt: Date.now() });
+    }
+
+    const next = mode ?? DEFAULT_SITE_MODE;
+    await writeAudit(ctx, {
+        action: "admin.site_mode_changed",
+        actorAppUserId: actor._id,
+        actorAuthUserId: actor.authUserId,
+        targetType: "site_mode",
+        targetId: SITE_MODE_KEY,
+        details: {
+            ...(operatorReason === null ? {} : { reason: operatorReason }),
+            from: previous,
+            to: next,
+            ...(mode === null ? { cleared: true } : {}),
+        },
+    });
+
+    return { mode: next, previous };
+}
