@@ -1,12 +1,12 @@
 # Graph Report - /Users/airowlgasga/coding/project/ceremly-v2  (2026-09-24)
 
 ## Corpus Check
-- 554 files · ~765,231 words
+- 571 files · ~779,502 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 6179 nodes · 6781 edges · 654 communities detected
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 756 edges (avg confidence: 0.8)
+- 6239 nodes · 6871 edges · 657 communities detected
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 797 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -664,18 +664,21 @@
 - [[_COMMUNITY_Community 651|Community 651]]
 - [[_COMMUNITY_Community 652|Community 652]]
 - [[_COMMUNITY_Community 653|Community 653]]
+- [[_COMMUNITY_Community 654|Community 654]]
+- [[_COMMUNITY_Community 655|Community 655]]
+- [[_COMMUNITY_Community 656|Community 656]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `getDB()` - 103 edges
 2. `logAudit()` - 35 edges
-3. `FASE 3 — Deploy Vercel serverless + background (QStash + Vercel Cron) Implementation Plan` - 24 edges
-4. `STACK-AND-CONVENTIONS (riferimento trasversale)` - 23 edges
-5. `get()` - 21 edges
-6. `FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan` - 19 edges
-7. `SPEC Implementazione Ceremly MVP (Phase 1)` - 19 edges
-8. `FASE 0 — Strip risorse-prodotto eventi — Implementation Plan` - 18 edges
-9. `FASE 4 — Entità-esempio `projects` (CRUD multi-tenant org-scoped) Implementation Plan` - 18 edges
-10. `FASE 1c — RBAC + middleware + route org Implementation Plan` - 18 edges
+3. `t()` - 25 edges
+4. `FASE 3 — Deploy Vercel serverless + background (QStash + Vercel Cron) Implementation Plan` - 24 edges
+5. `get()` - 23 edges
+6. `STACK-AND-CONVENTIONS (riferimento trasversale)` - 23 edges
+7. `FASE 1b — Auth flows + signup→org + team via plugin Implementation Plan` - 19 edges
+8. `SPEC Implementazione Ceremly MVP (Phase 1)` - 19 edges
+9. `FASE 0 — Strip risorse-prodotto eventi — Implementation Plan` - 18 edges
+10. `FASE 4 — Entità-esempio `projects` (CRUD multi-tenant org-scoped) Implementation Plan` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Effective Limit (override-then-plan-default)` --semantically_similar_to--> `Ceremly Plan Limits (pricing.ts per org)`  [INFERRED] [semantically similar]
@@ -731,47 +734,47 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
-Nodes (186): createBetterAuth(), getAuthSession(), requireAuth(), useServerAuth(), onUnlock(), createCelebrationCheckout(), getOrgId(), extractCreemIds() (+178 more)
+Nodes (190): createBetterAuth(), getAuthSession(), requireAuth(), useServerAuth(), assertAllowedFileSize(), assertAllowedMimeType(), assertBasePath(), assertExportKey() (+182 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (170): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, Disaccoppia non sposare (provider abstraction), Strada A (event-driven serverless), EMAIL ARCHITECTURE — Resend nel progetto, Email tracking in audit_log (no email_logs table), Email choke point unico (sendEmail) (+162 more)
+Nodes (91): assertAdminRateLimit(), auditView(), emailOf(), redactSecrets(), requireReason(), getCategoryFromAction(), writeAudit(), assertAccountRecord() (+83 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (89): getCategoryFromAction(), writeAudit(), assertAccountRecord(), assertTwoFactorRecord(), assertUserRecord(), importAuthRecordsIdempotently(), nullable(), toEpochMs() (+81 more)
+Nodes (170): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, Disaccoppia non sposare (provider abstraction), Strada A (event-driven serverless), EMAIL ARCHITECTURE — Resend nel progetto, Email tracking in audit_log (no email_logs table), Email choke point unico (sendEmail) (+162 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
 Nodes (127): Contact Properties, Property fallbackValue, Immutable key and type, Triple-mustache broadcast interpolation, Contacts, Null value deletes property, Segments replaced audiences, Claim a Domain (+119 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (61): createAuth(), cleanupOrphanFiles(), openSignedDownload(), useDB(), applyInvitePlaceholders(), buildEventDashboardUrl(), buildGuestInviteLink(), buildGuestPixelUrl() (+53 more)
-
-### Community 5 - "Community 5"
 Cohesion: 0.02
 Nodes (109): analyze_codebase.py script, Authentic Over Template philosophy, Context-aware OG layouts per page type, generate_og_images.py script, Playwright (image rendering), OG Image Creator (README), OG Image Creator (SKILL), 1. Analyze First (+101 more)
 
-### Community 6 - "Community 6"
+### Community 5 - "Community 5"
 Cohesion: 0.02
 Nodes (109): Table of Contents, Two-Phase Authentication Flow, Pinia Stores Development Skill, Multi-Tenancy pattern (workspace context), Plan Limits pattern, Server guard pattern (process.server), Setup syntax pattern (defineStore composition), Supabase access via useNuxtApp().$supabase (+101 more)
+
+### Community 6 - "Community 6"
+Cohesion: 0.04
+Nodes (61): createAuth(), cleanupOrphanFiles(), openSignedDownload(), useDB(), applyInvitePlaceholders(), buildEventDashboardUrl(), buildGuestInviteLink(), buildGuestPixelUrl() (+53 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.02
 Nodes (103): Supabase Integration Patterns (Pinia), Basic Pattern, Cleanup on Component Unmount, Client Access, Common Query Methods, Correct Pattern, Count Only, DELETE (+95 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.04
-Nodes (72): getClientIp(), sendContactMessage(), downloadExport(), requestExport(), buildWaMessage(), copyAll(), copyOne(), displayLink() (+64 more)
+Cohesion: 0.03
+Nodes (47): onUnlock(), changeLinks(), downloadExport(), requestExport(), buildWaMessage(), copyAll(), copyOne(), displayLink() (+39 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.03
-Nodes (91): React Email Skill, react-email CLI (email command), PreviewProps Convention, render() Function, Static Files Dev/Prod baseURL Pattern, Tailwind with pixelBasedPreset, resend api-keys Command Reference, API key token returned once on create (+83 more)
+Nodes (55): auditActions(), bootstrap(), drainJobs(), jobRows(), rows(), signedPost(), bridgeSignatureBase(), canonicalize() (+47 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.03
-Nodes (53): auditActions(), bootstrap(), drainJobs(), jobRows(), rows(), signedPost(), bridgeSignatureBase(), canonicalize() (+45 more)
+Nodes (91): React Email Skill, react-email CLI (email command), PreviewProps Convention, render() Function, Static Files Dev/Prod baseURL Pattern, Tailwind with pixelBasedPreset, resend api-keys Command Reference, API key token returned once on create (+83 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.03
@@ -779,159 +782,159 @@ Nodes (86): base Schema (not public), Edge Function Request Lifecycle, authentic
 
 ### Community 12 - "Community 12"
 Cohesion: 0.04
-Nodes (83): Alt Text Rule (meaningful vs decorative), 4.5:1 Color Contrast (WCAG AA), Email Accessibility, Single h1 / Heading Hierarchy, lang and dir Attributes, Linked Image Is Never Decorative Rule, title Tag in Head, Skill Enforcement Levels (suggest/block) (+75 more)
+Nodes (64): getClientIp(), sendContactMessage(), applyInvitePlaceholders(), assertEventNotClosed(), buildGuestInviteLink(), buildGuestPixelUrl(), buildPreviewLink(), getOrgId() (+56 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.04
-Nodes (31): bootstrap(), session(), bootstrap(), createEvent(), createGuest(), readyEvent(), session(), buildBasePath() (+23 more)
+Nodes (83): Alt Text Rule (meaningful vs decorative), 4.5:1 Color Contrast (WCAG AA), Email Accessibility, Single h1 / Heading Hierarchy, lang and dir Attributes, Linked Image Is Never Decorative Rule, title Tag in Head, Skill Enforcement Levels (suggest/block) (+75 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.04
-Nodes (45): createCeremlyAuthClient(), createConvexTokenFetcher(), setup(), setup(), setup(), installConvex(), installConvexHttp(), iso() (+37 more)
+Cohesion: 0.03
+Nodes (48): formatDateTime(), useCursorPager(), createCeremlyAuthClient(), createConvexTokenFetcher(), setup(), setup(), setup(), installConvex() (+40 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.03
-Nodes (66): 10. User Onboarding Plan, 11. Testing & QA Strategy, 12. Edge Cases & Open Questions, 13. Stakeholders & Responsibilities, 14. Risks & Assumptions, 1. Overview & Vision, 2. Objectives & Success Metrics, 3. Target Audience & User Personas (+58 more)
+Cohesion: 0.04
+Nodes (53): deferReason(), findById(), findExisting(), importRecords(), isBlank(), knownColumns(), loadDocument(), sameOrganization() (+45 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.05
-Nodes (48): deferReason(), findById(), findExisting(), importRecords(), isBlank(), knownColumns(), loadDocument(), sameOrganization() (+40 more)
+Cohesion: 0.04
+Nodes (29): bootstrap(), withoutAdmins(), bootstrap(), session(), bootstrap(), createEvent(), createGuest(), readyEvent() (+21 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.03
-Nodes (58): Fase 0 — Setup infrastruttura di test (Vitest), Fase 1 — Schema dati, costanti tier, env, mapping prodotto, Fase 2 — Risoluzione tier & enforcement limiti, Fase 3 — Checkout Celebrazione & webhook sblocco/refund, Fase 4 — Cron cleanup eventi conclusi+inattivi, Fase 5 — UI: paywall per-evento + pagina subscription + pricing, Fase 6 — Creazione prodotti Creem & popolamento env (operativo/esterno), Global Constraints (verbatim) (+50 more)
+Nodes (66): 10. User Onboarding Plan, 11. Testing & QA Strategy, 12. Edge Cases & Open Questions, 13. Stakeholders & Responsibilities, 14. Risks & Assumptions, 1. Overview & Vision, 2. Objectives & Success Metrics, 3. Target Audience & User Personas (+58 more)
 
 ### Community 18 - "Community 18"
+Cohesion: 0.03
+Nodes (58): Fase 0 — Setup infrastruttura di test (Vitest), Fase 1 — Schema dati, costanti tier, env, mapping prodotto, Fase 2 — Risoluzione tier & enforcement limiti, Fase 3 — Checkout Celebrazione & webhook sblocco/refund, Fase 4 — Cron cleanup eventi conclusi+inattivi, Fase 5 — UI: paywall per-evento + pagina subscription + pricing, Fase 6 — Creazione prodotti Creem & popolamento env (operativo/esterno), Global Constraints (verbatim) (+50 more)
+
+### Community 19 - "Community 19"
 Cohesion: 0.04
 Nodes (56): Admin API requirements (user custom limits), getEffectiveLimits merge (custom over plan), Audit log system requirements, resource.verb audit taxonomy, Email templates requirements, React.createElement .ts templates (avoid Vue JSX conflict), File storage system requirements, Magic-bytes file validation (+48 more)
 
-### Community 19 - "Community 19"
+### Community 20 - "Community 20"
 Cohesion: 0.05
 Nodes (50): Consent Checkboxes (Marketing), Double Opt-In, Email Capture Best Practices, Email Validation (Client + Server), Single Opt-In, Verification Email, CAN-SPAM Act (US), CASL (Canada) (+42 more)
 
-### Community 20 - "Community 20"
+### Community 21 - "Community 21"
 Cohesion: 0.04
 Nodes (45): Additional Component Tests, Additional Pressure Tests, Baseline (Establish Failure), Combined Scenario Tests, Email Client Limitations Tests, File Size & Performance Tests, Internationalization Tests, Pressure Test (Stress Test) (+37 more)
 
-### Community 21 - "Community 21"
+### Community 22 - "Community 22"
 Cohesion: 0.04
 Nodes (45): 1. Crawlability & Indexing, 2. Page-Level Meta Tags, 3. Open Graph & Social, 4. Structured Data, 5. Content & Semantic Structure, 6. Technical Performance, 7. URL Structure, 8. International SEO (if applicable) (+37 more)
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.05
 Nodes (43): 1. Letter/Monogram (Default), 2. Icons (Lucide Integration), 3. Emoji, Anti-Patterns, Available Icons, Available Templates, Content Types, Corner Radius (+35 more)
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.05
 Nodes (39): 1. Guardrail Skills, 1. Session Tracking, 2. Domain Skills, 2. File Markers, 3. Environment Variables, [ADVANCED.md](ADVANCED.md), Anthropic Best Practices, BLOCK (Critical Guardrails) (+31 more)
 
-### Community 24 - "Community 24"
+### Community 25 - "Community 25"
 Cohesion: 0.05
 Nodes (38): 0. Decisioni architetturali, 10. Definition of Done, 1. Design system "Soft Meadow", 2. Schema database (Drizzle, `server/database/schema/`), 3.1 InviteBlock, 3.2 RsvpQuestion, 3.3 Answers, 3.4 Logica condizionale — `shared/utils/rsvpLogic.ts` (+30 more)
 
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.05
 Nodes (36): Admin, App (branding is env-driven), Auth, Configure your .env file (see .env.example for all variables), Copy environment variables, Database, Database (Drizzle ORM + Neon Postgres), Database (Neon) (+28 more)
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.06
 Nodes (35): 1. File Path Doesn't Match Patterns, 1. Hook Not Registered, 1. Keywords Don't Match, 1. Keywords Too Generic, 1. Too Many Patterns, 2. Bash Wrapper Not Executable, 2. Complex Regex, 2. Excluded by pathExclusions (+27 more)
 
-### Community 27 - "Community 27"
+### Community 28 - "Community 28"
 Cohesion: 0.06
 Nodes (34): Best Practices, Best Practices, Best Practices, Best Practices, Best Practices Summary, Common Content Patterns, Common Path Patterns, Common Pattern Examples (+26 more)
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.06
 Nodes (34): 1. Always Use RLS-Enabled Client, 2. Handle CORS for All Endpoints, 3. Validate All Input, 4. Use Standard Response Helpers, 5. Apply Rate Limiting, 6. Check Plan Limits Before Resource Creation, 7. Use Soft Delete Pattern, Anti-Patterns to Avoid (+26 more)
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.06
 Nodes (34): Additional SEO Tags, Advanced Directives, App-Like Behavior, Article-Specific Tags, Author and Publisher, Basic Indexing Control, Bot-Specific Directives, Browser and PWA Tags (+26 more)
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
 Cohesion: 0.06
 Nodes (33): analyze_seo.py, Anti-Patterns to Avoid, Astro, Canonical URLs, Codebase Analysis Workflow, Essential Meta Tags (Every Page), Framework Quick Reference, generate_sitemap.py (+25 more)
 
-### Community 31 - "Community 31"
-Cohesion: 0.06
-Nodes (31): Account Management, Account Update Notifications, Authentication-Focused App, Authentication & Security, Developer Tools / API Platform, E-commerce / Marketplace, E-commerce & Transactions, Email Combinations by App Type (+23 more)
-
 ### Community 32 - "Community 32"
 Cohesion: 0.06
-Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
+Nodes (31): Account Management, Account Update Notifications, Authentication-Focused App, Authentication & Security, Developer Tools / API Platform, E-commerce / Marketplace, E-commerce & Transactions, Email Combinations by App Type (+23 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.06
 Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.07
-Nodes (30): Color Customization, Component Customization, Configuration, Core Components, Dark Mode, Nuxt UI (nuxt-frontend resource), Feedback Components, Form Components (+22 more)
+Cohesion: 0.06
+Nodes (30): Asset Locations, Best Practices, Body, Border Handling, Buttons, Colors and Brand Consistency, Component Structure, Container (+22 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.07
-Nodes (31): Hard vs Soft Bounce Handling, Create Webhook via API, email.received Inbound Event, Resend Webhook Event Types, Raw Body Requirement for Verification, Webhook Retry Schedule (Exponential Backoff), Webhook Signature Verification (Svix), Resend Webhooks (+23 more)
+Nodes (30): Color Customization, Component Customization, Configuration, Core Components, Dark Mode, Nuxt UI (nuxt-frontend resource), Feedback Components, Form Components (+22 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.07
-Nodes (29): Actions, Authentication, Best Practices, Computed Getters, Do's, Don'ts, Error Handling Pattern, Events Management (+21 more)
+Nodes (31): Hard vs Soft Bounce Handling, Create Webhook via API, email.received Inbound Event, Resend Webhook Event Types, Raw Body Requirement for Verification, Webhook Retry Schedule (Exponential Backoff), Webhook Signature Verification (Svix), Resend Webhooks (+23 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.07
-Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
+Nodes (29): Actions, Authentication, Best Practices, Computed Getters, Do's, Don'ts, Error Handling Pattern, Events Management (+21 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.07
-Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
+Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
 
 ### Community 39 - "Community 39"
+Cohesion: 0.07
+Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
+
+### Community 40 - "Community 40"
 Cohesion: 0.09
 Nodes (13): fixtureEmails(), decryptJson(), deriveKey(), encryptJson(), sha256Hex(), domainBatchCanonicalPayload(), domainBatchDigest(), createAuthUser() (+5 more)
 
-### Community 40 - "Community 40"
+### Community 41 - "Community 41"
 Cohesion: 0.07
 Nodes (27): Actions, Add Column Migration, Base Schema Setup, Best Practices, Check Constraint, Commands, Common Patterns, Current Migrations (+19 more)
 
-### Community 41 - "Community 41"
+### Community 42 - "Community 42"
 Cohesion: 0.07
 Nodes (27): Best Practices, Custom Claim Hook, Debug & Monitoring, Do's, Don'ts, Enable Hook, Event → Guests Cascade, Events Count (+19 more)
 
-### Community 42 - "Community 42"
+### Community 43 - "Community 43"
 Cohesion: 0.07
 Nodes (27): Active Views, Overview, Table of Contents, Best Practices, Bypassing Soft Delete Rule, Cascade Soft Delete, Cascade Trigger, Complete Setup (+19 more)
 
-### Community 43 - "Community 43"
+### Community 44 - "Community 44"
 Cohesion: 0.11
 Nodes (28): 500-Line Rule & Progressive Disclosure, Skill System Advanced Topics, Conditional Enforcement (Future), Content Patterns (Regex), database-verification Guardrail Example, Domain Skills, Enforcement Levels (block/suggest/warn), Exit Code 2 Block Mechanism (+20 more)
 
-### Community 44 - "Community 44"
+### Community 45 - "Community 45"
 Cohesion: 0.07
 Nodes (27): Account Deletion, Backend Architecture, Backend Requirements, Current Implementation, Data Protection, Database Functions, Database Schema (`user` table - Drizzle/Better Auth), Dependencies (+19 more)
 
-### Community 45 - "Community 45"
+### Community 46 - "Community 46"
 Cohesion: 0.07
 Nodes (26): Architecture Notes, Architecture Notes, Blog SEO (blogs/[slug].vue), Components Used, Composables Used, Current Implementation, Current Implementation, Design System (+18 more)
 
-### Community 46 - "Community 46"
+### Community 47 - "Community 47"
 Cohesion: 0.07
 Nodes (26): Example Conversation Flow, Execution Sequence, Execution Sequence, Exit Code Behavior (CRITICAL), Exit Code Reference Table, Hook Mechanisms - Deep Dive, How It Works, Input Format (+18 more)
 
-### Community 47 - "Community 47"
+### Community 48 - "Community 48"
 Cohesion: 0.07
 Nodes (26): Overview, Plan Limits, Table of Contents, checkPlanLimit Function, Complete Event Creation with Limit Check, Database Tables, Displaying Limits to User, Error Messages (+18 more)
 
-### Community 48 - "Community 48"
+### Community 49 - "Community 49"
 Cohesion: 0.07
 Nodes (26): Anti-Aliasing Techniques, Banding in Gradients, Canvas Performance, Color Space Considerations, Composite Operations, Debugging Visual Issues, Drop Shadow, Effect Implementation Details (+18 more)
 
-### Community 49 - "Community 49"
-Cohesion: 0.08
-Nodes (25): Adding to an Existing Project, Additional Resources, Basic Email Template, Before Writing Code, Behavioral Guidelines, CLI Commands, Common Patterns, Convert to HTML (+17 more)
-
 ### Community 50 - "Community 50"
 Cohesion: 0.08
-Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL Languages, 4. Fallback Values, 5. Test All Locales, 6. Keep Keys Consistent, 7. Handle Missing Translations, 8. Subject Line Translation (+17 more)
+Nodes (25): Adding to an Existing Project, Additional Resources, Basic Email Template, Before Writing Code, Behavioral Guidelines, CLI Commands, Common Patterns, Convert to HTML (+17 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.08
@@ -939,23 +942,23 @@ Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL La
 
 ### Community 52 - "Community 52"
 Cohesion: 0.08
-Nodes (25): Check Policy Status, Common Issues, Complete Table RLS Setup, Core Function, Debugging RLS, Events Table, Example Permissions, Guests Table (Child of Events) (+17 more)
+Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL Languages, 4. Fallback Values, 5. Test All Locales, 6. Keep Keys Consistent, 7. Handle Missing Translations, 8. Subject Line Translation (+17 more)
 
 ### Community 53 - "Community 53"
 Cohesion: 0.08
-Nodes (25): Overview, Plan Limits, Table of Contents, Admin Operations, Audit Log, Best Practices, Checking Limits, Core Tables (+17 more)
+Nodes (25): Check Policy Status, Common Issues, Complete Table RLS Setup, Core Function, Debugging RLS, Events Table, Example Permissions, Guests Table (Child of Events) (+17 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.08
-Nodes (25): 1. Setup Syntax (Composition API), 2. Server Guard (Critical), 3. Supabase Access, 4. TypeScript State Typing, 5. Error Handling Pattern, 6. Parallel Queries (Optimization), Component Usage, Core Patterns (+17 more)
+Nodes (25): Overview, Plan Limits, Table of Contents, Admin Operations, Audit Log, Best Practices, Checking Limits, Core Tables (+17 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.09
-Nodes (26): Per-event unlock via metadata.eventId (one-time), max_events → max_organizations rename, FASE 1c — RBAC + middleware + route org (Plan), FASE 1d — Frontend org-centric (Plan), FASE 2 — Driver DB Neon HTTP serverless (Plan), FASE 3 — Deploy Vercel serverless + QStash + Cron (Plan), FASE 4 — Entità-esempio projects CRUD multi-tenant (Plan), FASE 5 — Pulizia documentazione e branding (Plan) (+18 more)
+Cohesion: 0.08
+Nodes (25): 1. Setup Syntax (Composition API), 2. Server Guard (Critical), 3. Supabase Access, 4. TypeScript State Typing, 5. Error Handling Pattern, 6. Parallel Queries (Optimization), Component Usage, Core Patterns (+17 more)
 
 ### Community 56 - "Community 56"
-Cohesion: 0.12
-Nodes (14): attendanceCardStyle(), attendanceRadioStyle(), getAnswer(), goNext(), hasTags(), isAttendanceSelected(), isOptionChecked(), personSlotsFor() (+6 more)
+Cohesion: 0.09
+Nodes (26): Per-event unlock via metadata.eventId (one-time), max_events → max_organizations rename, FASE 1c — RBAC + middleware + route org (Plan), FASE 1d — Frontend org-centric (Plan), FASE 2 — Driver DB Neon HTTP serverless (Plan), FASE 3 — Deploy Vercel serverless + QStash + Cron (Plan), FASE 4 — Entità-esempio projects CRUD multi-tenant (Plan), FASE 5 — Pulizia documentazione e branding (Plan) (+18 more)
 
 ### Community 57 - "Community 57"
 Cohesion: 0.16
@@ -1362,12 +1365,12 @@ Cohesion: 0.26
 Nodes (12): Active View for Soft-Delete Tables, Base Schema Convention, Supabase MCP Integration, Migration File Naming Convention, Supabase Migration Conventions, Workspace Multi-Tenancy via JWT Claims, Never Modify Pushed Migrations, Permission Naming Convention (+4 more)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.22
-Nodes (3): dcFlatten(), DCSection(), DesignCanvas()
-
-### Community 159 - "Community 159"
 Cohesion: 0.31
 Nodes (9): buildReport(), chooseConvexPlan(), flowUnits(), monthlyCalls(), monthlyLoad(), over(), priceLoad(), crosses() (+1 more)
+
+### Community 159 - "Community 159"
+Cohesion: 0.22
+Nodes (3): dcFlatten(), DCSection(), DesignCanvas()
 
 ### Community 160 - "Community 160"
 Cohesion: 0.18
@@ -1398,136 +1401,136 @@ Cohesion: 0.18
 Nodes (10): Changes Applied, Commit, Concerns, event.service.ts, Files Modified, publicInvite.service.ts, Self-Review, Task 6 Report: Service (updateEvent + payload pubblico) (+2 more)
 
 ### Community 167 - "Community 167"
-Cohesion: 0.22
-Nodes (2): handleEnable(), startSetupWithPassword()
+Cohesion: 0.27
+Nodes (6): RsvpChart(), formatDate(), template(), x(), xTicks(), y()
 
 ### Community 168 - "Community 168"
 Cohesion: 0.27
 Nodes (4): apiPathsIn(), authPluginUsesIn(), read(), stripComments()
 
 ### Community 169 - "Community 169"
-Cohesion: 0.36
-Nodes (8): assertAllowedFileSize(), assertAllowedMimeType(), assertBasePath(), assertExportKey(), assertExportSize(), assertProcessableMimeType(), assertStorageKey(), fail()
+Cohesion: 0.2
+Nodes (0): 
 
 ### Community 170 - "Community 170"
 Cohesion: 0.2
 Nodes (0): 
 
 ### Community 171 - "Community 171"
-Cohesion: 0.27
-Nodes (6): RsvpChart(), formatDate(), template(), x(), xTicks(), y()
-
-### Community 172 - "Community 172"
-Cohesion: 0.2
-Nodes (0): 
-
-### Community 173 - "Community 173"
 Cohesion: 0.2
 Nodes (9): Code and Link Display, Content Structure, Core Principles, Error Handling, Mobile-First Design, Pre-Header, Sender Configuration, Subject Lines (+1 more)
 
-### Community 174 - "Community 174"
+### Community 172 - "Community 172"
 Cohesion: 0.2
 Nodes (9): Advanced Topics & Future Enhancements, Conditional Enforcement, Dynamic Rule Updates, Multi-Language Support, Related Files, Skill Analytics, Skill Dependencies, Skill Testing Framework (+1 more)
 
-### Community 175 - "Community 175"
+### Community 173 - "Community 173"
 Cohesion: 0.2
 Nodes (9): templates, templates create, templates delete, templates duplicate, templates get, templates list, templates open, templates publish (+1 more)
 
-### Community 176 - "Community 176"
+### Community 174 - "Community 174"
 Cohesion: 0.2
 Nodes (9): Broadcasts, Common Mistakes, Contact Property Interpolation, Create Parameters, Get, List, Update, Delete, Lifecycle: Create then Send, Python Example, SDK Methods (+1 more)
 
-### Community 177 - "Community 177"
+### Community 175 - "Community 175"
 Cohesion: 0.2
 Nodes (9): Contacts, Common Mistakes, Create Contact, Delete and List, Get and Update, Node.js, Overview, Python (+1 more)
 
-### Community 178 - "Community 178"
+### Community 176 - "Community 176"
 Cohesion: 0.2
 Nodes (9): Common Mistakes, Event Schema, Events, Node.js, Overview, Python, SDK Methods, Sending Events (+1 more)
 
-### Community 179 - "Community 179"
+### Community 177 - "Community 177"
 Cohesion: 0.2
 Nodes (9): Consolidamento ambienti (dev/prod) — Implementation Plan, File Structure, Global Constraints, Operazioni infrastruttura (manuali — le esegue l'utente), Self-Review, Task 1: Fix bug naming `.env.production` → `.env.prod`, Task 2: Fix billing — Creem `testMode` da `VERCEL_ENV`, Task 3: Elimina `.env.staging` e aggiorna `.env.example` (+1 more)
 
-### Community 180 - "Community 180"
+### Community 178 - "Community 178"
 Cohesion: 0.2
 Nodes (9): Checkpoint 1d, FASE 1d — Frontend org-centric (Scope), ✅ In 1d, ❌ NON in 1d, Obiettivo, Rischi noti, Scope, Superficie reale (contata post-FASE-0 — è poca) (+1 more)
 
-### Community 181 - "Community 181"
+### Community 179 - "Community 179"
 Cohesion: 0.2
 Nodes (9): 1. Principio architetturale: Strada A (event-driven serverless), 2. Convenzioni Laravel-style (la filosofia, non l'implementazione), 3. Disaccoppiamento dai fornitori (obbligatorio), 4. Struttura cartelle (obbligatoria), 5. Regole di stile e qualità (valide in ogni fase), 6. Cosa NON fare mai (riepilogo anti-pattern), ❌ NON si porta, ✅ Si porta (+1 more)
 
-### Community 182 - "Community 182"
+### Community 180 - "Community 180"
 Cohesion: 0.2
 Nodes (9): Classi CSS generate, Commit, Concerns, Esito `pnpm build`, Esito suite test, File creati / modificati, Font rimossi dal catalogo, Self-review (+1 more)
 
-### Community 183 - "Community 183"
+### Community 181 - "Community 181"
 Cohesion: 0.22
 Nodes (8): broadcasts, broadcasts create, broadcasts delete, broadcasts get, broadcasts list, broadcasts open, broadcasts send, broadcasts update
 
-### Community 184 - "Community 184"
+### Community 182 - "Community 182"
 Cohesion: 0.22
 Nodes (8): API Keys, Common Mistakes, Create Parameters, Examples, Node.js, Python, Response Fields, SDK Methods
 
-### Community 185 - "Community 185"
+### Community 183 - "Community 183"
 Cohesion: 0.22
 Nodes (8): Contact Properties, Common Mistakes, Create Parameters, Node.js Example, Python Example, SDK Methods, Setting Properties on Contacts, Using in Broadcast HTML
 
-### Community 186 - "Community 186"
+### Community 184 - "Community 184"
 Cohesion: 0.22
 Nodes (8): Segments, Common Mistakes, Create Segment, Managing Contacts in Segments, Node.js, Python, SDK Methods, Using Segments with Broadcasts
 
-### Community 187 - "Community 187"
+### Community 185 - "Community 185"
 Cohesion: 0.22
 Nodes (8): Checkpoint 1b, FASE 1b — Auth flows + signup→org + team via plugin (Scope), ✅ In 1b, ❌ NON in 1b, Obiettivo, Rischi noti, Scope, Task delineati
 
-### Community 188 - "Community 188"
+### Community 186 - "Community 186"
 Cohesion: 0.22
 Nodes (8): Checkpoint 1c, FASE 1c — RBAC + middleware + route org (Scope), ✅ In 1c, ❌ NON in 1c, Obiettivo, Rischi noti, Scope, Task delineati
 
-### Community 189 - "Community 189"
+### Community 187 - "Community 187"
 Cohesion: 0.28
 Nodes (9): Candlelit Intimate Mood, WhatsApp vs Email Blog Hero, Mobile Messaging Communication, Person Holding Phone, Smartphone with Blank Screen, Site Logo Envelope Mark, Email Confirmation Symbol, Envelope with Checkmark (+1 more)
 
-### Community 190 - "Community 190"
+### Community 188 - "Community 188"
 Cohesion: 0.39
 Nodes (5): toInvitationPreview(), toIso(), toOrganizationInvitation(), toOrganizationListItem(), toOrganizationMember()
 
-### Community 191 - "Community 191"
+### Community 189 - "Community 189"
 Cohesion: 0.25
 Nodes (0): 
 
+### Community 190 - "Community 190"
+Cohesion: 0.25
+Nodes (7): Common Email Patterns, Multi-Column Newsletter, Notification Email with Code Block, Order Confirmation with Product List, Password Reset Email, Table of Contents, Team Invitation Email
+
+### Community 191 - "Community 191"
+Cohesion: 0.25
+Nodes (7): Common Email Patterns, Multi-Column Newsletter, Notification Email with Code Block, Order Confirmation with Product List, Password Reset Email, Table of Contents, Team Invitation Email
+
 ### Community 192 - "Community 192"
-Cohesion: 0.25
-Nodes (7): Common Email Patterns, Multi-Column Newsletter, Notification Email with Code Block, Order Confirmation with Product List, Password Reset Email, Table of Contents, Team Invitation Email
-
-### Community 193 - "Community 193"
-Cohesion: 0.25
-Nodes (7): Common Email Patterns, Multi-Column Newsletter, Notification Email with Code Block, Order Confirmation with Product List, Password Reset Email, Table of Contents, Team Invitation Email
-
-### Community 194 - "Community 194"
 Cohesion: 0.25
 Nodes (7): webhooks, webhooks create, webhooks delete, webhooks get, webhooks list, webhooks listen, webhooks update
 
-### Community 195 - "Community 195"
+### Community 193 - "Community 193"
 Cohesion: 0.25
 Nodes (7): Come usare ogni file con Claude Code, Filosofia del boilerplate, Le due decisioni strutturali (già prese — NON cambiarle a metà), Lo stack (deciso, non da rivalutare durante il build), Nota su Creem (importante per la Fase 3), Ordine delle fasi (sequenziale, ogni fase poggia sulla precedente), SaaS Boilerplate — Build Guide (Strada A)
 
-### Community 196 - "Community 196"
+### Community 194 - "Community 194"
 Cohesion: 0.25
 Nodes (7): Concerns, Cosa ho implementato, Errori consumer attesi, File cambiati, Output typecheck su inviteTheme.ts, Self-review, Task 2 Report — InviteTheme + catalogo font ~60, preset come scorciatoie
 
-### Community 197 - "Community 197"
+### Community 195 - "Community 195"
 Cohesion: 0.25
 Nodes (7): Concerns, Edit applicati, Esito suite, Self-review, Task 9 Report — Pannello Aspetto custom (color picker + ricerca font + contrasto), Typecheck mirato, Validazione hex in setColor
 
-### Community 198 - "Community 198"
+### Community 196 - "Community 196"
 Cohesion: 0.25
 Nodes (7): Commit, Concerns, Edit applicato, Self-review, Suite di test, Task 10: Pagina pubblica invito — Report, Typecheck globale
 
-### Community 199 - "Community 199"
+### Community 197 - "Community 197"
 Cohesion: 0.39
 Nodes (8): Blog Badge, Blog OG Card (EN), Ceremly Brand Name, Guides, Tips & Resources Headline, Organize Unforgettable Events Tagline, Warm Earthy Color Palette, Blog OG Card (IT), Guide, Consigli e Risorse Headline
+
+### Community 198 - "Community 198"
+Cohesion: 0.29
+Nodes (0): 
+
+### Community 199 - "Community 199"
+Cohesion: 0.29
+Nodes (0): 
 
 ### Community 200 - "Community 200"
 Cohesion: 0.29
@@ -1539,127 +1542,127 @@ Nodes (0):
 
 ### Community 202 - "Community 202"
 Cohesion: 0.29
-Nodes (0): 
+Nodes (6): Complete Examples, Email Function, Event CRUD Function, Stripe Webhook Handler, Table of Contents, Workspace Function
 
 ### Community 203 - "Community 203"
 Cohesion: 0.29
-Nodes (0): 
+Nodes (6): topics, topics create, topics delete, topics get, topics list, topics update
 
 ### Community 204 - "Community 204"
 Cohesion: 0.29
-Nodes (0): 
+Nodes (6): contact-properties, contact-properties create, contact-properties delete, contact-properties get, contact-properties list, contact-properties update
 
 ### Community 205 - "Community 205"
 Cohesion: 0.29
-Nodes (6): Complete Examples, Email Function, Event CRUD Function, Stripe Webhook Handler, Table of Contents, Workspace Function
+Nodes (6): segments, segments contacts, segments create, segments delete, segments get, segments list
 
 ### Community 206 - "Community 206"
 Cohesion: 0.29
-Nodes (6): topics, topics create, topics delete, topics get, topics list, topics update
+Nodes (6): Concerns, File creati/modificati, Output `pnpm db:migrate`, Output verifica colonne, Self-review, Task 5 Report — Schema DB + migrazione 0010 (data-preserving)
 
 ### Community 207 - "Community 207"
 Cohesion: 0.29
-Nodes (6): contact-properties, contact-properties create, contact-properties delete, contact-properties get, contact-properties list, contact-properties update
+Nodes (6): Changes, Fix 1 — `server/database/schema/events.ts`, Fix 2 — `app/pages/dashboard/events/[id]/editor.vue`, Self-review, Task 12 — Fix schema comment + lazy font picker (review finale), Verification
 
 ### Community 208 - "Community 208"
 Cohesion: 0.29
-Nodes (6): segments, segments contacts, segments create, segments delete, segments get, segments list
+Nodes (6): Concerns, Edit applicati, Esito suite, Output typecheck mirato, Self-review, Task 7 Report — InviteRenderer: applica tema custom
 
 ### Community 209 - "Community 209"
 Cohesion: 0.29
-Nodes (6): Concerns, File creati/modificati, Output `pnpm db:migrate`, Output verifica colonne, Self-review, Task 5 Report — Schema DB + migrazione 0010 (data-preserving)
+Nodes (7): Ceremly App Icon, Open Envelope With Checkmark Glyph, RSVP Email Confirmation Branding, Event Invitation Platform Navigation, Ceremly Footer Navigation Screenshot, Footer Sitemap Four Column Layout, Legal And Resource Links Group
 
 ### Community 210 - "Community 210"
 Cohesion: 0.29
-Nodes (6): Changes, Fix 1 — `server/database/schema/events.ts`, Fix 2 — `app/pages/dashboard/events/[id]/editor.vue`, Self-review, Task 12 — Fix schema comment + lazy font picker (review finale), Verification
-
-### Community 211 - "Community 211"
-Cohesion: 0.29
-Nodes (6): Concerns, Edit applicati, Esito suite, Output typecheck mirato, Self-review, Task 7 Report — InviteRenderer: applica tema custom
-
-### Community 212 - "Community 212"
-Cohesion: 0.29
-Nodes (7): Ceremly App Icon, Open Envelope With Checkmark Glyph, RSVP Email Confirmation Branding, Event Invitation Platform Navigation, Ceremly Footer Navigation Screenshot, Footer Sitemap Four Column Layout, Legal And Resource Links Group
-
-### Community 213 - "Community 213"
-Cohesion: 0.29
 Nodes (7): Dramatic Purple Ambient Lighting, Elegant Banquet Event Hall, Floral Centerpieces, Wedding Guest Management, Wedding RSVP Blog Hero, Round Tables with Place Settings, Wedding Reception
 
-### Community 214 - "Community 214"
+### Community 211 - "Community 211"
 Cohesion: 0.43
 Nodes (7): Ceremly Brand Name, Site OG Card (EN), Private Event RSVP Platform, Domain ceremly.it, Tagline: Guest Confirmations via Email & WhatsApp in 1 Minute, Site OG Card (IT), Tagline: Conferme Invitati via Email e WhatsApp in 1 Minuto
 
-### Community 215 - "Community 215"
+### Community 212 - "Community 212"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 216 - "Community 216"
+### Community 213 - "Community 213"
 Cohesion: 0.47
 Nodes (3): batch(), legacyAccount(), legacyUser()
 
-### Community 217 - "Community 217"
+### Community 214 - "Community 214"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 218 - "Community 218"
+### Community 215 - "Community 215"
 Cohesion: 0.53
 Nodes (4): queryParams(), rewriteRefs(), schemaByName(), toSchema()
 
-### Community 219 - "Community 219"
+### Community 216 - "Community 216"
 Cohesion: 0.33
 Nodes (5): API · OpenAPI / Postman, Autenticazione, Generare la spec, Importare in Postman, Note
 
-### Community 220 - "Community 220"
+### Community 217 - "Community 217"
 Cohesion: 0.33
 Nodes (5): Concetti chiave, `docs/security/`, Documenti, Le due credenziali a confronto, Vedi anche
 
-### Community 221 - "Community 221"
+### Community 218 - "Community 218"
 Cohesion: 0.33
 Nodes (5): Background job in dev, Da sistemare (azioni su Cloudflare), Isolamento delle risorse cloud, Matrice ambienti, Servizi esterni & isolamento ambienti (QStash / Redis / R2)
 
+### Community 219 - "Community 219"
+Cohesion: 0.4
+Nodes (0): 
+
+### Community 220 - "Community 220"
+Cohesion: 0.4
+Nodes (4): Send as a Template to Resend, Send with Other Providers, Send with Resend (Recommended), Sending Guide
+
+### Community 221 - "Community 221"
+Cohesion: 0.4
+Nodes (4): Send as a Template to Resend, Send with Other Providers, Send with Resend (Recommended), Sending Guide
+
 ### Community 222 - "Community 222"
-Cohesion: 0.4
-Nodes (0): 
-
-### Community 223 - "Community 223"
-Cohesion: 0.4
-Nodes (0): 
-
-### Community 224 - "Community 224"
-Cohesion: 0.4
-Nodes (4): Send as a Template to Resend, Send with Other Providers, Send with Resend (Recommended), Sending Guide
-
-### Community 225 - "Community 225"
-Cohesion: 0.4
-Nodes (4): Send as a Template to Resend, Send with Other Providers, Send with Resend (Recommended), Sending Guide
-
-### Community 226 - "Community 226"
 Cohesion: 0.4
 Nodes (4): api-keys, api-keys create, api-keys delete, api-keys list
 
-### Community 227 - "Community 227"
+### Community 223 - "Community 223"
 Cohesion: 0.4
 Nodes (4): logs, logs get, logs list, logs open
 
-### Community 228 - "Community 228"
+### Community 224 - "Community 224"
 Cohesion: 0.4
 Nodes (4): About the design files, Bundle contents, CODING AGENTS: READ THIS FIRST, What you should do — IMPORTANT
 
-### Community 229 - "Community 229"
+### Community 225 - "Community 225"
 Cohesion: 0.4
 Nodes (5): Event Planning Errors, Frustration and Overwhelm, Event Planning Mistakes Blog Hero, Laptop and Crumpled Tissues, Stressed Woman Lying on Floor
 
-### Community 230 - "Community 230"
+### Community 226 - "Community 226"
 Cohesion: 0.5
 Nodes (5): Ceremly Default OG Card, Ceremly, ceremly.it, Piattaforma automatica RSVP eventi privati, Conferme Invitati via Email e WhatsApp in 1 Minuto
 
-### Community 231 - "Community 231"
+### Community 227 - "Community 227"
 Cohesion: 0.67
 Nodes (2): formatLimit(), isUnlimited()
 
-### Community 232 - "Community 232"
+### Community 228 - "Community 228"
 Cohesion: 0.5
 Nodes (0): 
+
+### Community 229 - "Community 229"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 230 - "Community 230"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 231 - "Community 231"
+Cohesion: 0.67
+Nodes (2): base64url(), signGateToken()
+
+### Community 232 - "Community 232"
+Cohesion: 0.67
+Nodes (2): sleep(), waitUntil()
 
 ### Community 233 - "Community 233"
 Cohesion: 0.5
@@ -1670,12 +1673,12 @@ Cohesion: 0.5
 Nodes (0): 
 
 ### Community 235 - "Community 235"
-Cohesion: 0.67
-Nodes (2): base64url(), signGateToken()
+Cohesion: 0.5
+Nodes (0): 
 
 ### Community 236 - "Community 236"
-Cohesion: 0.67
-Nodes (2): sleep(), waitUntil()
+Cohesion: 0.5
+Nodes (0): 
 
 ### Community 237 - "Community 237"
 Cohesion: 0.5
@@ -1691,35 +1694,35 @@ Nodes (0):
 
 ### Community 240 - "Community 240"
 Cohesion: 0.5
-Nodes (0): 
+Nodes (3): Next steps, Welcome, What's included
 
 ### Community 241 - "Community 241"
 Cohesion: 0.5
-Nodes (0): 
+Nodes (3): Benvenuto, Cosa include, Prossimi passi
 
 ### Community 242 - "Community 242"
-Cohesion: 0.5
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 243 - "Community 243"
-Cohesion: 0.5
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 244 - "Community 244"
-Cohesion: 0.5
-Nodes (3): Next steps, Welcome, What's included
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 245 - "Community 245"
-Cohesion: 0.5
-Nodes (3): Benvenuto, Cosa include, Prossimi passi
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 246 - "Community 246"
 Cohesion: 0.67
 Nodes (0): 
 
 ### Community 247 - "Community 247"
-Cohesion: 0.67
-Nodes (0): 
+Cohesion: 1.0
+Nodes (2): nodeDigest(), sha256Hex()
 
 ### Community 248 - "Community 248"
 Cohesion: 0.67
@@ -1730,8 +1733,8 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 250 - "Community 250"
-Cohesion: 1.0
-Nodes (2): nodeDigest(), sha256Hex()
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 251 - "Community 251"
 Cohesion: 0.67
@@ -1746,8 +1749,8 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 254 - "Community 254"
-Cohesion: 0.67
-Nodes (0): 
+Cohesion: 1.0
+Nodes (2): exceedsLimit(), isUnlimited()
 
 ### Community 255 - "Community 255"
 Cohesion: 0.67
@@ -1758,8 +1761,8 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 257 - "Community 257"
-Cohesion: 1.0
-Nodes (2): exceedsLimit(), isUnlimited()
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 258 - "Community 258"
 Cohesion: 0.67
@@ -1775,19 +1778,19 @@ Nodes (0):
 
 ### Community 261 - "Community 261"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (2): Design Thinking, Frontend Aesthetics Guidelines
 
 ### Community 262 - "Community 262"
-Cohesion: 0.67
+Cohesion: 1.0
 Nodes (0): 
 
 ### Community 263 - "Community 263"
-Cohesion: 0.67
+Cohesion: 1.0
 Nodes (0): 
 
 ### Community 264 - "Community 264"
-Cohesion: 0.67
-Nodes (2): Design Thinking, Frontend Aesthetics Guidelines
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 265 - "Community 265"
 Cohesion: 1.0
@@ -1935,75 +1938,75 @@ Nodes (0):
 
 ### Community 301 - "Community 301"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Task 1: Utility colore (contrasto + soft derivato)
 
 ### Community 302 - "Community 302"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Task 6: Service (updateEvent + payload pubblico)
 
 ### Community 303 - "Community 303"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Task 7: InviteRenderer — applica tema custom
 
 ### Community 304 - "Community 304"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): SDD Progress — tema invito custom
 
 ### Community 305 - "Community 305"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Task 10: Pagina pubblica invito
 
 ### Community 306 - "Community 306"
 Cohesion: 1.0
-Nodes (1): Task 1: Utility colore (contrasto + soft derivato)
+Nodes (1): Task 8: Self-hosting catalogo font (CSS + @nuxt/fonts)
 
 ### Community 307 - "Community 307"
 Cohesion: 1.0
-Nodes (1): Task 6: Service (updateEvent + payload pubblico)
+Nodes (1): Task 9: Editor — pannello Aspetto custom (picker + ricerca font + contrasto)
 
 ### Community 308 - "Community 308"
 Cohesion: 1.0
-Nodes (1): Task 7: InviteRenderer — applica tema custom
+Nodes (1): Task 2: Costanti — tipo InviteTheme + catalogo font, refactor preset
 
 ### Community 309 - "Community 309"
 Cohesion: 1.0
-Nodes (1): SDD Progress — tema invito custom
+Nodes (1): Task 3: Schema validazione
 
 ### Community 310 - "Community 310"
 Cohesion: 1.0
-Nodes (1): Task 10: Pagina pubblica invito
+Nodes (1): Task 5: Schema DB + migrazione 0010 (data-preserving)
 
 ### Community 311 - "Community 311"
 Cohesion: 1.0
-Nodes (1): Task 8: Self-hosting catalogo font (CSS + @nuxt/fonts)
+Nodes (1): Task 4: Tipi condivisi
 
 ### Community 312 - "Community 312"
 Cohesion: 1.0
-Nodes (1): Task 9: Editor — pannello Aspetto custom (picker + ricerca font + contrasto)
+Nodes (2): CeremlyTier (free/celebration/atelier), Modello pricing Ceremly + checkout per-evento (Plan)
 
 ### Community 313 - "Community 313"
 Cohesion: 1.0
-Nodes (1): Task 2: Costanti — tipo InviteTheme + catalogo font, refactor preset
+Nodes (2): Multi-tenant resource recipe (clonable pattern), projects example domain entity
 
 ### Community 314 - "Community 314"
 Cohesion: 1.0
-Nodes (1): Task 3: Schema validazione
+Nodes (0): 
 
 ### Community 315 - "Community 315"
 Cohesion: 1.0
-Nodes (1): Task 5: Schema DB + migrazione 0010 (data-preserving)
+Nodes (0): 
 
 ### Community 316 - "Community 316"
 Cohesion: 1.0
-Nodes (1): Task 4: Tipi condivisi
+Nodes (0): 
 
 ### Community 317 - "Community 317"
 Cohesion: 1.0
-Nodes (2): CeremlyTier (free/celebration/atelier), Modello pricing Ceremly + checkout per-evento (Plan)
+Nodes (0): 
 
 ### Community 318 - "Community 318"
 Cohesion: 1.0
-Nodes (2): Multi-tenant resource recipe (clonable pattern), projects example domain entity
+Nodes (0): 
 
 ### Community 319 - "Community 319"
 Cohesion: 1.0
@@ -3071,1076 +3074,1100 @@ Nodes (0):
 
 ### Community 585 - "Community 585"
 Cohesion: 1.0
-Nodes (1): Get HTML template based on page type.
+Nodes (0): 
 
 ### Community 586 - "Community 586"
 Cohesion: 1.0
-Nodes (1): Simple mustache-like template rendering.
+Nodes (0): 
 
 ### Community 587 - "Community 587"
 Cohesion: 1.0
-Nodes (1): Generate complete HTML for a route's OG image.
+Nodes (0): 
 
 ### Community 588 - "Community 588"
 Cohesion: 1.0
-Nodes (1): Determine if a hex color is dark.
+Nodes (1): Get HTML template based on page type.
 
 ### Community 589 - "Community 589"
 Cohesion: 1.0
-Nodes (1): Generate OG image from HTML using Playwright.
+Nodes (1): Simple mustache-like template rendering.
 
 ### Community 590 - "Community 590"
 Cohesion: 1.0
-Nodes (1): Generate OG images for all routes.
+Nodes (1): Generate complete HTML for a route's OG image.
 
 ### Community 591 - "Community 591"
 Cohesion: 1.0
-Nodes (1): Detect the framework used in the project.
+Nodes (1): Determine if a hex color is dark.
 
 ### Community 592 - "Community 592"
 Cohesion: 1.0
-Nodes (1): Find routes in a Next.js project (app router and pages router).
+Nodes (1): Generate OG image from HTML using Playwright.
 
 ### Community 593 - "Community 593"
 Cohesion: 1.0
-Nodes (1): Find routes in an Astro project.
+Nodes (1): Generate OG images for all routes.
 
 ### Community 594 - "Community 594"
 Cohesion: 1.0
-Nodes (1): Find routes in a React SPA (best effort).
+Nodes (1): Detect the framework used in the project.
 
 ### Community 595 - "Community 595"
 Cohesion: 1.0
-Nodes (1): Extract title and description from a file.
+Nodes (1): Find routes in a Next.js project (app router and pages router).
 
 ### Community 596 - "Community 596"
 Cohesion: 1.0
-Nodes (1): Categorize a page based on its route and metadata.
+Nodes (1): Find routes in an Astro project.
 
 ### Community 597 - "Community 597"
 Cohesion: 1.0
-Nodes (1): Extract brand colors from CSS, Tailwind config, or other sources.
+Nodes (1): Find routes in a React SPA (best effort).
 
 ### Community 598 - "Community 598"
 Cohesion: 1.0
-Nodes (1): Extract font families used in the project.
+Nodes (1): Extract title and description from a file.
 
 ### Community 599 - "Community 599"
 Cohesion: 1.0
-Nodes (1): Find the logo file in the project.
+Nodes (1): Categorize a page based on its route and metadata.
 
 ### Community 600 - "Community 600"
 Cohesion: 1.0
-Nodes (1): Perform full codebase analysis.
+Nodes (1): Extract brand colors from CSS, Tailwind config, or other sources.
 
 ### Community 601 - "Community 601"
 Cohesion: 1.0
-Nodes (1): Render a Lucide icon using cairosvg.          Args:         icon_name: Name of t
+Nodes (1): Extract font families used in the project.
 
 ### Community 602 - "Community 602"
 Cohesion: 1.0
-Nodes (1): Convert hex color to RGB tuple.
+Nodes (1): Find the logo file in the project.
 
 ### Community 603 - "Community 603"
 Cohesion: 1.0
-Nodes (1): Convert RGB tuple to hex string.
+Nodes (1): Perform full codebase analysis.
 
 ### Community 604 - "Community 604"
 Cohesion: 1.0
-Nodes (1): Blend two colors by ratio (0.0 = color1, 1.0 = color2).
+Nodes (1): Render a Lucide icon using cairosvg.          Args:         icon_name: Name of t
 
 ### Community 605 - "Community 605"
 Cohesion: 1.0
-Nodes (1): Adjust color brightness (factor > 1 = lighter, < 1 = darker).
+Nodes (1): Convert hex color to RGB tuple.
 
 ### Community 606 - "Community 606"
 Cohesion: 1.0
-Nodes (1): Create an anti-aliased rounded rectangle mask.          Args:         size: Imag
+Nodes (1): Convert RGB tuple to hex string.
 
 ### Community 607 - "Community 607"
 Cohesion: 1.0
-Nodes (1): Create a smooth gradient image.          Args:         size: Image size in pixel
+Nodes (1): Blend two colors by ratio (0.0 = color1, 1.0 = color2).
 
 ### Community 608 - "Community 608"
 Cohesion: 1.0
-Nodes (1): Add subtle noise/grain texture to an image.          Args:         img: Source i
+Nodes (1): Adjust color brightness (factor > 1 = lighter, < 1 = darker).
 
 ### Community 609 - "Community 609"
 Cohesion: 1.0
-Nodes (1): Apply drop shadow effect to the image.          Args:         img: Source image
+Nodes (1): Create an anti-aliased rounded rectangle mask.          Args:         size: Imag
 
 ### Community 610 - "Community 610"
 Cohesion: 1.0
-Nodes (1): Apply top highlight gradient effect.          Args:         img: Source image
+Nodes (1): Create a smooth gradient image.          Args:         size: Image size in pixel
 
 ### Community 611 - "Community 611"
 Cohesion: 1.0
-Nodes (1): Apply inner glow/ambient occlusion effect.          Args:         img: Source im
+Nodes (1): Add subtle noise/grain texture to an image.          Args:         img: Source i
 
 ### Community 612 - "Community 612"
 Cohesion: 1.0
-Nodes (1): Get a system font for text rendering.          Args:         size: Font size in
+Nodes (1): Apply drop shadow effect to the image.          Args:         img: Source image
 
 ### Community 613 - "Community 613"
 Cohesion: 1.0
-Nodes (1): Render a letter/monogram on the favicon.          Args:         img: Background
+Nodes (1): Apply top highlight gradient effect.          Args:         img: Source image
 
 ### Community 614 - "Community 614"
 Cohesion: 1.0
-Nodes (1): Generate a professional-quality favicon.          Args:         size: Output siz
+Nodes (1): Apply inner glow/ambient occlusion effect.          Args:         img: Source im
 
 ### Community 615 - "Community 615"
 Cohesion: 1.0
-Nodes (1): Generate a complete favicon suite with all standard sizes.          Args:
+Nodes (1): Get a system font for text rendering.          Args:         size: Font size in
 
 ### Community 616 - "Community 616"
 Cohesion: 1.0
-Nodes (1): Generate a complete favicon suite using a Lucide icon.          Args:         ou
+Nodes (1): Render a letter/monogram on the favicon.          Args:         img: Background
 
 ### Community 617 - "Community 617"
 Cohesion: 1.0
-Nodes (1): Create an SVG favicon file using Lucide icon paths.          Args:         filep
+Nodes (1): Generate a professional-quality favicon.          Args:         size: Output siz
 
 ### Community 618 - "Community 618"
 Cohesion: 1.0
-Nodes (1): Create an ICO file from multiple PNG images.          Args:         filepath: Ou
+Nodes (1): Generate a complete favicon suite with all standard sizes.          Args:
 
 ### Community 619 - "Community 619"
 Cohesion: 1.0
-Nodes (1): Create an SVG favicon file.          Args:         filepath: Output SVG file pat
+Nodes (1): Generate a complete favicon suite using a Lucide icon.          Args:         ou
 
 ### Community 620 - "Community 620"
 Cohesion: 1.0
-Nodes (1): Command-line interface for favicon generation.
+Nodes (1): Create an SVG favicon file using Lucide icon paths.          Args:         filep
 
 ### Community 621 - "Community 621"
 Cohesion: 1.0
-Nodes (1): Run complete SEO analysis.
+Nodes (1): Create an ICO file from multiple PNG images.          Args:         filepath: Ou
 
 ### Community 622 - "Community 622"
 Cohesion: 1.0
-Nodes (1): Detect the web framework being used.
+Nodes (1): Create an SVG favicon file.          Args:         filepath: Output SVG file pat
 
 ### Community 623 - "Community 623"
 Cohesion: 1.0
-Nodes (1): Find all page files based on framework.
+Nodes (1): Command-line interface for favicon generation.
 
 ### Community 624 - "Community 624"
 Cohesion: 1.0
-Nodes (1): Filter out non-page files.
+Nodes (1): Run complete SEO analysis.
 
 ### Community 625 - "Community 625"
 Cohesion: 1.0
-Nodes (1): Categorize page type based on path and content.
+Nodes (1): Detect the web framework being used.
 
 ### Community 626 - "Community 626"
 Cohesion: 1.0
-Nodes (1): Check for robots.txt file.
+Nodes (1): Find all page files based on framework.
 
 ### Community 627 - "Community 627"
 Cohesion: 1.0
-Nodes (1): Check for sitemap configuration.
+Nodes (1): Filter out non-page files.
 
 ### Community 628 - "Community 628"
 Cohesion: 1.0
-Nodes (1): Analyze meta tag implementation across pages.
+Nodes (1): Categorize page type based on path and content.
 
 ### Community 629 - "Community 629"
 Cohesion: 1.0
-Nodes (1): Check if a meta tag type exists in content.
+Nodes (1): Check for robots.txt file.
 
 ### Community 630 - "Community 630"
 Cohesion: 1.0
-Nodes (1): Check for structured data implementation.
+Nodes (1): Check for sitemap configuration.
 
 ### Community 631 - "Community 631"
 Cohesion: 1.0
-Nodes (1): Generate final analysis report.
+Nodes (1): Analyze meta tag implementation across pages.
 
 ### Community 632 - "Community 632"
 Cohesion: 1.0
-Nodes (1): Print formatted analysis report.
+Nodes (1): Check if a meta tag type exists in content.
 
 ### Community 633 - "Community 633"
 Cohesion: 1.0
-Nodes (1): Generate prioritized recommendations.
+Nodes (1): Check for structured data implementation.
 
 ### Community 634 - "Community 634"
 Cohesion: 1.0
-Nodes (1): Generate sitemap XML content.
+Nodes (1): Generate final analysis report.
 
 ### Community 635 - "Community 635"
 Cohesion: 1.0
-Nodes (1): Detect the web framework being used.
+Nodes (1): Print formatted analysis report.
 
 ### Community 636 - "Community 636"
 Cohesion: 1.0
-Nodes (1): Discover all routes based on framework.
+Nodes (1): Generate prioritized recommendations.
 
 ### Community 637 - "Community 637"
 Cohesion: 1.0
-Nodes (1): Discover routes from Next.js app or pages directory.
+Nodes (1): Generate sitemap XML content.
 
 ### Community 638 - "Community 638"
 Cohesion: 1.0
-Nodes (1): Convert Next.js App Router path to route.
+Nodes (1): Detect the web framework being used.
 
 ### Community 639 - "Community 639"
 Cohesion: 1.0
-Nodes (1): Convert Next.js Pages Router path to route.
+Nodes (1): Discover all routes based on framework.
 
 ### Community 640 - "Community 640"
 Cohesion: 1.0
-Nodes (1): Discover routes from Astro pages directory.
+Nodes (1): Discover routes from Next.js app or pages directory.
 
 ### Community 641 - "Community 641"
 Cohesion: 1.0
-Nodes (1): Convert Astro path to route.
+Nodes (1): Convert Next.js App Router path to route.
 
 ### Community 642 - "Community 642"
 Cohesion: 1.0
-Nodes (1): Discover routes from Gatsby pages directory.
+Nodes (1): Convert Next.js Pages Router path to route.
 
 ### Community 643 - "Community 643"
 Cohesion: 1.0
-Nodes (1): Discover routes from static HTML files.
+Nodes (1): Discover routes from Astro pages directory.
 
 ### Community 644 - "Community 644"
 Cohesion: 1.0
-Nodes (1): Create a route entry with metadata.
+Nodes (1): Convert Astro path to route.
 
 ### Community 645 - "Community 645"
 Cohesion: 1.0
-Nodes (1): Build the sitemap XML.
+Nodes (1): Discover routes from Gatsby pages directory.
 
 ### Community 646 - "Community 646"
 Cohesion: 1.0
-Nodes (1): base.update_updated_at() Utility Trigger
+Nodes (1): Discover routes from static HTML files.
 
 ### Community 647 - "Community 647"
 Cohesion: 1.0
-Nodes (1): Resend Webhooks Implementation Plan
+Nodes (1): Create a route entry with metadata.
 
 ### Community 648 - "Community 648"
 Cohesion: 1.0
-Nodes (1): Path-id authz vs active-org authz
+Nodes (1): Build the sitemap XML.
 
 ### Community 649 - "Community 649"
 Cohesion: 1.0
-Nodes (1): Accept-invite auth-first (invitation.id)
+Nodes (1): base.update_updated_at() Utility Trigger
 
 ### Community 650 - "Community 650"
 Cohesion: 1.0
-Nodes (1): Job payload = only IDs
+Nodes (1): Resend Webhooks Implementation Plan
 
 ### Community 651 - "Community 651"
 Cohesion: 1.0
-Nodes (1): Crons via nitro.vercel.config.crons (Build Output API)
+Nodes (1): Path-id authz vs active-org authz
 
 ### Community 652 - "Community 652"
 Cohesion: 1.0
-Nodes (1): B2B legacy PRICING_PLANS kept (ADD-only scope)
+Nodes (1): Accept-invite auth-first (invitation.id)
 
 ### Community 653 - "Community 653"
+Cohesion: 1.0
+Nodes (1): Job payload = only IDs
+
+### Community 654 - "Community 654"
+Cohesion: 1.0
+Nodes (1): Crons via nitro.vercel.config.crons (Build Output API)
+
+### Community 655 - "Community 655"
+Cohesion: 1.0
+Nodes (1): B2B legacy PRICING_PLANS kept (ADD-only scope)
+
+### Community 656 - "Community 656"
 Cohesion: 1.0
 Nodes (1): Svix-id dedup + env-domain isolation
 
 ## Knowledge Gaps
 - **2978 isolated node(s):** `Get HTML template based on page type.`, `Simple mustache-like template rendering.`, `Generate complete HTML for a route's OG image.`, `Determine if a hex color is dark.`, `Generate OG image from HTML using Playwright.` (+2973 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 265`** (2 nodes): `manualChunks()`, `nuxt.config.ts`
+- **Thin community `Community 262`** (2 nodes): `manualChunks()`, `nuxt.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 266`** (2 nodes): `useOrganization()`, `useOrganization.ts`
+- **Thin community `Community 263`** (2 nodes): `useOrganization()`, `useOrganization.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 267`** (2 nodes): `useSiteMode.ts`, `useSiteMode()`
+- **Thin community `Community 264`** (2 nodes): `useSiteMode.ts`, `useSiteMode()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 268`** (2 nodes): `useBlog()`, `useBlog.ts`
+- **Thin community `Community 265`** (2 nodes): `useBlog()`, `useBlog.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 269`** (2 nodes): `useScrollReveal.ts`, `useScrollReveal()`
+- **Thin community `Community 266`** (2 nodes): `useScrollReveal.ts`, `useScrollReveal()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 270`** (2 nodes): `_useDashboard()`, `useDashboard.ts`
+- **Thin community `Community 267`** (2 nodes): `_useDashboard()`, `useDashboard.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 271`** (2 nodes): `useRefetching()`, `useRefetching.ts`
+- **Thin community `Community 268`** (2 nodes): `useRefetching()`, `useRefetching.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 272`** (2 nodes): `scrollToWaitlist()`, `AppHeader.vue`
+- **Thin community `Community 269`** (2 nodes): `scrollToWaitlist()`, `AppHeader.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 273`** (2 nodes): `onSelect()`, `TeamsMenu.client.vue`
+- **Thin community `Community 270`** (2 nodes): `onSelect()`, `TeamsMenu.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 274`** (2 nodes): `changeLinks()`, `dashboard.vue`
+- **Thin community `Community 271`** (2 nodes): `stripBg()`, `status.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 275`** (2 nodes): `stripBg()`, `status.vue`
+- **Thin community `Community 272`** (2 nodes): `goToPage()`, `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 276`** (2 nodes): `goToPage()`, `index.vue`
+- **Thin community `Community 273`** (2 nodes): `pad()`, `cookie.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 277`** (2 nodes): `await()`, `[id].vue`
+- **Thin community `Community 274`** (2 nodes): `client()`, `auth-client.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 278`** (2 nodes): `pad()`, `cookie.vue`
+- **Thin community `Community 275`** (2 nodes): `signed()`, `storage-bridge-contract.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 279`** (2 nodes): `client()`, `auth-client.test.ts`
+- **Thin community `Community 276`** (2 nodes): `call()`, `site-mode-middleware.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 280`** (2 nodes): `signed()`, `storage-bridge-contract.test.ts`
+- **Thin community `Community 277`** (2 nodes): `bytes()`, `magic-bytes-contract.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 281`** (2 nodes): `call()`, `site-mode-middleware.test.ts`
+- **Thin community `Community 278`** (2 nodes): `generateTotp()`, `totp.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 282`** (2 nodes): `bytes()`, `magic-bytes-contract.test.ts`
+- **Thin community `Community 279`** (2 nodes): `reset()`, `reset.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 283`** (2 nodes): `generateTotp()`, `totp.ts`
+- **Thin community `Community 280`** (2 nodes): `generateRuntimeConfig()`, `runtimeConfig.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 284`** (2 nodes): `reset()`, `reset.ts`
+- **Thin community `Community 281`** (2 nodes): `notAvailable()`, `sharp-stub.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 285`** (2 nodes): `generateRuntimeConfig()`, `runtimeConfig.ts`
+- **Thin community `Community 282`** (2 nodes): `past()`, `eventRepository.cleanup.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 286`** (2 nodes): `notAvailable()`, `sharp-stub.ts`
+- **Thin community `Community 283`** (2 nodes): `isJobName()`, `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 287`** (2 nodes): `past()`, `eventRepository.cleanup.test.ts`
+- **Thin community `Community 284`** (2 nodes): `refusal()`, `presign.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 288`** (2 nodes): `isJobName()`, `types.ts`
+- **Thin community `Community 285`** (2 nodes): `fakeEvent()`, `reconcile-unlock.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 289`** (2 nodes): `refusal()`, `presign.post.ts`
+- **Thin community `Community 286`** (2 nodes): `fakeEvent()`, `unlock.post.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 290`** (2 nodes): `fakeEvent()`, `reconcile-unlock.test.ts`
+- **Thin community `Community 287`** (2 nodes): `fakeEvent()`, `cleanup-stale-events.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 291`** (2 nodes): `fakeEvent()`, `unlock.post.test.ts`
+- **Thin community `Community 288`** (2 nodes): `expectStatus()`, `reminder.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 292`** (2 nodes): `fakeEvent()`, `cleanup-stale-events.test.ts`
+- **Thin community `Community 289`** (2 nodes): `expectStatus()`, `guest.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 293`** (2 nodes): `expectStatus()`, `reminder.service.test.ts`
+- **Thin community `Community 290`** (2 nodes): `expectStatus()`, `event.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 294`** (2 nodes): `expectStatus()`, `guest.service.test.ts`
+- **Thin community `Community 291`** (2 nodes): `makePaidCheckout()`, `eventReconcile.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 295`** (2 nodes): `expectStatus()`, `event.service.test.ts`
+- **Thin community `Community 292`** (2 nodes): `getEventTypeLabel()`, `eventTypes.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 296`** (2 nodes): `makePaidCheckout()`, `eventReconcile.service.test.ts`
+- **Thin community `Community 293`** (2 nodes): `formatCurrencyAmount()`, `currency.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 297`** (2 nodes): `getEventTypeLabel()`, `eventTypes.ts`
+- **Thin community `Community 294`** (2 nodes): `adminLimitField()`, `admin.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 298`** (2 nodes): `formatCurrencyAmount()`, `currency.ts`
+- **Thin community `Community 295`** (2 nodes): `convexConnectSources()`, `convexCsp.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 299`** (2 nodes): `adminLimitField()`, `admin.ts`
+- **Thin community `Community 296`** (2 nodes): `Icon()`, `icons.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 300`** (2 nodes): `convexConnectSources()`, `convexCsp.ts`
+- **Thin community `Community 297`** (2 nodes): `AppShell()`, `app-shell.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 301`** (2 nodes): `Icon()`, `icons.jsx`
+- **Thin community `Community 298`** (2 nodes): `BrandShowcase()`, `brand.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 302`** (2 nodes): `AppShell()`, `app-shell.jsx`
+- **Thin community `Community 299`** (2 nodes): `headersFor()`, `svix.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 303`** (2 nodes): `BrandShowcase()`, `brand.jsx`
+- **Thin community `Community 300`** (2 nodes): `dataModel.d.ts`, `schema.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 304`** (2 nodes): `dataModel.d.ts`, `schema.ts`
+- **Thin community `Community 301`** (2 nodes): `Task 1: Utility colore (contrasto + soft derivato)`, `task-1-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 305`** (2 nodes): `headersFor()`, `svix.test.ts`
+- **Thin community `Community 302`** (2 nodes): `Task 6: Service (updateEvent + payload pubblico)`, `task-6-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 306`** (2 nodes): `Task 1: Utility colore (contrasto + soft derivato)`, `task-1-brief.md`
+- **Thin community `Community 303`** (2 nodes): `Task 7: InviteRenderer — applica tema custom`, `task-7-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 307`** (2 nodes): `Task 6: Service (updateEvent + payload pubblico)`, `task-6-brief.md`
+- **Thin community `Community 304`** (2 nodes): `SDD Progress — tema invito custom`, `progress.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 308`** (2 nodes): `Task 7: InviteRenderer — applica tema custom`, `task-7-brief.md`
+- **Thin community `Community 305`** (2 nodes): `Task 10: Pagina pubblica invito`, `task-10-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 309`** (2 nodes): `SDD Progress — tema invito custom`, `progress.md`
+- **Thin community `Community 306`** (2 nodes): `Task 8: Self-hosting catalogo font (CSS + @nuxt/fonts)`, `task-8-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 310`** (2 nodes): `Task 10: Pagina pubblica invito`, `task-10-brief.md`
+- **Thin community `Community 307`** (2 nodes): `Task 9: Editor — pannello Aspetto custom (picker + ricerca font + contrasto)`, `task-9-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 311`** (2 nodes): `Task 8: Self-hosting catalogo font (CSS + @nuxt/fonts)`, `task-8-brief.md`
+- **Thin community `Community 308`** (2 nodes): `Task 2: Costanti — tipo InviteTheme + catalogo font, refactor preset`, `task-2-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 312`** (2 nodes): `Task 9: Editor — pannello Aspetto custom (picker + ricerca font + contrasto)`, `task-9-brief.md`
+- **Thin community `Community 309`** (2 nodes): `Task 3: Schema validazione`, `task-3-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 313`** (2 nodes): `Task 2: Costanti — tipo InviteTheme + catalogo font, refactor preset`, `task-2-brief.md`
+- **Thin community `Community 310`** (2 nodes): `Task 5: Schema DB + migrazione 0010 (data-preserving)`, `task-5-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 314`** (2 nodes): `Task 3: Schema validazione`, `task-3-brief.md`
+- **Thin community `Community 311`** (2 nodes): `Task 4: Tipi condivisi`, `task-4-brief.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 315`** (2 nodes): `Task 5: Schema DB + migrazione 0010 (data-preserving)`, `task-5-brief.md`
+- **Thin community `Community 312`** (2 nodes): `CeremlyTier (free/celebration/atelier)`, `Modello pricing Ceremly + checkout per-evento (Plan)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 316`** (2 nodes): `Task 4: Tipi condivisi`, `task-4-brief.md`
+- **Thin community `Community 313`** (2 nodes): `Multi-tenant resource recipe (clonable pattern)`, `projects example domain entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 317`** (2 nodes): `CeremlyTier (free/celebration/atelier)`, `Modello pricing Ceremly + checkout per-evento (Plan)`
+- **Thin community `Community 314`** (1 nodes): `content.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 318`** (2 nodes): `Multi-tenant resource recipe (clonable pattern)`, `projects example domain entity`
+- **Thin community `Community 315`** (1 nodes): `sentry.server.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 319`** (1 nodes): `content.config.ts`
+- **Thin community `Community 316`** (1 nodes): `sentry.client.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 320`** (1 nodes): `sentry.server.config.ts`
+- **Thin community `Community 317`** (1 nodes): `vitest.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 321`** (1 nodes): `sentry.client.config.ts`
+- **Thin community `Community 318`** (1 nodes): `eslint.config.mjs`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 322`** (1 nodes): `vitest.config.ts`
+- **Thin community `Community 319`** (1 nodes): `app.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 323`** (1 nodes): `eslint.config.mjs`
+- **Thin community `Community 320`** (1 nodes): `app.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 324`** (1 nodes): `app.vue`
+- **Thin community `Community 321`** (1 nodes): `error.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 325`** (1 nodes): `app.config.ts`
+- **Thin community `Community 322`** (1 nodes): `auth.global.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 326`** (1 nodes): `error.vue`
+- **Thin community `Community 323`** (1 nodes): `admin.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 327`** (1 nodes): `auth.global.ts`
+- **Thin community `Community 324`** (1 nodes): `0.site-mode.global.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 328`** (1 nodes): `0.site-mode.global.ts`
+- **Thin community `Community 325`** (1 nodes): `index.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 329`** (1 nodes): `index.d.ts`
+- **Thin community `Community 326`** (1 nodes): `customFetch.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 330`** (1 nodes): `customFetch.ts`
+- **Thin community `Community 327`** (1 nodes): `auth.client.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 331`** (1 nodes): `auth.client.ts`
+- **Thin community `Community 328`** (1 nodes): `i18n-geo.client.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 332`** (1 nodes): `i18n-geo.client.ts`
+- **Thin community `Community 329`** (1 nodes): `feedbackStore.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 333`** (1 nodes): `feedbackStore.ts`
+- **Thin community `Community 330`** (1 nodes): `profileStore.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 334`** (1 nodes): `profileStore.ts`
+- **Thin community `Community 331`** (1 nodes): `userStore.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 335`** (1 nodes): `userStore.ts`
+- **Thin community `Community 332`** (1 nodes): `organizationStore.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 336`** (1 nodes): `organizationStore.ts`
+- **Thin community `Community 333`** (1 nodes): `AppTableSkeleton.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 337`** (1 nodes): `AppTableSkeleton.vue`
+- **Thin community `Community 334`** (1 nodes): `MaintenanceHeader.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 338`** (1 nodes): `MaintenanceHeader.vue`
+- **Thin community `Community 335`** (1 nodes): `PromotionalVideo.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 339`** (1 nodes): `PromotionalVideo.vue`
+- **Thin community `Community 336`** (1 nodes): `Hero.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 340`** (1 nodes): `Hero.vue`
+- **Thin community `Community 337`** (1 nodes): `NewsletterCTA.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 341`** (1 nodes): `NewsletterCTA.vue`
+- **Thin community `Community 338`** (1 nodes): `AppLogo.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 342`** (1 nodes): `AppLogo.vue`
+- **Thin community `Community 339`** (1 nodes): `StarsBg.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 343`** (1 nodes): `StarsBg.vue`
+- **Thin community `Community 340`** (1 nodes): `Why.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 344`** (1 nodes): `Why.vue`
+- **Thin community `Community 341`** (1 nodes): `HowItWorks.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 345`** (1 nodes): `HowItWorks.vue`
+- **Thin community `Community 342`** (1 nodes): `ImagePlaceholder.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 346`** (1 nodes): `ImagePlaceholder.vue`
+- **Thin community `Community 343`** (1 nodes): `Contact.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 347`** (1 nodes): `Contact.vue`
+- **Thin community `Community 344`** (1 nodes): `HeroBackground.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 348`** (1 nodes): `HeroBackground.vue`
+- **Thin community `Community 345`** (1 nodes): `Trust.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 349`** (1 nodes): `Trust.vue`
+- **Thin community `Community 346`** (1 nodes): `AppFooter.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 350`** (1 nodes): `AppFooter.vue`
+- **Thin community `Community 347`** (1 nodes): `WaitingListCTA.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 351`** (1 nodes): `WaitingListCTA.vue`
+- **Thin community `Community 348`** (1 nodes): `ForWho.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 352`** (1 nodes): `ForWho.vue`
+- **Thin community `Community 349`** (1 nodes): `Faq.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 353`** (1 nodes): `Faq.vue`
+- **Thin community `Community 350`** (1 nodes): `TwoFactorVerifyModal.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 354`** (1 nodes): `TwoFactorVerifyModal.vue`
+- **Thin community `Community 351`** (1 nodes): `UserMenu.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 355`** (1 nodes): `UserMenu.client.vue`
+- **Thin community `Community 352`** (1 nodes): `DeleteModal.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 356`** (1 nodes): `DeleteModal.client.vue`
+- **Thin community `Community 353`** (1 nodes): `AddModal.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 357`** (1 nodes): `AddModal.client.vue`
+- **Thin community `Community 354`** (1 nodes): `MembersList.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 358`** (1 nodes): `MembersList.client.vue`
+- **Thin community `Community 355`** (1 nodes): `HomeSales.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 359`** (1 nodes): `HomeSales.client.vue`
+- **Thin community `Community 356`** (1 nodes): `HomeTopBar.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 360`** (1 nodes): `HomeTopBar.client.vue`
+- **Thin community `Community 357`** (1 nodes): `HomePeriodSelect.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 361`** (1 nodes): `HomePeriodSelect.client.vue`
+- **Thin community `Community 358`** (1 nodes): `HomeStats.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 362`** (1 nodes): `HomeStats.client.vue`
+- **Thin community `Community 359`** (1 nodes): `HomeChart.server.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 363`** (1 nodes): `HomeChart.server.vue`
+- **Thin community `Community 360`** (1 nodes): `HomeDateRangePicker.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 364`** (1 nodes): `HomeDateRangePicker.client.vue`
+- **Thin community `Community 361`** (1 nodes): `HomeStatCards.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 365`** (1 nodes): `HomeStatCards.client.vue`
+- **Thin community `Community 362`** (1 nodes): `HomeWelcome.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 366`** (1 nodes): `HomeWelcome.client.vue`
+- **Thin community `Community 363`** (1 nodes): `HomeTopBarActions.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 367`** (1 nodes): `HomeTopBarActions.client.vue`
+- **Thin community `Community 364`** (1 nodes): `InboxMail.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 368`** (1 nodes): `InboxMail.client.vue`
+- **Thin community `Community 365`** (1 nodes): `InboxList.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 369`** (1 nodes): `InboxList.client.vue`
+- **Thin community `Community 366`** (1 nodes): `FeedbackCard.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 370`** (1 nodes): `FeedbackCard.client.vue`
+- **Thin community `Community 367`** (1 nodes): `FeedbackList.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 371`** (1 nodes): `FeedbackList.client.vue`
+- **Thin community `Community 368`** (1 nodes): `FeedbackFilters.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 372`** (1 nodes): `FeedbackFilters.client.vue`
+- **Thin community `Community 369`** (1 nodes): `FeedbackForm.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 373`** (1 nodes): `FeedbackForm.client.vue`
+- **Thin community `Community 370`** (1 nodes): `DeleteModal.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 374`** (1 nodes): `DeleteModal.client.vue`
+- **Thin community `Community 371`** (1 nodes): `AddOrgModal.client.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 375`** (1 nodes): `AddOrgModal.client.vue`
+- **Thin community `Community 372`** (1 nodes): `EventDetail.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 376`** (1 nodes): `BlogSidebar.vue`
+- **Thin community `Community 373`** (1 nodes): `BlogSidebar.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 377`** (1 nodes): `BlogNewsletter.vue`
+- **Thin community `Community 374`** (1 nodes): `BlogNewsletter.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 378`** (1 nodes): `BlogTagFilter.vue`
+- **Thin community `Community 375`** (1 nodes): `BlogTagFilter.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 379`** (1 nodes): `BlogArticleCard.vue`
+- **Thin community `Community 376`** (1 nodes): `BlogArticleCard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 380`** (1 nodes): `BlogFeaturedCard.vue`
+- **Thin community `Community 377`** (1 nodes): `BlogFeaturedCard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 381`** (1 nodes): `BackupCodesDisplay.vue`
+- **Thin community `Community 378`** (1 nodes): `BackupCodesDisplay.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 382`** (1 nodes): `TwoFactorQRCode.vue`
+- **Thin community `Community 379`** (1 nodes): `TwoFactorQRCode.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 383`** (1 nodes): `DataExportHistory.vue`
+- **Thin community `Community 380`** (1 nodes): `DataExportHistory.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 384`** (1 nodes): `CerCheckbox.vue`
+- **Thin community `Community 381`** (1 nodes): `CerCheckbox.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 385`** (1 nodes): `KpiCard.vue`
+- **Thin community `Community 382`** (1 nodes): `KpiCard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 386`** (1 nodes): `CerEventContextSync.vue`
+- **Thin community `Community 383`** (1 nodes): `CerEventContextSync.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 387`** (1 nodes): `CerSiteFooter.vue`
+- **Thin community `Community 384`** (1 nodes): `CerSiteFooter.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 388`** (1 nodes): `CerIcon.vue`
+- **Thin community `Community 385`** (1 nodes): `CerIcon.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 389`** (1 nodes): `CerSiteNav.vue`
+- **Thin community `Community 386`** (1 nodes): `CerSiteNav.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 390`** (1 nodes): `StatusPill.vue`
+- **Thin community `Community 387`** (1 nodes): `StatusPill.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 391`** (1 nodes): `CerMiniInvite.vue`
+- **Thin community `Community 388`** (1 nodes): `CerMiniInvite.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 392`** (1 nodes): `CerToggle.vue`
+- **Thin community `Community 389`** (1 nodes): `CerToggle.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 393`** (1 nodes): `AuthShell.vue`
+- **Thin community `Community 390`** (1 nodes): `AuthShell.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 394`** (1 nodes): `CerMark.vue`
+- **Thin community `Community 391`** (1 nodes): `CerMark.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 395`** (1 nodes): `CerSiteHero.vue`
+- **Thin community `Community 392`** (1 nodes): `CerSiteHero.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 396`** (1 nodes): `CerSitePricing.vue`
+- **Thin community `Community 393`** (1 nodes): `CerSitePricing.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 397`** (1 nodes): `CountdownRing.vue`
+- **Thin community `Community 394`** (1 nodes): `CountdownRing.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 398`** (1 nodes): `CerUseCase.vue`
+- **Thin community `Community 395`** (1 nodes): `CerUseCase.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 399`** (1 nodes): `Stepper.vue`
+- **Thin community `Community 396`** (1 nodes): `Stepper.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 400`** (1 nodes): `EventCard.vue`
+- **Thin community `Community 397`** (1 nodes): `EventCard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 401`** (1 nodes): `CerFaqGrid.vue`
+- **Thin community `Community 398`** (1 nodes): `CerFaqGrid.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 402`** (1 nodes): `CerLangSwitch.vue`
+- **Thin community `Community 399`** (1 nodes): `CerLangSwitch.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 403`** (1 nodes): `CerSiteH2.vue`
+- **Thin community `Community 400`** (1 nodes): `CerSiteH2.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 404`** (1 nodes): `CerSiteCTA.vue`
+- **Thin community `Community 401`** (1 nodes): `CerSiteCTA.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 405`** (1 nodes): `PageHeader.vue`
+- **Thin community `Community 402`** (1 nodes): `PageHeader.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 406`** (1 nodes): `auth.vue`
+- **Thin community `Community 403`** (1 nodes): `auth.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 407`** (1 nodes): `maintenance.vue`
+- **Thin community `Community 404`** (1 nodes): `maintenance.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 408`** (1 nodes): `dashboard.vue`
+- **Thin community `Community 405`** (1 nodes): `dashboard.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 409`** (1 nodes): `ceremly.vue`
+- **Thin community `Community 406`** (1 nodes): `ceremly.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 410`** (1 nodes): `public-site.vue`
+- **Thin community `Community 407`** (1 nodes): `public-site.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 411`** (1 nodes): `landing.vue`
+- **Thin community `Community 408`** (1 nodes): `landing.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 412`** (1 nodes): `default.vue`
+- **Thin community `Community 409`** (1 nodes): `default.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 413`** (1 nodes): `index.vue`
+- **Thin community `Community 410`** (1 nodes): `admin.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 414`** (1 nodes): `templates.vue`
+- **Thin community `Community 411`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 415`** (1 nodes): `pricing.vue`
+- **Thin community `Community 412`** (1 nodes): `templates.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 416`** (1 nodes): `maintenance.vue`
+- **Thin community `Community 413`** (1 nodes): `pricing.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 417`** (1 nodes): `login.vue`
+- **Thin community `Community 414`** (1 nodes): `maintenance.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 418`** (1 nodes): `features.vue`
+- **Thin community `Community 415`** (1 nodes): `login.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 419`** (1 nodes): `baptisms.vue`
+- **Thin community `Community 416`** (1 nodes): `features.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 420`** (1 nodes): `contact.vue`
+- **Thin community `Community 417`** (1 nodes): `baptisms.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 421`** (1 nodes): `examples.vue`
+- **Thin community `Community 418`** (1 nodes): `contact.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 422`** (1 nodes): `birthdays.vue`
+- **Thin community `Community 419`** (1 nodes): `examples.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 423`** (1 nodes): `rsvp-guide.vue`
+- **Thin community `Community 420`** (1 nodes): `birthdays.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 424`** (1 nodes): `help-center.vue`
+- **Thin community `Community 421`** (1 nodes): `rsvp-guide.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 425`** (1 nodes): `logout.vue`
+- **Thin community `Community 422`** (1 nodes): `help-center.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 426`** (1 nodes): `weddings.vue`
+- **Thin community `Community 423`** (1 nodes): `logout.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 427`** (1 nodes): `wedding-planner.vue`
+- **Thin community `Community 424`** (1 nodes): `weddings.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 428`** (1 nodes): `how-it-works.vue`
+- **Thin community `Community 425`** (1 nodes): `wedding-planner.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 429`** (1 nodes): `brand.vue`
+- **Thin community `Community 426`** (1 nodes): `how-it-works.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 430`** (1 nodes): `changelog.vue`
+- **Thin community `Community 427`** (1 nodes): `brand.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 431`** (1 nodes): `graduations.vue`
+- **Thin community `Community 428`** (1 nodes): `changelog.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 432`** (1 nodes): `api.vue`
+- **Thin community `Community 429`** (1 nodes): `graduations.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 433`** (1 nodes): `about.vue`
+- **Thin community `Community 430`** (1 nodes): `api.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 434`** (1 nodes): `callback.vue`
+- **Thin community `Community 431`** (1 nodes): `about.vue`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 432`** (1 nodes): `callback.vue`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 433`** (1 nodes): `index.vue`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 434`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 435`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 436`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 437`** (1 nodes): `members.vue`
+- **Thin community `Community 437`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 438`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 439`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 440`** (1 nodes): `index.vue`
+- **Thin community `Community 440`** (1 nodes): `members.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 441`** (1 nodes): `members.vue`
+- **Thin community `Community 441`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 442`** (1 nodes): `editor.vue`
+- **Thin community `Community 442`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 443`** (1 nodes): `dpa.vue`
+- **Thin community `Community 443`** (1 nodes): `index.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 444`** (1 nodes): `privacy.vue`
+- **Thin community `Community 444`** (1 nodes): `members.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 445`** (1 nodes): `subprocessors.vue`
+- **Thin community `Community 445`** (1 nodes): `editor.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 446`** (1 nodes): `tos.vue`
+- **Thin community `Community 446`** (1 nodes): `dpa.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 447`** (1 nodes): `setup.ts`
+- **Thin community `Community 447`** (1 nodes): `privacy.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 448`** (1 nodes): `g02-live-ssr.test.ts`
+- **Thin community `Community 448`** (1 nodes): `subprocessors.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 449`** (1 nodes): `cloudflare-config.test.ts`
+- **Thin community `Community 449`** (1 nodes): `tos.vue`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 450`** (1 nodes): `version-contract.test.ts`
+- **Thin community `Community 450`** (1 nodes): `setup.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 451`** (1 nodes): `convex-vue-spike.test.ts`
+- **Thin community `Community 451`** (1 nodes): `g02-live-ssr.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 452`** (1 nodes): `public-forms-contract.test.ts`
+- **Thin community `Community 452`** (1 nodes): `cloudflare-config.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 453`** (1 nodes): `0.i18n-geo.ts`
+- **Thin community `Community 453`** (1 nodes): `version-contract.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 454`** (1 nodes): `1.auth.ts`
+- **Thin community `Community 454`** (1 nodes): `convex-vue-spike.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 455`** (1 nodes): `4.block-bots.ts`
+- **Thin community `Community 455`** (1 nodes): `public-forms-contract.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 456`** (1 nodes): `2.organization.ts`
+- **Thin community `Community 456`** (1 nodes): `0.i18n-geo.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 457`** (1 nodes): `0.site-mode.ts`
+- **Thin community `Community 457`** (1 nodes): `1.auth.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 458`** (1 nodes): `0.common.ts`
+- **Thin community `Community 458`** (1 nodes): `4.block-bots.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 459`** (1 nodes): `drizzle.config.ts`
+- **Thin community `Community 459`** (1 nodes): `2.organization.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 460`** (1 nodes): `projects.ts`
+- **Thin community `Community 460`** (1 nodes): `0.site-mode.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 461`** (1 nodes): `file.ts`
+- **Thin community `Community 461`** (1 nodes): `0.common.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 462`** (1 nodes): `guestActivities.ts`
+- **Thin community `Community 462`** (1 nodes): `drizzle.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 463`** (1 nodes): `emailEvents.ts`
+- **Thin community `Community 463`** (1 nodes): `projects.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 464`** (1 nodes): `auditLog.ts`
+- **Thin community `Community 464`** (1 nodes): `file.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 465`** (1 nodes): `emailSuppressions.ts`
+- **Thin community `Community 465`** (1 nodes): `guestActivities.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 466`** (1 nodes): `waitingList.ts`
+- **Thin community `Community 466`** (1 nodes): `emailEvents.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 467`** (1 nodes): `events.ts`
+- **Thin community `Community 467`** (1 nodes): `auditLog.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 468`** (1 nodes): `index.ts`
+- **Thin community `Community 468`** (1 nodes): `emailSuppressions.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 469`** (1 nodes): `contactMessage.ts`
+- **Thin community `Community 469`** (1 nodes): `waitingList.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 470`** (1 nodes): `dataExport.ts`
+- **Thin community `Community 470`** (1 nodes): `events.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 471`** (1 nodes): `eventReminders.ts`
+- **Thin community `Community 471`** (1 nodes): `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 472`** (1 nodes): `auth.ts`
+- **Thin community `Community 472`** (1 nodes): `contactMessage.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 473`** (1 nodes): `guests.ts`
+- **Thin community `Community 473`** (1 nodes): `dataExport.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 474`** (1 nodes): `rsvpResponses.ts`
+- **Thin community `Community 474`** (1 nodes): `eventReminders.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 475`** (1 nodes): `images.ts`
+- **Thin community `Community 475`** (1 nodes): `auth.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 476`** (1 nodes): `cloudflare.d.ts`
+- **Thin community `Community 476`** (1 nodes): `guests.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 477`** (1 nodes): `context.d.ts`
+- **Thin community `Community 477`** (1 nodes): `rsvpResponses.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 478`** (1 nodes): `h3.ts`
+- **Thin community `Community 478`** (1 nodes): `images.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 479`** (1 nodes): `0.validate-env.ts`
+- **Thin community `Community 479`** (1 nodes): `cloudflare.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 480`** (1 nodes): `email.sender.test.ts`
+- **Thin community `Community 480`** (1 nodes): `context.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 481`** (1 nodes): `creem.getPlanFromProductId.test.ts`
+- **Thin community `Community 481`** (1 nodes): `h3.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 482`** (1 nodes): `email.suppression.test.ts`
+- **Thin community `Community 482`** (1 nodes): `0.validate-env.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 483`** (1 nodes): `dataExport.ts`
+- **Thin community `Community 483`** (1 nodes): `email.sender.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 484`** (1 nodes): `types.test.ts`
+- **Thin community `Community 484`** (1 nodes): `creem.getPlanFromProductId.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 485`** (1 nodes): `eventRepository.relock.test.ts`
+- **Thin community `Community 485`** (1 nodes): `email.suppression.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 486`** (1 nodes): `emailSuppression.repository.test.ts`
+- **Thin community `Community 486`** (1 nodes): `dataExport.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 487`** (1 nodes): `eventRepository.unlock.test.ts`
+- **Thin community `Community 487`** (1 nodes): `types.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 488`** (1 nodes): `contact.post.ts`
+- **Thin community `Community 488`** (1 nodes): `eventRepository.relock.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 489`** (1 nodes): `[id].delete.ts`
+- **Thin community `Community 489`** (1 nodes): `emailSuppression.repository.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 490`** (1 nodes): `index.get.ts`
+- **Thin community `Community 490`** (1 nodes): `eventRepository.unlock.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 491`** (1 nodes): `index.post.ts`
+- **Thin community `Community 491`** (1 nodes): `contact.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 492`** (1 nodes): `[id].get.ts`
+- **Thin community `Community 492`** (1 nodes): `[id].delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 493`** (1 nodes): `[id].put.ts`
+- **Thin community `Community 493`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 494`** (1 nodes): `index.get.ts`
+- **Thin community `Community 494`** (1 nodes): `index.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 495`** (1 nodes): `upload.post.ts`
+- **Thin community `Community 495`** (1 nodes): `[id].get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 496`** (1 nodes): `[id].delete.ts`
+- **Thin community `Community 496`** (1 nodes): `[id].put.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 497`** (1 nodes): `presign.post.ts`
+- **Thin community `Community 497`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 498`** (1 nodes): `confirm.post.ts`
+- **Thin community `Community 498`** (1 nodes): `upload.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 499`** (1 nodes): `url.get.ts`
+- **Thin community `Community 499`** (1 nodes): `[id].delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 500`** (1 nodes): `[...all].ts`
+- **Thin community `Community 500`** (1 nodes): `presign.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 501`** (1 nodes): `[id].delete.ts`
+- **Thin community `Community 501`** (1 nodes): `confirm.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 502`** (1 nodes): `index.get.ts`
+- **Thin community `Community 502`** (1 nodes): `url.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 503`** (1 nodes): `index.post.ts`
+- **Thin community `Community 503`** (1 nodes): `[...all].ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 504`** (1 nodes): `[id].get.ts`
+- **Thin community `Community 504`** (1 nodes): `[id].delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 505`** (1 nodes): `[id].put.ts`
+- **Thin community `Community 505`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 506`** (1 nodes): `site-mode.delete.ts`
+- **Thin community `Community 506`** (1 nodes): `index.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 507`** (1 nodes): `site-mode.get.ts`
+- **Thin community `Community 507`** (1 nodes): `[id].get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 508`** (1 nodes): `cleanup-files.post.ts`
+- **Thin community `Community 508`** (1 nodes): `[id].put.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 509`** (1 nodes): `site-mode.post.ts`
+- **Thin community `Community 509`** (1 nodes): `site-mode.delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 510`** (1 nodes): `index.get.ts`
+- **Thin community `Community 510`** (1 nodes): `site-mode.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 511`** (1 nodes): `index.get.ts`
+- **Thin community `Community 511`** (1 nodes): `cleanup-files.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 512`** (1 nodes): `[id].patch.ts`
+- **Thin community `Community 512`** (1 nodes): `site-mode.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 513`** (1 nodes): `export.get.ts`
+- **Thin community `Community 513`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 514`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 515`** (1 nodes): `[id].get.ts`
+- **Thin community `Community 515`** (1 nodes): `[id].patch.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 516`** (1 nodes): `[id].patch.ts`
+- **Thin community `Community 516`** (1 nodes): `export.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 517`** (1 nodes): `audit-logs.get.ts`
+- **Thin community `Community 517`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 518`** (1 nodes): `index.get.ts`
+- **Thin community `Community 518`** (1 nodes): `[id].get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 519`** (1 nodes): `profile.patch.ts`
+- **Thin community `Community 519`** (1 nodes): `[id].patch.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 520`** (1 nodes): `account.delete.ts`
+- **Thin community `Community 520`** (1 nodes): `audit-logs.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 521`** (1 nodes): `profile.get.ts`
+- **Thin community `Community 521`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 522`** (1 nodes): `request.post.ts`
+- **Thin community `Community 522`** (1 nodes): `profile.patch.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 523`** (1 nodes): `status.get.ts`
+- **Thin community `Community 523`** (1 nodes): `account.delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 524`** (1 nodes): `history.get.ts`
+- **Thin community `Community 524`** (1 nodes): `profile.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 525`** (1 nodes): `preview.get.ts`
+- **Thin community `Community 525`** (1 nodes): `request.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 526`** (1 nodes): `subscribe.post.ts`
+- **Thin community `Community 526`** (1 nodes): `status.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 527`** (1 nodes): `[job].post.ts`
+- **Thin community `Community 527`** (1 nodes): `history.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 528`** (1 nodes): `[id].delete.ts`
+- **Thin community `Community 528`** (1 nodes): `preview.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 529`** (1 nodes): `index.get.ts`
+- **Thin community `Community 529`** (1 nodes): `subscribe.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 530`** (1 nodes): `index.post.ts`
+- **Thin community `Community 530`** (1 nodes): `[job].post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 531`** (1 nodes): `[id].get.ts`
+- **Thin community `Community 531`** (1 nodes): `[id].delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 532`** (1 nodes): `[id].put.ts`
+- **Thin community `Community 532`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 533`** (1 nodes): `send.post.ts`
+- **Thin community `Community 533`** (1 nodes): `index.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 534`** (1 nodes): `reminders.get.ts`
+- **Thin community `Community 534`** (1 nodes): `[id].get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 535`** (1 nodes): `send-test.post.ts`
+- **Thin community `Community 535`** (1 nodes): `[id].put.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 536`** (1 nodes): `reconcile-unlock.post.ts`
+- **Thin community `Community 536`** (1 nodes): `send.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 537`** (1 nodes): `mark-sent.post.ts`
+- **Thin community `Community 537`** (1 nodes): `reminders.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 538`** (1 nodes): `unlock.post.ts`
+- **Thin community `Community 538`** (1 nodes): `send-test.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 539`** (1 nodes): `reminders.put.ts`
+- **Thin community `Community 539`** (1 nodes): `reconcile-unlock.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 540`** (1 nodes): `stats.get.ts`
+- **Thin community `Community 540`** (1 nodes): `mark-sent.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 541`** (1 nodes): `export.get.ts`
+- **Thin community `Community 541`** (1 nodes): `unlock.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 542`** (1 nodes): `[guestId].delete.ts`
+- **Thin community `Community 542`** (1 nodes): `reminders.put.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 543`** (1 nodes): `[guestId].put.ts`
+- **Thin community `Community 543`** (1 nodes): `stats.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 544`** (1 nodes): `index.get.ts`
+- **Thin community `Community 544`** (1 nodes): `export.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 545`** (1 nodes): `index.post.ts`
+- **Thin community `Community 545`** (1 nodes): `[guestId].delete.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 546`** (1 nodes): `[guestId].get.ts`
+- **Thin community `Community 546`** (1 nodes): `[guestId].put.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 547`** (1 nodes): `import.post.ts`
+- **Thin community `Community 547`** (1 nodes): `index.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 548`** (1 nodes): `qr.get.ts`
+- **Thin community `Community 548`** (1 nodes): `index.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 549`** (1 nodes): `resend.post.test.ts`
+- **Thin community `Community 549`** (1 nodes): `[guestId].get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 550`** (1 nodes): `resend.post.ts`
+- **Thin community `Community 550`** (1 nodes): `import.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 551`** (1 nodes): `send-reminders.get.ts`
+- **Thin community `Community 551`** (1 nodes): `qr.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 552`** (1 nodes): `requeue-image-variants.get.ts`
+- **Thin community `Community 552`** (1 nodes): `resend.post.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 553`** (1 nodes): `cleanup-files.get.ts`
+- **Thin community `Community 553`** (1 nodes): `resend.post.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 554`** (1 nodes): `purge-deleted-accounts.get.ts`
+- **Thin community `Community 554`** (1 nodes): `send-reminders.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 555`** (1 nodes): `cleanup-stale-events.get.ts`
+- **Thin community `Community 555`** (1 nodes): `requeue-image-variants.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 556`** (1 nodes): `checkout.service.test.ts`
+- **Thin community `Community 556`** (1 nodes): `cleanup-files.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 557`** (1 nodes): `eventAccess.service.test.ts`
+- **Thin community `Community 557`** (1 nodes): `purge-deleted-accounts.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 558`** (1 nodes): `eventCleanup.service.test.ts`
+- **Thin community `Community 558`** (1 nodes): `cleanup-stale-events.get.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 559`** (1 nodes): `emailWebhook.service.test.ts`
+- **Thin community `Community 559`** (1 nodes): `checkout.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 560`** (1 nodes): `types.ts`
+- **Thin community `Community 560`** (1 nodes): `eventAccess.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 561`** (1 nodes): `ceremly.ts`
+- **Thin community `Community 561`** (1 nodes): `eventCleanup.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 562`** (1 nodes): `rsvpPresets.ts`
+- **Thin community `Community 562`** (1 nodes): `emailWebhook.service.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 563`** (1 nodes): `templates.ts`
+- **Thin community `Community 563`** (1 nodes): `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 564`** (1 nodes): `inviteColor.test.ts`
+- **Thin community `Community 564`** (1 nodes): `ceremly.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 565`** (1 nodes): `blog.ts`
+- **Thin community `Community 565`** (1 nodes): `rsvpPresets.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 566`** (1 nodes): `rsvpLogic.ts`
+- **Thin community `Community 566`** (1 nodes): `templates.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 567`** (1 nodes): `types.ts`
+- **Thin community `Community 567`** (1 nodes): `inviteColor.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 568`** (1 nodes): `project.ts`
+- **Thin community `Community 568`** (1 nodes): `blog.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 569`** (1 nodes): `contact.ts`
+- **Thin community `Community 569`** (1 nodes): `rsvpLogic.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 570`** (1 nodes): `common.ts`
+- **Thin community `Community 570`** (1 nodes): `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 571`** (1 nodes): `file.ts`
+- **Thin community `Community 571`** (1 nodes): `project.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 572`** (1 nodes): `siteMode.ts`
+- **Thin community `Community 572`** (1 nodes): `contact.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 573`** (1 nodes): `waiting-list.ts`
+- **Thin community `Community 573`** (1 nodes): `common.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 574`** (1 nodes): `ceremly.ts`
+- **Thin community `Community 574`** (1 nodes): `file.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 575`** (1 nodes): `organization.ts`
+- **Thin community `Community 575`** (1 nodes): `siteMode.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 576`** (1 nodes): `index.ts`
+- **Thin community `Community 576`** (1 nodes): `waiting-list.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 577`** (1 nodes): `inviteTheme.schema.test.ts`
+- **Thin community `Community 577`** (1 nodes): `ceremly.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 578`** (1 nodes): `auth.ts`
+- **Thin community `Community 578`** (1 nodes): `organization.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 579`** (1 nodes): `auth.config.ts`
+- **Thin community `Community 579`** (1 nodes): `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 580`** (1 nodes): `convex.config.ts`
+- **Thin community `Community 580`** (1 nodes): `inviteTheme.schema.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 581`** (1 nodes): `EventCleanupWarning.test.ts`
+- **Thin community `Community 581`** (1 nodes): `auth.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 582`** (1 nodes): `server.d.ts`
+- **Thin community `Community 582`** (1 nodes): `auth.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 583`** (1 nodes): `server.js`
+- **Thin community `Community 583`** (1 nodes): `convex.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 584`** (1 nodes): `api.js`
+- **Thin community `Community 584`** (1 nodes): `EventCleanupWarning.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 585`** (1 nodes): `Get HTML template based on page type.`
+- **Thin community `Community 585`** (1 nodes): `server.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 586`** (1 nodes): `Simple mustache-like template rendering.`
+- **Thin community `Community 586`** (1 nodes): `server.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 587`** (1 nodes): `Generate complete HTML for a route's OG image.`
+- **Thin community `Community 587`** (1 nodes): `api.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 588`** (1 nodes): `Determine if a hex color is dark.`
+- **Thin community `Community 588`** (1 nodes): `Get HTML template based on page type.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 589`** (1 nodes): `Generate OG image from HTML using Playwright.`
+- **Thin community `Community 589`** (1 nodes): `Simple mustache-like template rendering.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 590`** (1 nodes): `Generate OG images for all routes.`
+- **Thin community `Community 590`** (1 nodes): `Generate complete HTML for a route's OG image.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 591`** (1 nodes): `Detect the framework used in the project.`
+- **Thin community `Community 591`** (1 nodes): `Determine if a hex color is dark.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 592`** (1 nodes): `Find routes in a Next.js project (app router and pages router).`
+- **Thin community `Community 592`** (1 nodes): `Generate OG image from HTML using Playwright.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 593`** (1 nodes): `Find routes in an Astro project.`
+- **Thin community `Community 593`** (1 nodes): `Generate OG images for all routes.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 594`** (1 nodes): `Find routes in a React SPA (best effort).`
+- **Thin community `Community 594`** (1 nodes): `Detect the framework used in the project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 595`** (1 nodes): `Extract title and description from a file.`
+- **Thin community `Community 595`** (1 nodes): `Find routes in a Next.js project (app router and pages router).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 596`** (1 nodes): `Categorize a page based on its route and metadata.`
+- **Thin community `Community 596`** (1 nodes): `Find routes in an Astro project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 597`** (1 nodes): `Extract brand colors from CSS, Tailwind config, or other sources.`
+- **Thin community `Community 597`** (1 nodes): `Find routes in a React SPA (best effort).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 598`** (1 nodes): `Extract font families used in the project.`
+- **Thin community `Community 598`** (1 nodes): `Extract title and description from a file.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 599`** (1 nodes): `Find the logo file in the project.`
+- **Thin community `Community 599`** (1 nodes): `Categorize a page based on its route and metadata.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 600`** (1 nodes): `Perform full codebase analysis.`
+- **Thin community `Community 600`** (1 nodes): `Extract brand colors from CSS, Tailwind config, or other sources.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 601`** (1 nodes): `Render a Lucide icon using cairosvg.          Args:         icon_name: Name of t`
+- **Thin community `Community 601`** (1 nodes): `Extract font families used in the project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 602`** (1 nodes): `Convert hex color to RGB tuple.`
+- **Thin community `Community 602`** (1 nodes): `Find the logo file in the project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 603`** (1 nodes): `Convert RGB tuple to hex string.`
+- **Thin community `Community 603`** (1 nodes): `Perform full codebase analysis.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 604`** (1 nodes): `Blend two colors by ratio (0.0 = color1, 1.0 = color2).`
+- **Thin community `Community 604`** (1 nodes): `Render a Lucide icon using cairosvg.          Args:         icon_name: Name of t`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 605`** (1 nodes): `Adjust color brightness (factor > 1 = lighter, < 1 = darker).`
+- **Thin community `Community 605`** (1 nodes): `Convert hex color to RGB tuple.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 606`** (1 nodes): `Create an anti-aliased rounded rectangle mask.          Args:         size: Imag`
+- **Thin community `Community 606`** (1 nodes): `Convert RGB tuple to hex string.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 607`** (1 nodes): `Create a smooth gradient image.          Args:         size: Image size in pixel`
+- **Thin community `Community 607`** (1 nodes): `Blend two colors by ratio (0.0 = color1, 1.0 = color2).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 608`** (1 nodes): `Add subtle noise/grain texture to an image.          Args:         img: Source i`
+- **Thin community `Community 608`** (1 nodes): `Adjust color brightness (factor > 1 = lighter, < 1 = darker).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 609`** (1 nodes): `Apply drop shadow effect to the image.          Args:         img: Source image`
+- **Thin community `Community 609`** (1 nodes): `Create an anti-aliased rounded rectangle mask.          Args:         size: Imag`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 610`** (1 nodes): `Apply top highlight gradient effect.          Args:         img: Source image`
+- **Thin community `Community 610`** (1 nodes): `Create a smooth gradient image.          Args:         size: Image size in pixel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 611`** (1 nodes): `Apply inner glow/ambient occlusion effect.          Args:         img: Source im`
+- **Thin community `Community 611`** (1 nodes): `Add subtle noise/grain texture to an image.          Args:         img: Source i`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 612`** (1 nodes): `Get a system font for text rendering.          Args:         size: Font size in`
+- **Thin community `Community 612`** (1 nodes): `Apply drop shadow effect to the image.          Args:         img: Source image`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 613`** (1 nodes): `Render a letter/monogram on the favicon.          Args:         img: Background`
+- **Thin community `Community 613`** (1 nodes): `Apply top highlight gradient effect.          Args:         img: Source image`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 614`** (1 nodes): `Generate a professional-quality favicon.          Args:         size: Output siz`
+- **Thin community `Community 614`** (1 nodes): `Apply inner glow/ambient occlusion effect.          Args:         img: Source im`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 615`** (1 nodes): `Generate a complete favicon suite with all standard sizes.          Args:`
+- **Thin community `Community 615`** (1 nodes): `Get a system font for text rendering.          Args:         size: Font size in`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 616`** (1 nodes): `Generate a complete favicon suite using a Lucide icon.          Args:         ou`
+- **Thin community `Community 616`** (1 nodes): `Render a letter/monogram on the favicon.          Args:         img: Background`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 617`** (1 nodes): `Create an SVG favicon file using Lucide icon paths.          Args:         filep`
+- **Thin community `Community 617`** (1 nodes): `Generate a professional-quality favicon.          Args:         size: Output siz`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 618`** (1 nodes): `Create an ICO file from multiple PNG images.          Args:         filepath: Ou`
+- **Thin community `Community 618`** (1 nodes): `Generate a complete favicon suite with all standard sizes.          Args:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 619`** (1 nodes): `Create an SVG favicon file.          Args:         filepath: Output SVG file pat`
+- **Thin community `Community 619`** (1 nodes): `Generate a complete favicon suite using a Lucide icon.          Args:         ou`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 620`** (1 nodes): `Command-line interface for favicon generation.`
+- **Thin community `Community 620`** (1 nodes): `Create an SVG favicon file using Lucide icon paths.          Args:         filep`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 621`** (1 nodes): `Run complete SEO analysis.`
+- **Thin community `Community 621`** (1 nodes): `Create an ICO file from multiple PNG images.          Args:         filepath: Ou`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 622`** (1 nodes): `Detect the web framework being used.`
+- **Thin community `Community 622`** (1 nodes): `Create an SVG favicon file.          Args:         filepath: Output SVG file pat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 623`** (1 nodes): `Find all page files based on framework.`
+- **Thin community `Community 623`** (1 nodes): `Command-line interface for favicon generation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 624`** (1 nodes): `Filter out non-page files.`
+- **Thin community `Community 624`** (1 nodes): `Run complete SEO analysis.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 625`** (1 nodes): `Categorize page type based on path and content.`
+- **Thin community `Community 625`** (1 nodes): `Detect the web framework being used.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 626`** (1 nodes): `Check for robots.txt file.`
+- **Thin community `Community 626`** (1 nodes): `Find all page files based on framework.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 627`** (1 nodes): `Check for sitemap configuration.`
+- **Thin community `Community 627`** (1 nodes): `Filter out non-page files.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 628`** (1 nodes): `Analyze meta tag implementation across pages.`
+- **Thin community `Community 628`** (1 nodes): `Categorize page type based on path and content.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 629`** (1 nodes): `Check if a meta tag type exists in content.`
+- **Thin community `Community 629`** (1 nodes): `Check for robots.txt file.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 630`** (1 nodes): `Check for structured data implementation.`
+- **Thin community `Community 630`** (1 nodes): `Check for sitemap configuration.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 631`** (1 nodes): `Generate final analysis report.`
+- **Thin community `Community 631`** (1 nodes): `Analyze meta tag implementation across pages.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 632`** (1 nodes): `Print formatted analysis report.`
+- **Thin community `Community 632`** (1 nodes): `Check if a meta tag type exists in content.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 633`** (1 nodes): `Generate prioritized recommendations.`
+- **Thin community `Community 633`** (1 nodes): `Check for structured data implementation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 634`** (1 nodes): `Generate sitemap XML content.`
+- **Thin community `Community 634`** (1 nodes): `Generate final analysis report.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 635`** (1 nodes): `Detect the web framework being used.`
+- **Thin community `Community 635`** (1 nodes): `Print formatted analysis report.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 636`** (1 nodes): `Discover all routes based on framework.`
+- **Thin community `Community 636`** (1 nodes): `Generate prioritized recommendations.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 637`** (1 nodes): `Discover routes from Next.js app or pages directory.`
+- **Thin community `Community 637`** (1 nodes): `Generate sitemap XML content.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 638`** (1 nodes): `Convert Next.js App Router path to route.`
+- **Thin community `Community 638`** (1 nodes): `Detect the web framework being used.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 639`** (1 nodes): `Convert Next.js Pages Router path to route.`
+- **Thin community `Community 639`** (1 nodes): `Discover all routes based on framework.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 640`** (1 nodes): `Discover routes from Astro pages directory.`
+- **Thin community `Community 640`** (1 nodes): `Discover routes from Next.js app or pages directory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 641`** (1 nodes): `Convert Astro path to route.`
+- **Thin community `Community 641`** (1 nodes): `Convert Next.js App Router path to route.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 642`** (1 nodes): `Discover routes from Gatsby pages directory.`
+- **Thin community `Community 642`** (1 nodes): `Convert Next.js Pages Router path to route.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 643`** (1 nodes): `Discover routes from static HTML files.`
+- **Thin community `Community 643`** (1 nodes): `Discover routes from Astro pages directory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 644`** (1 nodes): `Create a route entry with metadata.`
+- **Thin community `Community 644`** (1 nodes): `Convert Astro path to route.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 645`** (1 nodes): `Build the sitemap XML.`
+- **Thin community `Community 645`** (1 nodes): `Discover routes from Gatsby pages directory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 646`** (1 nodes): `base.update_updated_at() Utility Trigger`
+- **Thin community `Community 646`** (1 nodes): `Discover routes from static HTML files.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 647`** (1 nodes): `Resend Webhooks Implementation Plan`
+- **Thin community `Community 647`** (1 nodes): `Create a route entry with metadata.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 648`** (1 nodes): `Path-id authz vs active-org authz`
+- **Thin community `Community 648`** (1 nodes): `Build the sitemap XML.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 649`** (1 nodes): `Accept-invite auth-first (invitation.id)`
+- **Thin community `Community 649`** (1 nodes): `base.update_updated_at() Utility Trigger`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 650`** (1 nodes): `Job payload = only IDs`
+- **Thin community `Community 650`** (1 nodes): `Resend Webhooks Implementation Plan`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 651`** (1 nodes): `Crons via nitro.vercel.config.crons (Build Output API)`
+- **Thin community `Community 651`** (1 nodes): `Path-id authz vs active-org authz`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 652`** (1 nodes): `B2B legacy PRICING_PLANS kept (ADD-only scope)`
+- **Thin community `Community 652`** (1 nodes): `Accept-invite auth-first (invitation.id)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 653`** (1 nodes): `Svix-id dedup + env-domain isolation`
+- **Thin community `Community 653`** (1 nodes): `Job payload = only IDs`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 654`** (1 nodes): `Crons via nitro.vercel.config.crons (Build Output API)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 655`** (1 nodes): `B2B legacy PRICING_PLANS kept (ADD-only scope)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 656`** (1 nodes): `Svix-id dedup + env-domain isolation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDB()` connect `Community 0` to `Community 4`, `Community 39`, `Community 8`, `Community 16`, `Community 57`?**
+- **Why does `getDB()` connect `Community 0` to `Community 6`, `Community 40`, `Community 12`, `Community 15`, `Community 57`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `logAudit()` connect `Community 0` to `Community 8`, `Community 2`, `Community 4`?**
+- **Why does `logAudit()` connect `Community 0` to `Community 1`, `Community 12`, `Community 6`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Why does `initConvexTest()` connect `Community 13` to `Community 10`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+- **Why does `createEvent()` connect `Community 0` to `Community 8`, `Community 1`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `getDB()` (e.g. with `main()` and `main()`) actually correct?**
   _`getDB()` has 100 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 34 inferred relationships involving `logAudit()` (e.g. with `logEmailEvent()` and `sendEmail()`) actually correct?**
   _`logAudit()` has 34 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 19 inferred relationships involving `get()` (e.g. with `main()` and `legacySiteMode()`) actually correct?**
-  _`get()` has 19 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Get HTML template based on page type.`, `Simple mustache-like template rendering.`, `Generate complete HTML for a route's OG image.` to the rest of the system?**
-  _2978 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Are the 24 inferred relationships involving `t()` (e.g. with `template()` and `formatDateTime()`) actually correct?**
+  _`t()` has 24 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 21 inferred relationships involving `get()` (e.g. with `main()` and `legacySiteMode()`) actually correct?**
+  _`get()` has 21 INFERRED edges - model-reasoned connections that need verification._
