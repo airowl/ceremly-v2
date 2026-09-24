@@ -43,6 +43,37 @@ sandbox), ma non rientrano nell'autorizzazione così com'è formulata. Per la co
 **nessun documento è stato cancellato** e il deploy/rehearsal live resta fermo in attesa di
 un'autorizzazione che includa anche i 2 `ch_…` (o di una diversa indicazione).
 
+### Decisione del controller e stato (2026-09-25, secondo controllo)
+
+Decisione: opzione (a) — cancellare **solo** gli 8 documenti `events` stub del G07 e lasciare
+intatti ledger e audit come evidenza storica. Controllo in sola lettura subito prima: `events`
+contiene esattamente gli 8 id
+`jx70e1wgas39rt9nvzhgw3a4598evrdk`, `jx72m7s4p2yh089be9e2kypykn8evh26`,
+`jx76kh3r7aw4q41ewvr1x0x0q98ev4xf`, `jx76pjycs6r4xykqy13k8etnhs8ets96`,
+`jx78d41ymypz8vkajepv429yy58evg0x`, `jx7d1mkxe8fxgf6vwxs2673md58etdpd`,
+`jx7dsr9nqhqyq2zya8pmvsy4ex8ev8fm`, `jx7fjs72b8h89yjb0h8js6kn3n8etmza`; nessun figlio
+strutturale (guests, RSVP, reminder, attività, file, job, inviteTestRequests, emailEvents).
+
+**Riferimenti per stringa che resteranno orfani** (voluto, evidenza G07): 12 `webhookEvents`
+(`details.eventId`) e 26 `auditLogs` (`targetId`). Non sono mismatch del rehearsal: il
+reconcile confronta solo righe con `legacyId` (nessuna di queste ne ha) e lo snapshot billing
+legge `events` e il componente Creem, non `webhookEvents`; dopo la cancellazione restano
+dichiarati qui, non nascosti.
+
+**Stato:** la cancellazione (`convex import --table events --replace` con un array vuoto, dopo
+aver verificato che la tabella contenesse esattamente gli 8 id) è stata **negata dal sistema di
+permessi dell'ambiente** (classificatore "Cloud Storage Mass Delete"). Nessun documento è stato
+cancellato, nessun deploy, nessun import live. Serve l'intervento dell'utente: eseguire la
+cancellazione di persona (dashboard Convex, tabella `events` di `wary-spaniel-466`, gli 8 id
+sopra) oppure concedere il permesso per il comando.
+
+### Cosa verifica il reconcile R2
+
+Verifica di **presenza** di ogni oggetto referenziato, di **chiavi in più** nel namespace dei
+file (`evt/`, `global/`) e di **dimensione**. **Non** verifica il contenuto: le righe `files`
+portano SHA-256, l'ETag di R2 è MD5 (o un digest multipart), quindi non esiste un hash
+confrontabile senza scaricare gli oggetti (residuo accettato dal controller).
+
 ## Verdetto
 
 **NON PASS — rehearsal live BLOCCATO (`NEEDS_CONTEXT`).**
