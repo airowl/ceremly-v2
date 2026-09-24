@@ -21,7 +21,7 @@ import {
 } from "./lib/authorization";
 
 import { writeAudit } from "./lib/audit";
-import { limitsForOrgPlan, productIdForTier, type OrgPlan, type PaidTier } from "./lib/pricing";
+import { limitsForOrgPlan, productIdForTier, type OrgPlan, type PaidTier, type TierLimits } from "./lib/pricing";
 import { applyLimitOverride, findLimitOverride } from "./lib/limitOverrides";
 
 /**
@@ -769,7 +769,16 @@ async function relockRefundedEvent(ctx: MutationCtx, args: WebhookArgs): Promise
  */
 export interface BillingReconcileSnapshot {
     configured: Array<{ tier: PaidTier; productId: string }>;
-    organizations: Array<{ id: string; legacyId: string | null; customerId: string | null }>;
+    organizations: Array<{
+        id: string;
+        legacyId: string | null;
+        customerId: string | null;
+        /** Plan the app derives today (`planForActiveOrganization` rule). */
+        plan: OrgPlan;
+        /** Limits the domain enforces, override included (Task 15). */
+        limits: TierLimits;
+        hasLimitOverride: boolean;
+    }>;
     subscriptions: Array<{
         id: string;
         organizationId: string;
@@ -780,6 +789,8 @@ export interface BillingReconcileSnapshot {
         currentPeriodEnd: string | null;
         cancelAtPeriodEnd: boolean;
         checkoutId: string | null;
+        /** `metadata.legacyOrderId`, set by the migration import (Task 16). */
+        legacyOrderId: string | null;
     }>;
     events: Array<{
         id: string;
@@ -815,11 +826,17 @@ export const reconcileSnapshot = internalQuery({
                     components.creem.lib.listAllUserSubscriptions,
                     { entityId },
                 );
+                const current = await ctx.runQuery(components.creem.lib.getCurrentSubscription, { entityId });
+                const plan: OrgPlan = isAtelierSubscription(current) ? "atelier" : "free";
+                const override = await findLimitOverride(ctx, organization._id);
 
                 return {
                     organizationId: entityId,
                     legacyId: organization.legacyId ?? null,
                     customerId: customer?.id ?? null,
+                    plan,
+                    limits: applyLimitOverride(limitsForOrgPlan(plan), override),
+                    hasLimitOverride: override !== null && override !== undefined,
                     subscriptions: subscriptions.map((subscription) => ({
                         id: subscription.id,
                         customerId: subscription.customerId,
@@ -828,6 +845,10 @@ export const reconcileSnapshot = internalQuery({
                         currentPeriodEnd: subscription.currentPeriodEnd ?? null,
                         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
                         checkoutId: subscription.checkoutId ?? null,
+                        legacyOrderId:
+                            typeof subscription.metadata?.legacyOrderId === "string"
+                                ? subscription.metadata.legacyOrderId
+                                : null,
                     })),
                 };
             }),
@@ -838,10 +859,13 @@ export const reconcileSnapshot = internalQuery({
                 const productId = productIdForTier(tier);
                 return productId ? [{ tier, productId }] : [];
             }),
-            organizations: billing.map(({ organizationId, legacyId, customerId }) => ({
+            organizations: billing.map(({ organizationId, legacyId, customerId, plan, limits, hasLimitOverride }) => ({
                 id: organizationId,
                 legacyId,
                 customerId,
+                plan,
+                limits,
+                hasLimitOverride,
             })),
             subscriptions: billing.flatMap(({ organizationId, legacyId, subscriptions }) =>
                 subscriptions.map((subscription) => ({ ...subscription, organizationId, legacyId })),

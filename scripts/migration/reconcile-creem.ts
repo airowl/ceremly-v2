@@ -37,8 +37,13 @@ const PERIOD_TOLERANCE_MS = 1000;
 export interface LegacySubscription {
     /** Creem's subscription id; `null` while the row is still pending. */
     creemSubscriptionId: string | null;
-    /** Legacy organization the subscription belongs to. */
+    /** Legacy `referenceId`: the paying user (B2C) or an organization id. */
     referenceId: string;
+    /**
+     * Organizations the legacy granted this plan to (the paying user's owned
+     * organizations, Task 16). Absent → `[referenceId]` (Task 6 semantics).
+     */
+    organizationLegacyIds?: string[];
     productId: string;
     status: string;
     creemCustomerId: string | null;
@@ -55,9 +60,27 @@ export interface LegacyEvent {
     creemCheckoutId: string | null;
 }
 
+export interface PlanLimits {
+    maxGuestsPerEvent: number;
+    maxActiveEvents: number;
+    maxReminders: number;
+}
+
+export interface LegacyOrganizationPlan {
+    legacyId: string;
+    plan: "free" | "atelier";
+    limits: PlanLimits;
+    /** Creem customer ids of the owner's subscriptions. */
+    customerIds: string[];
+}
+
 export interface LegacyBillingState {
     subscriptions: LegacySubscription[];
     events: LegacyEvent[];
+    /** Products the legacy deployment is configured with (Task 16). */
+    products?: Array<{ tier: string; productId: string }>;
+    /** Plan, effective limits and customer of every legacy organization (Task 16). */
+    organizations?: LegacyOrganizationPlan[];
 }
 
 export interface ConvexSubscription {
@@ -69,6 +92,8 @@ export interface ConvexSubscription {
     status: string;
     currentPeriodEnd: string | null;
     cancelAtPeriodEnd: boolean;
+    /** `metadata.legacyOrderId` written by the migration import. */
+    legacyOrderId?: string | null;
 }
 
 export interface ConvexEvent {
@@ -83,7 +108,14 @@ export interface ConvexEvent {
 
 export interface ConvexBillingState {
     configured: Array<{ tier: string; productId: string }>;
-    organizations: Array<{ id: string; legacyId: string | null; customerId: string | null }>;
+    organizations: Array<{
+        id: string;
+        legacyId: string | null;
+        customerId: string | null;
+        plan?: "free" | "atelier";
+        limits?: PlanLimits;
+        hasLimitOverride?: boolean;
+    }>;
     subscriptions: ConvexSubscription[];
     events: ConvexEvent[];
 }
@@ -104,6 +136,8 @@ export interface ReconciliationReport {
         convexEvents: number;
         organizationsMapped: number;
     };
+    /** Every legacy fact compared (subjects), and the ones found in Convex. */
+    facts: { legacy: string[]; matched: string[] };
 }
 
 const instant = (value: string | null | undefined): number | null => {
@@ -132,9 +166,15 @@ export function compareBillingStates(
         if (organization.legacyId) orgByLegacyId.set(organization.legacyId, organization.id);
     }
 
+    const orgsOf = (subscription: LegacySubscription): string[] =>
+        subscription.organizationLegacyIds ?? [subscription.referenceId];
+    const legacyFacts: string[] = [];
+    const matchedFacts: string[] = [];
+
     const legacyOrgIds = new Set<string>([
-        ...legacy.subscriptions.map((subscription) => subscription.referenceId),
+        ...legacy.subscriptions.flatMap(orgsOf),
         ...legacy.events.map((event) => event.organizationLegacyId),
+        ...(legacy.organizations ?? []).map((organization) => organization.legacyId),
     ]);
 
     for (const legacyOrgId of legacyOrgIds) {
@@ -150,11 +190,38 @@ export function compareBillingStates(
     // ---------------------------------------------------------------------
     // Subscriptions: matched on Creem's subscription id.
     // ---------------------------------------------------------------------
+    // Products: the legacy configuration is the reference; a tier configured
+    // differently on Convex would sell (or recognize) the wrong product.
+    const configuredIds = new Set(convex.configured.map((entry) => entry.productId));
+    if (legacy.products) {
+        const convexByTier = new Map(convex.configured.map((entry) => [entry.tier, entry.productId]));
+        const legacyTiers = new Set(legacy.products.map((entry) => entry.tier));
+        for (const product of legacy.products) {
+            legacyFacts.push(`product:${product.tier}`);
+            if (convexByTier.get(product.tier) !== product.productId) {
+                mismatches.push({ kind: "product_config_mismatch", subject: product.tier });
+            } else {
+                matchedFacts.push(`product:${product.tier}`);
+            }
+        }
+        for (const entry of convex.configured) {
+            if (!legacyTiers.has(entry.tier)) mismatches.push({ kind: "product_config_mismatch", subject: entry.tier });
+        }
+    }
+
+    // One subscription can sit under several organizations (every org the
+    // paying user owns): group the Convex rows by id.
     const subscriptionById = new Map(convex.subscriptions.map((item) => [item.id, item]));
+    const subscriptionOrgs = new Map<string, Set<string>>();
+    for (const item of convex.subscriptions) {
+        if (!subscriptionOrgs.has(item.id)) subscriptionOrgs.set(item.id, new Set());
+        subscriptionOrgs.get(item.id)!.add(item.organizationId);
+    }
     const legacySubscriptionIds = new Set<string>();
 
     for (const legacySubscription of legacy.subscriptions) {
         const subject = legacySubscription.creemSubscriptionId ?? `pending:${legacySubscription.referenceId}`;
+        legacyFacts.push(`subscription:${subject}`);
 
         if (!legacySubscription.creemSubscriptionId) {
             // The legacy plugin writes the row before Creem returns the id; a row
@@ -178,6 +245,19 @@ export function compareBillingStates(
                 detail: { status: legacySubscription.status, productId: legacySubscription.productId },
             });
             continue;
+        }
+        matchedFacts.push(`subscription:${subject}`);
+
+        if (legacy.products && configuredIds.size > 0 && !configuredIds.has(legacySubscription.productId)) {
+            mismatches.push({ kind: "subscription_product_unconfigured", subject });
+        }
+
+        if ((legacySubscription.creemOrderId ?? null) !== (twin.legacyOrderId ?? null)) {
+            mismatches.push({
+                kind: "subscription_order_id_mismatch",
+                subject,
+                detail: { legacy: legacySubscription.creemOrderId, convex: twin.legacyOrderId ?? null },
+            });
         }
 
         if (twin.status !== legacySubscription.status) {
@@ -236,20 +316,24 @@ export function compareBillingStates(
 
         // The billing entity is what makes a charge org-scoped: a subscription
         // filed under the wrong organization is a cross-tenant leak, not a typo.
-        const expectedOrgId = orgByLegacyId.get(legacySubscription.referenceId);
-        if (expectedOrgId && twin.organizationId !== expectedOrgId) {
+        const expectedOrgIds = orgsOf(legacySubscription)
+            .map((legacyOrgId) => orgByLegacyId.get(legacyOrgId))
+            .filter((id): id is string => id !== undefined)
+            .sort();
+        const actualOrgIds = [...(subscriptionOrgs.get(twin.id) ?? [])].sort();
+        if (expectedOrgIds.length > 0 && expectedOrgIds.join(",") !== actualOrgIds.join(",")) {
             mismatches.push({
                 kind: "subscription_entity_mismatch",
                 subject,
-                detail: {
-                    legacyOrganizationId: legacySubscription.referenceId,
-                    convexOrganizationId: twin.organizationId,
-                },
+                detail: { expectedOrganizations: expectedOrgIds.length, actualOrganizations: actualOrgIds.length },
             });
         }
     }
 
+    const noted = new Set<string>();
     for (const convexSubscription of convex.subscriptions) {
+        if (noted.has(convexSubscription.id)) continue;
+        noted.add(convexSubscription.id);
         if (!legacySubscriptionIds.has(convexSubscription.id)) {
             notes.push({
                 kind: "subscription_only_in_convex",
@@ -274,6 +358,7 @@ export function compareBillingStates(
     for (const legacyEvent of legacy.events) {
         const subject = legacyEvent.legacyId;
         const twin = eventsByLegacyId.get(subject);
+        legacyFacts.push(`event:${subject}`);
 
         if (!twin) {
             // A paid legacy event with no Convex twin is the worst case: the
@@ -285,6 +370,7 @@ export function compareBillingStates(
             });
             continue;
         }
+        matchedFacts.push(`event:${subject}`);
 
         if (twin.tier !== legacyEvent.tier) {
             mismatches.push({
@@ -302,9 +388,11 @@ export function compareBillingStates(
             });
         }
 
+        // A diverging checkout id is a failure (Task 16 review): the webhook
+        // fulfillment matches an unlock on it, so a wrong one strands a payment.
         if ((twin.creemCheckoutId ?? null) !== (legacyEvent.creemCheckoutId ?? null)) {
-            notes.push({
-                kind: "event_checkout_id_differs",
+            mismatches.push({
+                kind: "event_checkout_id_mismatch",
                 subject,
                 detail: { legacy: legacyEvent.creemCheckoutId, convex: twin.creemCheckoutId },
             });
@@ -333,9 +421,48 @@ export function compareBillingStates(
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Plans, effective limits and customer per organization (Task 16).
+    // ---------------------------------------------------------------------
+    const convexOrgByLegacyId = new Map(
+        convex.organizations.filter((organization) => organization.legacyId).map((organization) => [organization.legacyId!, organization]),
+    );
+    for (const organization of legacy.organizations ?? []) {
+        const subject = organization.legacyId;
+        legacyFacts.push(`plan:${subject}`);
+        const twin = convexOrgByLegacyId.get(subject);
+        if (!twin) continue; // already `organization_unmapped`
+        matchedFacts.push(`plan:${subject}`);
+
+        if (twin.plan !== organization.plan) {
+            mismatches.push({ kind: "plan_mismatch", subject, detail: { legacy: organization.plan, convex: twin.plan ?? null } });
+        }
+        const limits = twin.limits;
+        if (
+            !limits ||
+            limits.maxGuestsPerEvent !== organization.limits.maxGuestsPerEvent ||
+            limits.maxActiveEvents !== organization.limits.maxActiveEvents ||
+            limits.maxReminders !== organization.limits.maxReminders
+        ) {
+            mismatches.push({
+                kind: "effective_limits_mismatch",
+                subject,
+                detail: { override: twin.hasLimitOverride ?? null },
+            });
+        }
+        if (organization.customerIds.length > 0) {
+            if (!twin.customerId || !organization.customerIds.includes(twin.customerId)) {
+                mismatches.push({ kind: "customer_mismatch", subject });
+            }
+        } else if (twin.customerId) {
+            notes.push({ kind: "customer_only_in_convex", subject });
+        }
+    }
+
     return {
         mismatches,
         notes,
+        facts: { legacy: legacyFacts, matched: matchedFacts },
         counts: {
             legacySubscriptions: legacy.subscriptions.length,
             convexSubscriptions: convex.subscriptions.length,

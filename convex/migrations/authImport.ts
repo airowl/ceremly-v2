@@ -3,6 +3,7 @@ import type { DBAdapter } from "better-auth/adapters";
 import type { BetterAuthOptions } from "better-auth/minimal";
 import { internalMutation } from "../_generated/server";
 import { normalizeEmail } from "../lib/identity";
+import { writeAudit } from "../lib/audit";
 import { assertMigrationKey } from "../lib/migrationKey";
 import { authComponent, createAuth } from "../auth";
 
@@ -485,10 +486,29 @@ export const importBatch = internalMutation({
         const auth = createAuth(ctx);
         const adapter = authComponent.adapter(ctx)(auth.options as BetterAuthOptions);
 
-        return await importAuthRecordsIdempotently(createAdapterBridge(adapter), {
+        const result = await importAuthRecordsIdempotently(createAdapterBridge(adapter), {
             users: args.users as LegacyAuthUser[],
             accounts: args.accounts as LegacyAuthAccount[],
             twoFactors: args.twoFactors as LegacyTwoFactor[],
         }, { mode: args.mode ?? "insert" });
+
+        // Counts only: no address, no hash, no secret in the audit trail.
+        await writeAudit(ctx, {
+            action: "admin.migration_auth_imported",
+            targetType: "migrationBatch",
+            targetId: "auth",
+            details: {
+                mode: args.mode ?? "insert",
+                users: args.users.length,
+                accounts: args.accounts.length,
+                twoFactors: args.twoFactors.length,
+                imported: result.imported,
+                skipped: result.skipped,
+                updated: result.updated,
+                normalizedEmails: result.normalizedEmails,
+            },
+        });
+
+        return result;
     },
 });

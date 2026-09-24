@@ -59,6 +59,7 @@ import type * as lib_storageBridge from "../lib/storageBridge.js";
 import type * as lib_svix from "../lib/svix.js";
 import type * as media from "../media.js";
 import type * as migrations_authImport from "../migrations/authImport.js";
+import type * as migrations_billingImport from "../migrations/billingImport.js";
 import type * as migrations_domainImport from "../migrations/domainImport.js";
 import type * as migrations_reconcileSnapshot from "../migrations/reconcileSnapshot.js";
 import type * as model_validators from "../model/validators.js";
@@ -128,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   "lib/svix": typeof lib_svix;
   media: typeof media;
   "migrations/authImport": typeof migrations_authImport;
+  "migrations/billingImport": typeof migrations_billingImport;
   "migrations/domainImport": typeof migrations_domainImport;
   "migrations/reconcileSnapshot": typeof migrations_reconcileSnapshot;
   "model/validators": typeof model_validators;

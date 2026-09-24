@@ -5,7 +5,9 @@ import {
     reconcileAuth,
     reconcileBilling,
     reconcileDomainTable,
+    legacyBillingState,
     reconcileManifest,
+    reconcileR2Bucket,
     reconciliationExitCode,
     sha256Secret,
     type AuthSourceState,
@@ -13,6 +15,7 @@ import {
 } from "../../scripts/migration/reconcile";
 import { compareBillingStates } from "../../scripts/migration/reconcile-creem";
 import type { ExportManifest } from "../../scripts/migration/types";
+import { listAllObjects, parseListObjectsV2, type BucketLister } from "../../scripts/migration/r2-bucket";
 import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
 import { is } from "drizzle-orm";
 import convexSchema from "../../convex/schema";
@@ -342,6 +345,7 @@ describe("manifest", () => {
         schemaVersion: { migrations: 12, lastHash: "h" },
         sourceEndpoint: "ep-test",
         createdAt: "2026-09-24T10:00:01.000Z",
+        mac: "",
         tables: [
             {
                 source: "guests",
@@ -433,5 +437,102 @@ describe("inventory (Step 2)", () => {
         for (const table of ["user", "account", "two_factor", "organization", "member", "events", "guests", "audit_log"]) {
             expect(byTable.get(table), table).toMatchObject({ dataClass: "production", disposition: "imported" });
         }
+    });
+});
+
+describe("Task 16 fix round 1", () => {
+    it("exit code fails on a count or checksum difference even without row mismatches", () => {
+        const base = { table: "t", sourceCount: 1, targetCount: 1, sourceChecksum: "a", targetChecksum: "a", mismatches: [] };
+
+        expect(reconciliationExitCode([base])).toBe(0);
+        expect(reconciliationExitCode([{ ...base, targetCount: 2 }])).toBe(1);
+        expect(reconciliationExitCode([{ ...base, targetChecksum: "b" }])).toBe(1);
+    });
+
+    const file = (id: string, path: string, size: number) => ({
+        id,
+        organizationId: ORG,
+        path,
+        size,
+        originalName: "x.jpg",
+        mimeType: "image/jpeg",
+        fileType: "image",
+        isPublic: true,
+        isActive: true,
+        uploadStatus: "completed",
+    });
+
+    /** Fake `ListObjectsV2` over a fixed key set, two keys per page. */
+    const fakeLister = (objects: Array<{ key: string; size: number }>): BucketLister => ({
+        async list(token) {
+            const start = token ? Number(token) : 0;
+            const page = objects.slice(start, start + 2).map((object) => ({ ...object, etag: "e" }));
+            return { objects: page, nextToken: start + 2 < objects.length ? String(start + 2) : null };
+        },
+    });
+
+    it("inventories the bucket: missing, extra and size-mismatched objects fail", async () => {
+        const rows = [file("f1", "evt/e1/2026-09/f1/a.jpg", 10), file("f2", "evt/e1/2026-09/f2/b.jpg", 20)];
+        const objects = await listAllObjects(fakeLister([
+            { key: "evt/e1/2026-09/f1/a.jpg", size: 10 },
+            { key: "evt/e1/2026-09/f2/b.jpg", size: 20 },
+            { key: "exports/u/2026-09/x.json", size: 5 },
+        ]));
+
+        const ok = reconcileR2Bucket(rows, objects);
+        expect(ok.mismatches).toEqual([]);
+        expect(ok.notes).toContain("objects_outside_file_namespace:1");
+        expect(reconciliationExitCode([ok])).toBe(0);
+
+        const drifted = reconcileR2Bucket(rows, await listAllObjects(fakeLister([
+            { key: "evt/e1/2026-09/f1/a.jpg", size: 11 },
+            { key: "global/2026-09/orphan/c.jpg", size: 1 },
+        ])));
+        expect(drifted.mismatches[0]).toBe("size_mismatch:f1");
+        expect(drifted.mismatches[1]).toBe("missing_object:f2");
+        expect(drifted.mismatches[2]).toMatch(/^extra_object:[0-9a-f]{16}$/);
+        // Keys can embed an original file name: never printed.
+        expect(drifted.mismatches.join(" ")).not.toContain("orphan");
+    });
+
+    it("parses a ListObjectsV2 page and its continuation", () => {
+        const page = parseListObjectsV2(
+            "<ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>t&amp;2</NextContinuationToken>" +
+            "<Contents><Key>evt/a&amp;b.jpg</Key><Size>42</Size><ETag>&quot;abc&quot;</ETag></Contents></ListBucketResult>",
+        );
+        expect(page).toEqual({ objects: [{ key: "evt/a&b.jpg", size: 42, etag: "abc" }], nextToken: "t&2" });
+    });
+
+    it("derives the legacy plan from the organization owner's subscription", () => {
+        const state = legacyBillingState(
+            {
+                organization: [{ id: "o1" }, { id: "o2" }],
+                member: [
+                    { organizationId: "o1", userId: "u1", role: "owner" },
+                    { organizationId: "o2", userId: "u2", role: "owner" },
+                    { organizationId: "o2", userId: "u1", role: "member" },
+                ],
+                creem_subscription: [
+                    { id: "r1", referenceId: "u1", productId: "prod_atelier", status: "active", creemSubscriptionId: "s1", creemCustomerId: "c1" },
+                ],
+                events: [],
+            },
+            [{ tier: "atelier", productId: "prod_atelier" }],
+        );
+
+        expect(state.subscriptions[0]!.organizationLegacyIds).toEqual(["o1"]);
+        expect(state.organizations).toEqual([
+            { legacyId: "o1", plan: "atelier", limits: { maxGuestsPerEvent: -1, maxActiveEvents: -1, maxReminders: -1 }, customerIds: ["c1"] },
+            { legacyId: "o2", plan: "free", limits: { maxGuestsPerEvent: 30, maxActiveEvents: 1, maxReminders: 3 }, customerIds: [] },
+        ]);
+    });
+
+    it("compares the legacy `svix_id` as `svixId`", () => {
+        const source = { id: "ee-1", messageId: "m", type: "t", recipient: "r@example.com", svix_id: "svix_1", createdAt: "2026-01-01T00:00:00.000Z" };
+        const target = { _id: "k_ee", legacyId: "ee-1", messageId: "m", type: "t", recipient: "r@example.com", svixId: "svix_1", createdAt: Date.parse("2026-01-01T00:00:00.000Z") };
+
+        expect(reconcileDomainTable("emailEvents", [source], [target], legacyIdOf).mismatches).toEqual([]);
+        expect(reconcileDomainTable("emailEvents", [source], [{ ...target, svixId: undefined }], legacyIdOf).mismatches)
+            .toEqual(["field_mismatch:ee-1:svixId"]);
     });
 });

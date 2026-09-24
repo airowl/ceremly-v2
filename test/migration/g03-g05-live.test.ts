@@ -1,9 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { assertBatchDigest, decryptJson, parseMigrationKey } from "../../scripts/migration/crypto";
 import type { MigrationBatch } from "../../scripts/migration/types";
+import { connectStagingTarget } from "../../scripts/migration/convex-target";
 import { AUTH_FIXTURES, GATE_TOTP_SECRET, type AuthFixture } from "../../scripts/migration/auth-fixtures";
 import { generateTotp } from "./totp";
 
@@ -71,28 +71,14 @@ interface ImportResult {
     normalizedEmails: number;
 }
 
-/** Runs the import through the CLI, the only path to an `internalMutation`. */
-function runImport(payload: unknown): ImportResult {
-    const stdout = execFileSync(
-        "npx",
-        [
-            "--no-install",
-            "convex",
-            "run",
-            "migrations/authImport:importBatch",
-            JSON.stringify(payload),
-        ],
-        { encoding: "utf8", cwd: process.cwd() },
-    );
-
-    // `convex run` prints the function result as pretty-printed JSON after its
-    // own banner lines, so the payload starts at the first line holding `{`.
-    const start = stdout.split("\n").findIndex((line) => line.trim() === "{");
-    if (start === -1) {
-        throw new Error(`convex run produced no JSON result:\n${stdout}`);
-    }
-
-    return JSON.parse(stdout.split("\n").slice(start).join("\n")) as ImportResult;
+/**
+ * Runs the import over HTTPS with admin credentials for the `.env.local` dev
+ * deployment (Task 16 fix round 1): the credentials travel in the request body,
+ * never on a command line.
+ */
+async function runImport(payload: Record<string, unknown>): Promise<ImportResult> {
+    const target = await connectStagingTarget();
+    return await target.run<ImportResult>("migrations/authImport:importBatch", payload);
 }
 
 class CookieJar {
@@ -176,7 +162,7 @@ describe.skipIf(!armed)("G03–G05 live · legacy credentials on Convex Better A
     let secondImport: ImportResult;
     let totalRecords = 0;
 
-    beforeAll(() => {
+    beforeAll(async () => {
         expect(siteUrl).toMatch(/\.convex\.site$/);
         expect(appOrigin).toMatch(/^https?:\/\//);
         expect(migrationKey).not.toBe("");
@@ -191,9 +177,9 @@ describe.skipIf(!armed)("G03–G05 live · legacy credentials on Convex Better A
         totalRecords = users.length + accounts.length + twoFactors.length;
 
         const payload = { migrationKey, users, accounts, twoFactors };
-        importResult = runImport(payload);
+        importResult = await runImport(payload);
         // Second identical run is the idempotency proof (plan Task 4 Step 4).
-        secondImport = runImport(payload);
+        secondImport = await runImport(payload);
     }, 180_000);
 
     it("accounts for every record once and never writes on a replay", () => {

@@ -10,7 +10,8 @@ import * as schema from "../../server/database/schema";
 import { canonicalJson } from "../../shared/migration/bridgeProtocol";
 import { encryptJson, migrationKeyFromEnv, sealBatch, sha256Bytes } from "./crypto";
 import { inventoryEntryFor } from "./inventory";
-import type { ExportManifest, ExportMode, ManifestTable, MigrationBatch } from "./types";
+import { signManifest } from "./manifest";
+import type { ExportManifest, ExportMode, IdsPayload, ManifestTable, MigrationBatch } from "./types";
 import { MIGRATION_BATCH_VERSION } from "./types";
 
 /**
@@ -40,7 +41,7 @@ const PRODUCTION_ENDPOINT_PREFIX = "ep-dark-dream";
 
 /** Records per batch (plan Step 3). */
 export const BATCH_SIZE = 100;
-/** Upper bound of one batch's JSON: `convex run` takes arguments on the command line. */
+/** Upper bound of one batch's JSON: one mutation argument, well under Convex's limits. */
 export const BATCH_MAX_BYTES = 350_000;
 /**
  * Rows touched shortly before the previous watermark may have committed after
@@ -89,8 +90,8 @@ export const SOURCE_TABLES: readonly SourceTable[] = [
     { source: "audit_log", table: schema.auditLog, batchTables: ["auditLogs"], deltaColumn: "createdAt" },
     { source: "contact_messages", table: schema.contactMessages, batchTables: ["contactMessages"], deltaColumn: null },
     { source: "waiting_list", table: schema.waitingList, batchTables: ["waitingList"], deltaColumn: null },
-    // Exported (the bundle is a complete copy) but not imported: the Creem
-    // component owns subscriptions. `reconcile.ts` checks it against Creem state.
+    // Imported into the Creem component (`migrations/billingImport`, fix round 1),
+    // where `billing.planForActiveOrganization` reads the plan from.
     { source: "creem_subscription", table: schema.creem_subscription, batchTables: ["creem_subscription"], deltaColumn: null },
 ];
 
@@ -111,6 +112,11 @@ export interface SourceSnapshot {
     /** Canonical JSON rows (ISO timestamps), by Postgres table name, ordered by id. */
     tables: Record<string, SourceRecord[]>;
 }
+
+/** Every batch table the exporter writes → its source table (manifest validation). */
+export const EXPECTED_BATCH_TABLES: ReadonlyMap<string, string> = new Map(
+    SOURCE_TABLES.flatMap((source) => source.batchTables.map((table) => [table, source.source] as const)),
+);
 
 /** Endpoint id of a Neon URL (`ep-…`), never the URL. */
 export function endpointOf(databaseUrl: string): string {
@@ -270,14 +276,14 @@ export function deltaRows(source: SourceTable, rows: readonly SourceRecord[], si
     });
 }
 
-interface CliOptions {
+export interface ExportOptions {
     out: string;
     mode: ExportMode;
     since: string | null;
 }
 
-function parseArgs(argv: string[]): CliOptions {
-    const options: CliOptions = { out: "", mode: "full", since: null };
+function parseArgs(argv: string[]): ExportOptions {
+    const options: ExportOptions = { out: "", mode: "full", since: null };
     for (let index = 0; index < argv.length; index += 1) {
         const arg = argv[index];
         if (arg === "--out") options.out = argv[++index] ?? "";
@@ -301,7 +307,7 @@ async function writeEncrypted(path: string, value: unknown, key: Buffer): Promis
 
 export async function exportSnapshot(
     snapshot: SourceSnapshot,
-    options: CliOptions,
+    options: ExportOptions,
     key: Buffer,
 ): Promise<ExportManifest> {
     const outDir = resolve(options.out);
@@ -336,7 +342,7 @@ export async function exportSnapshot(
                 source: source.source,
                 table: batchTable,
                 dataClass: entry.dataClass,
-                disposition: batchTable === "creem_subscription" ? "not-imported" : "imported",
+                disposition: "imported",
                 sourceCount: rows.length,
                 sourceChecksum: tableChecksum(rows),
                 exportedCount: exported.length,
@@ -345,15 +351,27 @@ export async function exportSnapshot(
 
             if (options.mode === "delta") {
                 const file = `${batchTable}.ids.enc`;
-                const ids = rows.map((row) => String(row.id));
-                manifestTable.idsFile = { file, fileSha256: await writeEncrypted(join(outDir, file), ids, key), count: ids.length };
+                // Bound to its table and watermark: a list moved to another table
+                // (or taken from another export) fails to verify, so it can never
+                // drive a prune it was not cut for.
+                const payload: IdsPayload = {
+                    version: MIGRATION_BATCH_VERSION,
+                    table: batchTable,
+                    watermark: snapshot.watermark,
+                    ids: rows.map((row) => String(row.id)),
+                };
+                manifestTable.idsFile = {
+                    file,
+                    fileSha256: await writeEncrypted(join(outDir, file), payload, key),
+                    count: payload.ids.length,
+                };
             }
 
             tables.push(manifestTable);
         }
     }
 
-    const manifest: ExportManifest = {
+    const manifest: ExportManifest = signManifest({
         format: "CEREMLY-MIGRATION-V1",
         version: MIGRATION_BATCH_VERSION,
         mode: options.mode,
@@ -363,7 +381,7 @@ export async function exportSnapshot(
         sourceEndpoint: snapshot.sourceEndpoint,
         createdAt: new Date().toISOString(),
         tables,
-    };
+    }, key);
     await writeFile(join(outDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
     return manifest;
 }

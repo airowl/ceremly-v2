@@ -3,6 +3,7 @@ import { components } from "../_generated/api";
 import type { MutationCtx } from "../_generated/server";
 import { internalMutation } from "../_generated/server";
 import { normalizeEmail } from "../lib/identity";
+import { writeAudit } from "../lib/audit";
 import { assertMigrationKey } from "../lib/migrationKey";
 import { isProcessableImage } from "../lib/media";
 import { canonicalJson } from "../lib/bridgeHmac";
@@ -484,7 +485,13 @@ const SPECS: readonly TableSpec[] = [
     },
     {
         table: "emailEvents",
-        fields: ["messageId", "type", "recipient", "emailType", "clickedUrl", "payload"],
+        // `svix_id` is the webhook delivery id the Resend fix added to the legacy
+        // table (a raw column: the Drizzle schema of this branch does not declare
+        // it, so the export carries the database name). It is what dedupes a
+        // redelivered webhook, so it must survive as `svixId` — dropping it would
+        // let a replay of a historical event write a second row.
+        fields: ["messageId", "type", "recipient", "emailType", "clickedUrl", "payload", "svixId", "svix_id"],
+        rename: { svix_id: "svixId" },
         timestamps: ["occurredAt", "createdAt"],
         required: ["messageId", "type", "recipient"],
         refs: [
@@ -494,7 +501,10 @@ const SPECS: readonly TableSpec[] = [
             ref("guestId", "guests", "best-effort"),
             ref("eventId", "events", "best-effort"),
         ],
-        naturalKeys: [{ index: "by_legacy_id", fields: ["legacyId"] }],
+        naturalKeys: [
+            { index: "by_svix_id", fields: ["svixId"] },
+            { index: "by_legacy_id", fields: ["legacyId"] },
+        ],
     },
     {
         table: "dataExports",
@@ -1135,6 +1145,26 @@ export const importBatch = internalMutation({
 
         const outcome = await importRecords(ctx, spec, records, args.mode ?? "insert");
 
+        // Administrative trace of the run (plan: audit on every write). Counts
+        // and the digest only: the records themselves never reach the audit log.
+        await writeAudit(ctx, {
+            action: "admin.migration_batch_imported",
+            targetType: "migrationBatch",
+            targetId: `${args.table}#${args.batchIndex}`,
+            details: {
+                table: args.table,
+                batchIndex: args.batchIndex,
+                mode: args.mode ?? "insert",
+                records: outcome.records,
+                imported: outcome.imported,
+                skipped: outcome.skipped,
+                updated: outcome.updated,
+                deferred: Object.values(outcome.deferred).reduce((sum, count) => sum + count, 0),
+                sha256: digest,
+                ...(args.watermark !== undefined ? { watermark: args.watermark } : {}),
+            },
+        });
+
         await ctx.db.insert("migrationRecords", {
             table: args.table,
             batchIndex: args.batchIndex,
@@ -1203,6 +1233,13 @@ export const pruneBatch = internalMutation({
             await ctx.db.delete(id as never);
             deleted += 1;
         }
+
+        await writeAudit(ctx, {
+            action: "admin.migration_batch_pruned",
+            targetType: "migrationTable",
+            targetId: args.table,
+            details: { table: args.table, requested: args.legacyIds.length, deleted, missing },
+        });
 
         return { table: args.table, deleted, missing };
     },

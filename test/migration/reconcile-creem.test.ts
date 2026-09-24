@@ -186,14 +186,88 @@ describe("compareBillingStates", () => {
         expect(kinds(stillFree.mismatches)).toEqual(["event_order_id_mismatch", "event_tier_mismatch"]);
     });
 
-    it("treats a checkout id difference as a note, not a failure", () => {
+    it("fails on a checkout id difference (Task 16: the fulfillment matches on it)", () => {
         const report = compareBillingStates(
             legacyState(),
             convexState({ events: [{ ...convexState().events[0]!, creemCheckoutId: null }] }),
         );
 
-        expect(report.mismatches).toEqual([]);
-        expect(kinds(report.notes)).toEqual(["event_checkout_id_differs"]);
+        expect(kinds(report.mismatches)).toEqual(["event_checkout_id_mismatch"]);
+    });
+
+    it("fails when the subscription's legacy order id did not survive", () => {
+        const report = compareBillingStates(
+            legacyState({ subscriptions: [{ ...legacyState().subscriptions[0]!, creemOrderId: "ord_9" }] }),
+            convexState(),
+        );
+        expect(kinds(report.mismatches)).toEqual(["subscription_order_id_mismatch"]);
+
+        const ok = compareBillingStates(
+            legacyState({ subscriptions: [{ ...legacyState().subscriptions[0]!, creemOrderId: "ord_9" }] }),
+            convexState({ subscriptions: [{ ...convexState().subscriptions[0]!, legacyOrderId: "ord_9" }] }),
+        );
+        expect(ok.mismatches).toEqual([]);
+    });
+
+    it("fails on product configuration drift and on a subscription to an unconfigured product", () => {
+        const report = compareBillingStates(
+            legacyState({ products: [{ tier: "atelier", productId: "prod_atelier" }, { tier: "celebration", productId: "prod_celebration" }] }),
+            convexState(),
+        );
+        expect(kinds(report.mismatches)).toEqual(["product_config_mismatch"]);
+
+        const unconfigured = compareBillingStates(
+            legacyState({
+                products: [{ tier: "atelier", productId: "prod_atelier" }],
+                subscriptions: [{ ...legacyState().subscriptions[0]!, productId: "prod_gone" }],
+            }),
+            convexState({ subscriptions: [{ ...convexState().subscriptions[0]!, productId: "prod_gone" }] }),
+        );
+        expect(kinds(unconfigured.mismatches)).toEqual(["subscription_product_unconfigured"]);
+    });
+
+    it("fails on a diverging plan, effective limits or customer of a migrated organization", () => {
+        const atelierLimits = { maxGuestsPerEvent: -1, maxActiveEvents: -1, maxReminders: -1 };
+        const legacy = legacyState({
+            organizations: [{ legacyId: ORG_LEGACY, plan: "atelier", limits: atelierLimits, customerIds: [CUSTOMER] }],
+        });
+
+        const same = compareBillingStates(legacy, convexState({
+            organizations: [{ id: ORG_CONVEX, legacyId: ORG_LEGACY, customerId: CUSTOMER, plan: "atelier", limits: atelierLimits }],
+        }));
+        expect(same.mismatches).toEqual([]);
+
+        const drift = compareBillingStates(legacy, convexState({
+            organizations: [{
+                id: ORG_CONVEX,
+                legacyId: ORG_LEGACY,
+                customerId: "cust_other",
+                plan: "free",
+                limits: { maxGuestsPerEvent: 30, maxActiveEvents: 1, maxReminders: 3 },
+                hasLimitOverride: false,
+            }],
+        }));
+        expect(kinds(drift.mismatches)).toEqual(["customer_mismatch", "effective_limits_mismatch", "plan_mismatch"]);
+    });
+
+    it("expects a user's subscription under every organization the user owns", () => {
+        const legacy = legacyState({
+            subscriptions: [{ ...legacyState().subscriptions[0]!, referenceId: "user_1", organizationLegacyIds: [ORG_LEGACY, "org_legacy_2"] }],
+        });
+        const convex = convexState({
+            organizations: [
+                { id: ORG_CONVEX, legacyId: ORG_LEGACY, customerId: CUSTOMER },
+                { id: "org_convex_2", legacyId: "org_legacy_2", customerId: CUSTOMER },
+            ],
+        });
+
+        expect(kinds(compareBillingStates(legacy, convex).mismatches)).toEqual(["subscription_entity_mismatch"]);
+
+        const both = compareBillingStates(legacy, {
+            ...convex,
+            subscriptions: [convex.subscriptions[0]!, { ...convex.subscriptions[0]!, organizationId: "org_convex_2" }],
+        });
+        expect(both.mismatches).toEqual([]);
     });
 
     it("lists growth on the new stack as notes", () => {

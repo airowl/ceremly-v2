@@ -105,4 +105,14 @@ export interface ExportManifest {
     sourceEndpoint: string;
     createdAt: string;
     tables: ManifestTable[];
+    /** HMAC-SHA256 of the canonical manifest (HKDF-derived from the migration key). */
+    mac: string;
+}
+
+/** Plaintext of a delta id list: bound to its table and watermark. */
+export interface IdsPayload {
+    version: typeof MIGRATION_BATCH_VERSION;
+    table: string;
+    watermark: string;
+    ids: string[];
 }

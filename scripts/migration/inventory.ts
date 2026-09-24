@@ -62,17 +62,13 @@ export const SOURCE_INVENTORY: readonly InventoryEntry[] = [
     imported("contact_messages", "contactMessages", "inbound requests not yet answered"),
     imported("waiting_list", "waitingList", "sign-ups"),
     // --- billing --------------------------------------------------------------
-    {
-        table: "creem_subscription",
-        location: "neon",
-        dataClass: "production",
-        disposition: "not-imported",
-        destination: "creem component (reconciled)",
-        reason:
-            "owned by the Creem component, which has no import path: exported in the encrypted bundle and " +
-            "reconciled by `reconcile-creem` (legacy is the reference, a missing subscription fails). " +
-            "Per-event billing facts travel with `events`",
-    },
+    imported(
+        "creem_subscription",
+        "creem component: customers + subscriptions (per owned organization)",
+        "the plan of an organization: `billing.planForActiveOrganization` reads the Creem component, " +
+            "so `migrations/billingImport` writes there through the component's idempotent mutations; " +
+            "per-event billing facts travel with `events`",
+    ),
     // --- non-table stores -----------------------------------------------------
     {
         table: "r2:objects",

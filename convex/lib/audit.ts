@@ -125,6 +125,12 @@ const AUDIT_ACTION_CATEGORY = {
     // i record scritti da Convex e quelli storici restano greppabili insieme.
     "email.sent": "email",
     "email.failed": "email",
+    // Migration (Task 16): one row per batch the operator's pipeline wrote or
+    // pruned. Counts and digests only — never a record, a credential or a key.
+    "admin.migration_batch_imported": "admin",
+    "admin.migration_auth_imported": "admin",
+    "admin.migration_billing_imported": "admin",
+    "admin.migration_batch_pruned": "admin",
 } as const satisfies Record<string, AuditCategory>;
 
 export type AuditAction = keyof typeof AUDIT_ACTION_CATEGORY;

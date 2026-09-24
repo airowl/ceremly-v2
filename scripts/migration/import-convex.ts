@@ -4,34 +4,35 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { IMPORT_ORDER } from "../../shared/migration/domainBatch";
-import { assertStagingTarget, readAllPages, runConvex } from "./convex-cli";
+import { connectStagingTarget, type ConvexTarget } from "./convex-target";
 import { assertBatchDigest, decryptJson, migrationKeyFromEnv, sha256Bytes } from "./crypto";
-import type { ExportManifest, MigrationBatch } from "./types";
+import { EXPECTED_BATCH_TABLES } from "./export-neon";
+import { assertIdsPayload, validateManifest, verifyManifestMac } from "./manifest";
+import type { ExportManifest, IdsPayload, MigrationBatch } from "./types";
 
 /**
  * Plan Task 16, Step 4 — import of an encrypted export into Convex.
  *
- * 1. **Verify everything before the first write.** Every file's SHA-256 must
- *    match the manifest, its GCM tag must authenticate, the decrypted batch must
- *    match its own digest, table and index. One bad file and nothing is sent.
+ * 1. **Verify everything before the first write.** The manifest's HMAC, then the
+ *    whole inventory (exact table set, contiguous batches, delta id lists), then
+ *    every file: SHA-256 against the manifest, GCM tag, the batch's own digest,
+ *    table/index/watermark, and each id list bound to its table and watermark.
+ *    One bad file and nothing is sent.
  * 2. **Credentials first** (`migrations/authImport:importBatch`, Task 4), users
- *    grouped with their accounts and 2FA rows — the import resolves a user's
- *    records inside one call.
- * 3. **Domain in topological order** (`migrations/domainImport:importBatch`,
- *    Task 10), the order the importer itself enforces.
- * 4. **Delta:** `upsert` mode (a row changed since the full import is rewritten)
- *    and a prune of migrated rows whose source row is gone, children first.
+ *    grouped with their accounts and 2FA rows.
+ * 3. **Domain in topological order** (`migrations/domainImport:importBatch`).
+ * 4. **Billing** (`migrations/billingImport:importBatch`): legacy subscriptions
+ *    into the Creem component, once organizations and memberships exist.
+ * 5. **Delta:** `upsert` mode and a prune of migrated rows whose source row is
+ *    gone, children first.
  *
- * Re-runnable: both importers are idempotent on natural keys, so a crashed run is
- * resumed by running it again. Output is counts only — never a row.
- *
- * `--verify-only` stops after step 1: the whole bundle is checked (digests, tags,
- * manifest agreement) and nothing is sent to the deployment.
+ * Every call goes over HTTPS to the deployment `.env.local` names, verified as a
+ * dev deployment (`convex-target.ts`): no child process, nothing in argv.
+ * Re-runnable: the importers are idempotent on natural keys. Output is counts only.
  *
  * Usage:
  *   MIGRATION_ENCRYPTION_KEY=... npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/full-1 --verify-only
  *   MIGRATION_ENCRYPTION_KEY=... npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/full-1
- *   MIGRATION_ENCRYPTION_KEY=... npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/delta-1
  */
 
 type SourceRecord = Record<string, unknown>;
@@ -41,7 +42,7 @@ const AUTH_USERS_PER_CALL = 50;
 /** Legacy ids per prune call (`pruneBatch` refuses more than 200). */
 const PRUNE_CHUNK = 200;
 
-interface VerifiedBundle {
+export interface VerifiedBundle {
     manifest: ExportManifest;
     /** Decrypted batches by batch table, in batch order. */
     batches: Map<string, MigrationBatch<SourceRecord>[]>;
@@ -58,9 +59,14 @@ async function readVerified(path: string, fileSha256: string): Promise<Buffer> {
 }
 
 /** Verifies and decrypts a whole bundle in memory. Throws before any write. */
-export async function loadBundle(dir: string, key: Buffer): Promise<VerifiedBundle> {
+export async function loadBundle(
+    dir: string,
+    key: Buffer,
+    expected: ReadonlyMap<string, string> = EXPECTED_BATCH_TABLES,
+): Promise<VerifiedBundle> {
     const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8")) as ExportManifest;
-    if (manifest.format !== "CEREMLY-MIGRATION-V1") throw new Error("Unknown manifest format");
+    verifyManifestMac(manifest, key);
+    validateManifest(manifest, expected);
 
     const batches = new Map<string, MigrationBatch<SourceRecord>[]>();
     const ids = new Map<string, string[]>();
@@ -82,17 +88,12 @@ export async function loadBundle(dir: string, key: Buffer): Promise<VerifiedBund
             }
             list.push(batch);
         }
-        const exported = list.reduce((sum, batch) => sum + batch.records.length, 0);
-        if (exported !== table.exportedCount) {
-            throw new Error(`Table ${table.table}: ${exported} records in the files, ${table.exportedCount} in the manifest`);
-        }
         batches.set(table.table, list);
 
         if (table.idsFile) {
             const bytes = await readVerified(join(dir, table.idsFile.file), table.idsFile.fileSha256);
-            const list = decryptJson<string[]>(bytes, key);
-            if (list.length !== table.idsFile.count) throw new Error(`Id list of ${table.table} is incomplete`);
-            ids.set(table.table, list);
+            const payload = decryptJson<IdsPayload>(bytes, key);
+            ids.set(table.table, assertIdsPayload(payload, table.table, manifest.watermark, table.idsFile.count));
         }
     }
 
@@ -160,55 +161,26 @@ interface AuthResult {
     imported: number;
     skipped: number;
     updated?: number;
-    normalizedEmails: number;
 }
 
-async function main() {
-    const bundleIndex = process.argv.indexOf("--bundle");
-    const dir = bundleIndex > -1 ? resolve(process.argv[bundleIndex + 1] ?? "") : "";
-    if (!dir) throw new Error("--bundle <dir> is required");
-    const noPrune = process.argv.includes("--no-prune");
-    const verifyOnly = process.argv.includes("--verify-only");
+const emptyOutcome = (table: string): TableOutcome => ({
+    table, batches: 0, records: 0, imported: 0, skipped: 0, updated: 0, deferred: 0, danglingRefs: 0, unknownColumns: [],
+});
 
-    if (verifyOnly) {
-        const started = Date.now();
-        const bundle = await loadBundle(dir, migrationKeyFromEnv());
-        console.log(JSON.stringify({
-            bundle: dir,
-            verified: true,
-            mode: bundle.manifest.mode,
-            watermark: bundle.manifest.watermark,
-            files: [...bundle.batches.values()].reduce((sum, list) => sum + list.length, 0) + bundle.ids.size,
-            records: Object.fromEntries([...bundle.batches].map(([table, list]) => [table, list.reduce((sum, batch) => sum + batch.records.length, 0)])),
-            verifyMs: Date.now() - started,
-        }, null, 2));
-        return;
-    }
-
-    config({ path: ".env", quiet: true });
-    const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
-    if (!migrationKey) throw new Error("NUXT_MIGRATION_API_KEY is not set (the deployment's MIGRATION_API_KEY)");
-    const deployment = assertStagingTarget();
-    const key = migrationKeyFromEnv();
-
-    const started = Date.now();
-    const bundle = await loadBundle(dir, key);
-    const verifyMs = Date.now() - started;
+export async function importBundle(target: ConvexTarget, bundle: VerifiedBundle, migrationKey: string, options: { prune: boolean }) {
     const mode = bundle.manifest.mode === "delta" ? "upsert" : "insert";
     const outcomes: TableOutcome[] = [];
+    const timings: Record<string, number> = {};
 
     // --- 1. credentials ------------------------------------------------------
-    const authStarted = Date.now();
-    const authGroups = groupAuthRecords(
+    let started = Date.now();
+    const auth = emptyOutcome("auth");
+    for (const group of groupAuthRecords(
         recordsOf(bundle, "auth_user"),
         recordsOf(bundle, "auth_account"),
         recordsOf(bundle, "auth_two_factor"),
-    );
-    const auth: TableOutcome = {
-        table: "auth", batches: 0, records: 0, imported: 0, skipped: 0, updated: 0, deferred: 0, danglingRefs: 0, unknownColumns: [],
-    };
-    for (const group of authGroups) {
-        const result = await runConvex<AuthResult>("migrations/authImport:importBatch", { migrationKey, ...group, mode });
+    )) {
+        const result = await target.run<AuthResult>("migrations/authImport:importBatch", { migrationKey, ...group, mode });
         auth.batches += 1;
         auth.records += group.users.length + group.accounts.length + group.twoFactors.length;
         auth.imported += result.imported;
@@ -216,17 +188,15 @@ async function main() {
         auth.updated += result.updated ?? 0;
     }
     outcomes.push(auth);
-    const authMs = Date.now() - authStarted;
+    timings.authMs = Date.now() - started;
 
     // --- 2. domain, topological ----------------------------------------------
-    const domainStarted = Date.now();
+    started = Date.now();
     for (const table of IMPORT_ORDER) {
-        const outcome: TableOutcome = {
-            table, batches: 0, records: 0, imported: 0, skipped: 0, updated: 0, deferred: 0, danglingRefs: 0, unknownColumns: [],
-        };
+        const outcome = emptyOutcome(table);
         const unknown = new Set<string>();
         for (const batch of bundle.batches.get(table) ?? []) {
-            const result = await runConvex<DomainResult>("migrations/domainImport:importBatch", {
+            const result = await target.run<DomainResult>("migrations/domainImport:importBatch", {
                 migrationKey,
                 table,
                 batchIndex: batch.batchIndex,
@@ -248,25 +218,49 @@ async function main() {
         outcome.unknownColumns = [...unknown].sort();
         outcomes.push(outcome);
     }
-    const domainMs = Date.now() - domainStarted;
+    timings.domainMs = Date.now() - started;
 
-    // --- 3. delta prune, children first --------------------------------------
-    const pruneStarted = Date.now();
-    if (bundle.manifest.mode === "delta" && !noPrune) {
+    // --- 3. billing (Creem component) ----------------------------------------
+    started = Date.now();
+    const billing = emptyOutcome("creem_subscription");
+    for (const batch of bundle.batches.get("creem_subscription") ?? []) {
+        const result = await target.run<{ imported: number; skipped: number; deferred: Record<string, number> }>(
+            "migrations/billingImport:importBatch",
+            {
+                migrationKey,
+                batchIndex: batch.batchIndex,
+                version: batch.version,
+                watermark: batch.watermark,
+                records: batch.records,
+                sha256: batch.sha256,
+            },
+        );
+        billing.batches += 1;
+        billing.records += batch.records.length;
+        billing.imported += result.imported;
+        billing.skipped += result.skipped;
+        billing.deferred += Object.values(result.deferred).reduce((sum, count) => sum + count, 0);
+    }
+    outcomes.push(billing);
+    timings.billingMs = Date.now() - started;
+
+    // --- 4. delta prune, children first --------------------------------------
+    started = Date.now();
+    if (bundle.manifest.mode === "delta" && options.prune) {
         for (const table of [...IMPORT_ORDER].reverse()) {
             const sourceIds = bundle.ids.get(table);
             if (!sourceIds) throw new Error(`Delta bundle has no id list for ${table}: refusing to guess deletions`);
             const keep = new Set(sourceIds);
 
-            const target = await readAllPages<{ legacyId?: string }>("migrations/reconcileSnapshot:tablePage", {
+            const current = await target.readAllPages<{ legacyId?: string }>("migrations/reconcileSnapshot:tablePage", {
                 migrationKey,
                 table,
             });
-            const orphans = target.map((doc) => String(doc.legacyId)).filter((legacyId) => !keep.has(legacyId));
+            const orphans = current.map((doc) => String(doc.legacyId)).filter((legacyId) => !keep.has(legacyId));
 
             let pruned = 0;
             for (let offset = 0; offset < orphans.length; offset += PRUNE_CHUNK) {
-                const result = await runConvex<{ deleted: number }>("migrations/domainImport:pruneBatch", {
+                const result = await target.run<{ deleted: number }>("migrations/domainImport:pruneBatch", {
                     migrationKey,
                     table,
                     legacyIds: orphans.slice(offset, offset + PRUNE_CHUNK),
@@ -277,16 +271,48 @@ async function main() {
             if (outcome) outcome.pruned = pruned;
         }
     }
-    const pruneMs = Date.now() - pruneStarted;
+    timings.pruneMs = Date.now() - started;
 
+    return { importMode: mode, tables: outcomes, timings };
+}
+
+async function main() {
+    const bundleIndex = process.argv.indexOf("--bundle");
+    const dir = bundleIndex > -1 ? resolve(process.argv[bundleIndex + 1] ?? "") : "";
+    if (!dir) throw new Error("--bundle <dir> is required");
+    const prune = !process.argv.includes("--no-prune");
+    const verifyOnly = process.argv.includes("--verify-only");
+
+    const started = Date.now();
+    const bundle = await loadBundle(dir, migrationKeyFromEnv());
+    const verifyMs = Date.now() - started;
+
+    if (verifyOnly) {
+        console.log(JSON.stringify({
+            bundle: dir,
+            verified: true,
+            mode: bundle.manifest.mode,
+            watermark: bundle.manifest.watermark,
+            files: [...bundle.batches.values()].reduce((sum, list) => sum + list.length, 0) + bundle.ids.size,
+            records: Object.fromEntries([...bundle.batches].map(([table, list]) => [table, list.reduce((sum, batch) => sum + batch.records.length, 0)])),
+            verifyMs,
+        }, null, 2));
+        return;
+    }
+
+    config({ path: ".env", quiet: true });
+    const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
+    if (!migrationKey) throw new Error("NUXT_MIGRATION_API_KEY is not set (the deployment's MIGRATION_API_KEY)");
+    const target = await connectStagingTarget();
+
+    const result = await importBundle(target, bundle, migrationKey, { prune });
     console.log(JSON.stringify({
-        deployment,
+        deployment: target.deployment,
         bundle: dir,
         manifestMode: bundle.manifest.mode,
-        importMode: mode,
         watermark: bundle.manifest.watermark,
-        tables: outcomes,
-        timings: { verifyMs, authMs, domainMs, pruneMs, totalMs: Date.now() - started },
+        ...result,
+        timings: { verifyMs, ...result.timings, totalMs: Date.now() - started },
     }, null, 2));
 }
 

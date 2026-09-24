@@ -1,0 +1,229 @@
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+import { convexToJson, jsonToConvex, type Value } from "convex/values";
+
+/**
+ * The one door from the migration scripts to the target deployment (Task 16).
+ *
+ * Fix round 1 replaced the `convex run` child process with a direct HTTPS call,
+ * for two reasons found in review:
+ *
+ * - **Target selection.** A child process inherits `process.env`, so an
+ *   exported `CONVEX_DEPLOYMENT` or `CONVEX_DEPLOY_KEY` could point the CLI at
+ *   production after the script had validated `.env.local`. Here there is no
+ *   child and no implicit selection: the deployment is named once
+ *   (`.env.local`), every conflicting source in the environment is refused, and
+ *   the credentials returned for that name are checked (`dev`, same name, same
+ *   host) before the first call.
+ * - **No plaintext in argv.** Records (password hashes, 2FA secrets, tokens)
+ *   travel in the TLS request body, never on a command line `ps` can read.
+ *
+ * Admin credentials come from `MIGRATION_CONVEX_ADMIN_KEY` + `MIGRATION_CONVEX_URL`
+ * when set (a staging deploy key), otherwise from the Convex CLI login
+ * (`~/.convex/config.json`), authorized for exactly the named deployment.
+ * Output of a failed call is reduced to its `ConvexError` code: the server's
+ * message can echo record data and is never printed.
+ */
+
+/** Environment variables that select a deployment behind the script's back. */
+export const CONFLICTING_ENV = [
+    "CONVEX_DEPLOY_KEY",
+    "CONVEX_SELF_HOSTED_URL",
+    "CONVEX_SELF_HOSTED_ADMIN_KEY",
+    "CONVEX_OVERRIDE_ACCESS_TOKEN",
+    "CONVEX_PROVISION_HOST",
+] as const;
+
+export interface TargetSelection {
+    deployment: string;
+    deploymentName: string;
+}
+
+/**
+ * Resolves the target from `.env.local`, refusing anything but a dev
+ * deployment and any environment variable that could select another one.
+ */
+export function resolveTargetSelection(envLocal: string | null, env: NodeJS.ProcessEnv): TargetSelection {
+    const fromFile = envLocal ? /^CONVEX_DEPLOYMENT=([^\s#]+)/m.exec(envLocal)?.[1] : undefined;
+    if (!fromFile) throw new Error("CONVEX_DEPLOYMENT is not set in .env.local");
+
+    const match = /^dev:([a-z]+-[a-z]+-\d+)$/.exec(fromFile);
+    if (!match) {
+        throw new Error(`Refusing CONVEX_DEPLOYMENT=${fromFile}: Task 16 targets a dev (staging) deployment only`);
+    }
+
+    if (env.CONVEX_DEPLOYMENT !== undefined && env.CONVEX_DEPLOYMENT !== fromFile) {
+        throw new Error(
+            `Conflicting deployment selection: CONVEX_DEPLOYMENT=${env.CONVEX_DEPLOYMENT} in the environment, ${fromFile} in .env.local`,
+        );
+    }
+    for (const name of CONFLICTING_ENV) {
+        if (env[name]) throw new Error(`Refusing to run with ${name} set: it selects a deployment outside .env.local`);
+    }
+
+    return { deployment: fromFile, deploymentName: match[1]! };
+}
+
+export interface TargetCredentials {
+    deploymentName: string;
+    url: string;
+    adminKey: string;
+}
+
+type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
+
+/** `https://<name>.<region>.convex.cloud` exactly — nothing else is accepted. */
+export function assertDeploymentUrl(url: string, deploymentName: string): void {
+    let host: string;
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== "https:") throw new Error("not https");
+        host = parsed.hostname;
+    } catch {
+        throw new Error("Deployment URL is not a valid https URL");
+    }
+    if (!host.startsWith(`${deploymentName}.`) || !host.endsWith(".convex.cloud")) {
+        throw new Error(`Deployment URL ${host} does not belong to ${deploymentName}`);
+    }
+}
+
+/** Admin credentials for exactly `selection`, verified before use. */
+export async function authorizeTarget(
+    selection: TargetSelection,
+    options: { env: NodeJS.ProcessEnv; fetch: FetchLike; accessToken: () => string | null },
+): Promise<TargetCredentials> {
+    const explicitKey = options.env.MIGRATION_CONVEX_ADMIN_KEY;
+    if (explicitKey) {
+        const url = options.env.MIGRATION_CONVEX_URL ?? "";
+        assertDeploymentUrl(url, selection.deploymentName);
+        // A deploy key names its deployment (`dev:<name>|…`): a prod key is refused.
+        if (explicitKey.includes("|") && !explicitKey.startsWith(`dev:${selection.deploymentName}|`)) {
+            throw new Error("MIGRATION_CONVEX_ADMIN_KEY does not belong to the selected dev deployment");
+        }
+        return { deploymentName: selection.deploymentName, url, adminKey: explicitKey };
+    }
+
+    const token = options.accessToken();
+    if (!token) throw new Error("No Convex login (~/.convex/config.json) and no MIGRATION_CONVEX_ADMIN_KEY");
+
+    const response = await options.fetch("https://api.convex.dev/api/deployment/authorize_within_current_project", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "Convex-Client": "npm-cli-1.45.0" },
+        body: JSON.stringify({
+            selectedDeploymentName: selection.deploymentName,
+            projectSelection: { kind: "deploymentName", deploymentName: selection.deploymentName, deploymentType: null },
+        }),
+    });
+    if (!response.ok) throw new Error(`Convex refused to authorize ${selection.deploymentName} (HTTP ${response.status})`);
+
+    const body = (await response.json()) as {
+        deploymentName?: string;
+        deploymentType?: string;
+        url?: string;
+        adminKey?: string;
+    };
+    if (body.deploymentName !== selection.deploymentName) {
+        throw new Error(`Authorized deployment ${String(body.deploymentName)} is not ${selection.deploymentName}`);
+    }
+    if (body.deploymentType !== "dev") {
+        throw new Error(`Refusing deployment type ${String(body.deploymentType)}: dev only`);
+    }
+    if (!body.adminKey) throw new Error("Convex returned no admin key");
+    assertDeploymentUrl(body.url ?? "", selection.deploymentName);
+
+    return { deploymentName: selection.deploymentName, url: body.url!, adminKey: body.adminKey };
+}
+
+export class ConvexRunError extends Error {
+    constructor(
+        readonly functionName: string,
+        readonly code: string,
+    ) {
+        super(`${functionName} failed: ${code}`);
+    }
+}
+
+/** `ConvexError` code of a failed call; a bare message is reduced to a class. */
+export function errorCodeOf(errorData: unknown, errorMessage: string): string {
+    const code = (errorData as { code?: unknown } | null | undefined)?.code;
+    if (typeof code === "string" && /^[A-Z0-9_]+$/.test(code)) return code;
+    if (/ArgumentValidationError/.test(errorMessage)) return "ARGUMENT_VALIDATION_ERROR";
+    if (/Could not find (public )?function/.test(errorMessage)) return "FUNCTION_NOT_FOUND";
+    return "UNKNOWN_ERROR";
+}
+
+export interface ConvexTarget {
+    deployment: string;
+    deploymentName: string;
+    run<T>(functionName: string, args: Record<string, unknown>): Promise<T>;
+    readAllPages<T>(functionName: string, args: Record<string, unknown>, numItems?: number): Promise<T[]>;
+}
+
+/** HTTP client over `/api/function` with admin auth (the endpoint `convex run` uses). */
+export function createTarget(selection: TargetSelection, credentials: TargetCredentials, fetchImpl: FetchLike): ConvexTarget {
+    const run = async <T>(functionName: string, args: Record<string, unknown>): Promise<T> => {
+        const response = await fetchImpl(`${credentials.url}/api/function`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Convex ${credentials.adminKey}`,
+                "Convex-Client": "npm-1.45.0",
+            },
+            body: JSON.stringify({
+                path: functionName,
+                format: "convex_encoded_json",
+                args: convexToJson(args as Value),
+            }),
+        });
+        const body = (await response.json().catch(() => null)) as
+            | { status: "success"; value: unknown }
+            | { status: "error"; errorMessage?: string; errorData?: unknown }
+            | null;
+
+        if (body?.status === "success") return jsonToConvex(body.value as never) as T;
+        if (body?.status === "error") {
+            throw new ConvexRunError(functionName, errorCodeOf(body.errorData, body.errorMessage ?? ""));
+        }
+        throw new ConvexRunError(functionName, `HTTP_${response.status}`);
+    };
+
+    const readAllPages = async <T>(functionName: string, args: Record<string, unknown>, numItems = 500): Promise<T[]> => {
+        const rows: T[] = [];
+        let cursor: string | null = null;
+        for (;;) {
+            const page: { page: T[]; isDone: boolean; continueCursor: string } = await run(functionName, {
+                ...args,
+                cursor,
+                numItems,
+            });
+            rows.push(...page.page);
+            if (page.isDone) return rows;
+            cursor = page.continueCursor;
+        }
+    };
+
+    return { deployment: selection.deployment, deploymentName: selection.deploymentName, run, readAllPages };
+}
+
+function readCliAccessToken(): string | null {
+    try {
+        const config = JSON.parse(readFileSync(join(homedir(), ".convex", "config.json"), "utf8")) as { accessToken?: string };
+        return config.accessToken ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/** Selection → verified credentials → client. The only constructor the scripts use. */
+export async function connectStagingTarget(): Promise<ConvexTarget> {
+    let envLocal: string | null = null;
+    try {
+        envLocal = readFileSync(resolve(".env.local"), "utf8");
+    } catch {
+        envLocal = null;
+    }
+    const selection = resolveTargetSelection(envLocal, process.env);
+    const credentials = await authorizeTarget(selection, { env: process.env, fetch, accessToken: readCliAccessToken });
+    return createTarget(selection, credentials, fetch);
+}

@@ -1014,3 +1014,50 @@ describe("pruneBatch (Task 16 delta)", () => {
         await expectCode(prune(t, "siteSettings", ["x"]), "UNKNOWN_IMPORT_TABLE");
     });
 });
+
+describe("Task 16 fix round 1", () => {
+    it("carries the legacy `svix_id` into `svixId` and dedupes on it", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        const record = {
+            id: "ee-1",
+            messageId: "msg_1",
+            type: "email.delivered",
+            recipient: "a@example.com",
+            svix_id: "msg_2abcSvixDelivery",
+            createdAt: "2026-03-01T00:00:00.000Z",
+        };
+
+        const first = await send(t, { table: "emailEvents", records: [record] });
+        expect(first.imported).toBe(1);
+        expect(first.unknownColumns).toEqual([]);
+
+        const doc = await t.run(async (c) =>
+            await c.db.query("emailEvents").withIndex("by_legacy_id", (q) => q.eq("legacyId", "ee-1")).unique(),
+        );
+        expect(doc?.svixId).toBe("msg_2abcSvixDelivery");
+
+        // Same delivery id under another legacy id: the webhook dedup key wins.
+        const replay = await send(t, { table: "emailEvents", batchIndex: 1, records: [{ ...record, id: "ee-2" }] });
+        expect(replay.skipped).toBe(1);
+        expect(await count(t, "emailEvents")).toBe(1);
+    });
+
+    it("audits every imported and pruned batch with counts only", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await send(t, { table: "organizations", records: [legacyOrganization("org-1", "acme")] });
+        await t.mutation(internal.migrations.domainImport.pruneBatch, {
+            migrationKey: MIGRATION_KEY,
+            table: "organizations",
+            legacyIds: ["org-1"],
+        });
+
+        const audits = await t.run(async (c) => await c.db.query("auditLogs").collect());
+        expect(audits.map((row) => row.action)).toEqual([
+            "admin.migration_batch_imported",
+            "admin.migration_batch_pruned",
+        ]);
+        expect(audits[0]!.details).toMatchObject({ table: "organizations", records: 1, imported: 1 });
+        // No record content: the organization's name never reaches the audit trail.
+        expect(JSON.stringify(audits)).not.toContain("Org acme");
+    });
+});

@@ -6,12 +6,15 @@ import { normalizeEmail } from "../../convex/lib/identity";
 import { DOMAIN_IMPORT_SPECS, deferReason, type TableSpec } from "../../convex/migrations/domainImport";
 import { canonicalJson } from "../../shared/migration/bridgeProtocol";
 import { IMPORT_ORDER, type DomainImportTable } from "../../shared/migration/domainBatch";
+import { CEREMLY_TIER_LIMITS, CREEM_PRODUCT_ENV } from "../../shared/constants/pricing";
 import { sha256Bytes } from "./crypto";
+import type { BucketObject } from "./r2-bucket";
 import type { ExportManifest, ReconciliationResult } from "./types";
 import {
     compareBillingStates,
     type ConvexBillingState,
     type LegacyBillingState,
+    type LegacyOrganizationPlan,
     type ReconciliationReport,
 } from "./reconcile-creem";
 
@@ -256,6 +259,58 @@ export function reconcileR2Manifest(
     });
 }
 
+/** Key prefixes the file service writes (`evt/<id>/…`, `global/…`). */
+export const FILE_NAMESPACES = ["evt/", "global/"] as const;
+
+const inFileNamespace = (key: string): boolean => FILE_NAMESPACES.some((prefix) => key.startsWith(prefix));
+
+/**
+ * The bucket itself (fix round 1): every file row must point at an object that
+ * exists with the recorded size, and every object in the file namespace must
+ * belong to a row. Keys are reported hashed: a key can embed an original file
+ * name. ETags are not compared — the rows carry SHA-256, R2's ETag is an MD5
+ * (or a multipart digest), so the two are not the same function.
+ */
+export function reconcileR2Bucket(
+    sourceFiles: readonly SourceRecord[],
+    objects: readonly BucketObject[],
+): TableReconciliation {
+    const keyDigest = (key: string) => sha256Bytes(key).slice(0, 16);
+    const expected = sourceFiles
+        .filter((row) => !deferReason("files", row) && typeof row.path === "string" && row.path.length > 0)
+        .map((row) => ({ legacyId: String(row.id), key: String(row.path), size: Number(row.size) }));
+    const inScope = objects.filter((object) => inFileNamespace(object.key));
+    const objectByKey = new Map(inScope.map((object) => [object.key, object]));
+    const expectedKeys = new Set(expected.map((entry) => entry.key));
+
+    const mismatches: string[] = [];
+    for (const entry of expected) {
+        const object = objectByKey.get(entry.key);
+        if (!object) mismatches.push(`missing_object:${entry.legacyId}`);
+        else if (object.size !== entry.size) mismatches.push(`size_mismatch:${entry.legacyId}`);
+    }
+    for (const object of inScope) {
+        if (!expectedKeys.has(object.key)) mismatches.push(`extra_object:${keyDigest(object.key)}`);
+    }
+
+    const digest = (entries: Array<{ key: string; size: number }>) =>
+        sha256Bytes(canonicalJson([...entries].map(({ key, size }) => ({ key, size })).sort((a, b) => a.key.localeCompare(b.key))));
+
+    return {
+        table: "r2_bucket",
+        sourceCount: expected.length,
+        targetCount: inScope.length,
+        sourceChecksum: digest(expected),
+        targetChecksum: digest(inScope),
+        mismatches,
+        deferred: sourceFiles.length - expected.length,
+        notes: [
+            `objects_outside_file_namespace:${objects.length - inScope.length}`,
+            "etag_not_compared:rows_carry_sha256",
+        ],
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Auth (Better Auth component)
 // ---------------------------------------------------------------------------
@@ -458,33 +513,109 @@ export function reconcileManifest(
 
 /** Wraps the Task 6 comparator: every Creem mismatch fails the reconciliation. */
 export function reconcileBilling(report: ReconciliationReport): TableReconciliation {
+    // Facts (products, subscriptions, events, per-org plans) are compared on
+    // their own keys; counts and digests cover the legacy facts and the ones
+    // found on Convex, so a missing fact moves both.
+    const legacy = [...report.facts.legacy].sort();
+    const matched = [...report.facts.matched].sort();
     return {
         table: "creem_billing",
-        sourceCount: report.counts.legacySubscriptions + report.counts.legacyEvents,
-        targetCount: report.counts.convexSubscriptions + report.counts.convexEvents,
-        // Facts are compared on Creem's own ids, not as rows: the digests cover
-        // the counts that were compared, so two runs can be told apart.
-        sourceChecksum: sha256Bytes(canonicalJson([report.counts.legacySubscriptions, report.counts.legacyEvents])),
-        targetChecksum: sha256Bytes(canonicalJson([report.counts.convexSubscriptions, report.counts.convexEvents])),
+        sourceCount: legacy.length,
+        targetCount: matched.length,
+        sourceChecksum: sha256Bytes(canonicalJson(legacy)),
+        targetChecksum: sha256Bytes(canonicalJson(matched)),
         mismatches: report.mismatches.map((mismatch) => `${mismatch.kind}:${mismatch.subject}`),
         deferred: 0,
         notes: report.notes.map((note) => `${note.kind}:${note.subject}`),
     };
 }
 
-/** `1` on any mismatch, and on an empty comparison (nothing proven). */
+/**
+ * `1` on any mismatch, on a count or checksum that differs between the two
+ * sides (fix round 1: a difference is a failure even when no row-level mismatch
+ * explains it), and on an empty comparison (nothing proven).
+ */
 export function reconciliationExitCode(results: readonly ReconciliationResult[]): 0 | 1 {
     if (results.length === 0) return 1;
-    return results.some((result) => result.mismatches.length > 0) ? 1 : 0;
+    return results.some(
+        (result) =>
+            result.mismatches.length > 0 ||
+            result.sourceCount !== result.targetCount ||
+            result.sourceChecksum !== result.targetChecksum,
+    )
+        ? 1
+        : 0;
 }
 
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 
-export function legacyBillingState(tables: Record<string, SourceRecord[]>): LegacyBillingState {
+/** Legacy product configuration (`NUXT_CREEM_PRODUCT_ID_*`). */
+export function legacyProductsFromEnv(env: NodeJS.ProcessEnv): Array<{ tier: string; productId: string }> {
+    return Object.entries(CREEM_PRODUCT_ENV.legacy).flatMap(([tier, name]) =>
+        env[name] ? [{ tier, productId: String(env[name]) }] : [],
+    );
+}
+
+const ACTIVE_STATUSES = new Set(["active", "trialing"]);
+
+/**
+ * The legacy billing state with the legacy rules: a subscription belongs to the
+ * paying **user** (`referenceId`), an organization's plan is its owner's
+ * (`planLimit.service.ts` → `resolveOrgOwnerId`: the `owner` member, else the
+ * first member), and Atelier needs an active subscription to the Atelier product
+ * when one is configured. Limits are the legacy's own table
+ * (`shared/constants/pricing.ts`), not the Convex mirror.
+ */
+export function legacyBillingState(
+    tables: Record<string, SourceRecord[]>,
+    products: Array<{ tier: string; productId: string }> = [],
+): LegacyBillingState {
+    const members = tables.member ?? [];
+    const organizationIds = new Set((tables.organization ?? []).map((row) => String(row.id)));
+    const ownedBy = new Map<string, string[]>();
+    const ownerOf = new Map<string, string>();
+    for (const organizationId of organizationIds) {
+        const orgMembers = members.filter((member) => String(member.organizationId) === organizationId);
+        const owner = orgMembers.find((member) => member.role === "owner") ?? orgMembers[0];
+        if (!owner) continue;
+        ownerOf.set(organizationId, String(owner.userId));
+    }
+    for (const member of members) {
+        if (member.role !== "owner") continue;
+        const list = ownedBy.get(String(member.userId)) ?? [];
+        list.push(String(member.organizationId));
+        ownedBy.set(String(member.userId), list);
+    }
+
+    const subscriptions = tables.creem_subscription ?? [];
+    const atelierProduct = products.find((product) => product.tier === "atelier")?.productId ?? null;
+    const organizations: LegacyOrganizationPlan[] = [...organizationIds].sort().map((legacyId) => {
+        const owner = ownerOf.get(legacyId);
+        const own = subscriptions.filter((row) => owner !== undefined && String(row.referenceId) === owner);
+        const atelier = own.some(
+            (row) =>
+                ACTIVE_STATUSES.has(String(row.status ?? "")) &&
+                (atelierProduct === null || String(row.productId) === atelierProduct),
+        );
+        const plan = atelier ? "atelier" : "free";
+        const limits = CEREMLY_TIER_LIMITS[plan];
+        return {
+            legacyId,
+            plan,
+            limits: { maxGuestsPerEvent: limits.maxGuestsPerEvent, maxActiveEvents: limits.maxActiveEvents, maxReminders: limits.maxReminders },
+            customerIds: [...new Set(own.map((row) => row.creemCustomerId).filter((id): id is string => typeof id === "string" && id.length > 0))],
+        };
+    });
+
     return {
-        subscriptions: (tables.creem_subscription ?? []).map((row) => ({
+        products,
+        organizations,
+        subscriptions: subscriptions.map((row) => ({
+            organizationLegacyIds: organizationIds.has(String(row.referenceId))
+                ? [String(row.referenceId)]
+                : (ownedBy.get(String(row.referenceId)) ?? []).sort(),
             creemSubscriptionId: (row.creemSubscriptionId as string | null) ?? null,
             referenceId: String(row.referenceId),
             productId: String(row.productId),
@@ -544,28 +675,44 @@ function parseArgs(argv: string[]): CliOptions {
 async function main() {
     const { config } = await import("dotenv");
     const { readSourceSnapshot, tableChecksum } = await import("./export-neon");
-    const { assertStagingTarget, readAllPages, runConvex } = await import("./convex-cli");
+    const { connectStagingTarget } = await import("./convex-target");
+    const { listAllObjects, r2ListerFromEnv } = await import("./r2-bucket");
+    const { migrationKeyFromEnv } = await import("./crypto");
+    const { verifyManifestMac, validateManifest } = await import("./manifest");
+    const { EXPECTED_BATCH_TABLES } = await import("./export-neon");
 
     const options = parseArgs(process.argv.slice(2));
     config({ path: ".env", quiet: true });
     const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
     if (!migrationKey) throw new Error("NUXT_MIGRATION_API_KEY is not set (the deployment's MIGRATION_API_KEY)");
-    const deployment = assertStagingTarget();
+
+    // The manifest is trusted only once its MAC verifies.
+    let manifest: ExportManifest | null = null;
+    if (options.manifest) {
+        manifest = JSON.parse(await readFile(resolve(options.manifest), "utf8")) as ExportManifest;
+        verifyManifestMac(manifest, migrationKeyFromEnv());
+        validateManifest(manifest, EXPECTED_BATCH_TABLES);
+    }
+
+    const target = await connectStagingTarget();
+    const deployment = target.deployment;
+    const lister = r2ListerFromEnv(process.env);
     const started = Date.now();
 
     // Source and target are read concurrently: the source is one consistent
     // snapshot, the target one paginated read per table.
-    const [snapshot, targetTables, authUsers, authAccounts, authTwoFactors, billing] = await Promise.all([
+    const [snapshot, targetTables, authUsers, authAccounts, authTwoFactors, billing, bucket] = await Promise.all([
         readSourceSnapshot(),
         Promise.all(
             IMPORT_ORDER.map((table) =>
-                readAllPages<TargetDoc>("migrations/reconcileSnapshot:tablePage", { migrationKey, table }),
+                target.readAllPages<TargetDoc>("migrations/reconcileSnapshot:tablePage", { migrationKey, table }),
             ),
         ),
-        readAllPages<AuthTargetState["users"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "user" }),
-        readAllPages<AuthTargetState["accounts"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "account" }),
-        readAllPages<AuthTargetState["twoFactors"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "twoFactor" }),
-        runConvex<ConvexBillingState>("billing:reconcileSnapshot", {}),
+        target.readAllPages<AuthTargetState["users"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "user" }),
+        target.readAllPages<AuthTargetState["accounts"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "account" }),
+        target.readAllPages<AuthTargetState["twoFactors"][number]>("migrations/reconcileSnapshot:authPage", { migrationKey, model: "twoFactor" }),
+        target.run<ConvexBillingState>("billing:reconcileSnapshot", {}),
+        lister ? listAllObjects(lister) : Promise.resolve(null),
     ]);
     const readMs = Date.now() - started;
 
@@ -605,10 +752,23 @@ async function main() {
         ),
     );
     results.push(reconcileR2Manifest(snapshot.tables.file ?? [], targetByTable.get("files") ?? []));
-    results.push(reconcileBilling(compareBillingStates(legacyBillingState(snapshot.tables), billing)));
+    if (bucket) {
+        results.push(reconcileR2Bucket(snapshot.tables.file ?? [], bucket));
+    } else {
+        // Fail closed: a reconciliation that could not look at the bucket has
+        // not proven the objects exist.
+        results.push({
+            table: "r2_bucket", sourceCount: 0, targetCount: 0, sourceChecksum: "-", targetChecksum: "-",
+            mismatches: ["bucket_not_inventoried:no_r2_read_credentials"], deferred: 0, notes: [],
+        });
+    }
+    results.push(
+        reconcileBilling(
+            compareBillingStates(legacyBillingState(snapshot.tables, legacyProductsFromEnv(process.env)), billing),
+        ),
+    );
 
-    if (options.manifest) {
-        const manifest = JSON.parse(await readFile(resolve(options.manifest), "utf8")) as ExportManifest;
+    if (manifest) {
         const live = Object.fromEntries(
             Object.entries(snapshot.tables).map(([table, rows]) => [table, { count: rows.length, checksum: tableChecksum(rows) }]),
         );
