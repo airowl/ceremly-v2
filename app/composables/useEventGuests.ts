@@ -41,10 +41,8 @@ import type {
  *   ma **opzionale**: con il drawer chiuso non c'è niente da sottoscrivere, e
  *   `convex-vue` non ha uno "skip". La sottoscrizione è quindi aperta e chiusa a
  *   mano (`client.onUpdate`) quando cambia l'ospite selezionato.
- * - `useEventGuests()` — le scritture: mutation per CRUD, import, invio e
- *   mark-sent; **action** per l'email di test, che va inviata adesso e il cui esito
- *   l'organizzatore aspetta (`convex-vue` non ha un composable per le action, da
- *   qui l'unico `client.action`).
+ * - `useEventGuests()` — le scritture, tutte mutation: CRUD, import, invio,
+ *   mark-sent ed email di test (che viene **accodata**: la consegna è un job).
  *
  * Il confine millisecondi ↔ ISO è qui (`toCeremlyGuest` & co.), per la stessa
  * ragione di `useEvents`: la UI è nata su stringhe ISO, Convex memorizza numeri.
@@ -82,7 +80,10 @@ export interface GuestImportResult {
 }
 
 export interface SendInvitesResult {
+    /** Job accodati da **questa** chiamata. */
     queued: number;
+    /** Ospiti il cui job di un invio precedente è ancora in volo: nessun nuovo job. */
+    alreadyQueued: number;
     skippedNoEmail: number;
     /**
      * Ospiti con email il cui accodamento è fallito. Con Convex è sempre 0 (i job
@@ -275,15 +276,13 @@ export function useGuestDetail(
  * i propri toast, come facevano con il composable legacy.
  */
 export function useEventGuests() {
-    const client = useConvexClient();
     const createMutation = useConvexMutation(api.guests.create);
     const updateMutation = useConvexMutation(api.guests.update);
     const removeMutation = useConvexMutation(api.guests.softDelete);
     const importMutation = useConvexMutation(api.guests.importRows);
     const sendMutation = useConvexMutation(api.guests.sendInvites);
     const markSentMutation = useConvexMutation(api.guests.markSent);
-
-    const testPending = ref(false);
+    const testMutation = useConvexMutation(api.guests.sendTest);
 
     const isLoading = computed(() =>
         createMutation.isPending.value
@@ -292,7 +291,7 @@ export function useEventGuests() {
         || importMutation.isPending.value
         || sendMutation.isPending.value
         || markSentMutation.isPending.value
-        || testPending.value);
+        || testMutation.isPending.value);
 
     async function createGuest(eventId: string, data: CreateGuestInput): Promise<CeremlyGuest> {
         const row = await createMutation.mutate({
@@ -338,16 +337,15 @@ export function useEventGuests() {
         });
     }
 
-    async function sendTest(eventId: string, override?: SendTestInput): Promise<{ success: boolean }> {
-        testPending.value = true;
-        try {
-            return await client.action(api.guests.sendTest, {
-                eventId: eventId as never,
-                ...definedOnly({ subject: override?.subject, body: override?.body }),
-            });
-        } finally {
-            testPending.value = false;
-        }
+    /**
+     * Accoda l'email di test: la consegna (tentativi, backoff, stato terminale) è
+     * del job, quindi l'esito qui è "in coda", non "inviata".
+     */
+    async function sendTest(eventId: string, override?: SendTestInput): Promise<{ queued: true }> {
+        return await testMutation.mutate({
+            eventId: eventId as never,
+            ...definedOnly({ subject: override?.subject, body: override?.body }),
+        });
     }
 
     async function markWhatsappSent(eventId: string, guestIds: string[]): Promise<{ marked: number }> {

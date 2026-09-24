@@ -389,6 +389,25 @@ export default defineSchema({
         .index("by_enabled_pending", ["enabled", "pending"])
         .index("by_legacy_id", ["legacyId"]),
 
+    /**
+     * Richieste di "invia un test a me" (Task 14, fix round 1).
+     *
+     * Esiste perché l'email di test è un effetto esterno e passa dalla macchina a
+     * stati dei job, il cui payload è **solo id**: il testo di prova (override non
+     * salvato di oggetto/corpo) vive qui, non nel job. Una riga per richiesta,
+     * cancellata con il grafo dell'evento.
+     */
+    inviteTestRequests: defineTable({
+        organizationId: v.id("organizations"),
+        eventId: v.id("events"),
+        requestedBy: v.id("appUsers"),
+        subject: v.optional(v.string()),
+        body: v.optional(v.string()),
+        createdAt: v.number(),
+    })
+        .index("by_organization", ["organizationId"])
+        .index("by_event", ["eventId"]),
+
     /** Entità di esempio org-scoped (CRUD completo: `server/api/projects/`). */
     projects: defineTable({
         legacyId: v.optional(v.string()),

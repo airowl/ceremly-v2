@@ -20,7 +20,7 @@ Commit: `e6bfe5d` progetti + install del client, `e936cc5` eventi, `c23d033` il
 gate, `2fa0258` statistiche vive.
 
 Seconda metà dello Step 3 (2026-09-24, albero locale): `vitest run convex/` **261
-passed** (+17, `convex/distribution.test.ts`), `pnpm test:migration` **399 passed /
+passed** (+17, `convex/distribution.test.ts`; 19 dopo il fix round 1), `pnpm test:migration` **399 passed /
 27 skipped**, gate `frontend-data-layer.test.ts` 16 casi, `pnpm typecheck` identico
 alla baseline (stesso numero di righe `error TS` misurato con le modifiche in stash,
 nessuna nei file toccati), `eslint` pulito sui file toccati, `pnpm build` ok. Commit:
@@ -189,21 +189,34 @@ Due differenze, entrambe conseguenza del runtime e dichiarate nei test:
   campo resta per il contratto della pagina.
 - **Un secondo clic non accoda una seconda email.** `dedupeKey` per ospite: finché il
   suo job è `pending`/`retrying`/`running` viene riusato (e legge il testo appena
-  salvato), senza una seconda attività. A job concluso un nuovo invio è un nuovo
-  invito, voluto.
+  salvato), senza una seconda attività, ed è contato in `alreadyQueued` — **non** in
+  `queued` (fix round 1 della review: prima `queued` era `withEmail.length`, e audit
+  e UI potevano dire "50 accodati" quando 49 erano già in volo). A job concluso un
+  nuovo invio è un nuovo invito, voluto.
 
 Validazione con i limiti dello schema legacy (1–200 ospiti, subject ≤ 200, body ≤
 5000), con una differenza minima: un testo di soli spazi è `INVALID_INPUT` (il legacy
 `min(1)` senza trim lo accettava; la dashboard faceva già il trim, quindi nessuna
 richiesta reale cambia esito).
 
-`guests.sendTest` è un'**action**, non un job e non una mutation: l'organizzatore
-aspetta "inviato / non inviato" (il legacy rispondeva 502), e un job trasformerebbe
-un fallimento in silenzio. Autorizzazione in `internal.guests.testEmailTarget`
-(l'identità si propaga dall'action), consegna via `internal.email.sendTemplate` con
-il mittente transazionale (legacy `type: "custom"`, fuori dal sottodominio tracciato),
-audit `invite.test_sent` con `success`/`failure` — nuovo: il legacy non auditava il
-test, e l'`email.sent` generico non ha attore. Nessuna scrittura su evento o ospiti.
+`guests.sendTest` è una **mutation che accoda un job** (fix round 1 della review). La
+prima versione era un'action che inviava subito e auditava l'esito dopo: un effetto
+esterno senza tentativi, backoff né stato terminale persistiti, e un errore arrivato
+*dopo* che il provider aveva accettato l'email si leggeva come "non inviata". Ora la
+mutation autorizza (`requireRole`), valida l'override, salva la richiesta in
+`inviteTestRequests` (il testo di prova non salvato vive lì, **non** nel payload) e
+accoda `send-test-invite-email` con payload `{ testRequestId }`; audit
+`invite.test_requested` all'accodamento. Il job (`convex/jobs.ts`) risolve
+destinatario e testo quando gira, invia con il mittente transazionale (legacy `type:
+"custom"`) e una **chiave di idempotenza Resend per richiesta** (`invite-test/<id>`:
+un retry dopo un timeout in cui il provider aveva accettato non spedisce due volte);
+tentativi (5, budget email), backoff e `dead` sono quelli della macchina a stati.
+Richiesta il cui evento è stato cancellato → skip silenzioso, e la riga va via con il
+grafo dell'evento (`deleteEventGraph`). La UI dice "in coda", non "inviata".
+
+È un **settimo tipo di job**, fuori dai sei del piano (Task 13): dichiarato qui e nel
+commento della registry (`convex/lib/jobQueue.ts`). E una tabella nuova
+(`inviteTestRequests`), additiva.
 
 ### L'anteprima firmata
 
@@ -289,9 +302,8 @@ comportamento.
    la riga rompe il test. La lista può solo accorciarsi;
 3. **nessuna `useConvexClient()` manuale** fuori da `useEvents.ts` e
    `useEventGuests.ts` — la via per reintrodurre una lettura una-tantum al posto di
-   una query viva. Il secondo è ammesso per `client.action` (l'email di test) e
-   `client.onUpdate` (il dettaglio opzionale), e un'asserzione dedicata vieta lì
-   `client.query(...)`.
+   una query viva. Il secondo è ammesso solo per `client.onUpdate` (il dettaglio
+   opzionale), e un'asserzione dedicata vieta lì `client.query(...)`.
 
 Dal 2026-09-24 il gate ammette, oltre a `/api/auth`, **un solo** bridge anonimo con
 una regex esatta (`/api/public/invite/${…}/rsvp`): la GET dell'invito ha lo stesso
@@ -335,14 +347,16 @@ Test: `test/migration/frontend-data-layer.test.ts` (9 casi), più i tre casi
 `listAll` in `convex/domain.test.ts`.
 
 Step 3, seconda metà: `convex/guests.ts` (`sendInvites`, `sendTest`,
-`testEmailTarget`, `recordTestSent`), `convex/rsvp.ts` (`previewInvite`, status HTTP
+`testEmailContext`, `buildTestInviteEmail`), `convex/rsvp.ts` (`previewInvite`, status HTTP
 dei rifiuti), `convex/http.ts` (inoltro di `errors`), `convex/lib/previewToken.ts`
-(nuovo), `convex/lib/audit.ts` (`invite.test_sent`),
+(nuovo), `convex/lib/audit.ts` (`invite.test_requested`), `convex/lib/jobQueue.ts` e
+`convex/jobs.ts` (`send-test-invite-email`), `convex/schema.ts` (`inviteTestRequests`),
+`convex/events.ts` (cascata),
 `server/utils/publicFormsBridge.ts` (`data.errors`), `app/composables/useEventGuests.ts`,
 `app/composables/usePublicInvite.ts`, `app/composables/useEventReminders.ts` (nuovo),
 `app/composables/useConvexError.ts` (`convexErrorCode`), `app/lib/publicInvite.ts`
 (nuovo), le pagine `events/[id]/{guests,distribution,reminders,index}.vue`. Test:
-`convex/distribution.test.ts` (17 casi, nuovo), +7 casi nel gate, +1 in
+`convex/distribution.test.ts` (19 casi, nuovo), +7 casi nel gate, +1 in
 `test/migration/public-forms-bridge.test.ts`.
 
 ### Perché `useConvexResource` è stato cancellato

@@ -43,6 +43,7 @@ const AUTH_SECRET = "better-auth-secret-under-test";
 interface FetchCall {
     url: string;
     payload: Record<string, unknown>;
+    headers: Record<string, string>;
 }
 
 let fetchCalls: FetchCall[] = [];
@@ -66,7 +67,11 @@ beforeEach(() => {
     globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
         const target = String(url);
         const body = typeof init?.body === "string" ? init.body : "{}";
-        fetchCalls.push({ url: target, payload: JSON.parse(body) as Record<string, unknown> });
+        const headers: Record<string, string> = {};
+        for (const [key, value] of Object.entries((init?.headers ?? {}) as Record<string, string>)) {
+            headers[key.toLowerCase()] = String(value);
+        }
+        fetchCalls.push({ url: target, payload: JSON.parse(body) as Record<string, unknown>, headers });
         const simulated = target.startsWith(RESEND_URL)
             ? resendResponder()
             : { status: 200, body: { ok: true } };
@@ -195,7 +200,7 @@ describe("guests.sendInvites", () => {
             body: "Apri {link}",
         });
 
-        expect(result).toEqual({ queued: 2, skippedNoEmail: 1, failed: 0 });
+        expect(result).toEqual({ queued: 2, alreadyQueued: 0, skippedNoEmail: 1, failed: 0 });
 
         const jobs = await rows(fixture.t, "jobExecutions");
         expect(jobs).toHaveLength(2);
@@ -240,7 +245,7 @@ describe("guests.sendInvites", () => {
             organizationId: fixture.organizationId,
             targetType: "event",
             targetId: eventId,
-            details: { channel: "email", queued: 2, skippedNoEmail: 1, failed: 0 },
+            details: { channel: "email", queued: 2, alreadyQueued: 0, skippedNoEmail: 1, failed: 0 },
         });
     });
 
@@ -280,7 +285,7 @@ describe("guests.sendInvites", () => {
             body: "Corpo",
         });
 
-        expect(result).toEqual({ queued: 1, skippedNoEmail: 0, failed: 0 });
+        expect(result).toEqual({ queued: 1, alreadyQueued: 0, skippedNoEmail: 0, failed: 0 });
         expect((await rows(fixture.t, "jobExecutions")).map((job) => job.payload?.guestId)).toEqual([active]);
     });
 
@@ -317,12 +322,19 @@ describe("guests.sendInvites", () => {
                 body: "Corpo",
             });
 
-        await send();
+        const first = await send();
         const firstSentAt = (await fixture.t.run(async (ctx) => await ctx.db.get(guestId)))!.sentAt;
         const second = await send();
 
-        // Still "queued" from the organizer's point of view: one email will leave.
-        expect(second).toEqual({ queued: 1, skippedNoEmail: 0, failed: 0 });
+        // `queued` counts only what this call queued: the in-flight job is reported
+        // apart, so neither the audit nor the UI claims a send that did not happen.
+        expect(first).toEqual({ queued: 1, alreadyQueued: 0, skippedNoEmail: 0, failed: 0 });
+        expect(second).toEqual({ queued: 0, alreadyQueued: 1, skippedNoEmail: 0, failed: 0 });
+        const audits = (await rows(fixture.t, "auditLogs")).filter((row) => row.action === "invite.sent");
+        expect(audits.map((row) => row.details)).toEqual([
+            { channel: "email", queued: 1, alreadyQueued: 0, skippedNoEmail: 0, failed: 0 },
+            { channel: "email", queued: 0, alreadyQueued: 1, skippedNoEmail: 0, failed: 0 },
+        ]);
         expect(await rows(fixture.t, "jobExecutions")).toHaveLength(1);
         expect(await rows(fixture.t, "guestActivities")).toHaveLength(1);
         expect((await fixture.t.run(async (ctx) => await ctx.db.get(guestId)))!.sentAt).toBe(firstSentAt);
@@ -419,8 +431,11 @@ describe("guests.sendInvites", () => {
 // guests.sendTest — legacy POST /api/events/:id/send-test
 // ---------------------------------------------------------------------------
 
+const testJobs = async (t: Test) =>
+    (await rows(t, "jobExecutions")).filter((job) => job.name === JOB_TYPES.sendTestInviteEmail);
+
 describe("guests.sendTest", () => {
-    it("sends the invite to the caller, as Anna, with a signed preview link, writing nothing on the event", async () => {
+    it("queues a durable job with an ID-only payload, and the job sends to the caller as Anna", async () => {
         const fixture = await bootstrap();
         const eventId = await seedEvent(fixture, {
             title: "Giulia & Tommaso",
@@ -429,15 +444,27 @@ describe("guests.sendTest", () => {
         });
         const before = await fixture.t.run(async (ctx) => await ctx.db.get(eventId));
 
-        const result = await fixture.s.action(api.guests.sendTest, { eventId });
+        const result = await fixture.s.mutation(api.guests.sendTest, { eventId });
 
-        expect(result).toEqual({ success: true });
+        // Queued, not sent: the send is an external side effect and goes through
+        // the job state machine (attempts, backoff, terminal state persisted).
+        expect(result).toEqual({ queued: true });
+        expect(emailCalls()).toHaveLength(0);
+        const [job] = await testJobs(fixture.t);
+        expect(job!.status).toBe("pending");
+        expect(Object.keys(job!.payload ?? {})).toEqual(["testRequestId"]);
+
+        await drain(fixture.t);
+
         const sent = emailCalls();
         expect(sent).toHaveLength(1);
         expect(sent[0]!.payload.to).toEqual(["alice@example.com"]);
         expect(sent[0]!.payload.subject).toBe("Ciao Anna");
         // Legacy `type: "custom"`: the transactional sender, not the tracked one.
         expect(sent[0]!.payload.from).toBe("Ceremly <noreply@ceremly.test>");
+        // A retry after the provider accepted the first attempt must not send twice.
+        expect(sent[0]!.headers["idempotency-key"]).toBe(`invite-test/${String(job!.payload?.testRequestId)}`);
+        expect((await testJobs(fixture.t))[0]!.status).toBe("succeeded");
 
         const text = String(sent[0]!.payload.text);
         const match = /\/e\/giulia-tommaso\/preview\?sig=([^\s)"]+)/.exec(text);
@@ -445,18 +472,18 @@ describe("guests.sendTest", () => {
         const sig = decodeURIComponent(match![1]!);
         expect(await verifyPreviewToken(AUTH_SECRET, "giulia-tommaso", sig)).toBe(true);
 
-        // No domain write: event untouched, no guest, no job.
+        // No domain write: event untouched, no guest.
         expect(await fixture.t.run(async (ctx) => await ctx.db.get(eventId))).toEqual(before);
         expect(await rows(fixture.t, "guests")).toHaveLength(0);
-        expect(await rows(fixture.t, "jobExecutions")).toHaveLength(0);
 
-        const audit = (await rows(fixture.t, "auditLogs")).filter((row) => row.action === "invite.test_sent");
+        const audit = (await rows(fixture.t, "auditLogs")).filter(
+            (row) => row.action === "invite.test_requested",
+        );
         expect(audit).toHaveLength(1);
         expect(audit[0]).toMatchObject({
             actorAppUserId: fixture.appUserId,
             organizationId: fixture.organizationId,
             targetId: eventId,
-            status: "success",
         });
     });
 
@@ -468,12 +495,14 @@ describe("guests.sendTest", () => {
         });
         const bare = await seedEvent(fixture, { title: "Evento spoglio", distribution: {} });
 
-        await fixture.s.action(api.guests.sendTest, {
+        await fixture.s.mutation(api.guests.sendTest, {
             eventId,
             subject: "Prova {nome}",
             body: "Bozza per {nome}",
         });
-        await fixture.s.action(api.guests.sendTest, { eventId: bare });
+        await drain(fixture.t);
+        await fixture.s.mutation(api.guests.sendTest, { eventId: bare });
+        await drain(fixture.t);
 
         const [override, fallback] = emailCalls();
         expect(override!.payload.subject).toBe("Prova Anna");
@@ -481,27 +510,67 @@ describe("guests.sendTest", () => {
         // No saved subject: the legacy default subject of the invite template.
         expect(String(fallback!.payload.subject)).toContain("Evento spoglio");
         expect(String(fallback!.payload.text)).toContain("c'è un invito che ti aspetta");
+        // The override is never written on the event.
+        const event = await fixture.t.run(async (ctx) => await ctx.db.get(eventId));
+        expect(event!.distribution.emailSubject).toBe("Salvato {nome}");
     });
 
-    it("reports a failed delivery instead of a success, and audits the failure", async () => {
+    it("a provider failure is a persisted retry with backoff, then a terminal state — never a success", async () => {
         const fixture = await bootstrap();
         const eventId = await seedEvent(fixture);
         resendResponder = () => ({ status: 500, body: { message: "boom" } });
 
-        await expectCode(fixture.s.action(api.guests.sendTest, { eventId }), "TEST_EMAIL_FAILED");
+        await fixture.s.mutation(api.guests.sendTest, { eventId });
+        await drain(fixture.t);
 
-        const audit = (await rows(fixture.t, "auditLogs")).filter((row) => row.action === "invite.test_sent");
-        expect(audit).toHaveLength(1);
-        expect(audit[0]!.status).toBe("failure");
+        const [job] = await testJobs(fixture.t);
+        expect(job!.status).toBe("retrying");
+        expect(job!.attempt).toBe(1);
+        expect(job!.lastError).toContain("RESEND_500");
+        expect(job!.nextAttemptAt).toBeGreaterThan(Date.now());
+
+        // The budget is the email one (5): each further delivery is one attempt,
+        // and the last failure is a terminal `dead`, not a silent stop.
+        for (let attempt = 2; attempt <= 5; attempt += 1) await drain(fixture.t);
+        const [terminal] = await testJobs(fixture.t);
+        expect(terminal!.status).toBe("dead");
+        expect(terminal!.attempt).toBe(5);
+        expect(emailCalls()).toHaveLength(5);
     });
 
-    it("refuses another organization's event before sending anything", async () => {
+    it("validates the override like the legacy schema before queueing", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture);
+
+        await expectCode(
+            fixture.s.mutation(api.guests.sendTest, { eventId, subject: "x".repeat(201) }),
+            "INVALID_INPUT",
+        );
+        expect(await testJobs(fixture.t)).toHaveLength(0);
+    });
+
+    it("refuses another organization's event before queueing anything", async () => {
         const fixture = await bootstrap();
         const eventId = await seedEvent(fixture);
         const bob = await addUser(fixture.t, "bob@example.com", "Bob");
 
-        await expectCode(bob.s.action(api.guests.sendTest, { eventId }), "EVENT_NOT_FOUND");
+        await expectCode(bob.s.mutation(api.guests.sendTest, { eventId }), "EVENT_NOT_FOUND");
+        expect(await testJobs(fixture.t)).toHaveLength(0);
+        expect(await rows(fixture.t, "inviteTestRequests")).toHaveLength(0);
+    });
+
+    it("skips, without sending, a request whose event was deleted in the meantime", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture);
+
+        await fixture.s.mutation(api.guests.sendTest, { eventId });
+        await fixture.s.mutation(api.events.remove, { eventId });
+        await drain(fixture.t);
+
         expect(emailCalls()).toHaveLength(0);
+        // The request row goes with the event graph; the job ends, it does not retry.
+        expect(await rows(fixture.t, "inviteTestRequests")).toHaveLength(0);
+        expect((await testJobs(fixture.t))[0]!.status).toBe("succeeded");
     });
 });
 

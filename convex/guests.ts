@@ -1,15 +1,13 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { DOMAIN_WRITE_ROLES, requireActiveOrganization, requireRole } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden } from "./lib/identity";
 import {
     FALLBACK_INVITE_BODY,
     applyInvitePlaceholders,
-    buildGuestPixelUrl,
     deriveRsvpStatus,
     generateGuestToken,
     normalizeOptionalEmail,
@@ -658,8 +656,10 @@ function assertEventOpenForSending(event: Doc<"events">): void {
  *   throws and nothing is. The field stays for the UI contract.
  * - **A second click does not queue a second email.** The dedupe key is per guest:
  *   while that guest's job is still pending, retrying or running, it is reused
- *   (and reads the text just saved). No second activity is written for it. Once
- *   the job has finished, a new send is a new, intentional invite.
+ *   (and reads the text just saved). It is counted in `alreadyQueued`, not in
+ *   `queued`, and no second activity is written for it: neither the audit nor the
+ *   UI claims a send this call did not make. Once the job has finished, a new
+ *   send is a new, intentional invite.
  */
 export const sendInvites = mutation({
     args: {
@@ -693,6 +693,8 @@ export const sendInvites = mutation({
         );
         const withEmail = guests.filter((guest) => guest.email !== undefined);
         const skippedNoEmail = guests.length - withEmail.length;
+        let queued = 0;
+        let alreadyQueued = 0;
 
         for (const guest of withEmail) {
             const { deduplicated } = await enqueueJob(ctx, {
@@ -700,7 +702,11 @@ export const sendInvites = mutation({
                 payload: { guestId: guest._id },
                 dedupeKey: `${JOB_TYPES.sendInviteEmail}:${guest._id}`,
             });
-            if (deduplicated) continue;
+            if (deduplicated) {
+                alreadyQueued += 1;
+                continue;
+            }
+            queued += 1;
 
             await ctx.db.patch(guest._id, {
                 // Legacy `COALESCE(sent_at, now())`: the first send date is kept.
@@ -718,7 +724,7 @@ export const sendInvites = mutation({
             });
         }
 
-        const result = { queued: withEmail.length, skippedNoEmail, failed: 0 };
+        const result = { queued, alreadyQueued, skippedNoEmail, failed: 0 };
 
         await writeAudit(ctx, {
             action: "invite.sent",
@@ -735,127 +741,110 @@ export const sendInvites = mutation({
 });
 
 /**
- * What the test email needs, resolved with the caller's identity (propagated from
- * the action). Authorization lives here, not in the action: an action cannot read
- * the database, and a check that the action did "by hand" would be a second
- * implementation of `requireRole`.
+ * `api.guests.sendTest` — "send a test to me": the invite email, to the caller,
+ * as the sample guest "Anna", with a signed preview link instead of a guest link.
+ *
+ * Port of `distribution.service.sendTest`, with one deliberate change: the legacy
+ * sent synchronously inside the route, and an external side effect executed that
+ * way has no persisted attempts, backoff or terminal state (a provider error after
+ * acceptance would even read as "failed" while the email left). Here the mutation
+ * authorizes, validates, stores the request and **queues a job**
+ * (`send-test-invite-email`, payload `{ testRequestId }` only); delivery, retries
+ * and the terminal state are the job machine's (`convex/jobs.ts`), with a Resend
+ * idempotency key per request. The UI therefore reports "queued", not "sent".
+ *
+ * The subject/body override exists to try the text before saving it: it lives on
+ * the request row, never on the event.
  */
-export const testEmailTarget = internalQuery({
-    args: { eventId: v.id("events") },
-    handler: async (ctx, args) => {
+export const sendTest = mutation({
+    args: {
+        eventId: v.id("events"),
+        subject: v.optional(v.string()),
+        body: v.optional(v.string()),
+    },
+    handler: async (ctx, args): Promise<{ queued: true }> => {
         const authz = await requireRole(ctx, DOMAIN_WRITE_ROLES);
+        const subject = optionalText(args.subject, MAX_SUBJECT_LENGTH, "subject");
+        const body = optionalText(args.body, MAX_BODY_LENGTH, "body");
+
         const event = await requireOwnedEvent(ctx, authz.organizationId, args.eventId);
         const appUser = await ctx.db.get(authz.appUserId);
         if (!appUser?.email) {
             throw new ConvexError({ code: "USER_EMAIL_MISSING", message: "Email dell'utente non disponibile" });
         }
 
-        return {
-            to: appUser.email,
+        const testRequestId = await ctx.db.insert("inviteTestRequests", {
             organizationId: authz.organizationId,
-            title: event.title,
-            slug: event.slug,
-            emailSubject: event.distribution.emailSubject ?? "",
-            emailBody: event.distribution.emailBody ?? "",
-        };
-    },
-});
+            eventId: event._id,
+            requestedBy: authz.appUserId,
+            ...(subject ? { subject } : {}),
+            ...(body ? { body } : {}),
+            createdAt: Date.now(),
+        });
 
-/** Audit of the test email, re-authorized: an internal function trusts no caller. */
-export const recordTestSent = internalMutation({
-    args: { eventId: v.id("events"), sent: v.boolean() },
-    handler: async (ctx, args) => {
-        const authz = await requireRole(ctx, DOMAIN_WRITE_ROLES);
-        await requireOwnedEvent(ctx, authz.organizationId, args.eventId);
+        await enqueueJob(ctx, {
+            type: JOB_TYPES.sendTestInviteEmail,
+            payload: { testRequestId },
+        });
 
         await writeAudit(ctx, {
-            action: "invite.test_sent",
+            action: "invite.test_requested",
             actorAppUserId: authz.appUserId,
             actorAuthUserId: authz.authUserId,
             organizationId: authz.organizationId,
             targetType: "event",
-            targetId: args.eventId,
-            status: args.sent ? "success" : "failure",
+            targetId: event._id,
+            details: { testRequestId },
         });
+
+        return { queued: true };
     },
 });
 
 /**
- * `api.guests.sendTest` — the invite email, sent **now** to the caller, as the
- * sample guest "Anna", with a signed preview link instead of a guest link.
- *
- * Port of `distribution.service.sendTest`. An action and not a mutation for the
- * reason the legacy did not use the queue either: the organizer is waiting for
- * the answer ("sent" or "not sent"), and a job would turn a failure into silence.
- * The subject/body override exists to try the text before saving it, so it is
- * never persisted. Nothing is written on the event or the guests; the only rows
- * are the audit (`invite.test_sent`, with success or failure) and what the email
- * pipeline itself records.
+ * What the test job needs, resolved **when it runs**: the recipient is the
+ * requester's current email, the text the event's current one (unless the request
+ * carries an override). `null` when the request, the event or the requester no
+ * longer exist — the job then ends without sending instead of retrying five times
+ * something that has no recipient.
  */
-export const sendTest = action({
-    args: {
-        eventId: v.id("events"),
-        subject: v.optional(v.string()),
-        body: v.optional(v.string()),
-    },
-    handler: async (ctx, args): Promise<{ success: true }> => {
-        const subjectOverride = optionalText(args.subject, MAX_SUBJECT_LENGTH, "subject");
-        const bodyOverride = optionalText(args.body, MAX_BODY_LENGTH, "body");
+export const testEmailContext = internalQuery({
+    args: { testRequestId: v.id("inviteTestRequests") },
+    handler: async (ctx, args) => {
+        const request = await ctx.db.get(args.testRequestId);
+        if (!request) return null;
+        const [event, requester] = await Promise.all([
+            ctx.db.get(request.eventId),
+            ctx.db.get(request.requestedBy),
+        ]);
+        if (!event || !requester?.email) return null;
 
-        const target: {
-            to: string;
-            organizationId: Id<"organizations">;
-            title: string;
-            slug: string;
-            emailSubject: string;
-            emailBody: string;
-        } = await ctx.runQuery(internal.guests.testEmailTarget, { eventId: args.eventId });
-
-        const base = siteUrl().replace(/\/+$/, "");
-        const sig = await signPreviewToken(requireEnv("BETTER_AUTH_SECRET"), target.slug);
-        const link = `${base}/e/${target.slug}/${PREVIEW_TOKEN}?sig=${encodeURIComponent(sig)}`;
-        const values = { nome: TEST_GUEST_NAME, link };
-
-        const subject = applyInvitePlaceholders(
-            subjectOverride || target.emailSubject || emailSubjects.guestInvite(target.title),
-            values,
-        );
-        const message = applyInvitePlaceholders(
-            bodyOverride || target.emailBody || FALLBACK_INVITE_BODY,
-            values,
-        );
-
-        let sent = false;
-        try {
-            const result: { sent: boolean } = await ctx.runAction(internal.email.sendTemplate, {
-                request: {
-                    template: "guest-invite",
-                    to: target.to,
-                    subject,
-                    eventTitle: target.title,
-                    firstName: TEST_GUEST_NAME,
-                    message,
-                    ctaUrl: link,
-                    pixelUrl: buildGuestPixelUrl(PREVIEW_TOKEN),
-                },
-                // Legacy `type: "custom"`: the transactional sender, not the tracked
-                // events subdomain — the test must not pollute the invite metrics.
-                eventScoped: false,
-                context: { organizationId: target.organizationId },
-            });
-            sent = result.sent;
-        } catch (error) {
-            console.error("[guests.sendTest] delivery failed", error instanceof Error ? error.message : error);
-        }
-
-        await ctx.runMutation(internal.guests.recordTestSent, { eventId: args.eventId, sent });
-
-        if (!sent) {
-            throw new ConvexError({
-                code: "TEST_EMAIL_FAILED",
-                message: "Invio dell'email di test non riuscito",
-            });
-        }
-        return { success: true };
+        return {
+            to: requester.email,
+            organizationId: request.organizationId,
+            title: event.title,
+            slug: event.slug,
+            subject: request.subject || event.distribution.emailSubject || emailSubjects.guestInvite(event.title),
+            body: request.body || event.distribution.emailBody || FALLBACK_INVITE_BODY,
+        };
     },
 });
+
+/** Link, subject and message of the test email: pure, used by the job runner. */
+export async function buildTestInviteEmail(context: {
+    slug: string;
+    subject: string;
+    body: string;
+}): Promise<{ link: string; subject: string; message: string; firstName: string }> {
+    const base = siteUrl().replace(/\/+$/, "");
+    const sig = await signPreviewToken(requireEnv("BETTER_AUTH_SECRET"), context.slug);
+    const link = `${base}/e/${context.slug}/${PREVIEW_TOKEN}?sig=${encodeURIComponent(sig)}`;
+    const values = { nome: TEST_GUEST_NAME, link };
+
+    return {
+        link,
+        subject: applyInvitePlaceholders(context.subject, values),
+        message: applyInvitePlaceholders(context.body, values),
+        firstName: TEST_GUEST_NAME,
+    };
+}

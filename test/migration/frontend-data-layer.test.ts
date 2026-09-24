@@ -123,14 +123,13 @@ const isAllowed = (path: string): boolean =>
  * Dove `useConvexClient()` è ammesso, e perché.
  *
  * - `useEvents.ts`: `getEventOnce`, la lettura una-tantum delle pagine a form.
- * - `useEventGuests.ts`: `client.action` (l'email di test: `convex-vue` non ha un
- *   composable per le action) e `client.onUpdate` (il dettaglio ospite, una
- *   sottoscrizione **viva** che si apre solo a drawer aperto). Mai `client.query`:
- *   lo verifica l'asserzione dedicata.
+ * - `useEventGuests.ts`: `client.onUpdate` (il dettaglio ospite, una
+ *   sottoscrizione **viva** che si apre solo a drawer aperto: `convex-vue` non ha
+ *   uno "skip"). Mai `client.query`: lo verifica l'asserzione dedicata.
  */
 const MANUAL_CLIENT_ALLOWED: Record<string, string> = {
     "app/composables/useEvents.ts": "getEventOnce (pagine a form)",
-    "app/composables/useEventGuests.ts": "action sendTest + sottoscrizione opzionale del dettaglio",
+    "app/composables/useEventGuests.ts": "sottoscrizione opzionale del dettaglio (onUpdate)",
 };
 
 describe("frontend data layer: una strada sola per i dati di dominio", () => {
@@ -185,7 +184,7 @@ describe("frontend data layer: una strada sola per i dati di dominio", () => {
     });
 
     it("chi ha il client manuale per altro non lo usa per una lettura una-tantum", () => {
-        // L'eccezione di `useEventGuests` è per `action` e `onUpdate`: un
+        // L'eccezione di `useEventGuests` è per `onUpdate`: un
         // `client.query(...)` lì sarebbe la lettura morta che il gate vieta.
         const oneShotReads = dataLayerFiles()
             .filter(({ relative, source }) =>

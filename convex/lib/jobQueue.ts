@@ -41,6 +41,13 @@ export const JOB_TYPES = {
     sendInviteEmail: "send-invite-email",
     /** Reminder RSVP: 1 job per ospite (legacy QStash `send-reminder-email`). */
     sendReminderEmail: "send-reminder-email",
+    /**
+     * Email di test dell'organizzatore (Task 14). Nel legacy era un invio sincrono
+     * nella route; qui è un effetto esterno, quindi passa dalla stessa macchina a
+     * stati delle altre email invece di contare su retry impliciti. Settimo tipo,
+     * fuori dai sei del piano: dichiarato in `docs/migration/frontend-convex.md`.
+     */
+    sendTestInviteEmail: "send-test-invite-email",
     /** Generazione varianti immagine via bridge media (legacy QStash `image-variant`). */
     imageVariant: "image-variant",
     /** Avviso di cleanup di un evento stale, prima della cancellazione. */
@@ -66,6 +73,7 @@ export const JOB_MAX_ATTEMPTS: Record<JobType, number> = {
     [JOB_TYPES.accountPurge]: 1,
     [JOB_TYPES.sendInviteEmail]: 5,
     [JOB_TYPES.sendReminderEmail]: 5,
+    [JOB_TYPES.sendTestInviteEmail]: 5,
     [JOB_TYPES.imageVariant]: 3,
     [JOB_TYPES.eventCleanupWarning]: 5,
 };

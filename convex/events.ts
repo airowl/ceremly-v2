@@ -520,7 +520,7 @@ export const remove = mutation({
 
 /** Tutte le righe che appartengono a un evento, rimosse insieme a lui. */
 export async function deleteEventGraph(ctx: MutationCtx, event: Doc<"events">): Promise<void> {
-    const [guests, responses, activities, reminders] = await Promise.all([
+    const [guests, responses, activities, reminders, testRequests] = await Promise.all([
         ctx.db.query("guests").withIndex("by_event", (q) => q.eq("eventId", event._id)).collect(),
         ctx.db
             .query("rsvpResponses")
@@ -534,9 +534,13 @@ export async function deleteEventGraph(ctx: MutationCtx, event: Doc<"events">): 
             .query("eventReminders")
             .withIndex("by_event", (q) => q.eq("eventId", event._id))
             .collect(),
+        ctx.db
+            .query("inviteTestRequests")
+            .withIndex("by_event", (q) => q.eq("eventId", event._id))
+            .collect(),
     ]);
 
-    for (const row of [...responses, ...activities, ...reminders, ...guests]) {
+    for (const row of [...responses, ...activities, ...reminders, ...testRequests, ...guests]) {
         await ctx.db.delete(row._id);
     }
 

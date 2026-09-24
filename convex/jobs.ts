@@ -17,6 +17,8 @@ import { emailSubjects } from "./lib/emailSubjects";
 import { forbidden } from "./lib/identity";
 import { JOB_TYPES, enqueueJob, retryDelayMs } from "./lib/jobQueue";
 import { BRIDGE_PATH, callBridge, errorMessage, tryBridge } from "./lib/storageBridge";
+import { PREVIEW_TOKEN } from "./lib/previewToken";
+import { buildTestInviteEmail } from "./guests";
 
 /**
  * Esecutore dei job e produttori dei cron (plan Task 13).
@@ -264,6 +266,7 @@ async function dispatch(
     if (name === JOB_TYPES.accountPurge) return await runAccountPurge(ctx, payload);
     if (name === JOB_TYPES.sendInviteEmail) return await runSendInviteEmail(ctx, payload);
     if (name === JOB_TYPES.sendReminderEmail) return await runSendReminderEmail(ctx, payload);
+    if (name === JOB_TYPES.sendTestInviteEmail) return await runSendTestInviteEmail(ctx, payload);
     if (name === JOB_TYPES.imageVariant) return await runImageVariant(ctx, payload);
     if (name === JOB_TYPES.eventCleanupWarning) return await runEventCleanupWarning(ctx, payload);
 
@@ -577,6 +580,54 @@ async function runSendInviteEmail(
                 guestId: context.guest._id,
                 eventId: context.guest.eventId,
             },
+        },
+    );
+
+    return {
+        sent: result.sent,
+        ...(result.reason ? { reason: result.reason } : {}),
+        ...(result.messageId ? { providerId: result.messageId } : {}),
+    };
+}
+
+/**
+ * `send-test-invite-email` (Task 14): the organizer's "send a test to me".
+ *
+ * Everything is resolved now, not when the request was queued (the payload is the
+ * request id). A request whose event or requester is gone is a silent skip, like
+ * a removed guest for the invite. The Resend idempotency key is per request: a
+ * retry after a timeout in which the provider did accept the email does not send
+ * a second one. A suppressed address is a terminal "not sent", not a retry.
+ */
+async function runSendTestInviteEmail(
+    ctx: ActionCtx,
+    payload: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+    const testRequestId = payload.testRequestId as Id<"inviteTestRequests"> | undefined;
+    if (!testRequestId) throw new Error("SEND_TEST_JOB_WITHOUT_REQUEST_ID");
+
+    const context = await ctx.runQuery(internal.guests.testEmailContext, { testRequestId });
+    if (!context) return { skipped: "request_target_gone" };
+
+    const email = await buildTestInviteEmail(context);
+    const result: { sent: boolean; messageId: string | null; reason?: string } = await ctx.runAction(
+        internal.email.sendTemplate,
+        {
+            request: {
+                template: "guest-invite",
+                to: context.to,
+                subject: email.subject,
+                eventTitle: context.title,
+                firstName: email.firstName,
+                message: email.message,
+                ctaUrl: email.link,
+                pixelUrl: buildGuestPixelUrl(PREVIEW_TOKEN),
+            },
+            // Legacy `type: "custom"`: the transactional sender, not the tracked
+            // events subdomain — a test must not pollute the invite metrics.
+            eventScoped: false,
+            idempotencyKey: `invite-test/${testRequestId}`,
+            context: { organizationId: context.organizationId },
         },
     );
 

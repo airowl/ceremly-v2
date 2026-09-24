@@ -87,9 +87,9 @@ const AUDIT_ACTION_CATEGORY = {
     // that had no writer yet on the Convex side.
     "invite.sent": "invite",
     // Task 14: the legacy `send-test` wrote no audit row (only the generic
-    // `email.sent`, which has no actor). The migration audits every write, and the
-    // test email is the one organizer action that reaches an inbox without a guest.
-    "invite.test_sent": "invite",
+    // `email.sent`, which has no actor). The request is audited when it is queued;
+    // delivery, retries and the terminal state live in `jobExecutions`.
+    "invite.test_requested": "invite",
     "reminder.updated": "reminder",
     "project.created": "project",
     "project.updated": "project",

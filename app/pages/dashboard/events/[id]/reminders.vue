@@ -58,6 +58,10 @@ const loading = computed(() => guestsLoading.value || remindersLoading.value);
 const loadError = computed(() =>
     guestsError.value || remindersError.value ? t("ceremly.event.reminders.loadError") : null);
 const saveBtn = useButtonSuccess();
+// Dichiarati prima del watcher `immediate` qui sotto: con dati già in cache (navigazione
+// client) il callback gira in setup, e un `const` più in basso sarebbe in TDZ.
+const crumbs = useState<string[]>("ceremly-crumbs", () => []);
+const eventCtx = useState<{ id: string, title: string, type: string } | null>("ceremly-event-ctx", () => null);
 const { event: eventData } = useEvent(eventId);
 const { updateEvent } = useEventActions();
 
@@ -85,8 +89,6 @@ watch(eventData, (event) => {
     savedDeadlineInput.value = deadlineInput.value;
 }, { immediate: true });
 
-const crumbs = useState<string[]>("ceremly-crumbs", () => []);
-const eventCtx = useState<{ id: string, title: string, type: string } | null>("ceremly-event-ctx", () => null);
 
 function pad2(n: number): string {
     return String(n).padStart(2, "0");
