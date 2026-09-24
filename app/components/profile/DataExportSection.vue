@@ -4,7 +4,7 @@ import { api } from "~~/convex/_generated/api";
 import type { Id } from "~~/convex/_generated/dataModel";
 import { convexErrorMessage } from "~/composables/useConvexError";
 import { useConvexAction } from "~/composables/useConvexAction";
-import { isExportInFlight, openSignedDownload, toExportView, type ExportView } from "~/lib/dataExports";
+import { isExportInFlight, openSignedDownload, toExportView, useExpiryClock, type ExportView } from "~/lib/dataExports";
 
 /**
  * GDPR export (Task 14, part c): `api.dataExports.*`.
@@ -24,8 +24,10 @@ const downloadUrl = useConvexAction(api.dataExports.downloadUrl);
 const isLoading = computed(() => isPending.value && statusData.value === undefined);
 const isRequesting = computed(() => requestMutation.isPending.value);
 const isDownloading = ref(false);
+// A query is not invalidated by the clock: `now` moves at the expiry instant.
+const now = useExpiryClock(() => (statusData.value?.export ? [statusData.value.export] : []));
 const currentExport = computed<ExportView | null>(() =>
-    statusData.value?.export ? toExportView(statusData.value.export) : null,
+    statusData.value?.export ? toExportView(statusData.value.export, now.value) : null,
 );
 
 async function requestExport() {

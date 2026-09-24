@@ -80,6 +80,9 @@ const AUDIT_ACTION_CATEGORY = {
     "file.upload_confirmed": "file",
     "file.uploaded": "file",
     "file.dedup_matched": "file",
+    // Task 14c fix round 1: an object whose real size contradicts the declared
+    // one (or the cap) is refused at confirm and deleted.
+    "file.upload_rejected": "file",
     "file.deleted": "file",
     "file.variant_ready": "file",
     "file.variant_failed": "file",

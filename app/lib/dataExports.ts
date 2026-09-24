@@ -1,3 +1,5 @@
+import { onScopeDispose, ref, watch, type Ref } from "vue";
+
 /**
  * GDPR export adapters (Task 14, part c).
  *
@@ -38,14 +40,23 @@ const iso = (value: number | null): string | null =>
     value === null ? null : new Date(value).toISOString();
 
 /**
- * Milliseconds → ISO, and a status the i18n keys know. The server already derives
- * `expired`; an unexpected value degrades to `failed` (not downloadable, and a
- * new request is offered) instead of a spinner that never ends.
+ * Milliseconds → ISO, and a status the i18n keys know. An unexpected value
+ * degrades to `failed` (not downloadable, and a new request is offered) instead
+ * of a spinner that never ends.
+ *
+ * `expired` is re-derived here against `now` (Task 14c fix round 1): the server
+ * derives it too, but a Convex query is not invalidated by the clock — an export
+ * that expires while the page is open would keep showing "completed", the click
+ * would fail and no "request new" would be offered. The components pass a `now`
+ * that a single timer moves to the next expiry (`nextExpiryDelay`).
  */
-export function toExportView(row: ExportRow): ExportView {
+export function toExportView(row: ExportRow, now: number = Date.now()): ExportView {
+    const known = EXPORT_STATUSES.includes(row.status as ExportStatus) ? (row.status as ExportStatus) : "failed";
+    const status: ExportStatus =
+        known === "completed" && row.expiresAt !== null && row.expiresAt <= now ? "expired" : known;
     return {
         id: row.id,
-        status: EXPORT_STATUSES.includes(row.status as ExportStatus) ? (row.status as ExportStatus) : "failed",
+        status,
         format: row.format,
         fileSize: row.fileSize,
         expiresAt: iso(row.expiresAt),
@@ -55,9 +66,52 @@ export function toExportView(row: ExportRow): ExportView {
     };
 }
 
+/** Browsers clamp longer `setTimeout` delays to ~1 ms: cap and re-arm instead. */
+const MAX_TIMER_DELAY_MS = 2_147_483_647;
+
+/**
+ * Milliseconds until the next `completed` export expires, or `null` if none will.
+ * One timer for the whole list: when it fires, `now` moves and the views re-derive.
+ */
+export function nextExpiryDelay(rows: readonly ExportRow[], now: number): number | null {
+    const upcoming = rows
+        .filter((row) => row.status === "completed" && row.expiresAt !== null && row.expiresAt > now)
+        .map((row) => row.expiresAt! - now);
+    if (upcoming.length === 0) return null;
+    return Math.min(Math.min(...upcoming), MAX_TIMER_DELAY_MS);
+}
+
 /** An export is still being produced: the section shows progress, not actions. */
 export const isExportInFlight = (status: ExportStatus): boolean =>
     status === "pending" || status === "processing";
+
+/**
+ * `now` for export views, advanced by a single timer at the next expiry.
+ * Must be called in a setup context (it registers the cleanup).
+ */
+export function useExpiryClock(rows: () => readonly ExportRow[]): Ref<number> {
+    const now = ref(Date.now());
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const arm = () => {
+        if (timer) clearTimeout(timer);
+        timer = null;
+        const delay = nextExpiryDelay(rows(), Date.now());
+        if (delay === null) return;
+        // A small margin so the re-derivation sees `expiresAt <= now`.
+        timer = setTimeout(() => {
+            now.value = Date.now();
+            arm();
+        }, delay + 50);
+    };
+
+    watch(rows, arm, { immediate: true });
+    onScopeDispose(() => {
+        if (timer) clearTimeout(timer);
+    });
+
+    return now;
+}
 
 /**
  * Opens a short-lived signed URL in a new tab.

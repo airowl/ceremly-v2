@@ -1,12 +1,15 @@
 # Task 14 — frontend da `$fetch` a Convex
 
-**Stato: completato (2026-09-24), verificato ermeticamente.** I cinque vertical
-slice sono chiusi: progetti, eventi + statistiche, ospiti/RSVP/invito pubblico
-(§4bis), organizzazione/billing (§4ter), profilo/export/form pubblici/upload
-(§4quater). Il registro del debito del gate contiene **solo** vincoli di trasporto
-(bridge anonimi, download CSV/PNG) e `feedbackStore`, fuori dal piano. **Nessuna
-run live**: la verifica con due browser context, e il CORS del bucket R2 per il
-`PUT` diretto, appartengono al rehearsal (Task 16).
+**Stato: code-complete ermeticamente (2026-09-24), non completato.** I cinque
+vertical slice sono scritti e verdi in locale: progetti, eventi + statistiche,
+ospiti/RSVP/invito pubblico (§4bis), organizzazione/billing (§4ter),
+profilo/export/form pubblici/upload (§4quater). Il registro del debito del gate
+contiene **solo** vincoli di trasporto (bridge anonimi, download CSV/PNG) e
+`feedbackStore`, fuori dal piano. Due cose mancano perché il task sia completo, e
+sono **spostate al rehearsal del Task 16**: la verifica realtime con due browser
+context e quella live dell'upload (presign → PUT R2 → confirm, CORS del bucket R2).
+`pnpm typecheck` resta a 23 errori, tutti preesistenti — debito del pin-bump del
+Task 1 — nessuno nuovo.
 
 Verifiche di chiusura (2026-09-22, albero locale):
 
@@ -572,28 +575,68 @@ legge `data.statusMessage`, dove il bridge mette il testo (429, 400, 503).
 
 ### La CSP bloccava il client Convex
 
-Trovato in verifica: `connect-src` ammetteva R2 ma **non** `wss://*.convex.cloud`.
+Trovato in verifica: `connect-src` ammetteva R2 ma **non** il deployment Convex.
 Nessuna run live l'aveva mai visto, ma in produzione ogni query viva del browser
-sarebbe stata bloccata dalla CSP della pagina stessa. Aggiunti `wss://*.convex.cloud`
-e `https://*.convex.cloud`, pinnati in `test/migration/security-headers.test.ts`
-(visto rosso prima della correzione).
+sarebbe stata bloccata dalla CSP della pagina stessa. La prima correzione usava
+`wss://*.convex.cloud`/`https://*.convex.cloud`; il fix round 1 la restringe alle
+origini **esatte** del deployment, derivate al build da `NUXT_PUBLIC_CONVEX_URL`
+(`shared/migration/convexCsp.ts`): un wildcard permetterebbe a uno script iniettato
+di esfiltrare verso qualunque deployment Convex. Il test fallisce se un wildcard
+`*.convex.*` ricompare. Il browser non contatta mai `.convex.site` (l'auth passa dal
+proxy same-origin, i bridge dal Worker), quindi non è ammesso. Conseguenza operativa:
+cambiare `NUXT_PUBLIC_CONVEX_URL` richiede un rebuild, non solo una variabile a
+runtime.
 
 ### Il registro del debito, alla fine
 
 `PENDING`, `UI_PENDING` e `UI_DEAD` sono **vuoti**, e un'asserzione lo pretende.
 `UI_DEAD` conteneva `profile/members.vue`, pagina del template Nuxt UI mai linkata
-che chiamava `/api/members` (una route mai esistita): cancellata. Restano
+che chiamava `/api/members` (una route mai esistita): ora è un **redirect** alla
+pagina membri dell'organizzazione attiva (o alla lista organizzazioni), così un
+vecchio deep link non finisce in un 404 (fix round 1). Restano
 `UI_TRANSPORT` (bridge anonimi, CSV, QR) e `OUT_OF_SCOPE` (`feedbackStore`).
 
 Le route legacy (`/api/user/**`, `/api/file/**`) **non sono cancellate**: il runtime
 Vercel continua a funzionare durante il blue-green.
+
+### Fix round 1 della review
+
+- **Confirm legato all'organizzazione attiva.** `getPendingForConfirm` e
+  `finalizeUpload` controllavano solo l'uploader: dopo un cambio di organizzazione
+  (o la perdita della membership) lo stesso utente poteva rendere attivo un file nel
+  tenant precedente. Ora entrambi confrontano `file.organizationId` con
+  l'organizzazione risolta da `uploadAuthz`; due casi in `convex/media.test.ts`.
+- **Dedup mai fra visibilità diverse.** Un avatar pubblico identico a un file privato
+  veniva cancellato a favore del privato (senza URL: upload fallito), e al contrario
+  un upload privato ereditava id e URL non firmato di quello pubblico. Il candidato
+  ora deve avere lo stesso `isPublic`; testato nei due versi.
+- **Dimensione reale verificata.** La firma del PUT lega il `Content-Type`, non la
+  lunghezza: il limite di presign valeva solo per la dimensione *dichiarata*.
+  `finalizeUpload` rifiuta un oggetto la cui dimensione misurata differisce da
+  quella dichiarata o supera 5 MB (`size_mismatch` / `file_too_large`), l'action lo
+  cancella da R2, e resta l'audit `file.upload_rejected` (azione nuova).
+- **Scadenza dell'export.** Una query Convex non è invalidata dal passare del tempo:
+  un export aperto prima della scadenza restava "pronto", il clic falliva e non
+  compariva "richiedi nuovo". `toExportView` ri-deriva `expired` contro un `now` che
+  un **solo** timer (`useExpiryClock`, all'istante della prossima scadenza, con tetto
+  al range di `setTimeout`) fa avanzare.
+- **CSP** ristretta alle origini esatte (sopra) e **redirect** per il vecchio link
+  membri.
+
+Misure dopo il fix round 1: gate 35 casi, `vitest run convex/` 292 passed,
+`pnpm test:migration` 451 passed / 27 skipped, `pnpm test` 580 passed / 27 skipped,
+`pnpm typecheck` 23 righe `error TS` (baseline), `typecheck:convex` e `eslint` sui file
+toccati puliti, `pnpm build` ok. Rosso visto prima di ogni correzione: 17 casi in
+`media.test.ts` (validator + nuovi casi), 2 casi del gate contro la vecchia
+`dataExports.ts`, 1 caso CSP contro il vecchio `nuxt.config.ts` col wildcard.
 
 ### Commit
 
 Un solo commit, `feat(migration): move profile, export and public forms UI to
 Convex` (profilo, export, form, upload, gate, CSP): upload e profilo condividono la
 pagina profilo e il file del gate, e separarli avrebbe lasciato un commit col gate
-rosso.
+rosso. Il fix round 1 è un commit a parte
+(`fix(migration): harden upload confirm, export expiry and Convex CSP`).
 
 ### Nessuna run live
 
@@ -654,8 +697,9 @@ le pagine consumatrici (`dashboard/index.vue`, `dashboard/subscription/index.vue
 `dashboard/events/new.vue`, `events/[id]/{index,editor,guests,reminders,distribution,rsvp}.vue`,
 `dashboard/projects/index.vue`), `i18n/locales/*` (la chiave `projects.truncated`).
 
-Rimosso: `app/composables/useConvexResource.ts`; con lo Step 5
-`app/pages/dashboard/profile/members.vue` (pagina template morta).
+Rimosso: `app/composables/useConvexResource.ts`. Con lo Step 5
+`app/pages/dashboard/profile/members.vue` (pagina template morta) è diventata un
+redirect.
 
 Test: `test/migration/frontend-data-layer.test.ts` (9 casi), più i tre casi
 `listAll` in `convex/domain.test.ts`.
@@ -692,7 +736,9 @@ Step 5: `app/stores/profileStore.ts`, `app/composables/useStorageUpload.ts` (nuo
 `app/components/landing/Contact.vue`, le pagine `dashboard/profile/index.vue` e
 `dashboard/events/[id]/editor.vue`, `convex/files.ts` (`publicUrl`/`url`),
 `server/api/internal/storage/presign.post.ts` (`publicUrl`), `nuxt.config.ts`
-(`connect-src`), `i18n/locales/*` (`dataExport.downloadError`). Test: +7 casi nel gate,
+(`connect-src`), `shared/migration/convexCsp.ts` (nuovo, fix round 1),
+`convex/lib/audit.ts` (`file.upload_rejected`), `i18n/locales/*`
+(`dataExport.downloadError`). Test: +7 casi nel gate,
 +2 in `convex/media.test.ts`, +1 in `test/migration/security-headers.test.ts`.
 
 ### Perché `useConvexResource` è stato cancellato

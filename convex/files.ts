@@ -87,12 +87,32 @@ export const assertEventAccess = internalQuery({
 // Internal reads
 // ---------------------------------------------------------------------------
 
-/** The pending row an upload may confirm — only its own, only while pending. */
+/**
+ * Whether a pending row may be confirmed by this caller in this organization.
+ *
+ * The uploader alone is not enough (Task 14c fix round 1): after an organization
+ * switch, or after losing the membership, the same user must not be able to turn
+ * a pending upload into an active file of the **previous** tenant. The
+ * organization is the caller's active one, resolved by `uploadAuthz`.
+ */
+function isConfirmableBy(
+    file: Doc<"files"> | null,
+    args: { appUserId: Id<"appUsers">; organizationId: Id<"organizations"> },
+): file is Doc<"files"> {
+    return (
+        file !== null &&
+        file.uploadStatus === "pending" &&
+        file.uploadedBy === args.appUserId &&
+        file.organizationId === args.organizationId
+    );
+}
+
+/** The pending row an upload may confirm — only its own, only in its active org, only while pending. */
 export const getPendingForConfirm = internalQuery({
-    args: { fileId: v.id("files"), appUserId: v.id("appUsers") },
+    args: { fileId: v.id("files"), appUserId: v.id("appUsers"), organizationId: v.id("organizations") },
     handler: async (ctx, args): Promise<Doc<"files">> => {
         const file = await ctx.db.get(args.fileId);
-        if (!file || file.uploadStatus !== "pending" || file.uploadedBy !== args.appUserId) {
+        if (!isConfirmableBy(file, args)) {
             throw forbidden("PENDING_UPLOAD_NOT_FOUND", { fileId: args.fileId });
         }
         return file;
@@ -228,6 +248,7 @@ export type FinalizeResult =
 export const finalizeUpload = internalMutation({
     args: {
         fileId: v.id("files"),
+        organizationId: v.id("organizations"),
         appUserId: v.id("appUsers"),
         authUserId: v.string(),
         headBytes: v.string(),
@@ -236,8 +257,42 @@ export const finalizeUpload = internalMutation({
     },
     handler: async (ctx, args): Promise<FinalizeResult> => {
         const file = await ctx.db.get(args.fileId);
-        if (!file || file.uploadStatus !== "pending" || file.uploadedBy !== args.appUserId) {
+        // Re-checked here, not only in the action's read: the transition is what
+        // must not be reachable for the wrong tenant.
+        if (!isConfirmableBy(file, args)) {
             throw forbidden("PENDING_UPLOAD_NOT_FOUND", { fileId: args.fileId });
+        }
+
+        // The presigned PUT binds the Content-Type, not the length: the size
+        // checked at presign is only what the caller *declared*. The stored object
+        // must be exactly that size and within the cap (Task 14c fix round 1).
+        const sizeProblem =
+            args.size > MAX_FILE_SIZE_BYTES
+                ? "file_too_large"
+                : args.size !== file.size
+                  ? "size_mismatch"
+                  : null;
+        if (sizeProblem) {
+            await ctx.db.patch(file._id, {
+                uploadStatus: "failed",
+                isActive: false,
+                updatedAt: Date.now(),
+            });
+            await writeAudit(ctx, {
+                action: "file.upload_rejected",
+                actorAppUserId: args.appUserId,
+                actorAuthUserId: args.authUserId,
+                organizationId: file.organizationId,
+                targetType: "file",
+                targetId: file._id,
+                details: {
+                    reason: sizeProblem,
+                    declaredSize: file.size,
+                    actualSize: args.size,
+                    max: MAX_FILE_SIZE_BYTES,
+                },
+            });
+            return { status: "failed", fileId: file._id, reason: sizeProblem };
         }
 
         const head = decodeBase64(args.headBytes, 256);
@@ -261,7 +316,12 @@ export const finalizeUpload = internalMutation({
                     (candidate) =>
                         candidate._id !== file._id &&
                         candidate.uploadStatus === "active" &&
-                        candidate.variantType === "original",
+                        candidate.variantType === "original" &&
+                        // Never across visibility (Task 14c fix round 1): a public
+                        // upload must not be deleted in favor of a private file
+                        // (it would have no URL), and a private one must not
+                        // inherit a public file's unsigned URL.
+                        candidate.isPublic === file.isPublic,
                 ) ?? null,
             );
 
@@ -504,6 +564,7 @@ export const confirmUpload = action({
         const pending: Doc<"files"> = await ctx.runQuery(internal.files.getPendingForConfirm, {
             fileId: args.fileId,
             appUserId: authz.appUserId,
+            organizationId: authz.organizationId,
         });
 
         // One bridge call reads everything the transition needs: existence, the
@@ -526,6 +587,7 @@ export const confirmUpload = action({
 
         const finalized: FinalizeResult = await ctx.runMutation(internal.files.finalizeUpload, {
             fileId: args.fileId,
+            organizationId: authz.organizationId,
             appUserId: authz.appUserId,
             authUserId: authz.authUserId,
             headBytes: inspect.headBytes,
@@ -535,6 +597,12 @@ export const confirmUpload = action({
 
         if (finalized.status === "failed") {
             await tryBridge(BRIDGE_PATH.object, { op: "delete", key: pending.path });
+            if (finalized.reason === "size_mismatch") {
+                throw forbidden("UPLOAD_SIZE_MISMATCH", { fileId: args.fileId });
+            }
+            if (finalized.reason === "file_too_large") {
+                throw forbidden("FILE_TOO_LARGE", { fileId: args.fileId, max: MAX_FILE_SIZE_BYTES });
+            }
             throw forbidden("MAGIC_BYTES_MISMATCH", { fileId: args.fileId });
         }
 

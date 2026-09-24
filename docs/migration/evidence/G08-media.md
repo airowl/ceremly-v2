@@ -125,3 +125,10 @@ survivor's after a dedup. Pinned by two cases in `convex/media.test.ts`. The
 browser flow (presign → `PUT` → confirm) additionally needs a CORS rule on the
 bucket for `PUT` from the site origin; not verifiable from this repository.
 
+Task 14c fix round 1 (same day): confirm is bound to the caller's **active
+organization** (`getPendingForConfirm`/`finalizeUpload` compare
+`file.organizationId`), dedup never crosses visibility (`isPublic` must match), and
+the stored object's measured size must equal the declared one and stay within 5 MB
+— otherwise the row fails, the object is deleted and `file.upload_rejected` is
+audited (the presigned PUT signs the Content-Type, not the length).
+

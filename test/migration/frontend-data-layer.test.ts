@@ -24,7 +24,7 @@ import {
     toOrganizationMember,
     toOrganizationSummary,
 } from "~/lib/organizations";
-import { toExportView } from "~/lib/dataExports";
+import { nextExpiryDelay, toExportView } from "~/lib/dataExports";
 
 /**
  * Task 14, Step 1 — il gate anti-CRUD Nuxt.
@@ -275,7 +275,8 @@ const UI_PENDING: Record<string, { paths: readonly string[]; step: string }> = {
 
 const UI_DEAD: Record<string, readonly string[]> = {
     // Task 14, part c: empty. The Nuxt UI template page `profile/members.vue`
-    // (`/api/members`, a route that never existed) was deleted.
+    // (`/api/members`, a route that never existed) is now a redirect to the
+    // active organization's members page (fix round 1: deep links keep working).
 };
 
 function uiFiles(): { relative: string; source: string }[] {
@@ -869,21 +870,46 @@ describe("frontend: GDPR export adapter (Task 14, part c)", () => {
         createdAt: Date.parse("2026-09-24T09:59:00.000Z"),
     };
 
+    // A fixed clock: `toExportView` re-derives expiry, and the real one would
+    // make this test fail the day after `row.expiresAt`.
+    const NOW = Date.parse("2026-09-24T12:00:00.000Z");
+
     it("converts milliseconds to ISO and keeps the server-derived status", () => {
-        expect(toExportView(row)).toEqual({
+        expect(toExportView(row, NOW)).toEqual({
             ...row,
             expiresAt: "2026-09-25T10:00:00.000Z",
             completedAt: "2026-09-24T10:00:00.000Z",
             createdAt: "2026-09-24T09:59:00.000Z",
         });
-        expect(toExportView({ ...row, status: "expired", completedAt: null }).status).toBe("expired");
-        expect(toExportView({ ...row, completedAt: null, expiresAt: null })).toMatchObject({
+        expect(toExportView({ ...row, status: "expired", completedAt: null }, NOW).status).toBe("expired");
+        expect(toExportView({ ...row, completedAt: null, expiresAt: null }, NOW)).toMatchObject({
             completedAt: null,
             expiresAt: null,
         });
     });
 
+    it("an export that expires while the page is open becomes expired without a new query result", () => {
+        // Task 14c fix round 1: the server derives `expired` only when the query
+        // re-runs, and the clock does not re-run it.
+        const justBefore = Date.parse("2026-09-25T09:59:59.000Z");
+        const justAfter = Date.parse("2026-09-25T10:00:00.001Z");
+        expect(toExportView(row, justBefore).status).toBe("completed");
+        expect(toExportView(row, justAfter).status).toBe("expired");
+        // Only `completed` expires: a failed export keeps its own state.
+        expect(toExportView({ ...row, status: "failed" }, justAfter).status).toBe("failed");
+    });
+
+    it("one timer: the delay is to the next expiry, none when nothing will expire", () => {
+        const now = Date.parse("2026-09-25T09:00:00.000Z");
+        const later = { ...row, id: "x2", expiresAt: Date.parse("2026-09-26T10:00:00.000Z") };
+        expect(nextExpiryDelay([later, row], now)).toBe(60 * 60 * 1000);
+        expect(nextExpiryDelay([{ ...row, status: "pending", expiresAt: null }], now)).toBeNull();
+        expect(nextExpiryDelay([row], Date.parse("2026-09-25T11:00:00.000Z"))).toBeNull();
+        // Beyond the browser's timer range the delay is capped (and re-armed).
+        expect(nextExpiryDelay([{ ...row, expiresAt: now + 90 * 24 * 60 * 60 * 1000 }], now)).toBe(2_147_483_647);
+    });
+
     it("an unexpected status is not downloadable and does not spin forever", () => {
-        expect(toExportView({ ...row, status: "boh" }).status).toBe("failed");
+        expect(toExportView({ ...row, status: "boh" }, NOW).status).toBe("failed");
     });
 });

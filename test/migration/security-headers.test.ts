@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync, readdirSync } from "node:fs";
 import { spawn, type ChildProcess } from "node:child_process";
 import { loadNuxtConfig } from "@nuxt/kit";
+import { convexConnectSources } from "../../shared/migration/convexCsp";
 
 /**
  * G09 — the protection matrix (plan Task 8, Step 3).
@@ -147,13 +148,31 @@ describe("protection matrix (declared)", () => {
         expect(csp["script-src"] ?? []).not.toContain("'unsafe-eval'");
     });
 
-    it("lets the browser reach Convex and R2 (Task 14: live queries and direct uploads)", () => {
-        // Without these the dashboard's websocket (`wss://<deployment>.convex.cloud`)
-        // and the presigned R2 PUT are blocked by the page's own CSP.
+    it("lets the browser reach this Convex deployment and R2, and nothing wider", () => {
+        // Without these the dashboard's websocket and the presigned R2 PUT are
+        // blocked by the page's own CSP (Task 14). Exact origins derived from
+        // NUXT_PUBLIC_CONVEX_URL at build time — a `*.convex.cloud` wildcard would
+        // allow exfiltration to any Convex deployment (Task 14c fix round 1).
         const connect = securityOf(config).headers?.contentSecurityPolicy?.["connect-src"] ?? [];
-        expect(connect).toContain("wss://*.convex.cloud");
-        expect(connect).toContain("https://*.convex.cloud");
+        expect(connect.filter((source) => /\*\.convex\./.test(source))).toEqual([]);
+        for (const source of convexConnectSources(process.env.NUXT_PUBLIC_CONVEX_URL)) {
+            expect(connect).toContain(source);
+        }
         expect(connect).toContain("https://*.r2.cloudflarestorage.com");
+    });
+
+    it("derives exactly the deployment's https and wss origins", () => {
+        expect(convexConnectSources("https://wary-spaniel-466.convex.cloud")).toEqual([
+            "https://wary-spaniel-466.convex.cloud",
+            "wss://wary-spaniel-466.convex.cloud",
+        ]);
+        expect(convexConnectSources("http://127.0.0.1:3210")).toEqual([
+            "http://127.0.0.1:3210",
+            "ws://127.0.0.1:3210",
+        ]);
+        expect(convexConnectSources(undefined)).toEqual([]);
+        expect(convexConnectSources("not a url")).toEqual([]);
+        expect(convexConnectSources("https://*.convex.cloud")).toEqual([]);
     });
 
     it("declares a redirect for every bot trap", () => {

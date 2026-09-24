@@ -94,6 +94,7 @@ async function seedPending(
         originalName?: string;
         isPublic?: boolean;
         publicUrl?: string;
+        fileSize?: number;
     },
 ): Promise<Id<"files">> {
     const id = `seed-${Math.random().toString(36).slice(2)}`;
@@ -104,7 +105,7 @@ async function seedPending(
         authUserId: alice.subject,
         originalName: args.originalName ?? "photo.png",
         mimeType: args.mimeType ?? "image/png",
-        fileSize: 1024,
+        fileSize: args.fileSize ?? 1024,
         path: originalKey(basePath, args.originalName ?? "photo.png"),
         basePath,
         isPublic: args.isPublic ?? true,
@@ -132,6 +133,7 @@ async function seedActiveImage(
     });
     const finalized = await t.mutation(internal.files.finalizeUpload, {
         fileId,
+        organizationId: args.organizationId,
         appUserId: args.uploadedBy,
         authUserId: alice.subject,
         headBytes: args.headBytes ?? PNG_HEAD,
@@ -288,13 +290,14 @@ describe("upload confirmation", () => {
 
         // Bob cannot confirm Alice's pending upload even by guessing the id.
         await expectCode(
-            bobSession.query(internal.files.getPendingForConfirm, { fileId, appUserId: bobUserId }),
+            bobSession.query(internal.files.getPendingForConfirm, { fileId, appUserId: bobUserId, organizationId }),
             "PENDING_UPLOAD_NOT_FOUND",
         );
 
         const pending = await aliceSession.query(internal.files.getPendingForConfirm, {
             fileId,
             appUserId: aliceUserId,
+            organizationId,
         });
         expect(pending.uploadStatus).toBe("pending");
     });
@@ -305,7 +308,7 @@ describe("upload confirmation", () => {
         const fileId = await seedActiveImage(t, { organizationId, uploadedBy: userId });
 
         await expectCode(
-            aliceSession.query(internal.files.getPendingForConfirm, { fileId, appUserId: userId }),
+            aliceSession.query(internal.files.getPendingForConfirm, { fileId, appUserId: userId, organizationId }),
             "PENDING_UPLOAD_NOT_FOUND",
         );
     });
@@ -317,6 +320,7 @@ describe("upload confirmation", () => {
 
         const result = await t.mutation(internal.files.finalizeUpload, {
             fileId,
+            organizationId,
             appUserId: userId,
             authUserId: alice.subject,
             headBytes: NOT_A_PNG,
@@ -345,6 +349,7 @@ describe("upload confirmation", () => {
             const fileId = await seedPending(t, { organizationId, uploadedBy: userId, mimeType });
             const result = await t.mutation(internal.files.finalizeUpload, {
                 fileId,
+                organizationId,
                 appUserId: userId,
                 authUserId: alice.subject,
                 headBytes: head,
@@ -367,9 +372,11 @@ describe("upload confirmation", () => {
             uploadedBy: userId,
             mimeType: "application/pdf",
             originalName: "doc.pdf",
+            fileSize: 2048,
         });
         const finalized = await t.mutation(internal.files.finalizeUpload, {
             fileId: pdfId,
+            organizationId,
             appUserId: userId,
             authUserId: alice.subject,
             headBytes: PDF_HEAD,
@@ -394,6 +401,7 @@ describe("upload confirmation", () => {
         const secondId = await seedPending(t, { organizationId, uploadedBy: userId, originalName: "copy.png" });
         const duplicated = await t.mutation(internal.files.finalizeUpload, {
             fileId: secondId,
+            organizationId,
             appUserId: userId,
             authUserId: alice.subject,
             headBytes: PNG_HEAD,
@@ -413,6 +421,7 @@ describe("upload confirmation", () => {
         });
         const foreign = await t.mutation(internal.files.finalizeUpload, {
             fileId: foreignId,
+            organizationId: bobOrgId,
             appUserId: bobUserId,
             authUserId: bob.subject,
             headBytes: PNG_HEAD,
@@ -420,6 +429,156 @@ describe("upload confirmation", () => {
             size: 1024,
         });
         expect(foreign.status).toBe("active");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Confirm hardening (Task 14c fix round 1)
+// ---------------------------------------------------------------------------
+
+describe("upload confirmation: tenant, visibility and size", () => {
+    it("refuses to confirm into an organization that is no longer the caller's active one", async () => {
+        const { t, aliceSession, organizationId } = await bootstrap();
+        const userId = await appUserId(aliceSession, alice.email);
+        const fileId = await seedPending(t, { organizationId, uploadedBy: userId });
+
+        // Alice switches to (creates) another organization: the pending upload was
+        // issued for the previous tenant and must not be finalized from here.
+        const { organizationId: otherOrgId } = await aliceSession.mutation(
+            api.organizations.createOrganization,
+            { name: "Second" },
+        );
+        const active = await aliceSession.query(internal.files.uploadAuthz, {});
+        expect(active.organizationId).toBe(otherOrgId);
+
+        await expectCode(
+            aliceSession.query(internal.files.getPendingForConfirm, {
+                fileId,
+                appUserId: userId,
+                organizationId: active.organizationId,
+            }),
+            "PENDING_UPLOAD_NOT_FOUND",
+        );
+        await expectCode(
+            t.mutation(internal.files.finalizeUpload, {
+                fileId,
+                organizationId: active.organizationId,
+                appUserId: userId,
+                authUserId: alice.subject,
+                headBytes: PNG_HEAD,
+                sha256: "1".repeat(64),
+                size: 1024,
+            }),
+            "PENDING_UPLOAD_NOT_FOUND",
+        );
+        expect((await fileById(t, fileId))?.uploadStatus).toBe("pending");
+    });
+
+    it("refuses to confirm after the membership in the upload's organization is gone", async () => {
+        const { t, organizationId } = await bootstrap();
+        const { s: bobSession, organizationId: bobOrgId } = await addUser(t, bob);
+        const bobUserId = await appUserId(bobSession, bob.email);
+
+        // A pending row in Alice's organization issued to Bob — the state left
+        // behind when a member uploads and is then removed: his active
+        // organization is his own, so the row is out of his reach.
+        const fileId = await seedPending(t, { organizationId, uploadedBy: bobUserId });
+        const active = await bobSession.query(internal.files.uploadAuthz, {});
+        expect(active.organizationId).toBe(bobOrgId);
+
+        await expectCode(
+            bobSession.query(internal.files.getPendingForConfirm, {
+                fileId,
+                appUserId: bobUserId,
+                organizationId: active.organizationId,
+            }),
+            "PENDING_UPLOAD_NOT_FOUND",
+        );
+    });
+
+    it("never deduplicates a public upload onto a private file, nor the reverse", async () => {
+        const { t, organizationId } = await bootstrap();
+        const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
+        const sha = "2".repeat(64);
+        const finalize = (fileId: Id<"files">) =>
+            t.mutation(internal.files.finalizeUpload, {
+                fileId,
+                organizationId,
+                appUserId: userId,
+                authUserId: alice.subject,
+                headBytes: PNG_HEAD,
+                sha256: sha,
+                size: 1024,
+            });
+
+        const privateId = await seedPending(t, { organizationId, uploadedBy: userId, isPublic: false });
+        expect((await finalize(privateId)).status).toBe("active");
+
+        // Same bytes, public: a new file with its own public URL, not the private one.
+        const publicUrl = "https://media.example.com/global/2026-09/p/original.png";
+        const publicId = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl });
+        expect(await finalize(publicId)).toMatchObject({ status: "active", url: publicUrl });
+
+        // Same bytes, private again: dedups onto the private survivor, never onto
+        // the public one (which would hand out an unsigned URL).
+        const privateAgain = await seedPending(t, { organizationId, uploadedBy: userId, isPublic: false });
+        expect(await finalize(privateAgain)).toMatchObject({
+            status: "deduplicated",
+            duplicateId: privateId,
+            url: null,
+        });
+
+        // And a second public copy dedups onto the public survivor.
+        const publicAgain = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl: "https://x/y.png" });
+        expect(await finalize(publicAgain)).toMatchObject({
+            status: "deduplicated",
+            duplicateId: publicId,
+            url: publicUrl,
+        });
+    });
+
+    it("rejects an object whose real size differs from the declared one or exceeds the limit", async () => {
+        const { t, organizationId } = await bootstrap();
+        const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
+
+        // The presigned PUT binds the Content-Type, not the length: the declared
+        // size proves nothing until the stored object is measured.
+        const lying = await seedPending(t, { organizationId, uploadedBy: userId, fileSize: 1024 });
+        const result = await t.mutation(internal.files.finalizeUpload, {
+            fileId: lying,
+            organizationId,
+            appUserId: userId,
+            authUserId: alice.subject,
+            headBytes: PNG_HEAD,
+            sha256: "3".repeat(64),
+            size: 4096,
+        });
+        expect(result).toEqual({ status: "failed", fileId: lying, reason: "size_mismatch" });
+        const row = await fileById(t, lying);
+        expect(row?.uploadStatus).toBe("failed");
+        expect(row?.isActive).toBe(false);
+
+        // Declared and real agree, but both are over the cap (a row that bypassed
+        // the presign check): still refused.
+        const oversize = await seedPending(t, {
+            organizationId,
+            uploadedBy: userId,
+            fileSize: MAX_FILE_SIZE_BYTES + 1,
+        });
+        const over = await t.mutation(internal.files.finalizeUpload, {
+            fileId: oversize,
+            organizationId,
+            appUserId: userId,
+            authUserId: alice.subject,
+            headBytes: PNG_HEAD,
+            sha256: "4".repeat(64),
+            size: MAX_FILE_SIZE_BYTES + 1,
+        });
+        expect(over).toEqual({ status: "failed", fileId: oversize, reason: "file_too_large" });
+
+        const actions = await auditActions(t);
+        expect(actions.filter((action) => action === "file.upload_rejected")).toHaveLength(2);
+        expect(actions).not.toContain("file.upload_confirmed");
     });
 });
 
@@ -455,6 +614,7 @@ describe("public URL of an upload", () => {
         const firstId = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl: PUBLIC });
         const first = await t.mutation(internal.files.finalizeUpload, {
             fileId: firstId,
+            organizationId,
             appUserId: userId,
             authUserId: alice.subject,
             headBytes: PNG_HEAD,
@@ -473,6 +633,7 @@ describe("public URL of an upload", () => {
         });
         const copy = await t.mutation(internal.files.finalizeUpload, {
             fileId: copyId,
+            organizationId,
             appUserId: userId,
             authUserId: alice.subject,
             headBytes: PNG_HEAD,

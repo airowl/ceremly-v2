@@ -4,7 +4,7 @@ import { api } from "~~/convex/_generated/api";
 import type { Id } from "~~/convex/_generated/dataModel";
 import { convexErrorMessage } from "~/composables/useConvexError";
 import { useConvexAction } from "~/composables/useConvexAction";
-import { openSignedDownload, toExportView, type ExportView } from "~/lib/dataExports";
+import { openSignedDownload, toExportView, useExpiryClock, type ExportView } from "~/lib/dataExports";
 
 /**
  * Export history (Task 14, part c): `api.dataExports.history`, live. A completed,
@@ -17,7 +17,9 @@ const toast = useToast();
 const { data: historyData, isPending } = useConvexQuery(api.dataExports.history, {}, { server: false });
 const downloadUrl = useConvexAction(api.dataExports.downloadUrl);
 
-const history = computed<ExportView[]>(() => (historyData.value ?? []).map(toExportView));
+// A query is not invalidated by the clock: `now` moves at the next expiry.
+const now = useExpiryClock(() => historyData.value ?? []);
+const history = computed<ExportView[]>(() => (historyData.value ?? []).map((row) => toExportView(row, now.value)));
 const isLoading = computed(() => isPending.value && historyData.value === undefined);
 const downloadingId = ref<string | null>(null);
 

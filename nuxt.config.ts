@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from "nuxt/config";
 import { generateRuntimeConfig } from "./server/utils/runtimeConfig";
+import { convexConnectSources } from "./shared/migration/convexCsp";
 
 export default defineNuxtConfig({
     app: {
@@ -319,8 +320,9 @@ export default defineNuxtConfig({
                     // Task 14: the browser Convex client (live queries over a
                     // websocket, plus its HTTPS fallback) talks to the deployment
                     // directly; without these the dashboard cannot load any data.
-                    "wss://*.convex.cloud",
-                    "https://*.convex.cloud",
+                    // Exact origins of *this* deployment, never a wildcard
+                    // (see `shared/migration/convexCsp.ts`).
+                    ...convexConnectSources(process.env.NUXT_PUBLIC_CONVEX_URL),
                     // Presigned R2 PUT (uploads go browser → R2, Task 14 part c).
                     "https://*.r2.cloudflarestorage.com",
                     "https://api.iconify.design",
