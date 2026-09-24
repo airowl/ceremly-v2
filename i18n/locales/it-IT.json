@@ -1296,7 +1296,7 @@
   "subscription": {
     "title": "Abbonamento",
     "realtime": "Aggiornato in tempo reale",
-    "noBillingPermission": "La fatturazione di questo piano è gestita da chi può amministrare l'abbonamento dell'organizzazione.",
+    "noBillingPermission": "L'abbonamento è dell'organizzazione: solo il proprietario può attivarlo o gestirlo.",
     "sync": "Sincronizza",
     "synced": "Sincronizzato",
     "syncError": "Errore sincronizzazione",

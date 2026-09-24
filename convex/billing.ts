@@ -14,7 +14,7 @@ import type { Id } from "./_generated/dataModel";
 import { forbidden } from "./lib/identity";
 import {
     DOMAIN_WRITE_ROLES,
-    ORGANIZATION_ROLES,
+    OWNER_ONLY_ROLES,
     requireActiveOrganization,
     requireRole,
     type OrganizationRole,
@@ -24,21 +24,19 @@ import { writeAudit } from "./lib/audit";
 import { limitsForOrgPlan, productIdForTier, type OrgPlan, type PaidTier } from "./lib/pricing";
 
 /**
- * Who may pay, mirrored from the legacy runtime (Task 14 part b, fix round 1).
+ * Who may pay (Task 14 part b, fix rounds 1–2 — controller ruling).
  *
- * - **Celebration** (per-event unlock): `POST /api/events/:id/unlock` guarded with
- *   `requireWrite`, i.e. owner | admin | member — every role writes domain data.
- * - **Atelier checkout and the customer portal**: the legacy used the Creem
- *   Better Auth plugin endpoints (`/api/auth/creem/*`), which check only for a
- *   session — no organization role at all. So every member of the organization.
- *
- * G07 had made both owner-only; that was a behaviour change nobody decided, and
- * the product ruling is parity. What did change, and is stated rather than
- * hidden: the billing entity is now the **organization**, not the user, so a
- * member opening the portal manages the organization's subscription.
+ * - **Celebration** (per-event unlock): every write role (owner | admin | member),
+ *   as the legacy `POST /api/events/:id/unlock` (`requireWrite`).
+ * - **Atelier checkout and the customer portal**: **owner only**. The legacy
+ *   reached them through the session-only Creem Better Auth plugin, but there the
+ *   billing entity was the *user*: a member could only ever touch their own
+ *   customer. Here the entity is the **organization**, so the same openness would
+ *   let a plain member subscribe or cancel for the whole organization — an
+ *   escalation the legacy never allowed. Owner-only is the equivalent rule.
  */
 export const CELEBRATION_CHECKOUT_ROLES: readonly OrganizationRole[] = DOMAIN_WRITE_ROLES;
-export const SUBSCRIPTION_BILLING_ROLES: readonly OrganizationRole[] = ORGANIZATION_ROLES;
+export const SUBSCRIPTION_BILLING_ROLES: readonly OrganizationRole[] = OWNER_ONLY_ROLES;
 
 
 /**
@@ -329,8 +327,8 @@ export const checkoutsCreate = action({
 
 /**
  * `api.billing.customersPortalUrl` — the Creem customer portal for the active
- * organization. Any member, as the legacy plugin endpoint (session only); it
- * exposes the organization's invoices and payment methods.
+ * organization. Owner only (`SUBSCRIPTION_BILLING_ROLES`): it manages — and can
+ * cancel — the organization's subscription, and exposes invoices and payment methods.
  */
 export const customersPortalUrl = action({
     args: {},

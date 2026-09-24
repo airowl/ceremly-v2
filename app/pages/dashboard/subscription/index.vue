@@ -37,8 +37,9 @@ async function handleOpenPortal() {
     finally { isPortalLoading.value = false; }
 }
 
-// Every portal control follows the same rule the server applies
-// (`billing.customersPortalUrl` accepts the roles behind `canManageBilling`).
+// Every portal control follows the rule the server applies: Atelier checkout
+// and the portal are owner only (`canManageBilling`), because the subscription
+// belongs to the organization.
 const canOpenPortal = computed(() => isAtelier.value && hasActiveSubscription.value && canManageBilling.value);
 </script>
 
@@ -79,10 +80,12 @@ const canOpenPortal = computed(() => isAtelier.value && hasActiveSubscription.va
                             <UButton v-if="canOpenPortal" :loading="isPortalLoading" color="neutral" variant="soft" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">
                                 {{ $t('subscription.manageAtelier') }}
                             </UButton>
-                            <p v-else-if="isAtelier" class="text-sm text-muted max-w-56">
+                            <!-- Atelier and the portal are owner only (the subscription is the
+                                 organization's): no upsell and no portal for anyone else. -->
+                            <p v-else-if="!canManageBilling" class="text-sm text-muted max-w-56">
                                 {{ $t('subscription.noBillingPermission') }}
                             </p>
-                            <UButton v-else :to="localePath('/pricing')" color="primary" size="sm" leading-icon="i-lucide-sparkles">
+                            <UButton v-else-if="!isAtelier" :to="localePath('/pricing')" color="primary" size="sm" leading-icon="i-lucide-sparkles">
                                 {{ $t('subscription.discoverAtelier') }}
                             </UButton>
                         </div>

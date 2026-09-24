@@ -48,8 +48,9 @@ export function useSubscription() {
 
     /**
      * What the billing actions will accept for this caller, answered by the server
-     * from the same role lists the actions check (legacy parity: every member).
-     * `false` while loading: never offer a control the server has not confirmed.
+     * from the same role lists the actions check: `canManageBilling` (Atelier
+     * checkout, portal) is owner only, `canUnlockEvents` (Celebration) every write
+     * role. `false` while loading: never offer a control the server has not confirmed.
      */
     const canManageBilling = computed<boolean>(() => plan.value?.canManageBilling ?? false);
     const canUnlockEvents = computed<boolean>(() => plan.value?.canUnlockEvents ?? false);

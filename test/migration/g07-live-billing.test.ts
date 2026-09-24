@@ -302,7 +302,7 @@ describe.skipIf(!armed)("G07 live · Creem test mode", () => {
         gateCustomerId = customer.id;
     }, 120000);
 
-    it("refuses anonymous callers before the provider is needed, and lets every member pay (legacy parity)", async () => {
+    it("refuses anonymous callers, and non-owners for Atelier and the portal", async () => {
         const anonymous = asClient();
         await expectCode(
             anonymous.action(api.billing.checkoutsCreate, { tier: "atelier" }),
@@ -318,14 +318,18 @@ describe.skipIf(!armed)("G07 live · Creem test mode", () => {
         await member.mutation(api.organizations.ensureProvisioned, {});
         await member.mutation(api.organizations.acceptInvitation, { token: invitation.token });
 
-        // Legacy parity (Task 14 part b, fix round 1): a plain member may pay and
-        // open the portal, as with the legacy `requireWrite` unlock route and the
-        // session-only Creem plugin endpoints. No member checkout is created here
-        // (it would be a second real test-mode checkout); the hermetic suite
-        // (`convex/billing.test.ts`) covers each role reaching the provider.
+        // Controller ruling (Task 14 part b, fix round 2): Atelier and the portal
+        // act on the organization's subscription and are owner only; the
+        // Celebration unlock stays open to every write role (covered hermetically
+        // in `convex/billing.test.ts`, not here, to avoid a second live checkout).
+        await expectCode(
+            member.action(api.billing.checkoutsCreate, { tier: "atelier" }),
+            "INSUFFICIENT_ROLE",
+        );
+        await expectCode(member.action(api.billing.customersPortalUrl, {}), "INSUFFICIENT_ROLE");
         const plan = await member.query(api.billing.planForActiveOrganization, {});
         expect(plan.organizationId).toBe(organizationId);
-        expect(plan.canManageBilling).toBe(true);
+        expect(plan.canManageBilling).toBe(false);
         expect(plan.canUnlockEvents).toBe(true);
     }, 60000);
 

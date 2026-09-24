@@ -121,13 +121,13 @@ describe("checkout authorization", () => {
         await expectCode(t.action(api.billing.customersPortalUrl, {}), "UNAUTHENTICATED");
     });
 
-    // Legacy parity (Task 14 part b, fix round 1): `POST /api/events/:id/unlock`
-    // used `requireWrite` (owner | admin | member), and Atelier checkout and the
-    // portal were Creem Better Auth plugin endpoints that checked only the session.
-    // Every role therefore passes authorization and stops at the missing provider
-    // credential — proof that no provider call happens before the guards.
+    // Controller ruling (Task 14 part b, fix round 2): Celebration is open to every
+    // write role (legacy `requireWrite` on the unlock route); Atelier checkout and
+    // the portal act on the *organization's* subscription and are owner only.
+    // Authorized calls stop at the missing provider credential — proof that no
+    // provider call happens before the guards; refused ones never get that far.
     for (const role of ["owner", "admin", "member"] as const) {
-        it(`lets a ${role} start both checkouts and open the portal, as the legacy did`, async () => {
+        it(`${role}: may unlock an event; ${role === "owner" ? "may" : "may not"} subscribe or open the portal`, async () => {
             const { t, ownerSession, organizationId } = await bootstrap();
             const eventId = await insertEvent(t, organizationId);
 
@@ -146,15 +146,14 @@ describe("checkout authorization", () => {
                 caller.action(api.billing.checkoutsCreate, { tier: "celebration", eventId }),
                 "CREEM_API_KEY_NOT_CONFIGURED",
             );
-            await expectCode(
-                caller.action(api.billing.checkoutsCreate, { tier: "atelier" }),
-                "CREEM_API_KEY_NOT_CONFIGURED",
-            );
-            await expectCode(caller.action(api.billing.customersPortalUrl, {}), "CREEM_API_KEY_NOT_CONFIGURED");
+
+            const subscriptionOutcome = role === "owner" ? "CREEM_API_KEY_NOT_CONFIGURED" : "INSUFFICIENT_ROLE";
+            await expectCode(caller.action(api.billing.checkoutsCreate, { tier: "atelier" }), subscriptionOutcome);
+            await expectCode(caller.action(api.billing.customersPortalUrl, {}), subscriptionOutcome);
 
             const plan = await caller.query(api.billing.planForActiveOrganization, {});
-            expect(plan.canManageBilling).toBe(true);
             expect(plan.canUnlockEvents).toBe(true);
+            expect(plan.canManageBilling).toBe(role === "owner");
         });
     }
 
@@ -353,8 +352,8 @@ describe("plan for the active organization", () => {
 
         const memberPlan = await memberSession.query(api.billing.planForActiveOrganization, {});
         expect(memberPlan.plan).toBe("free");
-        // Legacy parity: every member could reach the Creem plugin endpoints.
-        expect(memberPlan.canManageBilling).toBe(true);
+        // Owner only: the subscription belongs to the organization (fix round 2).
+        expect(memberPlan.canManageBilling).toBe(false);
     });
 
     it("is atelier while the subscription is active, and back to free when it ends", async () => {

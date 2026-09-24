@@ -1296,7 +1296,7 @@
   "subscription": {
     "title": "Subscription",
     "realtime": "Updated in real time",
-    "noBillingPermission": "Billing for this plan is managed by whoever can administer the organization's subscription.",
+    "noBillingPermission": "The subscription belongs to the organization: only the owner can start or manage it.",
     "sync": "Sync",
     "synced": "Synced",
     "syncError": "Sync error",

@@ -383,21 +383,20 @@ risolta dal server, il mapping tier → product id è configurazione server, nes
 segreto Creem nel browser (il gate verifica anche che `useSubscription` non contenga
 `organizationId`).
 
-**Ruoli: parità col legacy (fix round 1, decisione di prodotto).** La prima versione
-ereditava da G07 un checkout e un portale **owner-only**, che era un cambiamento di
-comportamento mai deciso. Il legacy: sblocco Celebrazione `POST /api/events/:id/unlock`
-con `requireWrite` (owner | admin | member); checkout Atelier e portale erano gli
-endpoint del plugin Creem Better Auth, che controllano solo la sessione. Ora
-`checkoutsCreate` e `customersPortalUrl` accettano tutti i ruoli
-(`CELEBRATION_CHECKOUT_ROLES`, `SUBSCRIPTION_BILLING_ROLES` in `convex/billing.ts`),
-`planForActiveOrganization` restituisce `canManageBilling`/`canUnlockEvents` dalle
-stesse liste, un caso convex-test per ruolo, e la correzione è annotata nell'evidenza
-G07. Differenza che resta, dichiarata: l'entità di billing è l'**organizzazione**, non
-l'utente, quindi un membro che apre il portale gestisce l'abbonamento
-dell'organizzazione. Nella pagina abbonamento **ogni** controllo del portale (gestisci,
-metodi di pagamento, storico fatture) segue `canOpenPortal` (Atelier attivo e
-`canManageBilling`), e chi è su Atelier senza permesso vede un messaggio informativo
-invece di "Scopri Atelier".
+**Ruoli (fix round 1–2, decisione del controller).** La regola finale:
+lo **sblocco Celebrazione** è aperto a ogni ruolo di scrittura (owner | admin | member),
+come il legacy `POST /api/events/:id/unlock` (`requireWrite`); **checkout Atelier e
+portale sono solo owner**. Il legacy li raggiungeva dal plugin Creem, che controllava
+solo la sessione, ma lì l'entità di billing era l'**utente**; qui è l'organizzazione, e
+la stessa apertura permetterebbe a un semplice membro di abbonare o cancellare per
+tutta l'organizzazione — un'escalation che il legacy non consentiva. (Il round 1 aveva
+aperto tutto a tutti per parità letterale; il round 2 lo corregge.) Costanti
+`CELEBRATION_CHECKOUT_ROLES` / `SUBSCRIPTION_BILLING_ROLES` in `convex/billing.ts`,
+`canUnlockEvents` / `canManageBilling` da `planForActiveOrganization` con le stesse
+liste, un caso convex-test per ruolo, nota corretta nell'evidenza G07. Nella pagina
+abbonamento **ogni** controllo del portale (gestisci, metodi di pagamento, storico
+fatture) segue `canOpenPortal` (Atelier attivo e owner); chi non è owner vede un
+messaggio informativo e nessun invito ad Atelier, né da Free né già su Atelier.
 
 `userStore` non espone più `subscription`/`getSubscription`/`fetchSubscription`
 (inutilizzati): chiamavano `useSubscription()` dentro un `computed`, che con una
