@@ -316,6 +316,12 @@ export default defineNuxtConfig({
                 "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
                 "connect-src": [
                     "'self'",
+                    // Task 14: the browser Convex client (live queries over a
+                    // websocket, plus its HTTPS fallback) talks to the deployment
+                    // directly; without these the dashboard cannot load any data.
+                    "wss://*.convex.cloud",
+                    "https://*.convex.cloud",
+                    // Presigned R2 PUT (uploads go browser → R2, Task 14 part c).
                     "https://*.r2.cloudflarestorage.com",
                     "https://api.iconify.design",
                     "https://datafa.st",

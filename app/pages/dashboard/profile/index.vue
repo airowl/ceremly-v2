@@ -6,6 +6,7 @@ const { t, locale, setLocale } = useI18n()
 const localePath = useLocalePath()
 const toast = useToast()
 const profileStore = useProfileStore()
+const { uploadPublicFile } = useStorageUpload()
 
 // --- Timezone options ---
 const timezoneOptions = [
@@ -115,24 +116,20 @@ async function onFileSelected(event: Event) {
     isUploading.value = true
 
     try {
-        const formData = new FormData()
-        formData.append('file', file)
+        // presign (Convex) → PUT (R2) → confirm (Convex): the bytes never go
+        // through the Nuxt runtime.
+        const uploaded = await uploadPublicFile(file)
 
-        const result = await $fetch<{ success: boolean; file: { url: string } }>('/api/file/upload', {
-            method: 'POST',
-            body: formData,
+        const saved = await profileStore.updateProfile({ image: uploaded.url })
+        if (!saved) throw new Error(profileStore.getError || 'Failed to save the avatar')
+
+        avatarUrl.value = uploaded.url
+        toast.add({
+            title: t('common.success'),
+            description: t('profile.updateSuccess'),
+            icon: 'i-lucide-check',
+            color: 'success',
         })
-
-        if (result.success && result.file?.url) {
-            avatarUrl.value = result.file.url
-            await profileStore.updateProfile({ image: result.file.url })
-            toast.add({
-                title: t('common.success'),
-                description: t('profile.updateSuccess'),
-                icon: 'i-lucide-check',
-                color: 'success',
-            })
-        }
     } catch {
         toast.add({
             title: t('common.error'),
@@ -148,7 +145,9 @@ async function onFileSelected(event: Event) {
 
 async function removeAvatar() {
     try {
-        await profileStore.updateProfile({ image: null })
+        // `updateProfile` reports failure with `false`, it does not throw.
+        const saved = await profileStore.updateProfile({ image: null })
+        if (!saved) throw new Error(profileStore.getError || 'Failed to remove the avatar')
         avatarUrl.value = null
         toast.add({
             title: t('common.success'),

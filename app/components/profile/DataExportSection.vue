@@ -1,90 +1,70 @@
 <script setup lang="ts">
-interface ExportStatus {
-    id: string;
-    status: "pending" | "processing" | "completed" | "failed" | "expired";
-    format: string;
-    fileSize: number | null;
-    downloadToken: string | null;
-    expiresAt: string | null;
-    completedAt: string | null;
-    errorMessage: string | null;
-    createdAt: string;
-}
+import { useConvexMutation, useConvexQuery } from "convex-vue";
+import { api } from "~~/convex/_generated/api";
+import type { Id } from "~~/convex/_generated/dataModel";
+import { convexErrorMessage } from "~/composables/useConvexError";
+import { useConvexAction } from "~/composables/useConvexAction";
+import { isExportInFlight, openSignedDownload, toExportView, type ExportView } from "~/lib/dataExports";
 
+/**
+ * GDPR export (Task 14, part c): `api.dataExports.*`.
+ *
+ * The status is a **live** query: the 3-second polling loop of the legacy
+ * component is gone, the row moves pending → processing → completed by itself
+ * when the export job writes it. The download is a signed URL (5 minutes, owner
+ * only) minted on click by `api.dataExports.downloadUrl`.
+ */
 const { t } = useI18n();
 const toast = useToast();
 
-const isLoading = ref(false);
-const isRequesting = ref(false);
-const currentExport = ref<ExportStatus | null>(null);
+const { data: statusData, isPending } = useConvexQuery(api.dataExports.status, {}, { server: false });
+const requestMutation = useConvexMutation(api.dataExports.request);
+const downloadUrl = useConvexAction(api.dataExports.downloadUrl);
 
-// Poll interval for status updates
-let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-async function fetchStatus() {
-    try {
-        const response = await $fetch<{
-            hasExport: boolean;
-            export: ExportStatus | null;
-        }>("/api/user/data-export/status");
-
-        currentExport.value = response.export;
-
-        // If export is pending or processing, poll for updates
-        if (response.export?.status === "pending" || response.export?.status === "processing") {
-            startPolling();
-        } else {
-            stopPolling();
-        }
-    } catch {
-        // Silent error
-    }
-}
+const isLoading = computed(() => isPending.value && statusData.value === undefined);
+const isRequesting = computed(() => requestMutation.isPending.value);
+const isDownloading = ref(false);
+const currentExport = computed<ExportView | null>(() =>
+    statusData.value?.export ? toExportView(statusData.value.export) : null,
+);
 
 async function requestExport() {
-    isRequesting.value = true;
-
     try {
-        await $fetch("/api/user/data-export/request", { method: "POST" });
-
+        await requestMutation.mutate({});
         toast.add({
             title: t("common.success"),
             description: t("dataExport.requestSuccess"),
             icon: "i-lucide-check",
             color: "success",
         });
-
-        // Start polling for status
-        await fetchStatus();
     } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : t("dataExport.requestError");
         toast.add({
             title: t("common.error"),
-            description: errorMessage,
+            description: convexErrorMessage(err, t("dataExport.requestError")),
+            icon: "i-lucide-alert-circle",
+            color: "error",
+        });
+    }
+}
+
+async function downloadExport() {
+    const current = currentExport.value;
+    if (!current || current.status !== "completed" || isDownloading.value) return;
+
+    isDownloading.value = true;
+    try {
+        await openSignedDownload(async () =>
+            (await downloadUrl({ exportId: current.id as Id<"dataExports"> })).url,
+        );
+    } catch (err: unknown) {
+        toast.add({
+            title: t("common.error"),
+            description: convexErrorMessage(err, t("dataExport.downloadError")),
             icon: "i-lucide-alert-circle",
             color: "error",
         });
     } finally {
-        isRequesting.value = false;
-    }
-}
-
-function downloadExport() {
-    if (!currentExport.value?.downloadToken) return;
-
-    // Open download URL in new tab
-    window.open(`/api/user/data-export/download/${currentExport.value.downloadToken}`, "_blank");
-}
-
-function startPolling() {
-    if (pollInterval) return;
-    pollInterval = setInterval(fetchStatus, 3000);
-}
-
-function stopPolling() {
-    if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
+        isDownloading.value = false;
     }
 }
 
@@ -99,18 +79,6 @@ function formatDate(dateStr: string | null): string {
     if (!dateStr) return "";
     return new Date(dateStr).toLocaleString();
 }
-
-// Fetch status on mount
-onMounted(async () => {
-    isLoading.value = true;
-    await fetchStatus();
-    isLoading.value = false;
-});
-
-// Cleanup on unmount
-onUnmounted(() => {
-    stopPolling();
-});
 </script>
 
 <template>
@@ -140,7 +108,7 @@ onUnmounted(() => {
 
                 <!-- Processing indicator -->
                 <div
-                    v-if="currentExport.status === 'processing' || currentExport.status === 'pending'"
+                    v-if="isExportInFlight(currentExport.status)"
                     class="flex items-center gap-2 text-sm text-muted-foreground"
                 >
                     <UIcon name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
@@ -160,6 +128,8 @@ onUnmounted(() => {
                         :label="t('dataExport.download')"
                         icon="i-lucide-download"
                         color="primary"
+                        :loading="isDownloading"
+                        :disabled="isDownloading"
                         @click="downloadExport"
                     />
                 </div>

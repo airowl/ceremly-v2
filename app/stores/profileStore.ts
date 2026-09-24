@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { useConvexClient, useConvexMutation } from 'convex-vue';
+import { api } from '~~/convex/_generated/api';
+import { convexErrorMessage } from '~/composables/useConvexError';
 
 export interface UserProfile {
     id: string;
@@ -8,9 +11,11 @@ export interface UserProfile {
     phone: string | null;
     bio: string | null;
     image: string | null;
+    locale?: string;
     timezone: string | null;
-    createdAt: string;
-    updatedAt: string;
+    // `null` when the Better Auth row has no timestamp (never for a real account).
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface UpdateProfileData {
@@ -27,7 +32,32 @@ export interface UpdateProfileData {
  */
 export type AuthProvider = 'email' | 'google' | 'github' | 'apple' | 'facebook' | string;
 
+/**
+ * Profile store — Task 14, part c.
+ *
+ * Before: `GET/PATCH /api/user/profile` and `DELETE /api/user/account` on the
+ * Nuxt runtime. Now `api.profile.*`:
+ *
+ * - `fetchProfile` reads **once** (`convex.query(api.profile.current)`): the page
+ *   copies the profile into an editable form, and a live query would rewrite the
+ *   fields under the user's fingers (the `getEventOnce` rule).
+ * - `updateProfile` is `api.profile.update` (validated and audited server-side;
+ *   `email` and `role` are not in its contract).
+ * - `deleteAccount` is `api.profile.requestDeletion`: deferred purge (30 days),
+ *   account blocked at once, sessions revoked, audited.
+ *
+ * Email and password changes stay Better Auth flows (`client.changeEmail`,
+ * `client.changePassword`): verification and hashing belong to the identity
+ * provider.
+ *
+ * CSR only (the dashboard is `ssr: false`): the store takes the browser client
+ * when it is created.
+ */
 export const useProfileStore = defineStore('profile', () => {
+    const convex = useConvexClient();
+    const updateMutation = useConvexMutation(api.profile.update);
+    const requestDeletionMutation = useConvexMutation(api.profile.requestDeletion);
+
     const profile = ref<UserProfile | null>(null);
     const isLoading = ref(false);
     const error = ref<string | null>(null);
@@ -62,17 +92,15 @@ export const useProfileStore = defineStore('profile', () => {
                 return null;
             }
 
-            // Fetch profile + auth provider from API. Il server determina il provider
-            // reale (email/password vs OAuth-only) leggendo la tabella account.
-            const data = await $fetch<{ profile: UserProfile; authProvider?: AuthProvider }>('/api/user/profile');
+            // The server decides the real provider (email/password vs OAuth-only)
+            // from the Better Auth accounts, as the legacy route did.
+            const data = await convex.query(api.profile.current, {});
 
-            if (data.profile) {
-                profile.value = data.profile;
-            }
+            profile.value = data.profile;
             authProvider.value = data.authProvider ?? 'email';
             return profile.value;
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Failed to fetch profile';
+            error.value = convexErrorMessage(err, 'Failed to fetch profile');
             console.error('fetchProfile error:', err);
             return null;
         } finally {
@@ -90,21 +118,25 @@ export const useProfileStore = defineStore('profile', () => {
         error.value = null;
 
         try {
-            const result = await $fetch<{ success: boolean; profile: UserProfile }>(
-                '/api/user/profile',
-                {
-                    method: 'PATCH',
-                    body: data,
-                }
-            );
+            const result = await updateMutation.mutate({ input: data });
 
-            if (result.profile) {
-                profile.value = result.profile;
+            // The mutation answers `{ success }` only: apply the accepted patch to
+            // the local copy (the legacy route echoed the whole row back).
+            if (result.success && profile.value) {
+                profile.value = {
+                    ...profile.value,
+                    ...(data.fullName !== undefined && { fullName: data.fullName.trim() }),
+                    ...(data.phone !== undefined && { phone: data.phone.trim() }),
+                    ...(data.bio !== undefined && { bio: data.bio.trim() }),
+                    ...(data.locale !== undefined && { locale: data.locale }),
+                    ...(data.timezone !== undefined && { timezone: data.timezone }),
+                    ...(data.image !== undefined && { image: data.image }),
+                };
             }
 
             return result.success;
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Failed to update profile';
+            error.value = convexErrorMessage(err, 'Failed to update profile');
             console.error('updateProfile error:', err);
             return false;
         } finally {
@@ -209,11 +241,9 @@ export const useProfileStore = defineStore('profile', () => {
         try {
             const { signOut } = useAuth();
 
-            // Call API to delete account (critical step). On success the server
-            // bans the user and REVOKES the session immediately (deleteSessions).
-            await $fetch('/api/user/account', {
-                method: 'DELETE',
-            });
+            // Critical step. On success the account is blocked at once, the purge is
+            // scheduled (30-day grace) and every session is revoked server-side.
+            await requestDeletionMutation.mutate({});
 
             // Clear local state
             profile.value = null;
@@ -229,7 +259,7 @@ export const useProfileStore = defineStore('profile', () => {
 
             return true;
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Failed to delete account';
+            error.value = convexErrorMessage(err, 'Failed to delete account');
             console.error('deleteAccount error:', err);
             return false;
         } finally {

@@ -1,33 +1,25 @@
 <script setup lang="ts">
-interface ExportHistoryItem {
-    id: string;
-    status: "pending" | "processing" | "completed" | "failed" | "expired";
-    format: string;
-    fileSize: number | null;
-    downloadToken: string | null;
-    expiresAt: string | null;
-    completedAt: string | null;
-    errorMessage: string | null;
-    createdAt: string;
-}
+import { useConvexQuery } from "convex-vue";
+import { api } from "~~/convex/_generated/api";
+import type { Id } from "~~/convex/_generated/dataModel";
+import { convexErrorMessage } from "~/composables/useConvexError";
+import { useConvexAction } from "~/composables/useConvexAction";
+import { openSignedDownload, toExportView, type ExportView } from "~/lib/dataExports";
 
+/**
+ * Export history (Task 14, part c): `api.dataExports.history`, live. A completed,
+ * unexpired export downloads through a signed URL minted on click
+ * (`api.dataExports.downloadUrl`); the server derives `expired`.
+ */
 const { t } = useI18n();
+const toast = useToast();
 
-const history = ref<ExportHistoryItem[]>([]);
-const isLoading = ref(false);
+const { data: historyData, isPending } = useConvexQuery(api.dataExports.history, {}, { server: false });
+const downloadUrl = useConvexAction(api.dataExports.downloadUrl);
 
-async function fetchHistory() {
-    isLoading.value = true;
-
-    try {
-        const response = await $fetch<{ exports: ExportHistoryItem[] }>("/api/user/data-export/history");
-        history.value = response.exports;
-    } catch {
-        // Silent error
-    } finally {
-        isLoading.value = false;
-    }
-}
+const history = computed<ExportView[]>(() => (historyData.value ?? []).map(toExportView));
+const isLoading = computed(() => isPending.value && historyData.value === undefined);
+const downloadingId = ref<string | null>(null);
 
 function formatFileSize(bytes: number | null): string {
     if (bytes === null) return "-";
@@ -40,15 +32,25 @@ function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString();
 }
 
-function downloadExport(token: string | null) {
-    if (!token) return;
-    window.open(`/api/user/data-export/download/${token}`, "_blank");
-}
+async function downloadExport(exportId: string) {
+    if (downloadingId.value) return;
 
-// Fetch history on mount
-onMounted(() => {
-    fetchHistory();
-});
+    downloadingId.value = exportId;
+    try {
+        await openSignedDownload(async () =>
+            (await downloadUrl({ exportId: exportId as Id<"dataExports"> })).url,
+        );
+    } catch (err: unknown) {
+        toast.add({
+            title: t("common.error"),
+            description: convexErrorMessage(err, t("dataExport.downloadError")),
+            icon: "i-lucide-alert-circle",
+            color: "error",
+        });
+    } finally {
+        downloadingId.value = null;
+    }
+}
 </script>
 
 <template>
@@ -93,13 +95,15 @@ onMounted(() => {
                 </div>
 
                 <UButton
-                    v-if="item.status === 'completed' && item.downloadToken"
+                    v-if="item.status === 'completed'"
                     icon="i-lucide-download"
                     color="neutral"
                     variant="ghost"
                     size="xs"
                     :title="t('dataExport.download')"
-                    @click="downloadExport(item.downloadToken)"
+                    :loading="downloadingId === item.id"
+                    :disabled="downloadingId !== null"
+                    @click="downloadExport(item.id)"
                 />
             </div>
         </div>

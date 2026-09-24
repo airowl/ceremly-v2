@@ -61,11 +61,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         } else {
             throw new Error(response?.error || t('landing.contact.errorMessage'))
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Contact form error:', error)
+        const failure = error as { data?: { statusMessage?: string; message?: string } } | null
 
-        // Extract error message from Supabase FunctionsError or generic error
-        const errorMessage = error?.context?.body?.error || error?.message || t('landing.contact.errorMessage')
+        // The Worker bridge (and the legacy route) put the user-facing text in
+        // `statusMessage` (429 rate limit, 400 disposable address, 503 backend
+        // down); a FetchError's own `message` is the raw request line.
+        const errorMessage = failure?.data?.statusMessage || failure?.data?.message || t('landing.contact.errorMessage')
 
         toast.add({
             title: t('landing.contact.errorTitle'),

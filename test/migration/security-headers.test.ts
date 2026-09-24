@@ -147,6 +147,15 @@ describe("protection matrix (declared)", () => {
         expect(csp["script-src"] ?? []).not.toContain("'unsafe-eval'");
     });
 
+    it("lets the browser reach Convex and R2 (Task 14: live queries and direct uploads)", () => {
+        // Without these the dashboard's websocket (`wss://<deployment>.convex.cloud`)
+        // and the presigned R2 PUT are blocked by the page's own CSP.
+        const connect = securityOf(config).headers?.contentSecurityPolicy?.["connect-src"] ?? [];
+        expect(connect).toContain("wss://*.convex.cloud");
+        expect(connect).toContain("https://*.convex.cloud");
+        expect(connect).toContain("https://*.r2.cloudflarestorage.com");
+    });
+
     it("declares a redirect for every bot trap", () => {
         for (const trap of EXPECTED.botTraps) {
             const rules = trap.owner === "nuxt" ? config.routeRules : config.nitro?.routeRules;

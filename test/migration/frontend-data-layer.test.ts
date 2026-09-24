@@ -24,6 +24,7 @@ import {
     toOrganizationMember,
     toOrganizationSummary,
 } from "~/lib/organizations";
+import { toExportView } from "~/lib/dataExports";
 
 /**
  * Task 14, Step 1 — il gate anti-CRUD Nuxt.
@@ -72,7 +73,9 @@ const ALLOWED_API_PATTERNS: readonly RegExp[] = [
  * per questo è elencata a parte e non ha uno step.
  */
 const PENDING: Record<string, string> = {
-    "app/stores/profileStore.ts": "Step 5 (profilo ed export)",
+    // Task 14, part c: empty. `profileStore` (the last entry, Step 5) now talks to
+    // `api.profile`. Kept as a ledger so a new debt entry has somewhere to go —
+    // with a step that retires it.
 };
 
 const OUT_OF_SCOPE: Record<string, string> = {
@@ -140,7 +143,17 @@ const MANUAL_CLIENT_ALLOWED: Record<string, string> = {
     // Task 14, part b: convex-vue has no action composable; billing is actions
     // (Creem). The file may only call `client.action` — asserted below.
     "app/composables/useConvexAction.ts": "azioni Convex (billing: checkout, portal)",
+    // Task 14, part c: the profile page copies the profile into a form, so it
+    // reads it once (`fetchProfile`) — a live query would rewrite the fields
+    // under the user's fingers, the same reason as `getEventOnce`.
+    "app/stores/profileStore.ts": "fetchProfile (lettura una-tantum del form profilo)",
 };
+
+/** Files allowed to do a one-shot `client.query(...)`: the form-backed reads. */
+const READ_ONCE_ALLOWED: readonly string[] = [
+    "app/composables/useEvents.ts",
+    "app/stores/profileStore.ts",
+];
 
 describe("frontend data layer: una strada sola per i dati di dominio", () => {
     it("nessun composable o store chiama più il CRUD Nuxt fuori dalle eccezioni dichiarate", () => {
@@ -199,7 +212,7 @@ describe("frontend data layer: una strada sola per i dati di dominio", () => {
         const oneShotReads = dataLayerFiles()
             .filter(({ relative, source }) =>
                 relative in MANUAL_CLIENT_ALLOWED
-                && relative !== "app/composables/useEvents.ts"
+                && !READ_ONCE_ALLOWED.includes(relative)
                 && /\.query\s*\(/.test(stripComments(source)))
             .map(({ relative }) => relative);
 
@@ -253,26 +266,16 @@ const UI_TRANSPORT: Record<string, readonly string[]> = {
 };
 
 const UI_PENDING: Record<string, { paths: readonly string[]; step: string }> = {
-    "app/pages/dashboard/profile/index.vue": { paths: ["/api/file/upload"], step: "Step 5 (upload)" },
-    "app/pages/dashboard/events/[id]/editor.vue": { paths: ["/api/file/upload"], step: "Step 5 (upload)" },
-    "app/components/profile/DataExportHistory.vue": {
-        // The signed download URL stays (transport); the history read is Step 5.
-        paths: ["/api/user/data-export/history", "/api/user/data-export/download/${token}"],
-        step: "Step 5 (export)",
-    },
-    "app/components/profile/DataExportSection.vue": {
-        paths: [
-            "/api/user/data-export/status",
-            "/api/user/data-export/request",
-            "/api/user/data-export/download/${currentExport.value.downloadToken}",
-        ],
-        step: "Step 5 (export)",
-    },
+    // Task 14, part c: empty. Uploads go presign (Convex) → PUT (R2) → confirm
+    // (Convex) through `useStorageUpload`; the export components read
+    // `api.dataExports` and download through a short-lived signed URL minted by
+    // `api.dataExports.downloadUrl` (the legacy `/download/:token` route cannot
+    // serve a Convex export: Convex rows carry no download token by design).
 };
 
 const UI_DEAD: Record<string, readonly string[]> = {
-    // Nuxt UI dashboard template page, not linked anywhere; `/api/members` has no route.
-    "app/pages/dashboard/profile/members.vue": ["/api/members"],
+    // Task 14, part c: empty. The Nuxt UI template page `profile/members.vue`
+    // (`/api/members`, a route that never existed) was deleted.
 };
 
 function uiFiles(): { relative: string; source: string }[] {
@@ -770,5 +773,117 @@ describe("frontend: organization adapters (Task 14, part b)", () => {
         expect(isInvitationToken("A".repeat(64))).toBe(false);
         expect(isInvitationToken("0198f2c4-7c1e-7d3a-9b2f-1a2b3c4d5e6f")).toBe(false);
         expect(isInvitationToken("")).toBe(false);
+    });
+});
+
+/**
+ * Task 14, part c (Step 5) — profile, GDPR export, public forms and uploads.
+ *
+ * The `/api/**` scans above prove what is *gone*; these pin what took its place,
+ * so a file cannot pass the gate by simply calling nothing.
+ */
+describe("frontend: profile, export, public forms and uploads (Task 14, part c)", () => {
+    const read = (relative: string): string =>
+        stripComments(readFileSync(join(PROJECT_ROOT, relative), "utf8"));
+
+    it("the profile store reads and writes api.profile, and keeps Better Auth only for credentials", () => {
+        const store = read("app/stores/profileStore.ts");
+        expect(store).toMatch(/api\.profile\.current/);
+        expect(store).toMatch(/useConvexMutation\(\s*api\.profile\.update\b/);
+        // Account deletion is a domain write (deferred purge + audit), not a Better
+        // Auth endpoint: the Convex mutation schedules it and revokes the sessions.
+        expect(store).toMatch(/useConvexMutation\(\s*api\.profile\.requestDeletion\b/);
+        // Email and password changes stay Better Auth flows (verification, hashing).
+        expect(store).toMatch(/client\.changeEmail\s*\(/);
+        expect(store).toMatch(/client\.changePassword\s*\(/);
+        expect(store).not.toMatch(/\$fetch\s*[(<]/);
+    });
+
+    it("the export components read api.dataExports live and download through a signed URL", () => {
+        const section = read("app/components/profile/DataExportSection.vue");
+        const history = read("app/components/profile/DataExportHistory.vue");
+
+        expect(section).toMatch(/useConvexQuery\(\s*api\.dataExports\.status\b/);
+        expect(section).toMatch(/useConvexMutation\(\s*api\.dataExports\.request\b/);
+        expect(history).toMatch(/useConvexQuery\(\s*api\.dataExports\.history\b/);
+        for (const source of [section, history]) {
+            expect(source).toMatch(/api\.dataExports\.downloadUrl/);
+            // The 3-second polling loop is replaced by the live query.
+            expect(source).not.toMatch(/setInterval\s*\(/);
+            expect(source).not.toMatch(/downloadToken/);
+        }
+    });
+
+    it("uploads go presign → PUT to R2 → confirm, and never through the Nuxt runtime", () => {
+        const upload = read("app/composables/useStorageUpload.ts");
+        expect(upload).toMatch(/api\.files\.presignUpload/);
+        expect(upload).toMatch(/api\.files\.confirmUpload/);
+        expect(upload).toMatch(/method:\s*["']PUT["']/);
+        expect(upload).not.toMatch(/FormData/);
+
+        for (const page of ["app/pages/dashboard/profile/index.vue", "app/pages/dashboard/events/[id]/editor.vue"]) {
+            const source = read(page);
+            expect(source, page).toMatch(/useStorageUpload\s*\(/);
+            expect(source, page).not.toMatch(/FormData/);
+        }
+    });
+
+    it("public forms call only the protected Worker bridges, never Convex directly", () => {
+        const forms = [
+            "app/pages/index.vue",
+            "app/components/landing/Contact.vue",
+            "app/components/landing/WaitingListCTA.vue",
+            "app/components/blog/BlogSidebar.vue",
+            "app/components/blog/BlogNewsletter.vue",
+        ];
+        const bridges = ["/api/contact", "/api/waiting-list/subscribe"];
+
+        for (const relative of forms) {
+            const source = read(relative);
+            const paths = apiPathsIn(relative, source);
+            expect(paths.length, `${relative} must still submit through a bridge`).toBeGreaterThan(0);
+            expect(paths.every((path) => bridges.includes(path)), `${relative}: ${paths.join(", ")}`).toBe(true);
+            // The IP becomes a signed digest in the Worker: a direct Convex call
+            // would skip that and the per-IP limiter with it.
+            expect(source, relative).not.toMatch(/convex\/_generated|useConvex(Query|Mutation|Client|HttpClient|Action)\s*\(/);
+        }
+    });
+
+    it("the dated-debt ledgers hold only transport constraints and the out-of-plan store", () => {
+        expect(Object.keys(PENDING)).toEqual([]);
+        expect(Object.keys(UI_PENDING)).toEqual([]);
+        expect(Object.keys(UI_DEAD)).toEqual([]);
+        expect(Object.keys(OUT_OF_SCOPE)).toEqual(["app/stores/feedbackStore.ts"]);
+    });
+});
+
+describe("frontend: GDPR export adapter (Task 14, part c)", () => {
+    const row = {
+        id: "x1",
+        status: "completed",
+        format: "json",
+        fileSize: 2048,
+        expiresAt: Date.parse("2026-09-25T10:00:00.000Z"),
+        completedAt: Date.parse("2026-09-24T10:00:00.000Z"),
+        errorMessage: null,
+        createdAt: Date.parse("2026-09-24T09:59:00.000Z"),
+    };
+
+    it("converts milliseconds to ISO and keeps the server-derived status", () => {
+        expect(toExportView(row)).toEqual({
+            ...row,
+            expiresAt: "2026-09-25T10:00:00.000Z",
+            completedAt: "2026-09-24T10:00:00.000Z",
+            createdAt: "2026-09-24T09:59:00.000Z",
+        });
+        expect(toExportView({ ...row, status: "expired", completedAt: null }).status).toBe("expired");
+        expect(toExportView({ ...row, completedAt: null, expiresAt: null })).toMatchObject({
+            completedAt: null,
+            expiresAt: null,
+        });
+    });
+
+    it("an unexpected status is not downloadable and does not spin forever", () => {
+        expect(toExportView({ ...row, status: "boh" }).status).toBe("failed");
     });
 });

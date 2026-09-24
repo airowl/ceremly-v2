@@ -112,3 +112,16 @@ to the rehearsal (Task 16) once a Worker is deployed.
 | G09–G10 | NOT_RUN | — |
 
 Next authorized work: **Task 8** (G09: protection matrix and rate limiting).
+
+## Addendum (Task 14, part c — 2026-09-24): public URL
+
+Found while wiring the browser upload: no Convex file ever had a public URL
+(`insertPendingUpload` wrote `url: null` and nothing filled it), so an avatar or a
+gallery image uploaded through this domain had nothing to display. The presign
+bridge now also returns `publicUrl` (the Worker owns the R2 config, public base
+included; same rule as the legacy `storage.getUrl`), `files.insertPendingUpload`
+keeps it **only for a public file**, and `files.confirmUpload` returns `url` — the
+survivor's after a dedup. Pinned by two cases in `convex/media.test.ts`. The
+browser flow (presign → `PUT` → confirm) additionally needs a CORS rule on the
+bucket for `PUT` from the site origin; not verifiable from this repository.
+

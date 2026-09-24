@@ -50,6 +50,11 @@ export default defineEventHandler(async (event) => {
             ok: true,
             url,
             key,
+            // The object's public URL (Task 14, part c): the Worker owns the R2
+            // configuration, public base included, so Convex never has to know it.
+            // Same rule as the legacy upload (`storage.getUrl`). Convex keeps it
+            // only for a public file.
+            publicUrl: storage.getUrl(key),
             // Milliseconds: Convex stores `presignExpiresAt` as a number.
             expiresAt: expiresAt.getTime(),
         };

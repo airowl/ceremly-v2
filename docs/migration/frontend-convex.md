@@ -1,10 +1,12 @@
 # Task 14 — frontend da `$fetch` a Convex
 
-**Stato: parziale, e in modo dichiarato.** Quattro vertical slice su cinque sono
-completi (progetti, eventi + statistiche, ospiti/RSVP/invito pubblico — §4bis —, e
-organizzazione/billing — §4ter —, entrambi chiusi il 2026-09-24), il gate anti-CRUD
-esiste e sta in piedi. Profilo/export/form pubblici/upload (Step 5) **non è
-iniziato**. La sezione 4 dice esattamente cosa resta e da cosa dipende.
+**Stato: completato (2026-09-24), verificato ermeticamente.** I cinque vertical
+slice sono chiusi: progetti, eventi + statistiche, ospiti/RSVP/invito pubblico
+(§4bis), organizzazione/billing (§4ter), profilo/export/form pubblici/upload
+(§4quater). Il registro del debito del gate contiene **solo** vincoli di trasporto
+(bridge anonimi, download CSV/PNG) e `feedbackStore`, fuori dal piano. **Nessuna
+run live**: la verifica con due browser context, e il CORS del bucket R2 per il
+`PUT` diretto, appartengono al rehearsal (Task 16).
 
 Verifiche di chiusura (2026-09-22, albero locale):
 
@@ -32,6 +34,14 @@ Step 4 (2026-09-24, albero locale): `vitest run convex/` **279 passed** (+11,
 identico alla baseline e nessuna nei file toccati, `pnpm typecheck:convex` pulito,
 `eslint` sui file toccati pulito salvo i `@ts-ignore` preesistenti su
 `definePageMeta`/`useSeoMeta`, `pnpm build` ok. Commit: vedi §4ter.
+
+Step 5 e verifica finale del task (2026-09-24, albero locale): gate
+`frontend-data-layer.test.ts` **33 casi**, `vitest run convex/` **288 passed**,
+`pnpm test:migration` **444 passed / 27 skipped**, `pnpm test` **573 passed / 27
+skipped**, `pnpm typecheck` a **23 righe `error TS`** (baseline, nessuna nei file
+toccati), `pnpm typecheck:convex` pulito (esegue `convex codegen`, che contatta la
+deployment di sviluppo — non è una verifica di comportamento), `eslint` pulito sui
+file toccati, `pnpm build` ok. Commit: vedi §4quater.
 
 ---
 
@@ -134,20 +144,19 @@ primo il legacy distingueva `draft`/`active`/`closed`, nel secondo solo
 
 ### Step 4 — organizzazione e billing — fatto, vedi §4ter
 
-### Step 5 — profilo, export, form pubblici, upload
-
-`profileStore` (profilo, cambio email/password, cancellazione account),
-`DataExportSection`/`DataExportHistory` (`api.profile`, `api.dataExports`), i tre
-bridge anonimi già esistenti, e gli upload avatar/galleria che devono passare a
-presign Convex → PUT su R2 → confirm.
+### Step 5 — profilo, export, form pubblici, upload — fatto, vedi §4quater
 
 ### Quelle che restano Worker, e perché
 
 Non sono debito, sono vincoli di trasporto: `GET /api/events/:id/export` (CSV) e
-`/guests/:id/qr` (PNG) sono **download binari** aperti in una nuova scheda;
-`/api/user/data-export/download/:token` è un URL firmato; `/api/file/upload` è
-il percorso di upload ancora legacy. `feedbackStore` (`/api/suggestions*`) è
-**fuori dal piano**: le suggestions non hanno una controparte Convex.
+`/guests/:id/qr` (PNG) sono **download binari** aperti in una nuova scheda; contact,
+waiting list e submit RSVP sono i **bridge anonimi** (Task 12), dove l'IP diventa un
+digest firmato. `feedbackStore` (`/api/suggestions*`) è **fuori dal piano**: le
+suggestions non hanno una controparte Convex.
+
+`/api/user/data-export/download/:token` **non** è più chiamato: un export Convex non
+ha token (§4quater), l'URL firmato lo conia `api.dataExports.downloadUrl`.
+`/api/file/upload` non è più chiamato: gli upload vanno dal browser a R2.
 
 ### Nessuna run live
 
@@ -484,6 +493,115 @@ non è una verifica del comportamento.
 
 ---
 
+## 4quater. Profilo, export GDPR, form pubblici e upload (2026-09-24)
+
+### Profilo: letto una volta, scritto con mutation
+
+`profileStore` usa `api.profile.current` con una `client.query` **una-tantum** —
+la regola dei form (§2): la pagina copia il profilo nei campi, una query viva li
+riscriverebbe sotto le dita. Per questo lo store è in `MANUAL_CLIENT_ALLOWED` e,
+con `useEvents.ts`, nell'elenco `READ_ONCE_ALLOWED` del gate. Le scritture:
+
+- `updateProfile` → `api.profile.update`. La mutation risponde solo `{ success }`
+  (il legacy restituiva la riga intera), quindi lo store applica alla copia locale
+  la patch accettata, con lo stesso trim del server.
+- `deleteAccount` → `api.profile.requestDeletion`: cancellazione differita di 30
+  giorni, account bloccato subito, sessioni revocate, audit — poi `signOut`
+  best-effort come prima (la sessione è già invalidata).
+- Cambio email e password **restano Better Auth** (`client.changeEmail`,
+  `client.changePassword`, e la verifica della password corrente con
+  `signIn.email`): verifica e hashing sono dell'identity provider.
+
+La pagina ora controlla l'esito di `updateProfile` anche per l'avatar: prima un
+salvataggio fallito dopo un upload riuscito mostrava "aggiornato".
+
+### Export GDPR: stato vivo, URL firmato al clic
+
+`DataExportSection` e `DataExportHistory` leggono `api.dataExports.status` e
+`history` **vive**: il polling a 3 secondi è sparito col suo timer, la riga passa
+`pending → processing → completed` da sola quando il job la scrive. La richiesta è
+`api.dataExports.request` (idempotente lato server: un export in volo viene
+riusato). Gli adattatori (ms → ISO, status sconosciuto → `failed`, non uno spinner
+eterno) sono in `app/lib/dataExports.ts`, testati nel gate.
+
+Il download **non** passa più da `/api/user/data-export/download/:token`: quella
+route legge Postgres per token, e un export Convex non ha token **per scelta** (Task
+12: un segreto di lunga durata in una riga è ciò che non si vuole). L'URL lo conia
+al clic l'action `api.dataExports.downloadUrl` (5 minuti, solo il proprietario,
+solo `completed` non scaduto). Siccome arriva dopo un `await`, un `window.open` a
+quel punto non è più legato al clic e viene bloccato come popup: `openSignedDownload`
+apre la scheda **in modo sincrono** sul clic, poi la naviga (e le toglie `opener`),
+o la chiude se l'action fallisce.
+
+### Upload: presign → PUT → confirm, e l'URL pubblico che mancava
+
+`useStorageUpload().uploadPublicFile(file)` (il nome `useFileUpload` è già un
+auto-import di Nuxt UI e lo collideva) fa i tre passi: `api.files.presignUpload`
+(autorizza, valida tipo e dimensione, budget di presign), `PUT` del file
+all'URL firmato (R2, già in `connect-src`), `api.files.confirmUpload` (magic bytes,
+dedup SHA-256, varianti). Il file non passa più dal runtime Nuxt. Lo usano avatar e
+galleria dell'editor; il layout delle chiavi resta quello legacy (`global/…`, non
+per evento).
+
+Portarlo in pagina ha fatto emergere un buco del Task 7: **nessun file Convex aveva
+un URL pubblico** — `insertPendingUpload` scriveva `url: null` e nessuno lo
+riempiva, quindi avatar e galleria non avrebbero avuto niente da mostrare. Il
+bridge di presign (che possiede la configurazione R2, base pubblica compresa)
+restituisce ora anche `publicUrl` con la stessa regola del legacy
+(`storage.getUrl`), `insertPendingUpload` lo conserva **solo per un file
+pubblico** (un file privato esce solo firmato), e `confirmUpload` restituisce
+`url` — dopo un dedup quello del file **sopravvissuto**, perché l'oggetto del
+duplicato viene cancellato. Due casi in `convex/media.test.ts`. Un bridge vecchio
+che non manda `publicUrl` produce `url: null` e la UI lo tratta come upload fallito,
+non come un'immagine vuota.
+
+**Prerequisito operativo nuovo**: il bucket R2 deve ammettere un CORS `PUT` dall'origine
+del sito con header `Content-Type`, altrimenti il secondo passo fallisce nel browser.
+Non verificabile da qui.
+
+### Form pubblici
+
+Contact e waiting list (landing, home, blog) chiamavano già soltanto
+`/api/contact` e `/api/waiting-list/subscribe`, cioè i bridge del Task 12 dietro
+`NUXT_PUBLIC_FORMS_BACKEND`; le shape di risposta (`success`, `alreadySubscribed`)
+coincidono sui due rami. Il gate ora lo **asserisce** (solo quei percorsi, nessun
+import Convex: una chiamata diretta salterebbe il digest dell'IP e il limiter per
+IP). Unica modifica: `Contact.vue` leggeva l'errore da `error.context.body.error`
+(un residuo Supabase) e poi dal `message` di ofetch (la riga della richiesta); ora
+legge `data.statusMessage`, dove il bridge mette il testo (429, 400, 503).
+
+### La CSP bloccava il client Convex
+
+Trovato in verifica: `connect-src` ammetteva R2 ma **non** `wss://*.convex.cloud`.
+Nessuna run live l'aveva mai visto, ma in produzione ogni query viva del browser
+sarebbe stata bloccata dalla CSP della pagina stessa. Aggiunti `wss://*.convex.cloud`
+e `https://*.convex.cloud`, pinnati in `test/migration/security-headers.test.ts`
+(visto rosso prima della correzione).
+
+### Il registro del debito, alla fine
+
+`PENDING`, `UI_PENDING` e `UI_DEAD` sono **vuoti**, e un'asserzione lo pretende.
+`UI_DEAD` conteneva `profile/members.vue`, pagina del template Nuxt UI mai linkata
+che chiamava `/api/members` (una route mai esistita): cancellata. Restano
+`UI_TRANSPORT` (bridge anonimi, CSV, QR) e `OUT_OF_SCOPE` (`feedbackStore`).
+
+Le route legacy (`/api/user/**`, `/api/file/**`) **non sono cancellate**: il runtime
+Vercel continua a funzionare durante il blue-green.
+
+### Commit
+
+Un solo commit, `feat(migration): move profile, export and public forms UI to
+Convex` (profilo, export, form, upload, gate, CSP): upload e profilo condividono la
+pagina profilo e il file del gate, e separarli avrebbe lasciato un commit col gate
+rosso.
+
+### Nessuna run live
+
+Come il resto del task: verificato ermeticamente (convex-test, gate, adattatori,
+typecheck, build), **mai eseguito contro un deployment**.
+
+---
+
 ## 5. Il gate, e perché non è un elenco di permessi
 
 `test/migration/frontend-data-layer.test.ts` scansiona `app/composables` e
@@ -495,7 +613,10 @@ non è una verifica del comportamento.
 3. **nessuna `useConvexClient()` manuale** fuori da `useEvents.ts` e
    `useEventGuests.ts` — la via per reintrodurre una lettura una-tantum al posto di
    una query viva. Il secondo è ammesso solo per `client.onUpdate` (il dettaglio
-   opzionale), e un'asserzione dedicata vieta lì `client.query(...)`.
+   opzionale), e un'asserzione dedicata vieta lì `client.query(...)`. Dopo lo
+   Step 4 si è aggiunto `useConvexAction.ts` (solo `client.action`), dopo lo Step 5
+   `profileStore.ts` (lettura una-tantum del form profilo, in `READ_ONCE_ALLOWED`
+   con `useEvents.ts`).
 
 Dal 2026-09-24 il gate ammette, oltre a `/api/auth`, **un solo** bridge anonimo con
 una regex esatta (`/api/public/invite/${…}/rsvp`): la GET dell'invito ha lo stesso
@@ -533,7 +654,8 @@ le pagine consumatrici (`dashboard/index.vue`, `dashboard/subscription/index.vue
 `dashboard/events/new.vue`, `events/[id]/{index,editor,guests,reminders,distribution,rsvp}.vue`,
 `dashboard/projects/index.vue`), `i18n/locales/*` (la chiave `projects.truncated`).
 
-Rimosso: `app/composables/useConvexResource.ts`.
+Rimosso: `app/composables/useConvexResource.ts`; con lo Step 5
+`app/pages/dashboard/profile/members.vue` (pagina template morta).
 
 Test: `test/migration/frontend-data-layer.test.ts` (9 casi), più i tre casi
 `listAll` in `convex/domain.test.ts`.
@@ -564,6 +686,14 @@ consegna in `inviteMember`, campi additivi in `listMembers`/`listMyOrganizations
 `i18n/locales/*` (`subscription.realtime`, `subscription.noBillingPermission`).
 Test: `convex/orgInvites.test.ts` (11 casi, nuovo), +8 casi nel gate; `BETTER_AUTH_SECRET`
 impostato nelle suite che invitano (`organizations`, `billing`, `auxiliaryFlows`).
+
+Step 5: `app/stores/profileStore.ts`, `app/composables/useStorageUpload.ts` (nuovo),
+`app/lib/dataExports.ts` (nuovo), `app/components/profile/DataExport{Section,History}.vue`,
+`app/components/landing/Contact.vue`, le pagine `dashboard/profile/index.vue` e
+`dashboard/events/[id]/editor.vue`, `convex/files.ts` (`publicUrl`/`url`),
+`server/api/internal/storage/presign.post.ts` (`publicUrl`), `nuxt.config.ts`
+(`connect-src`), `i18n/locales/*` (`dataExport.downloadError`). Test: +7 casi nel gate,
++2 in `convex/media.test.ts`, +1 in `test/migration/security-headers.test.ts`.
 
 ### Perché `useConvexResource` è stato cancellato
 

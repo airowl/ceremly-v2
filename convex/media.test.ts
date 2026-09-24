@@ -93,6 +93,7 @@ async function seedPending(
         mimeType?: string;
         originalName?: string;
         isPublic?: boolean;
+        publicUrl?: string;
     },
 ): Promise<Id<"files">> {
     const id = `seed-${Math.random().toString(36).slice(2)}`;
@@ -108,6 +109,7 @@ async function seedPending(
         basePath,
         isPublic: args.isPublic ?? true,
         presignExpiresAt: Date.now() + 900_000,
+        ...(args.publicUrl !== undefined && { publicUrl: args.publicUrl }),
     });
     return result.fileId;
 }
@@ -398,7 +400,7 @@ describe("upload confirmation", () => {
             sha256: sha,
             size: 1024,
         });
-        expect(duplicated).toEqual({ status: "deduplicated", fileId: secondId, duplicateId: first });
+        expect(duplicated).toEqual({ status: "deduplicated", fileId: secondId, duplicateId: first, url: null });
         expect((await fileById(t, secondId))?.uploadStatus).toBe("failed");
         expect(await auditActions(t)).toContain("file.dedup_matched");
 
@@ -418,6 +420,66 @@ describe("upload confirmation", () => {
             size: 1024,
         });
         expect(foreign.status).toBe("active");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Public URL (Task 14, part c): what the browser shows after an upload
+// ---------------------------------------------------------------------------
+
+describe("public URL of an upload", () => {
+    const PUBLIC = "https://media.example.com/global/2026-09/x/original.png";
+
+    it("keeps the bridge's public URL only for a public file", async () => {
+        const { t, organizationId } = await bootstrap();
+        const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
+
+        const publicId = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl: PUBLIC });
+        expect((await fileById(t, publicId))?.url).toBe(PUBLIC);
+
+        // A private file must never carry a URL that serves it without a signature.
+        const privateId = await seedPending(t, {
+            organizationId,
+            uploadedBy: userId,
+            isPublic: false,
+            publicUrl: PUBLIC,
+        });
+        expect((await fileById(t, privateId))?.url).toBeNull();
+    });
+
+    it("confirm reports the URL of the file that survives, including after dedup", async () => {
+        const { t, organizationId } = await bootstrap();
+        const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
+        const sha = "f".repeat(64);
+
+        const firstId = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl: PUBLIC });
+        const first = await t.mutation(internal.files.finalizeUpload, {
+            fileId: firstId,
+            appUserId: userId,
+            authUserId: alice.subject,
+            headBytes: PNG_HEAD,
+            sha256: sha,
+            size: 1024,
+        });
+        expect(first).toMatchObject({ status: "active", url: PUBLIC });
+
+        // The duplicate's own object is deleted by the action: the URL the page
+        // stores must be the survivor's, or the image would 404 right away.
+        const copyId = await seedPending(t, {
+            organizationId,
+            uploadedBy: userId,
+            originalName: "copy.png",
+            publicUrl: "https://media.example.com/global/2026-09/y/original.png",
+        });
+        const copy = await t.mutation(internal.files.finalizeUpload, {
+            fileId: copyId,
+            appUserId: userId,
+            authUserId: alice.subject,
+            headBytes: PNG_HEAD,
+            sha256: sha,
+            size: 1024,
+        });
+        expect(copy).toMatchObject({ status: "deduplicated", duplicateId: firstId, url: PUBLIC });
     });
 });
 

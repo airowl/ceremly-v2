@@ -1395,7 +1395,8 @@
     "requestError": "Failed to request export. Please try again.",
     "gdprInfo": "Under GDPR, you have the right to request and download a copy of all personal data we hold about you. The export includes your profile, your organizations, files metadata, and activity logs.",
     "history": "Export History",
-    "noHistory": "No previous exports"
+    "noHistory": "No previous exports",
+    "downloadError": "Could not download the export. Please try again."
   },
   "blog": {
     "seo": {

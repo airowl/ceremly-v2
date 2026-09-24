@@ -132,6 +132,7 @@ function normalizeBlocks(list: InviteBlock[]): InviteBlock[] {
 // font vengono copiati in stato editabile: una query viva li riscriverebbe sotto
 // le dita dell'utente, anche per una scrittura arrivata da un'altra scheda.
 const { getEventOnce, updateEvent } = useEventActions();
+const { uploadPublicFile } = useStorageUpload();
 
 async function loadEvent() {
     pending.value = true;
@@ -383,17 +384,10 @@ async function onGalleryFile(e: Event) {
     }
     uploadingGallery.value = true;
     try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await $fetch<{ success: boolean; file: { url: string | null } }>("/api/file/upload", {
-            method: "POST",
-            body: formData,
-        });
-        if (res.success && res.file?.url) {
-            d.images.push({ url: res.file.url, alt: file.name.replace(/\.[^.]+$/, "") });
-        } else {
-            throw new Error("URL pubblico non disponibile");
-        }
+        // presign (Convex) → PUT (R2) → confirm (Convex): the bytes never go
+        // through the Nuxt runtime. Same (global) key layout as the legacy upload.
+        const uploaded = await uploadPublicFile(file);
+        d.images.push({ url: uploaded.url, alt: file.name.replace(/\.[^.]+$/, "") });
     } catch {
         toast.add({ title: t("ceremly.event.editor.toast.gallery.uploadErrorTitle"), description: t("ceremly.event.editor.toast.gallery.uploadErrorDesc"), icon: "i-lucide-alert-circle", color: "error" });
     } finally {

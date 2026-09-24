@@ -151,6 +151,13 @@ export const insertPendingUpload = internalMutation({
         basePath: v.string(),
         isPublic: v.boolean(),
         presignExpiresAt: v.number(),
+        /**
+         * Public URL of the object, computed by the storage bridge (the Worker
+         * owns the R2 configuration, public base included). Task 14, part c: the
+         * avatar and the invite gallery store this URL, so a public upload that
+         * did not carry it would be unusable by the page.
+         */
+        publicUrl: v.optional(v.string()),
     },
     handler: async (ctx, args): Promise<{ fileId: Id<"files"> }> => {
         const now = Date.now();
@@ -163,7 +170,9 @@ export const insertPendingUpload = internalMutation({
             size: args.fileSize,
             path: args.path,
             basePath: args.basePath,
-            url: null,
+            // A private file never carries an unsigned URL: its only way out is
+            // `downloadUrl`, which signs after the access check.
+            url: args.isPublic && args.publicUrl ? args.publicUrl : null,
             isPublic: args.isPublic,
             isActive: false,
             uploadStatus: "pending",
@@ -197,8 +206,8 @@ export const insertPendingUpload = internalMutation({
 });
 
 export type FinalizeResult =
-    | { status: "active"; fileId: Id<"files">; variantStatus: "pending" | "none" }
-    | { status: "deduplicated"; fileId: Id<"files">; duplicateId: Id<"files"> }
+    | { status: "active"; fileId: Id<"files">; variantStatus: "pending" | "none"; url: string | null }
+    | { status: "deduplicated"; fileId: Id<"files">; duplicateId: Id<"files">; url: string | null }
     | { status: "failed"; fileId: Id<"files">; reason: string };
 
 /**
@@ -271,7 +280,13 @@ export const finalizeUpload = internalMutation({
                 targetId: duplicate._id,
                 details: { sha256: args.sha256, existingFileId: duplicate._id, duplicateRowId: file._id },
             });
-            return { status: "deduplicated", fileId: file._id, duplicateId: duplicate._id };
+            // The survivor's URL: this row's object is deleted by the action.
+            return {
+                status: "deduplicated",
+                fileId: file._id,
+                duplicateId: duplicate._id,
+                url: duplicate.url ?? null,
+            };
         }
 
         const variantStatus = isProcessableImage(file.mimeType) ? "pending" : "none";
@@ -306,7 +321,7 @@ export const finalizeUpload = internalMutation({
             details: { originalName: file.originalName, mimeType: file.mimeType, size: args.size },
         });
 
-        return { status: "active", fileId: file._id, variantStatus };
+        return { status: "active", fileId: file._id, variantStatus, url: file.url ?? null };
     },
 });
 
@@ -428,7 +443,7 @@ export const presignUpload = action({
         const basePath = buildBasePath({ id, eventId: args.eventId });
         const key = originalKey(basePath, args.originalName);
 
-        const presign = await callBridge<{ url: string; key: string; expiresAt: number }>(
+        const presign = await callBridge<{ url: string; key: string; expiresAt: number; publicUrl?: string }>(
             BRIDGE_PATH.presign,
             {
                 key,
@@ -451,6 +466,7 @@ export const presignUpload = action({
                 basePath,
                 isPublic: args.isPublic ?? true,
                 presignExpiresAt: presign.expiresAt,
+                ...(typeof presign.publicUrl === "string" && { publicUrl: presign.publicUrl }),
             },
         );
 
@@ -468,6 +484,8 @@ export interface ConfirmResult {
     fileId: Id<"files">;
     deduplicated: boolean;
     variantStatus: "pending" | "processing" | "none" | "retrying";
+    /** Public URL of the surviving file (`null` for a private one). Task 14, part c. */
+    url: string | null;
 }
 
 export const confirmUpload = action({
@@ -522,11 +540,16 @@ export const confirmUpload = action({
 
         if (finalized.status === "deduplicated") {
             await tryBridge(BRIDGE_PATH.object, { op: "delete", key: pending.path });
-            return { fileId: finalized.duplicateId, deduplicated: true, variantStatus: "none" };
+            return {
+                fileId: finalized.duplicateId,
+                deduplicated: true,
+                variantStatus: "none",
+                url: finalized.url,
+            };
         }
 
         if (finalized.variantStatus !== "pending") {
-            return { fileId: finalized.fileId, deduplicated: false, variantStatus: "none" };
+            return { fileId: finalized.fileId, deduplicated: false, variantStatus: "none", url: finalized.url };
         }
 
         // Stessa action del job `image-variant` (Task 13): il percorso immediato e il
@@ -536,7 +559,12 @@ export const confirmUpload = action({
             { fileId: args.fileId },
         );
 
-        return { fileId: finalized.fileId, deduplicated: false, variantStatus: processed.status };
+        return {
+            fileId: finalized.fileId,
+            deduplicated: false,
+            variantStatus: processed.status,
+            url: finalized.url,
+        };
     },
 });
 
