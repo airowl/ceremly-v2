@@ -21,8 +21,7 @@ write, quindi in pratica l'unica fonte possibile prima del passo 10 è un webhoo
 Si **misura**, non si presume:
 
 ```bash
-export MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
-export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX
+# credenziali di produzione nella shell del cutover, mai sulla riga di comando (cutover.md 0.25)
 pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
   --out .migration-cutover/reconcile-check.json --first-write-check \
   --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json
@@ -65,7 +64,7 @@ Ordine (inverso rispetto al runbook, ognuno registrato con ora UTC):
    read-only, e la verifica darebbe un falso positivo.
    ```bash
    LEGACY=https://<legacy>.vercel.app      # dal blocco evidenze / registro
-   curl -fsS -X DELETE "$LEGACY/api/admin/site-mode" -H "X-Admin-API-Key: $NUXT_ADMIN_API_KEY"
+   curl -fsS -X DELETE "$LEGACY/api/admin/site-mode" -H @<(admin_hdr)   # cutover.md 0.25
    # (o POST {"mode":"active"} se l'env di Vercel non è `active`)
    curl -s -o /dev/null -w '%{http_code}\n' -X POST "$LEGACY/api/public/invite/x/rsvp"   # non più 503
    ```

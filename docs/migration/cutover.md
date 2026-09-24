@@ -107,12 +107,40 @@ aperti al 2026-09-25.
     (`reconcile-unlock` non è portato). Il recupero è la riconciliazione operatore
     `scripts/migration/reconcile-creem.ts` (sola lettura) + verifica dalla console admin.
 
+### 0.25 Shell del cutover: segreti mai sulla riga di comando (final review M7)
+
+Ogni segreto entra nella shell **una volta**, con un prompt che non lo mostra, e resta solo
+nell'ambiente del processo della shell: mai scritto in un comando (history), mai in un file, mai
+in argv di un processo (visibile in `ps`). Nessun comando di questo runbook contiene un valore
+segreto: usano le variabili già esportate.
+
+```bash
+# nuova shell (zsh o bash) dedicata al cutover
+unset HISTFILE                                   # questa sessione non scrive la history su disco
+secret() { local v; printf '%s: ' "$1" >&2; IFS= read -rs v; printf '\n' >&2; export "$1=$v"; }
+# (`secret` è una funzione della shell: `export` è un builtin, il valore non finisce in argv)
+secret NUXT_DATABASE_URL            # URL Neon di produzione (contiene la password)
+secret MIGRATION_ENCRYPTION_KEY     # 0.2 §5 (oppure: export MIGRATION_ENCRYPTION_KEY="$(openssl rand -base64 32)" al T-1)
+secret NUXT_MIGRATION_API_KEY       # MIGRATION_API_KEY del deployment Convex di produzione
+secret MIGRATION_CONVEX_ADMIN_KEY   # deploy key prod:…
+secret NUXT_ADMIN_API_KEY           # admin key del legacy (toggle site mode)
+secret NEON_API_KEY; secret NUXT_QSTASH_TOKEN; secret NUXT_BETTER_AUTH_SECRET
+secret NUXT_CF_ACCESS_KEY_ID; secret NUXT_CF_SECRET_ACCESS_KEY
+secret NUXT_UPSTASH_REDIS_REST_TOKEN   # solo per il passo 7
+# non segreti: in chiaro
+export NUXT_CF_ACCOUNT_ID=<account> NUXT_CF_R2_BUCKET_NAME=<bucket> NUXT_UPSTASH_REDIS_REST_URL=<url>
+export MIGRATION_SOURCE_CONFIRM=<ep-id prod> MIGRATION_CONVEX_URL=https://$CX
+# header admin letto da un file descriptor, non da argv
+admin_hdr() { printf 'X-Admin-API-Key: %s\n' "$NUXT_ADMIN_API_KEY"; }
+```
+
+`.env`/`.env.prod` non si leggono mai (i valori dev verrebbero presi per default dagli script;
+`reconcile.ts --production` rifiuta proprio per questo se i valori non vengono dalla shell).
+
 ### 0.3 Preflight (senza side effect)
 
 ```bash
-# shell del cutover: valori di produzione esportati a mano, nessun file letto
-export MIGRATION_ENCRYPTION_KEY=… NEON_API_KEY=… NUXT_QSTASH_TOKEN=… NUXT_BETTER_AUTH_SECRET=…
-export NUXT_CF_ACCOUNT_ID=… NUXT_CF_ACCESS_KEY_ID=… NUXT_CF_SECRET_ACCESS_KEY=… NUXT_CF_R2_BUCKET_NAME=…
+# shell del cutover (0.25): i segreti sono già esportati, nessun file letto
 pnpm tsx scripts/migration/preflight.ts --environment production > .migration-cutover/preflight.json
 echo "exit=$?"   # deve essere 0
 ```
@@ -181,13 +209,13 @@ Ogni passo si registra nel **Registro di esecuzione** in fondo: ora UTC, comando
 delta + reconcile ≤ 15 min, finestra read-only completa ≤ 30 min. Superato un budget o fallito un
 controllo **prima del passo 10** → [`rollback.md`](./rollback.md) §A.
 
-Variabili usate sotto: `HOST=ceremly.com`, `ADMIN=$NUXT_ADMIN_API_KEY` (legacy),
+Variabili usate sotto (i segreti vengono dalla shell di 0.25): `HOST=ceremly.com`,
 `W=<watermark del full T-1>`, `CX=<prod>.convex.cloud`, `CXS=<prod>.convex.site`.
 
 ### 1. Attiva read-only su Vercel
 
 ```bash
-curl -fsS -X POST "https://$HOST/api/admin/site-mode" -H "X-Admin-API-Key: $ADMIN" \
+curl -fsS -X POST "https://$HOST/api/admin/site-mode" -H @<(admin_hdr) \
   -H 'content-type: application/json' -d '{"mode":"maintenance-readonly"}'
 sleep 20   # cache per-istanza del site mode: 10 s
 curl -s -o /dev/null -w '%{http_code} retry-after=%header{retry-after}\n' -X POST "https://$HOST/api/public/invite/x/rsvp"   # 503 retry-after=1800
@@ -229,11 +257,10 @@ prima. Il watermark del delta (passo 4) è scritto dall'export nel proprio manif
 ### 4. Export e import delta
 
 ```bash
-export MIGRATION_ENCRYPTION_KEY=…   # la stessa del full
-MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> \
-  time pnpm tsx scripts/migration/export-neon.ts --out .migration-cutover/delta --mode delta --since "$W"
+# MIGRATION_ENCRYPTION_KEY (la stessa del full), NUXT_DATABASE_URL, MIGRATION_SOURCE_CONFIRM,
+# MIGRATION_CONVEX_ADMIN_KEY, MIGRATION_CONVEX_URL, NUXT_MIGRATION_API_KEY: già nella shell (0.25)
+time pnpm tsx scripts/migration/export-neon.ts --out .migration-cutover/delta --mode delta --since "$W"
 # modalità produzione (fix round 1): report del preflight GO del passo 0.3, nome digitato a mano
-export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
 time pnpm tsx scripts/migration/import-convex.ts --bundle .migration-cutover/delta \
   --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json
 ```
@@ -252,8 +279,7 @@ rifiuta di partire; con `--production` rifiuta se Neon di produzione, `MIGRATION
 essere presa per errore su staging.
 
 ```bash
-MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> \
-  time pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
+time pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
   --out .migration-cutover/reconcile-delta.json \
   --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json   # exit 0 obbligatorio
 ```
@@ -281,7 +307,7 @@ solo quelle e i token che elencano; rifiuta `site:mode` e qualunque chiave non d
 **mai** un flush o un `DEL` per pattern: `site:mode` tiene la read-only del passo 1.
 
 ```bash
-export NUXT_UPSTASH_REDIS_REST_URL=… NUXT_UPSTASH_REDIS_REST_TOKEN=…   # Upstash di produzione
+# NUXT_UPSTASH_REDIS_REST_URL / _TOKEN di produzione: già nella shell (0.25)
 pnpm tsx scripts/migration/invalidate-legacy-sessions.ts             # dry run: conta liste e token
 pnpm tsx scripts/migration/invalidate-legacy-sessions.ts --execute   # cancella
 curl -s -o /dev/null -w '%{http_code}\n' -X POST "https://$HOST/api/public/invite/x/rsvp"   # ancora 503: read-only intatta
@@ -320,8 +346,7 @@ Il deployment Convex è in `maintenance-readonly` dal T-1 (0.2 §7), riverificat
 ```bash
 pnpm tsx scripts/migration/smoke-production.ts --read-only --base-url "https://$HOST" \
   --convex-url "https://$CX" --convex-site-url "https://$CXS"      # exit 0 obbligatorio
-export MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
-export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX
+# credenziali di produzione già nella shell (0.25)
 pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
   --out .migration-cutover/reconcile-first-write.json --first-write-check \
   --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json   # misura la "prima write"
@@ -340,7 +365,7 @@ Esito ≠ 0 → rollback §A se nessuna write, altrimenti §B.
 # L'interruttore vero: fino a qui ogni mutation/action pubblica rispondeva SITE_READ_ONLY.
 npx convex run --prod siteSettings:set '{"mode":"active","reason":"cutover GO <ticket>"}'
 curl -fsS "https://$CXS/public/site-mode"                              # {"mode":"active"}
-curl -fsS -X POST "https://<legacy>.vercel.app/api/admin/site-mode" -H "X-Admin-API-Key: $ADMIN" \
+curl -fsS -X POST "https://<legacy>.vercel.app/api/admin/site-mode" -H @<(admin_hdr) \
   -H 'content-type: application/json' -d '{"mode":"maintenance"}'     # il blu non scrive più, mai
 pnpm tsx scripts/migration/smoke-production.ts --write-canary --base-url "https://$HOST" \
   --convex-url "https://$CX" --convex-site-url "https://$CXS"         # SMOKE_CANARY_INVITE_TOKEN di un invito canary
