@@ -1,7 +1,7 @@
 # Graph Report - /Users/airowlgasga/coding/project/ceremly-v2  (2026-09-24)
 
 ## Corpus Check
-- 551 files · ~758,480 words
+- 551 files · ~758,483 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -4116,11 +4116,11 @@ Nodes (1): Svix-id dedup + env-domain isolation
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getDB()` connect `Community 0` to `Community 1`, `Community 3`, `Community 9`, `Community 11`, `Community 56`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `logAudit()` connect `Community 0` to `Community 1`, `Community 3`, `Community 9`?**
-  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `ref()` connect `Community 13` to `Community 1`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Why does `get()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+  _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `getDB()` (e.g. with `main()` and `main()`) actually correct?**
   _`getDB()` has 100 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 34 inferred relationships involving `logAudit()` (e.g. with `logEmailEvent()` and `sendEmail()`) actually correct?**
