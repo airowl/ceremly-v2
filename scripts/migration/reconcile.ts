@@ -7,6 +7,7 @@ import { DOMAIN_IMPORT_SPECS, deferReason, type TableSpec } from "../../convex/m
 import { canonicalJson } from "../../shared/migration/bridgeProtocol";
 import { IMPORT_ORDER, type DomainImportTable } from "../../shared/migration/domainBatch";
 import { CEREMLY_TIER_LIMITS, CREEM_PRODUCT_ENV } from "../../shared/constants/pricing";
+import { PRODUCTION_ENDPOINT_PREFIX, endpointOf } from "./export-neon";
 import { sha256Bytes } from "./crypto";
 import type { BucketObject } from "./r2-bucket";
 import type { ExportManifest, ReconciliationResult } from "./types";
@@ -661,6 +662,60 @@ interface CliOptions {
     out: string | null;
 }
 
+/**
+ * Explicit target of a reconcile run (Task 17 fix round 2, N1).
+ *
+ * `connectTarget` falls back to the staging deployment of `.env.local` without
+ * `--production`, and the Neon source falls back to the dev URL of `.env`. For
+ * the rehearsal that is the point; for the cutover it would be a silent lie —
+ * the reconcile that decides rollback §A ("no Convex write yet") vs §B would
+ * compare dev with dev and answer "no writes". So the target is never implied:
+ *
+ * - exactly one of `--production` / `--staging`;
+ * - `--first-write-check` (the §A/§B measurement) only with `--production`;
+ * - `--production` needs the production Neon **in the shell** (`.env` is loaded
+ *   later without override, so a missing shell value would become the dev URL):
+ *   `NUXT_DATABASE_URL` on the production endpoint, confirmed by
+ *   `MIGRATION_SOURCE_CONFIRM`, and `NUXT_MIGRATION_API_KEY` exported too;
+ * - `--staging` refuses a production source.
+ *
+ * The Convex side of `--production` is then the guarded `resolveProductionTarget`.
+ */
+export function resolveReconcileTarget(
+    argv: string[],
+    env: Record<string, string | undefined>,
+): { target: "production" | "staging"; firstWriteCheck: boolean } {
+    const production = argv.includes("--production");
+    const staging = argv.includes("--staging");
+    const firstWriteCheck = argv.includes("--first-write-check");
+    if (!production && !staging) throw new Error("Choose the target explicitly: --production or --staging");
+    if (production && staging) throw new Error("--production or --staging, not both");
+    if (firstWriteCheck && !production) {
+        throw new Error("--first-write-check decides rollback §A/§B and only runs with --production");
+    }
+
+    const url = env.NUXT_DATABASE_URL;
+    if (production) {
+        if (!url) throw new Error("--production needs NUXT_DATABASE_URL of the production Neon exported in the shell");
+        const endpoint = endpointOf(url);
+        if (!endpoint.startsWith(PRODUCTION_ENDPOINT_PREFIX)) {
+            throw new Error(`--production: NUXT_DATABASE_URL is ${endpoint}, not the production endpoint`);
+        }
+        if (env.MIGRATION_SOURCE_CONFIRM !== endpoint) {
+            throw new Error(`--production needs MIGRATION_SOURCE_CONFIRM=${endpoint}`);
+        }
+        if (!env.NUXT_MIGRATION_API_KEY) {
+            throw new Error("--production needs NUXT_MIGRATION_API_KEY of the production deployment exported in the shell");
+        }
+        return { target: "production", firstWriteCheck };
+    }
+    if (url && endpointOf(url).startsWith(PRODUCTION_ENDPOINT_PREFIX)) {
+        throw new Error("--staging with the production Neon endpoint: refused");
+    }
+    return { target: "staging", firstWriteCheck: false };
+}
+
+
 function parseArgs(argv: string[]): CliOptions {
     const options: CliOptions = { manifest: null, out: null };
     for (let index = 0; index < argv.length; index += 1) {
@@ -668,7 +723,7 @@ function parseArgs(argv: string[]): CliOptions {
         if (arg === "--manifest") options.manifest = argv[++index] ?? null;
         else if (arg === "--out") options.out = argv[++index] ?? null;
         // Production gate flags (Task 17): consumed by `connectTarget`.
-        else if (arg === "--production") continue;
+        else if (arg === "--production" || arg === "--staging" || arg === "--first-write-check") continue;
         else if (arg === "--confirm-deployment" || arg === "--preflight-report") index += 1;
         else throw new Error(`Unknown argument: ${arg}`);
     }
@@ -685,6 +740,8 @@ async function main() {
     const { EXPECTED_BATCH_TABLES } = await import("./export-neon");
 
     const options = parseArgs(process.argv.slice(2));
+    // Before `.env` is loaded: the production values must come from the shell.
+    const mode = resolveReconcileTarget(process.argv.slice(2), process.env);
     config({ path: ".env", quiet: true });
     const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
     if (!migrationKey) throw new Error("NUXT_MIGRATION_API_KEY is not set (the deployment's MIGRATION_API_KEY)");
@@ -780,6 +837,8 @@ async function main() {
 
     const exitCode = reconciliationExitCode(results);
     const report = {
+        target: mode.target,
+        firstWriteCheck: mode.firstWriteCheck,
         generatedAt: new Date().toISOString(),
         deployment,
         sourceEndpoint: snapshot.sourceEndpoint,

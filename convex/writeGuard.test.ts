@@ -1,11 +1,11 @@
 import { register } from "@creem_io/convex/test";
-import { describe, expect, it } from "vitest";
-import { api, internal } from "./_generated/api";
+import { describe, expect, it, vi } from "vitest";
+import { api, components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { WRITE_GUARD_TAG } from "./lib/functions";
 import { getTemplatesByType } from "./lib/inviteTemplates";
-import { SITE_READ_ONLY, writesAllowed } from "./lib/writeGuard";
-import { initConvexTest } from "./test.setup";
+import { SITE_READ_ONLY, authEndpointAllowed, writesAllowed } from "./lib/writeGuard";
+import { initConvexTest, initConvexTestWithAuthComponent } from "./test.setup";
 
 /**
  * Migration Task 17, fix round 1 — site-mode guard on Convex writes.
@@ -216,5 +216,88 @@ describe("write guard: doors that are not public builders", () => {
         expect(source).toMatch(/\/public\/contact".*policy: "domain"/);
         expect(source).toMatch(/\/public\/waiting-list".*policy: "guest"/);
         expect(source).toMatch(/writesAllowed\(mode, route\.policy\)/);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Fix round 2 (N4): Better Auth write endpoints on the `.convex.site` host.
+// ---------------------------------------------------------------------------
+
+describe("write guard: Better Auth endpoints through the real handler", () => {
+    process.env.SITE_URL ??= "https://staging.example";
+    process.env.BETTER_AUTH_SECRET ??= "test-secret-not-used-for-anything";
+    process.env.GOOGLE_CLIENT_ID ??= "test-google-client";
+    process.env.GOOGLE_CLIENT_SECRET ??= "test-google-secret";
+
+    const call = async (
+        t: Awaited<ReturnType<typeof initConvexTestWithAuthComponent>>,
+        method: "GET" | "POST",
+        path: string,
+        body?: unknown,
+    ): Promise<number> =>
+        await t.action(async (ctx) => {
+            const { createAuth } = await import("./auth");
+            const response = await createAuth(ctx).handler(
+                new Request(`https://staging.example/api/auth${path}`, {
+                    method,
+                    headers: { "content-type": "application/json", origin: "https://staging.example", "x-forwarded-for": "203.0.113.7" },
+                    body: body === undefined ? undefined : JSON.stringify(body),
+                }),
+            );
+            return response.status;
+        });
+
+    const creds = { email: "guard@example.com", password: "correct-horse-battery-staple", name: "Guard" };
+
+    it("active: sign-up works; read-only: sign-up and every account write are refused (503), login and reads pass", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        vi.useFakeTimers();
+        try {
+            expect(await call(t, "POST", "/sign-up/email", creds)).toBe(200);
+        } finally {
+            vi.useRealTimers();
+        }
+
+        // `requireEmailVerification`: mark the address verified, as an imported user is.
+        await t.run(async (ctx) =>
+            ctx.runMutation(components.betterAuth.adapter.updateOne, {
+                input: { model: "user", where: [{ field: "email", value: creds.email }], update: { emailVerified: true } },
+            } as never),
+        );
+        await t.mutation(internal.siteSettings.set, { mode: "maintenance-readonly", reason: "test" });
+
+        expect(await call(t, "POST", "/sign-up/email", { ...creds, email: "second@example.com" })).toBe(503);
+        // Without the guard these would be 401 (no session); the guard answers first.
+        for (const path of ["/update-user", "/change-password", "/change-email", "/delete-user", "/two-factor/enable", "/two-factor/disable", "/reset-password", "/request-password-reset", "/two-factor/verify-backup-code", "/sign-in/social"]) {
+            expect(await call(t, "POST", path, {}), path).toBe(503);
+        }
+        expect(await call(t, "GET", "/verify-email?token=x")).toBe(503);
+
+        // Allowed: password login, session read, logout.
+        expect(await call(t, "POST", "/sign-in/email", { email: creds.email, password: creds.password })).toBe(200);
+        expect(await call(t, "GET", "/get-session")).toBe(200);
+        expect(await call(t, "POST", "/sign-out", {})).not.toBe(503);
+
+        const users = await t.run(async (ctx) =>
+            ctx.runQuery(components.betterAuth.adapter.findMany, {
+                model: "user",
+                paginationOpts: { numItems: 10, cursor: null },
+            } as never),
+        );
+        expect((users as { page: unknown[] }).page).toHaveLength(1);
+    });
+
+    it("the endpoint matrix is the documented one", () => {
+        expect(authEndpointAllowed("active", "POST", "/update-user")).toBe(true);
+        for (const mode of ["waitinglist", "maintenance", "maintenance-readonly"] as const) {
+            expect(authEndpointAllowed(mode, "POST", "/sign-in/email")).toBe(true);
+            expect(authEndpointAllowed(mode, "POST", "/two-factor/verify-totp")).toBe(true);
+            expect(authEndpointAllowed(mode, "POST", "/sign-out")).toBe(true);
+            expect(authEndpointAllowed(mode, "GET", "/get-session")).toBe(true);
+            expect(authEndpointAllowed(mode, "GET", "/convex/token")).toBe(true);
+            expect(authEndpointAllowed(mode, "POST", "/sign-up/email")).toBe(false);
+            expect(authEndpointAllowed(mode, "GET", "/callback/google")).toBe(false);
+            expect(authEndpointAllowed(mode, "PATCH", "/anything")).toBe(false);
+        }
     });
 });

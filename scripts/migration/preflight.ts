@@ -464,6 +464,14 @@ const CHECKS: Record<PreflightCheckId, Check> = {
         // (runbook step 8.0): otherwise the first user on the new DNS writes to
         // Convex and the pre-write rollback is gone before the smoke even runs.
         const base = ctx.evidence("convexSiteUrl").replace(/\/+$/, "");
+        // Bound to the deployment the import gate will confirm (fix round 2, N3):
+        // a staging or mistyped `.convex.site` must not stand in for production.
+        const name = /^prod:([a-z]+-[a-z]+-\d+)$/.exec(ctx.evidence("deployments").convexProduction)?.[1];
+        if (!name) return fail("deployments.convexProduction is not prod:<name>", "attested");
+        const url = new URL(base);
+        if (url.protocol !== "https:" || !url.hostname.startsWith(`${name}.`) || !url.hostname.endsWith(".convex.site")) {
+            return fail(`convexSiteUrl ${url.hostname} is not the .convex.site of ${name}`, "attested");
+        }
         const response = await ctx.deps.fetch(`${base}/public/site-mode`, { method: "GET", headers: { accept: "application/json" } });
         if (!response.ok) return fail(`GET ${base}/public/site-mode → ${response.status}`, "measured");
         const { mode } = (await response.json()) as { mode?: unknown };

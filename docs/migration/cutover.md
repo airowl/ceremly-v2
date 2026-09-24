@@ -30,7 +30,7 @@ aperti al 2026-09-25.
 | B1 | Gate `G04` (Google) e `G10` (alert di costo) `PASS` in `gates.md` | **BLOCCANTE** — entrambi `NOT_RUN` |
 | B2 | Rehearsal live `PASS` < 24 h, stesso codice (blocco machine-readable di `rehearsal.md`) | **BLOCCANTE** — `BLOCKED` (staging da ripulire, vedi `rehearsal.md`) |
 | ~~B3~~ | Import verso produzione. **Chiuso (fix round 1):** `convex-target.ts` ha una modalità produzione guardata (`resolveProductionTarget`): mai di default, richiede `--production`, `--confirm-deployment <prod:nome>` digitato uguale al `deployments.convexProduction` di un report di preflight `PASS` firmato (HMAC con la chiave di migrazione), non parziale, di produzione, stesso commit di HEAD, < 24 h; sanitizzazione env del Task 16 invariata; solo credenziali esplicite `MIGRATION_CONVEX_ADMIN_KEY` (`prod:<nome>\|…`) + `MIGRATION_CONVEX_URL`, nessun fallback sul login CLI. 20 casi ermetici, uno per rifiuto, più il caso positivo (`test/migration/convex-target.test.ts`). Mai eseguita | chiuso |
-| ~~B4~~ | Read-only sul verde. **Chiuso (fix round 1):** ogni mutation/action pubblica Convex passa dai builder di `convex/lib/functions.ts`, che rifiutano con `SITE_READ_ONLY` secondo la matrice di `convex/lib/writeGuard.ts` (`domain` solo in `active`; `guest` — RSVP — in `active` e `waitinglist`; il cambio di modalità del superAdmin in ogni modalità, break-glass). Un test **enumera** le funzioni pubbliche e fallisce su una senza guardia (`convex/writeGuard.test.ts`). Anche il sign-up Better Auth sull'host `.convex.site` e i form pubblici HTTP seguono la stessa matrice. Il passo 10 è quindi il vero interruttore | chiuso |
+| ~~B4~~ | Read-only sul verde. **Chiuso (fix round 1):** ogni mutation/action pubblica Convex passa dai builder di `convex/lib/functions.ts`, che rifiutano con `SITE_READ_ONLY` secondo la matrice di `convex/lib/writeGuard.ts` (`domain` solo in `active`; `guest` — RSVP — in `active` e `waitinglist`; il cambio di modalità del superAdmin in ogni modalità, break-glass). Un test **enumera** le funzioni pubbliche e fallisce su una senza guardia (`convex/writeGuard.test.ts`). Anche **ogni endpoint Better Auth** chiamato direttamente sull'host `.convex.site` (fix round 2: `hooks.before` con la stessa allowlist del Worker — login password, verifica TOTP, logout e letture; sign-up, modifiche account, 2FA, OAuth, verifica email → `503`, provato attraverso il vero handler) e i form pubblici HTTP seguono la stessa matrice. Il passo 10 è quindi il vero interruttore | chiuso |
 | B5 | Approvazione umana del runbook (GO) e della finestra | **BLOCCANTE** — Task 18 |
 
 ### 0.2 Prerequisiti operativi (verificati dal preflight o dalla checklist)
@@ -68,11 +68,19 @@ aperti al 2026-09-25.
    (dotenv `override: false`): non usarlo mai nella finestra; se la produzione ha bisogno di una
    migrazione Drizzle, farla prima, con l'URL inline, e rimisurare il drift dello schema (il
    manifest dell'export lo riporta: sul branch dev mancano le colonne della `0011`).
-7. **Import full di produzione** (T-1): export full + import (modalità produzione, vedi passo 4)
-   + reconcile `exit 0` sul deployment di produzione mentre il blu è ancora attivo; **subito
-   dopo**, il deployment Convex va in `maintenance-readonly` e ci resta fino al passo 10
-   (`npx convex run --prod siteSettings:set '{"mode":"maintenance-readonly","reason":"cutover T-1"}'`;
-   il preflight lo verifica, `convexReadOnly`). Le righe portano `legacyId` e sono ricostruibili
+7. **Import full di produzione** (T-1), in quest'ordine (il gate di produzione richiede un
+   preflight `PASS`, e un `PASS` richiede già il verde in read-only):
+   1. deployment Convex in `maintenance-readonly`, e ci resta fino al passo 10 — l'import usa
+      funzioni interne, non guardate, quindi non ne è bloccato:
+      `npx convex run --prod siteSettings:set '{"mode":"maintenance-readonly","reason":"cutover T-1"}'`;
+   2. preflight T-1: `preflight.ts --environment production > .migration-cutover/preflight-t1.json`,
+      `exit 0` (è il report che il gate del full T-1 accetta, valido 24 h);
+   3. export full + import + reconcile con `--production --confirm-deployment prod:<nome>
+      --preflight-report .migration-cutover/preflight-t1.json` (stessi comandi e variabili dei
+      passi 4–5), `exit 0`, mentre il blu è ancora attivo.
+
+   Il giorno del cutover il preflight si rifà (passo 0.3, `preflight.json`): è quello che
+   accettano delta e reconcile della finestra. Le righe portano `legacyId` e sono ricostruibili
    da Neon: non sono "write Convex" ai fini del rollback. `email_events` e `creem_subscription`
    entrano **da questo pipeline** (Task 16), non da un replay dei provider.
 8. **DNS**: TTL del record del sito abbassato (valore approvato, es. 300 s) almeno un TTL vecchio
@@ -114,7 +122,9 @@ codice da HEAD), `convexReadOnly` (il target Convex risponde `maintenance-readon
 `readOnlyFetch`), sottoprocessi solo `git rev-parse`/`git diff --name-only`/`convex env list`,
 nessuna scrittura (nemmeno locale: il report va su stdout). Il report è firmato
 (`hmac-sha256`, chiave derivata HKDF dalla chiave di migrazione) e contiene commit e id dei
-deployment, mai segreti. Test: `test/migration/preflight.test.ts`.
+deployment, mai segreti. La firma prova integrità e freschezza rispetto a chi detiene la chiave di
+migrazione; non separa i ruoli (la stessa persona tiene chiave e deploy key): è una scelta
+consapevole per un cutover con un solo operatore. Test: `test/migration/preflight.test.ts`.
 
 **Esito misurato sullo stato attuale** (2026-09-25, `--environment staging`, commit `c68c5df` +
 modifiche del Task 17, solo letture; ripetuto dopo il fix round 1 con 13 controlli, stesso esito più `convexReadOnly` FAIL per evidenza vuota): `exit 1`, 2 PASS. `gates` FAIL (G04, G10 `NOT_RUN`),
@@ -225,6 +235,12 @@ cambiate, `prune` delle righe sparite (figli prima dei padri).
 
 ### 5. Reconcile automatico
 
+`reconcile.ts` non ha un target implicito (fix round 2): senza `--production` o `--staging`
+rifiuta di partire; con `--production` rifiuta se Neon di produzione, `MIGRATION_SOURCE_CONFIRM` e
+`NUXT_MIGRATION_API_KEY` non sono nella shell (`.env` darebbe i valori dev), e
+`--first-write-check` esiste solo con `--production`. Così la misura che decide §A/§B non può
+essere presa per errore su staging.
+
 ```bash
 MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> \
   time pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
@@ -294,8 +310,11 @@ Il deployment Convex è in `maintenance-readonly` dal T-1 (0.2 §7), riverificat
 ```bash
 pnpm tsx scripts/migration/smoke-production.ts --read-only --base-url "https://$HOST" \
   --convex-url "https://$CX" --convex-site-url "https://$CXS"      # exit 0 obbligatorio
+export MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
+export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX
 pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
-  --out .migration-cutover/reconcile-post-dns.json                   # misura la "prima write"
+  --out .migration-cutover/reconcile-first-write.json --first-write-check \
+  --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json   # misura la "prima write"
 ```
 
 Lo smoke fa solo GET più una query Convex (`/api/query`, che non può scrivere): home con HSTS e

@@ -260,6 +260,8 @@ describe("preflight: each failing check is exit 1", () => {
             "deploymentIds",
         ],
         ["Convex target still active before the switch", { convexMode: "active" }, "convexReadOnly"],
+        ["convexSiteUrl of another deployment", { evidence: { ...goodEvidence, convexSiteUrl: "https://wary-spaniel-466.eu-west-1.convex.site" } }, "convexReadOnly"],
+        ["convexSiteUrl not a .convex.site host", { evidence: { ...goodEvidence, convexSiteUrl: "https://happy-otter-123.example.com" } }, "convexReadOnly"],
         ["evidence for another environment", { evidence: { ...goodEvidence, environment: "staging" } }, "deploymentIds"],
     ];
 

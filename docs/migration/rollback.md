@@ -18,9 +18,16 @@ ritenta dopo la finestra.
 Si **misura**, non si presume:
 
 ```bash
+export MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
+export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX
 pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
-  --out .migration-cutover/reconcile-check.json
+  --out .migration-cutover/reconcile-check.json --first-write-check \
+  --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json
 ```
+
+Sempre contro la **produzione** (Convex e Neon): `reconcile.ts` rifiuta `--first-write-check`
+senza `--production`, e senza un target esplicito non parte affatto — una misura presa su staging
+direbbe "nessuna write" e aprirebbe un rollback §A sbagliato.
 
 - `exit 0`, nessuna riga `only_in_target`, nessun `webhookEvents` nuovo rispetto al registro del
   passo 6 → **nessuna write**: vale §A.

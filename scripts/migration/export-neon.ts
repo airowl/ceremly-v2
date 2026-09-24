@@ -37,7 +37,7 @@ import { MIGRATION_BATCH_VERSION } from "./types";
  */
 
 /** The production endpoint. Reading it requires an explicit confirmation (Task 17). */
-const PRODUCTION_ENDPOINT_PREFIX = "ep-dark-dream";
+export const PRODUCTION_ENDPOINT_PREFIX = "ep-dark-dream";
 
 /** Records per batch (plan Step 3). */
 export const BATCH_SIZE = 100;

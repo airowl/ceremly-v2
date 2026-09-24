@@ -3,11 +3,12 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
 import { isQueryCtx } from "@convex-dev/better-auth/utils";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { requireEnv, siteUrl } from "./lib/env";
 import authConfig from "./auth.config";
-import { writesAllowed } from "./lib/writeGuard";
+import { authEndpointAllowed, writesAllowed } from "./lib/writeGuard";
 import type { SiteMode } from "./siteSettings";
 
 /** Sign-up is an account write: `domain` policy of `lib/writeGuard.ts`. */
@@ -208,6 +209,20 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         // `api.organizations.ensureProvisioned` called on first login, so a
         // failed schedule degrades to "provisioned at next login", never to a
         // user without an organization.
+        // Task 17 fix round 2 (N4): every Better Auth endpoint follows the site
+        // mode, also when called on the `.convex.site` host directly. A call
+        // without a request (server-side `auth.api.*` from Convex code) is an
+        // internal path and is not gated here.
+        hooks: {
+            before: createAuthMiddleware(async (hookCtx) => {
+                const method = hookCtx.request?.method;
+                if (!method) return;
+                const { mode } = await ctx.runQuery(internal.siteSettings.getForWorker, {});
+                if (!authEndpointAllowed(mode, method, hookCtx.path)) {
+                    throw new APIError("SERVICE_UNAVAILABLE", { code: "SITE_READ_ONLY", message: "Site is read-only" });
+                }
+            }),
+        },
         databaseHooks: {
             user: {
                 create: {

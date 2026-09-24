@@ -265,12 +265,12 @@ npx convex dev --once                                            # deploy Task 1
 export MIGRATION_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 npx tsx scripts/migration/export-neon.ts   --out .migration-rehearsal/full-1
 npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/full-1
-npx tsx scripts/migration/reconcile.ts     --manifest .migration-rehearsal/full-1/manifest.json --out .migration-rehearsal/reconcile-full-1.json
+npx tsx scripts/migration/reconcile.ts --staging --manifest .migration-rehearsal/full-1/manifest.json --out .migration-rehearsal/reconcile-full-1.json
 npx tsx scripts/migration/export-neon.ts   --out .migration-rehearsal/full-2
 npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/full-2   # replay: 0 imported
 npx tsx scripts/migration/export-neon.ts   --out .migration-rehearsal/delta-1 --mode delta --since <watermark full-2>
 time npx tsx scripts/migration/import-convex.ts --bundle .migration-rehearsal/delta-1
-time npx tsx scripts/migration/reconcile.ts --manifest .migration-rehearsal/delta-1/manifest.json --out .migration-rehearsal/reconcile-delta-1.json
+time npx tsx scripts/migration/reconcile.ts --staging --manifest .migration-rehearsal/delta-1/manifest.json --out .migration-rehearsal/reconcile-delta-1.json
 ```
 
 Il reconcile scrive l'elenco completo dei mismatch (id legacy + colonna, mai valori) nel
