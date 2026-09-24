@@ -168,10 +168,26 @@ describe("site mode: break-glass della console admin (Task 15)", () => {
                 ["/api/auth/convex/token", "GET"],
                 ["/api/auth/sign-in/email", "POST"],
                 ["/api/auth/two-factor/verify-totp", "POST"],
+                ["/api/auth/two-factor/verify-backup-code", "POST"],
                 ["/api/auth/sign-out", "POST"],
             ] as const) {
                 expect((await call(path, method)).result, path).toBeUndefined();
                 expect((await call(path, method)).statusCode, path).toBeUndefined();
+            }
+
+            // Final review I2: the break-glass signs in, it does not change
+            // credentials or create users — on the blue stack after step 10 these
+            // would be writes.
+            for (const [path, method] of [
+                ["/api/auth/two-factor/enable", "POST"],
+                ["/api/auth/two-factor/disable", "POST"],
+                ["/api/auth/two-factor/generate-backup-codes", "POST"],
+                ["/api/auth/sign-in/social", "POST"],
+                ["/api/auth/sign-in/magic-link", "POST"],
+                ["/api/auth/convex/token", "POST"],
+                ["/api/auth/sign-in/email/../../two-factor/enable", "POST"],
+            ] as const) {
+                expect((await call(path, method)).statusCode, `${method} ${path}`).toBe(503);
             }
 
             // Non è una porta generica: registrazione, login verso altre pagine, un

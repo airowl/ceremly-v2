@@ -198,7 +198,9 @@ Cosa resta aperto (`READONLY_ALLOWED_WRITES` in `shared/constants/siteMode.ts`):
 `/api/admin/site-mode` (rollback), `POST /api/jobs/*` (drain), il webhook Creem (verità del
 provider, finestra di retry corta), login password + TOTP e logout. Il login in read-only **non**
 scrive `audit_log` (diventa una riga di log strutturata) e **non** esegue il self-heal
-dell'organizzazione (`server/utils/authAudit.ts`): resta solo la sessione, effimera. Il webhook
+dell'organizzazione (`server/utils/authAudit.ts`): resta solo la sessione, effimera. Lo stesso
+vale in `maintenance` (final review I2: il blu dopo il passo 10), dove il break-glass ammette solo
+i path di login esatti — mai 2FA enable/disable, OAuth o sign-up. Il webhook
 Resend risponde `503`: Svix ritenta per circa un giorno, quindi gli eventi arrivano allo stack
 servito dal DNS dopo la finestra invece di essere scritti dopo il watermark. Tutto il resto che scrive —
 RSVP, checkout, upload, profilo, account, org, admin, cron, OAuth, verifica email — è `503`.

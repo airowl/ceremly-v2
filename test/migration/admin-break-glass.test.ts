@@ -40,4 +40,23 @@ describe("admin break-glass predicate", () => {
         expect(isAdminBreakGlassAuthApi("/api/auth/reset-password")).toBe(false);
         expect(isAdminBreakGlass("/api/projects")).toBe(false);
     });
+
+    it("final review I2: exact sign-in paths only, never 2FA enable/disable or OAuth", () => {
+        expect(isAdminBreakGlassAuthApi("/api/auth/two-factor/verify-totp")).toBe(true);
+        expect(isAdminBreakGlassAuthApi("/api/auth/two-factor/verify-backup-code")).toBe(true);
+        for (const path of [
+            "/api/auth/two-factor/enable",
+            "/api/auth/two-factor/disable",
+            "/api/auth/two-factor/get-totp-uri",
+            "/api/auth/two-factor/generate-backup-codes",
+            "/api/auth/sign-in/social",
+            "/api/auth/sign-in/email-otp",
+            "/api/auth/sign-in/email/../social",
+        ]) {
+            expect(isAdminBreakGlassAuthApi(path, "POST"), path).toBe(false);
+        }
+        // The Convex token endpoint is a read: a write method on it is not break-glass.
+        expect(isAdminBreakGlassAuthApi("/api/auth/convex/token", "GET")).toBe(true);
+        expect(isAdminBreakGlassAuthApi("/api/auth/convex/token", "POST")).toBe(false);
+    });
 });

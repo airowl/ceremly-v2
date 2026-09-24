@@ -94,8 +94,14 @@ dell'organizzazione (`organizations.deleteOrganization`, purge account).
    monta la pagina finché `whoami` non risponde, e il gate vero resta Convex.
 6. **Break-glass del site mode** (fix round 1): in `maintenance` e `waitinglist` la
    shell `/admin/**`, il login diretto alla console (`/login?redirect=/admin…`) e le
-   sole API di sessione di Better Auth (sign-in, 2FA, get-session, token Convex,
-   sign-out — non sign-up) restano raggiungibili: middleware server, middleware client
+   sole API di sessione di Better Auth restano raggiungibili — dalla final review I2 per
+   **path esatto**: `sign-in/email`, `two-factor/verify-totp`,
+   `two-factor/verify-backup-code` (il superAdmin senza dispositivo TOTP), `get-session`,
+   `sign-out` e il token Convex in sola lettura; mai sign-up, OAuth, 2FA enable/disable.
+   Lo stesso insieme vale sull'host `.convex.site` (`authEndpointAllowed`, che in
+   `maintenance-readonly` segue invece `READONLY_ALLOWED_WRITES`, senza backup code). In
+   `maintenance` il login legacy non scrive `audit_log` né esegue il self-heal
+   dell'organizzazione (`server/utils/authAudit.ts`), come in read-only: middleware server, middleware client
    e catch-all `/api/auth` usano lo stesso predicato (`isAdminBreakGlass` in
    `shared/constants/siteMode.ts`). Così la console può annullare la modalità che ha
    impostato. Un non-admin che ci arriva vede solo il rifiuto della console. I test

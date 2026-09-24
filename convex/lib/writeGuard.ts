@@ -77,12 +77,22 @@ export function assertWritableMode(mode: SiteMode, policy: WritePolicy): void {
 //
 // The Better Auth routes are also reachable on the deployment's own
 // `.convex.site` host, bypassing the Worker's read-only gate. Outside `active`
-// the same rule as the Worker applies (`shared/constants/siteMode.ts`,
-// `READONLY_ALLOWED_WRITES`): password login, TOTP verification and logout are
-// the only writes (sessions, ephemeral); reads pass except the GETs that write.
-// Paths are Better Auth's own (`/sign-in/email`), without the `/api/auth` base.
+// the same rule as the Worker applies (`shared/constants/siteMode.ts`), mode by
+// mode (final review I2, symmetric with the Worker):
+//
+// - `maintenance-readonly`: `READONLY_ALLOWED_WRITES` — password login, TOTP
+//   verification and logout (sessions, ephemeral). Not the backup code: it
+//   consumes a credential after the watermark.
+// - `maintenance` / `waitinglist`: the admin break-glass
+//   (`ADMIN_BREAK_GLASS_AUTH_PATHS`) — the same, plus the backup-code
+//   verification, so a superAdmin without the TOTP device can still reach the
+//   console. Never 2FA enable/disable, sign-up or OAuth.
+//
+// Reads pass except the GETs that write. Paths are Better Auth's own
+// (`/sign-in/email`), without the `/api/auth` base.
 
-const AUTH_WRITES_OUTSIDE_ACTIVE = ["/sign-in/email", "/two-factor/verify-totp", "/sign-out"] as const;
+const AUTH_WRITES_READONLY = ["/sign-in/email", "/two-factor/verify-totp", "/sign-out"] as const;
+const AUTH_WRITES_BREAK_GLASS = [...AUTH_WRITES_READONLY, "/two-factor/verify-backup-code"] as const;
 const AUTH_GETS_THAT_WRITE = ["/callback/", "/oauth2/", "/verify-email", "/magic-link/"] as const;
 
 export function authEndpointAllowed(mode: SiteMode, method: string, path: string): boolean {
@@ -91,5 +101,7 @@ export function authEndpointAllowed(mode: SiteMode, method: string, path: string
     if (upper === "GET" || upper === "HEAD" || upper === "OPTIONS") {
         return !AUTH_GETS_THAT_WRITE.some((prefix) => path.startsWith(prefix));
     }
-    return (AUTH_WRITES_OUTSIDE_ACTIVE as readonly string[]).includes(path);
+    const allowed: readonly string[] =
+        mode === "maintenance-readonly" ? AUTH_WRITES_READONLY : AUTH_WRITES_BREAK_GLASS;
+    return allowed.includes(path);
 }

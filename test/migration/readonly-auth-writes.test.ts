@@ -69,6 +69,23 @@ describe("legacy auth writes in maintenance-readonly", () => {
         await setServerSiteMode("active");
     });
 
+    it("final review I2: maintenance (the blue stack after step 10) suppresses them too", async () => {
+        await setServerSiteMode("maintenance");
+        const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+        await auditAuthEvent("auth.signed_in", { userId: "u1", targetId: "a@b.c", ipAddress: "1.2.3.4", status: "success" });
+        expect(logAudit).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledTimes(1);
+        expect(await shouldSelfHealOrg()).toBe(false);
+        info.mockRestore();
+
+        // waitinglist is a normal legacy operating mode: audit and self-heal stay.
+        await setServerSiteMode("waitinglist");
+        await auditAuthEvent("auth.signed_in", { userId: "u1", status: "success" });
+        expect(logAudit).toHaveBeenCalledTimes(1);
+        expect(await shouldSelfHealOrg()).toBe(true);
+        await setServerSiteMode("active");
+    });
+
     it("server/utils/auth.ts routes every audit through auditAuthEvent and gates the self-heal", () => {
         const source = readFileSync("server/utils/auth.ts", "utf8");
         expect(source).not.toMatch(/\blogAudit\(/);

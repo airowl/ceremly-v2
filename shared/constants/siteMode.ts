@@ -137,19 +137,27 @@ export function isMaintenancePage(path: string): boolean {
  *   until Convex confirms the superAdmin role, which is the real gate;
  * - the login page **only** when it is on its way to the console
  *   (`/login?redirect=/admin…`), so an expired admin session can be renewed;
- * - the Better Auth endpoints a session needs (sign-in, 2FA, session read,
- *   Convex token, sign-out) — sign-up is not among them.
+ * - the Better Auth endpoints a sign-in needs, by **exact** path (final review
+ *   I2): password sign-in, TOTP or backup-code verification, session read,
+ *   Convex token, sign-out. Not sign-up, not OAuth (`sign-in/social` can create
+ *   a user), and never 2FA enable/disable — on the blue stack those are writes
+ *   after the cutover, and the break-glass exists to sign in, not to change a
+ *   credential. `convex/lib/writeGuard.ts` (`authEndpointAllowed`) allows the
+ *   same set on the `.convex.site` host.
  *
  * A non-admin who reaches these gets the console's refusal and nothing else:
  * every other page and API keeps the mode's rules.
  */
-export const ADMIN_BREAK_GLASS_AUTH_PREFIXES = [
-    "/api/auth/sign-in/",
-    "/api/auth/two-factor/",
+export const ADMIN_BREAK_GLASS_AUTH_PATHS = [
+    "/api/auth/sign-in/email",
+    "/api/auth/two-factor/verify-totp",
+    "/api/auth/two-factor/verify-backup-code",
     "/api/auth/get-session",
-    "/api/auth/convex/",
     "/api/auth/sign-out",
 ] as const;
+
+/** Read-only endpoints under a prefix (the Convex token): GET/HEAD/OPTIONS only. */
+export const ADMIN_BREAK_GLASS_AUTH_READ_PREFIXES = ["/api/auth/convex/"] as const;
 
 function splitPath(path: string): { pathname: string; search: string } {
     const index = path.indexOf("?");
@@ -172,15 +180,26 @@ export function isAdminBreakGlassLogin(path: string, redirect?: unknown): boolea
     return typeof target === "string" && target.startsWith("/") && isAdminConsolePage(target);
 }
 
-/** The session endpoints the console needs (see the list above). */
-export function isAdminBreakGlassAuthApi(path: string): boolean {
+/**
+ * The session endpoints the console needs (see the list above). `method` is
+ * given by the server middleware; without it (the auth catch-all's "stay on?"
+ * check, which runs after the middleware) only the path is judged.
+ */
+export function isAdminBreakGlassAuthApi(path: string, method?: string): boolean {
     const { pathname } = splitPath(path);
-    return ADMIN_BREAK_GLASS_AUTH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    if (pathname.includes("..")) return false;
+    if ((ADMIN_BREAK_GLASS_AUTH_PATHS as readonly string[]).includes(pathname)) return true;
+    return (
+        ADMIN_BREAK_GLASS_AUTH_READ_PREFIXES.some((prefix) => pathname.startsWith(prefix)) &&
+        (method === undefined || !isWriteMethod(method))
+    );
 }
 
 /** Any of the three: what the site-mode gates must let through outside `active`. */
-export function isAdminBreakGlass(path: string, redirect?: unknown): boolean {
-    return isAdminConsolePage(path) || isAdminBreakGlassLogin(path, redirect) || isAdminBreakGlassAuthApi(path);
+export function isAdminBreakGlass(path: string, redirect?: unknown, method?: string): boolean {
+    return (
+        isAdminConsolePage(path) || isAdminBreakGlassLogin(path, redirect) || isAdminBreakGlassAuthApi(path, method)
+    );
 }
 
 // ---------------------------------------------------------------------------

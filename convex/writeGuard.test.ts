@@ -298,6 +298,34 @@ describe("write guard: Better Auth endpoints through the real handler", () => {
             expect(authEndpointAllowed(mode, "POST", "/sign-up/email")).toBe(false);
             expect(authEndpointAllowed(mode, "GET", "/callback/google")).toBe(false);
             expect(authEndpointAllowed(mode, "PATCH", "/anything")).toBe(false);
+            // Final review I2: never a credential change, never OAuth.
+            expect(authEndpointAllowed(mode, "POST", "/two-factor/enable")).toBe(false);
+            expect(authEndpointAllowed(mode, "POST", "/two-factor/disable")).toBe(false);
+            expect(authEndpointAllowed(mode, "POST", "/sign-in/social")).toBe(false);
         }
+    });
+
+    it("final review I2: backup code is allowed exactly where the Worker allows it", async () => {
+        const { isAdminBreakGlassAuthApi, readonlyVerdict } = await import("../shared/constants/siteMode");
+        const probes = [
+            "/sign-in/email",
+            "/two-factor/verify-totp",
+            "/two-factor/verify-backup-code",
+            "/two-factor/enable",
+            "/two-factor/disable",
+            "/sign-out",
+            "/sign-up/email",
+            "/sign-in/social",
+        ];
+        for (const path of probes) {
+            // Worker: break-glass in maintenance/waitinglist, the read-only allowlist in read-only.
+            const workerBreakGlass = isAdminBreakGlassAuthApi(`/api/auth${path}`, "POST");
+            const workerReadonly = readonlyVerdict(`/api/auth${path}`, "POST") === "allow";
+            expect(authEndpointAllowed("maintenance", "POST", path), path).toBe(workerBreakGlass);
+            expect(authEndpointAllowed("waitinglist", "POST", path), path).toBe(workerBreakGlass);
+            expect(authEndpointAllowed("maintenance-readonly", "POST", path), path).toBe(workerReadonly);
+        }
+        expect(authEndpointAllowed("maintenance", "POST", "/two-factor/verify-backup-code")).toBe(true);
+        expect(authEndpointAllowed("maintenance-readonly", "POST", "/two-factor/verify-backup-code")).toBe(false);
     });
 });

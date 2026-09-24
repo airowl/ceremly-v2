@@ -11,9 +11,15 @@ import { getServerSiteMode } from "./siteMode";
  * After the watermark that row is lost (or shows up as drift), so in read-only
  * the hook emits a structured log line instead. The line carries the action,
  * the status and the user id only: no email, no IP, no user agent.
+ *
+ * Final review I2: the same holds in `maintenance`. After runbook step 10 the
+ * blue stack sits in `maintenance` as the rollback asset and must not write
+ * ("il blu non scrive più, mai"), yet the admin break-glass keeps sign-in open.
  */
+const AUTH_WRITES_SUPPRESSED_IN: readonly string[] = ["maintenance-readonly", "maintenance"];
+
 export async function auditAuthEvent(action: AuditAction, opts: Partial<LogAuditOptions>): Promise<void> {
-    if ((await getServerSiteMode()) === "maintenance-readonly") {
+    if (AUTH_WRITES_SUPPRESSED_IN.includes(await getServerSiteMode())) {
         console.info(
             JSON.stringify({
                 event: "audit.suppressed_readonly",
@@ -29,9 +35,10 @@ export async function auditAuthEvent(action: AuditAction, opts: Partial<LogAudit
 
 /**
  * Whether the login self-heal may create a personal organization. Not in
- * `maintenance-readonly`: it would write `organization` + `member` after the
- * watermark. Every imported user already has one, so a login is unaffected.
+ * `maintenance-readonly` (it would write `organization` + `member` after the
+ * watermark) nor in `maintenance` (final review I2: the blue stack after step
+ * 10). Every imported user already has one, so a login is unaffected.
  */
 export async function shouldSelfHealOrg(): Promise<boolean> {
-    return (await getServerSiteMode()) !== "maintenance-readonly";
+    return !AUTH_WRITES_SUPPRESSED_IN.includes(await getServerSiteMode());
 }

@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
     // alla console e le API di sessione restano raggiungibili in ogni modalità,
     // altrimenti la console non potrebbe annullare la modalità che ha impostato.
     // Il gate vero è Convex (`requireSuperAdmin`), non questa pagina.
-    if (isAdminBreakGlass(path)) return;
+    if (isAdminBreakGlass(path, undefined, event.method)) return;
 
     const isApi = path.startsWith("/api/");
 
