@@ -13,9 +13,9 @@ import { getServerSiteMode, setServerSiteMode } from "../../server/utils/siteMod
  *
  * Il modulo è caricato con un `import()` **dinamico** e non statico: un import
  * statico viene valutato prima delle righe di questo file, e il middleware chiama
- * `defineEventHandler` mentre viene costruito. I tre polyfill dichiarano quello che
+ * `defineEventHandler` mentre viene costruito. I quattro polyfill dichiarano quello che
  * fuori da Nuxt non esiste (`defineEventHandler`, `sendRedirect`,
- * `useRuntimeConfig`); tutto il resto è reale, `getServerSiteMode` compreso.
+ * `setResponseHeader`, `useRuntimeConfig`); tutto il resto è reale, `getServerSiteMode` compreso.
  */
 
 type FakeEvent = { path: string; method: string };
@@ -28,6 +28,8 @@ g.sendRedirect = (event: FakeEvent, location: string, status: number) => ({
     status,
     event,
 });
+// Task 17: read-only refusals carry `Retry-After` (asserted in readonly-mode.test.ts).
+g.setResponseHeader = () => undefined;
 g.useRuntimeConfig = () => ({ public: { siteMode: process.env.NUXT_PUBLIC_SITE_MODE ?? "active" } });
 
 type Middleware = (event: FakeEvent) => unknown;

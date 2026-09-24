@@ -5,6 +5,7 @@
  * deve mai produrre 500 né rivelare se il token esiste (§8.2).
  */
 import { trackEmailOpen } from "~~/server/services/publicInvite.service";
+import { shouldTrackReads } from "~~/server/utils/siteMode";
 
 /** GIF 1x1 trasparente (43 byte). */
 const TRANSPARENT_GIF = Buffer.from(
@@ -19,7 +20,9 @@ export default defineEventHandler(async (event) => {
 
     if (token) {
         try {
-            await trackEmailOpen(token);
+            // maintenance-readonly (migration Task 17): the pixel still answers,
+            // the open is not recorded.
+            if (await shouldTrackReads()) await trackEmailOpen(token);
         } catch (e) {
             // Errori inghiottiti di proposito: il pixel risponde comunque 200.
             console.error("[public.pixel.[token].get] swallowed error:", e);

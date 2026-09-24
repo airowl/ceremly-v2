@@ -16,17 +16,23 @@
  * MAINTENANCE:
  *   - API: tutte 503 (tranne jobs/cron/public)
  *   - Pagine: tutte → /maintenance (che risponde 503 dal proprio setup)
- * MAINTENANCE-READONLY:
- *   - API: solo le scritture 503 (tranne /api/auth/**, che serve a poter leggere)
- *   - Pagine: tutte raggiungibili, /maintenance esclusa
+ * MAINTENANCE-READONLY (modalità del cutover, Task 17):
+ *   - valutata PRIMA di ogni esenzione: in questa modalità anche /api/public
+ *     (RSVP), /api/cron e i webhook passano dalla stessa regola;
+ *   - ogni metodo di scrittura → 503 + Retry-After, salvo l'allowlist esplicita
+ *     `READONLY_ALLOWED_WRITES` (toggle site-mode, drain dei job, webhook,
+ *     login password/TOTP e logout);
+ *   - le GET passano, salvo quelle che scrivono (`READONLY_SIDE_EFFECT_READS`);
+ *   - Pagine: tutte raggiungibili, /maintenance esclusa.
  * BREAK-GLASS (ogni modalità non-active, Task 15): /admin/**, /login?redirect=/admin…
  *   e le API di sessione di Better Auth passano (vedi `isAdminBreakGlass`).
  */
 import {
+    READONLY_RETRY_AFTER_SECONDS,
     isAdminBreakGlass,
     isMaintenancePage,
     isWaitingListBlockedPage,
-    isWriteMethod,
+    readonlyVerdict,
 } from "~~/shared/constants/siteMode";
 import { getServerSiteMode } from "../utils/siteMode";
 
@@ -37,11 +43,37 @@ export default defineEventHandler(async (event) => {
 
     const path = event.path || "/";
 
-    // Background jobs (QStash) e cron (Vercel): liberi a prescindere dal mode.
+    // Risorse interne di Nuxt / payload prerenderizzati: mai gate
+    // (evita anche un round-trip Redis inutile sugli asset).
+    if (path.startsWith("/_")) return;
+
+    const siteMode = await getServerSiteMode();
+
+    // === MAINTENANCE-READONLY ===
+    //
+    // Valutata prima delle esenzioni sotto: nelle altre modalità jobs, cron,
+    // /api/public e i webhook sono sempre liberi, ma nel cutover una scrittura
+    // dopo il watermark è persa (il delta export non la vede). Qui vale una regola
+    // sola, chiusa per default sulle scritture (vedi `readonlyVerdict`).
+    if (siteMode === "maintenance-readonly") {
+        const verdict = readonlyVerdict(path, event.method);
+        if (verdict === "redirect-home") return sendRedirect(event, "/", 302);
+        if (verdict === "block") {
+            setResponseHeader(event, "Retry-After", READONLY_RETRY_AFTER_SECONDS);
+            throw createError({
+                statusCode: 503,
+                statusMessage: "Service Unavailable",
+                data: { siteMode, retryAfter: READONLY_RETRY_AFTER_SECONDS },
+            });
+        }
+        return;
+    }
+
+    // Background jobs (QStash) e cron (Vercel): liberi in ogni altra modalità.
     if (path.startsWith("/api/jobs") || path.startsWith("/api/cron")) return;
 
-    // API pubbliche ospite (invito/RSVP/pixel email): liberi a prescindere dal
-    // mode. I token degli inviti sono già stati recapitati agli ospiti: bloccarli
+    // API pubbliche ospite (invito/RSVP/pixel email): liberi in ogni altra
+    // modalità. I token degli inviti sono già stati recapitati agli ospiti: bloccarli
     // in waitinglist/maintenance romperebbe RSVP già in circolazione e il pixel
     // di apertura nelle email inviate.
     if (path.startsWith("/api/public/")) return;
@@ -59,11 +91,6 @@ export default defineEventHandler(async (event) => {
     // Webhook Resend: mai gate (eventi delivery/bounce, Resend ritenta a finestra limitata).
     if (path.startsWith("/api/webhooks/resend")) return;
 
-    // Risorse interne di Nuxt / payload prerenderizzati: mai gate
-    // (evita anche un round-trip Redis inutile sugli asset).
-    if (path.startsWith("/_")) return;
-
-    const siteMode = await getServerSiteMode();
     if (siteMode === "active") {
         // La pagina /maintenance risponde 503 in SSR: fuori da maintenance non
         // va servita. Specchia il client e la redirige a "/" (evita 503 spuri,
@@ -91,25 +118,6 @@ export default defineEventHandler(async (event) => {
         }
         if (isWaitingListBlockedPage(path)) {
             return sendRedirect(event, "/", 302);
-        }
-        return;
-    }
-
-    // === MAINTENANCE-READONLY ===
-    //
-    // Solo le scritture chiudono; letture e pagine passano. Le eccezioni sono le
-    // stesse del resto del middleware (jobs/cron/public/admin/webhook), che escono
-    // prima; in più `/api/auth/**`, che è tecnicamente una scrittura (crea sessioni)
-    // ma senza la quale "le letture passano" sarebbe falso per la dashboard: un
-    // utente con la sessione scaduta non potrebbe più riaprirla. Resta fermo tutto
-    // ciò che scrive dati di dominio.
-    if (siteMode === "maintenance-readonly") {
-        if (isMaintenancePage(path)) return sendRedirect(event, "/", 302);
-        if (isApi && isWriteMethod(event.method) && !path.startsWith("/api/auth/")) {
-            throw createError({
-                statusCode: 503,
-                statusMessage: "Service Unavailable",
-            });
         }
         return;
     }

@@ -1,6 +1,6 @@
 import { useServerAuth } from "~~/server/utils/auth";
 import { getServerSiteMode } from "~~/server/utils/siteMode";
-import { isAdminBreakGlassAuthApi } from "~~/shared/constants/siteMode";
+import { isAuthCatchAllOpen } from "~~/shared/constants/siteMode";
 import { proxyAuthRequest, resolveConvexSiteUrl } from "~~/server/utils/authProxy";
 import { runtimeConfig } from "~~/server/utils/runtimeConfig";
 
@@ -17,9 +17,10 @@ export default defineEventHandler(async (event) => {
 
     // Auth disabilitata fuori da "active". Stessa authority del middleware
     // (Redis override → env): un toggle runtime chiude/riapre auth coerentemente.
-    // Eccezione: le API di sessione del break-glass della console admin (Task 15),
-    // senza le quali la console non potrebbe riaprire il sito che ha chiuso.
-    if (!isWebhook && !isAdminBreakGlassAuthApi(path) && (await getServerSiteMode()) !== "active") {
+    // Eccezioni: il webhook Creem, le API di sessione del break-glass della console
+    // admin (Task 15), e `maintenance-readonly` (Task 17), dove il login deve
+    // funzionare — lì l'enforcement è il middleware 0.site-mode, già eseguito.
+    if (!isAuthCatchAllOpen(await getServerSiteMode(), path)) {
         return;
     }
 

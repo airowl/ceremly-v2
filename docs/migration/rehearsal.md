@@ -74,6 +74,23 @@ file (`evt/`, `global/`) e di **dimensione**. **Non** verifica il contenuto: le 
 portano SHA-256, l'ETag di R2 è MD5 (o un digest multipart), quindi non esiste un hash
 confrontabile senza scaricare gli oggetti (residuo accettato dal controller).
 
+## Stato machine-readable (letto da `scripts/migration/preflight.ts`)
+
+Il preflight del cutover (Task 17) legge **solo** questo blocco, mai la prosa. Va aggiornato
+quando il rehearsal live è completato: `status` `PASS`, `completedAt` ISO, `commitSha` del
+codice eseguito (dopo quel commit sono ammessi solo cambi sotto `docs/`, `graphify-out/`,
+`.superpowers/`), `convexDeployment` del target. Il preflight richiede `PASS` da meno di 24 ore.
+
+<!-- preflight:rehearsal -->
+```json
+{
+  "status": "BLOCKED",
+  "completedAt": null,
+  "commitSha": null,
+  "convexDeployment": "dev:wary-spaniel-466"
+}
+```
+
 ## Verdetto
 
 **NON PASS — rehearsal live BLOCCATO (`NEEDS_CONTEXT`).**

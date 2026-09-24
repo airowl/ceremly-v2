@@ -5,6 +5,7 @@
  * Side-effect tracking (firstOpenedAt, openCount, activity) nel service.
  */
 import { getPublicInvite } from "~~/server/services/publicInvite.service";
+import { shouldTrackReads } from "~~/server/utils/siteMode";
 
 export default defineEventHandler(async (event) => {
     const token = getRouterParam(event, "token");
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        return await getPublicInvite(token);
+        return await getPublicInvite(token, { track: await shouldTrackReads() });
     } catch (e) {
         const err = e as { statusCode?: number };
         if (err.statusCode) throw e;

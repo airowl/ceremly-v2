@@ -182,3 +182,120 @@ export function isAdminBreakGlassAuthApi(path: string): boolean {
 export function isAdminBreakGlass(path: string, redirect?: unknown): boolean {
     return isAdminConsolePage(path) || isAdminBreakGlassLogin(path, redirect) || isAdminBreakGlassAuthApi(path);
 }
+
+// ---------------------------------------------------------------------------
+// maintenance-readonly as the cutover mode (migration Task 17, Step 1)
+// ---------------------------------------------------------------------------
+//
+// During the cutover the window between "the legacy stops writing" and "Convex
+// starts writing" is where a write is lost for good: it lands after the
+// watermark, so the delta export never carries it. The rule is therefore
+// **closed by default**: every write method is refused, whatever the path, and
+// the only exceptions are the short explicit allowlist below. A route added
+// tomorrow is closed without anyone touching this file
+// (`test/migration/readonly-mode.test.ts` enumerates `server/api/**` to prove it).
+//
+// Reads are open by default, with one twist: some GETs write (cron, OAuth
+// callback, e-mail verification, open tracking). Those are classified in
+// `READONLY_SIDE_EFFECT_READS`, and the same test fails on a GET route that is
+// neither audited as pure nor classified.
+
+/** `Retry-After` on every read-only refusal: the maintenance budget (≤ 30 min). */
+export const READONLY_RETRY_AFTER_SECONDS = 1800;
+
+type ReadonlyWriteRule = {
+    methods: readonly string[];
+    /** `exact`: the pathname must equal `path`; `prefix`: must start with it. */
+    match: "exact" | "prefix";
+    path: string;
+    why: string;
+};
+
+/**
+ * The only writes `maintenance-readonly` lets through. Growing this list is a
+ * decision about what may be written after the watermark; the drift test pins
+ * the resulting set of routes.
+ */
+export const READONLY_ALLOWED_WRITES: readonly ReadonlyWriteRule[] = [
+    {
+        methods: ["POST", "DELETE"],
+        match: "exact",
+        path: "/api/admin/site-mode",
+        why: "rollback: the toggle that re-opens (or keeps closed) the legacy writes",
+    },
+    {
+        methods: ["POST"],
+        match: "prefix",
+        path: "/api/jobs/",
+        why: "drain: jobs already enqueued must finish before the watermark",
+    },
+    {
+        methods: ["POST"],
+        match: "exact",
+        path: "/api/auth/creem/webhook",
+        why: "provider truth: Creem retries only for a limited window; reconciled after the switch",
+    },
+    {
+        methods: ["POST"],
+        match: "exact",
+        path: "/api/webhooks/resend",
+        why: "provider truth: delivery/bounce events; reconciled after the switch",
+    },
+    // Password login (+ TOTP) and logout. They write only sessions, which are
+    // ephemeral and never imported (the runbook invalidates them anyway).
+    // Deliberately absent: OAuth (`sign-in/social`, `callback/*` can create a
+    // user) and `two-factor/verify-backup-code` (consumes a credential).
+    { methods: ["POST"], match: "exact", path: "/api/auth/sign-in/email", why: "login" },
+    { methods: ["POST"], match: "exact", path: "/api/auth/two-factor/verify-totp", why: "login (2FA)" },
+    { methods: ["POST"], match: "exact", path: "/api/auth/sign-out", why: "logout" },
+];
+
+/**
+ * GET routes that write. `block`: refused like a write. `suppress`: served,
+ * with the handler skipping its side effect (`shouldTrackReads()` on the server).
+ */
+export const READONLY_SIDE_EFFECT_READS: readonly { prefix: string; action: "block" | "suppress"; why: string }[] = [
+    { prefix: "/api/cron/", action: "block", why: "cleanup/purge writes and reminder enqueue" },
+    { prefix: "/api/auth/callback/", action: "block", why: "OAuth callback: may create a user or link an account" },
+    { prefix: "/api/auth/oauth2/", action: "block", why: "generic OAuth callback" },
+    { prefix: "/api/auth/verify-email", action: "block", why: "marks the e-mail verified" },
+    { prefix: "/api/auth/magic-link/", action: "block", why: "creates a session and possibly a user" },
+    { prefix: "/api/public/invite/", action: "suppress", why: "open tracking (firstOpenedAt, openCount, activity)" },
+    { prefix: "/api/public/pixel/", action: "suppress", why: "e-mail open tracking; a pixel must always answer 200" },
+];
+
+export type ReadonlyVerdict = "allow" | "block" | "redirect-home";
+
+/** Verdict of `maintenance-readonly` for one request. Pure: shared by middleware and tests. */
+export function readonlyVerdict(path: string, method: string | undefined): ReadonlyVerdict {
+    const { pathname } = splitPath(path);
+
+    if (!isWriteMethod(method)) {
+        if (isMaintenancePage(pathname)) return "redirect-home";
+        const sideEffect = READONLY_SIDE_EFFECT_READS.find((entry) => pathname.startsWith(entry.prefix));
+        return sideEffect?.action === "block" ? "block" : "allow";
+    }
+
+    const upper = (method as string).toUpperCase();
+    const allowed = READONLY_ALLOWED_WRITES.some(
+        (rule) =>
+            rule.methods.includes(upper) &&
+            // `..` never reaches a handler as a traversal, but an allowlist must
+            // not depend on who normalizes the path downstream.
+            !pathname.includes("..") &&
+            (rule.match === "exact" ? pathname === rule.path : pathname.startsWith(rule.path)),
+    );
+    return allowed ? "allow" : "block";
+}
+
+/**
+ * Whether the auth catch-all serves `path` in `mode`. The site-mode middleware
+ * runs first and is the enforcement; this only decides whether the catch-all
+ * goes dark (it does outside `active`, except webhook and break-glass). In
+ * `maintenance-readonly` it stays on, so the login the mode promises works.
+ */
+export function isAuthCatchAllOpen(mode: SiteMode, path: string): boolean {
+    if (mode === "active" || mode === "maintenance-readonly") return true;
+    const { pathname } = splitPath(path);
+    return pathname.includes("/creem/webhook") || isAdminBreakGlassAuthApi(pathname);
+}

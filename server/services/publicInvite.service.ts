@@ -83,15 +83,22 @@ function buildInviteEventPayload(eventRow: InviteEventRow): PublicInvitePayload[
  * Side-effect di tracking: openCount+1, firstOpenedAt al primo accesso,
  * activity `link_opened` con meta { nth } (numero progressivo di apertura).
  */
-export async function getPublicInvite(token: string): Promise<PublicInvitePayload> {
+export async function getPublicInvite(
+    token: string,
+    options: { track?: boolean } = {},
+): Promise<PublicInvitePayload> {
     const { guest, event: eventRow, response } = await findActiveInviteByToken(token);
 
-    const isFirst = guest.firstOpenedAt === null;
-    const nth = guest.openCount + 1;
-    await Promise.all([
-        trackOpen(guest.id, isFirst),
-        insertActivity(guest.organizationId, guest.eventId, guest.id, "link_opened", { nth }),
-    ]);
+    // `track: false` in maintenance-readonly (migration Task 17): the invite is
+    // served, the open is not recorded (it would land after the watermark).
+    if (options.track !== false) {
+        const isFirst = guest.firstOpenedAt === null;
+        const nth = guest.openCount + 1;
+        await Promise.all([
+            trackOpen(guest.id, isFirst),
+            insertActivity(guest.organizationId, guest.eventId, guest.id, "link_opened", { nth }),
+        ]);
+    }
 
     // Evento 'closed': l'invito resta visibile (più cortese di un 404) ma il
     // form RSVP è chiuso, esattamente come a deadline passata.

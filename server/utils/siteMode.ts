@@ -159,6 +159,17 @@ async function convexSiteMode(): Promise<SiteMode> {
     return resolveUnreachableSiteMode({ lastObserved, envDefault: envSiteMode() });
 }
 
+/**
+ * Whether a GET may record its side effect (open tracking). False only in
+ * `maintenance-readonly` (migration Task 17): during the cutover a tracking
+ * write after the watermark would be lost, so the read is served without it.
+ * Listed as `suppress` in `READONLY_SIDE_EFFECT_READS`; a drift test checks that
+ * every such handler calls this.
+ */
+export async function shouldTrackReads(): Promise<boolean> {
+    return (await getServerSiteMode()) !== "maintenance-readonly";
+}
+
 /** Imposta l'override runtime e invalida la cache locale di questa istanza. */
 export async function setServerSiteMode(mode: SiteMode): Promise<void> {
     await cacheClient.set(SITE_MODE_OVERRIDE_KEY, mode, undefined);
