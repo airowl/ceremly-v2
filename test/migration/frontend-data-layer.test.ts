@@ -13,6 +13,9 @@ import {
     toEventStatus,
 } from "~/composables/useEvents";
 import { toProjectItem, toProjectStatus } from "~/composables/useProjects";
+import { toGuestDetail, toGuestWithStatus } from "~/composables/useEventGuests";
+import { toPublicInvitePayload, toPublicRsvpResponse } from "~/lib/publicInvite";
+import { toEventReminderData } from "~/composables/useEventReminders";
 
 /**
  * Task 14, Step 1 — il gate anti-CRUD Nuxt.
@@ -41,6 +44,19 @@ const STORES_DIR = join(PROJECT_ROOT, "app/stores");
 const ALLOWED_API_PREFIXES = ["/api/auth"];
 
 /**
+ * Bridge anonimi del Worker (Task 12) che il **data layer** chiama. Non sono
+ * debito: sono il trasporto scelto, perché è lì che l'IP diventa un digest firmato
+ * e Convex non vede mai l'indirizzo. Contact e waiting list vivono nei componenti
+ * (fuori dalla scansione); il submit RSVP vive in `usePublicInvite`.
+ *
+ * Una regex esatta e non un prefisso: `/api/public/invite/…` senza `/rsvp` è la
+ * GET legacy dell'invito, che è proprio la strada che questo gate deve chiudere.
+ */
+const ALLOWED_API_PATTERNS: readonly RegExp[] = [
+    /^\/api\/public\/invite\/\$\{[^}]+\}\/rsvp$/,
+];
+
+/**
  * File ancora sul trasporto legacy, ognuno con lo step che lo migra.
  *
  * `feedbackStore` è **fuori dal piano**: le `suggestions` non hanno (e non
@@ -48,8 +64,6 @@ const ALLOWED_API_PREFIXES = ["/api/auth"];
  * per questo è elencata a parte e non ha uno step.
  */
 const PENDING: Record<string, string> = {
-    "app/composables/useEventGuests.ts": "Step 3 (ospiti/RSVP)",
-    "app/composables/usePublicInvite.ts": "Step 3 (invito pubblico)",
     "app/composables/useSubscription.ts": "Step 4 (organizzazione e billing)",
     "app/stores/profileStore.ts": "Step 5 (profilo ed export)",
 };
@@ -76,7 +90,9 @@ function apiPathsIn(file: string, source: string): string[] {
     // (`` `/api/events/${id}/guests` ``): senza `{` e `}` nella classe di
     // caratteri il gate non vedeva proprio le chiamate più comuni, ed è la
     // seconda asserzione ("ogni voce è ancora vera") che l'ha rivelato.
-    const matches = cleaned.matchAll(/["'`](\/api\/[A-Za-z0-9/_\-[\].${}]*)["'`]/g);
+    // Stessa storia per `(` e `)` (Task 14, part a): `` `/api/public/invite/${encodeURIComponent(token)}` ``
+    // era invisibile, e `usePublicInvite` stava in allowlist per una sola riga su tre.
+    const matches = cleaned.matchAll(/["'`](\/api\/[A-Za-z0-9/_\-[\].${}()]*)["'`]/g);
     return [...matches].map((match) => match[1]!);
 }
 
@@ -100,7 +116,22 @@ function dataLayerFiles(): { relative: string; source: string }[] {
 }
 
 const isAllowed = (path: string): boolean =>
-    ALLOWED_API_PREFIXES.some((allowed) => path.startsWith(allowed));
+    ALLOWED_API_PREFIXES.some((allowed) => path.startsWith(allowed))
+    || ALLOWED_API_PATTERNS.some((pattern) => pattern.test(path));
+
+/**
+ * Dove `useConvexClient()` è ammesso, e perché.
+ *
+ * - `useEvents.ts`: `getEventOnce`, la lettura una-tantum delle pagine a form.
+ * - `useEventGuests.ts`: `client.action` (l'email di test: `convex-vue` non ha un
+ *   composable per le action) e `client.onUpdate` (il dettaglio ospite, una
+ *   sottoscrizione **viva** che si apre solo a drawer aperto). Mai `client.query`:
+ *   lo verifica l'asserzione dedicata.
+ */
+const MANUAL_CLIENT_ALLOWED: Record<string, string> = {
+    "app/composables/useEvents.ts": "getEventOnce (pagine a form)",
+    "app/composables/useEventGuests.ts": "action sendTest + sottoscrizione opzionale del dettaglio",
+};
 
 describe("frontend data layer: una strada sola per i dati di dominio", () => {
     it("nessun composable o store chiama più il CRUD Nuxt fuori dalle eccezioni dichiarate", () => {
@@ -146,11 +177,41 @@ describe("frontend data layer: una strada sola per i dati di dominio", () => {
         // query viva.
         const manualCalls = dataLayerFiles()
             .filter(({ relative, source }) =>
-                relative !== "app/composables/useEvents.ts"
+                !(relative in MANUAL_CLIENT_ALLOWED)
                 && /useConvexClient\s*\(/.test(stripComments(source)))
             .map(({ relative }) => relative);
 
         expect(manualCalls).toEqual([]);
+    });
+
+    it("chi ha il client manuale per altro non lo usa per una lettura una-tantum", () => {
+        // L'eccezione di `useEventGuests` è per `action` e `onUpdate`: un
+        // `client.query(...)` lì sarebbe la lettura morta che il gate vieta.
+        const oneShotReads = dataLayerFiles()
+            .filter(({ relative, source }) =>
+                relative in MANUAL_CLIENT_ALLOWED
+                && relative !== "app/composables/useEvents.ts"
+                && /\.query\s*\(/.test(stripComments(source)))
+            .map(({ relative }) => relative);
+
+        expect(oneShotReads).toEqual([]);
+    });
+
+    it("l'invito pubblico non passa più dalla GET legacy e non apre un websocket", () => {
+        const source = stripComments(
+            readFileSync(join(COMPOSABLES_DIR, "usePublicInvite.ts"), "utf8"),
+        );
+
+        // L'apertura è `api.rsvp.publicInvite`, l'anteprima `api.rsvp.previewInvite`,
+        // entrambe sul client HTTP (l'unico che esiste nel render server).
+        expect(source).toMatch(/api\.rsvp\.publicInvite/);
+        expect(source).toMatch(/api\.rsvp\.previewInvite/);
+        expect(source).toMatch(/useConvexHttpClient\s*\(/);
+        expect(source).not.toMatch(/useConvexClient\s*\(/);
+        // Il submit resta sul bridge: l'unico percorso `/api/**` del file.
+        expect(apiPathsIn("usePublicInvite.ts", source)).toEqual([
+            "/api/public/invite/${encodeURIComponent(token)}/rsvp",
+        ]);
     });
 });
 
@@ -223,6 +284,176 @@ describe("frontend data layer: gli adattatori fra Convex e la UI", () => {
             createdAt: "2026-01-02T03:04:05.000Z",
             updatedAt: "2026-01-03T03:04:05.000Z",
         });
+    });
+});
+
+describe("frontend data layer: gli adattatori di ospiti, invito e reminder", () => {
+    const guestRow = {
+        _id: "g1",
+        _creationTime: 0,
+        organizationId: "o1",
+        eventId: "e1",
+        firstName: "Ada",
+        lastName: "Lovelace",
+        email: "ada@example.com",
+        token: "tok0000001",
+        openCount: 2,
+        remindersDisabled: false,
+        sentAt: Date.parse("2026-09-01T10:00:00.000Z"),
+        sentChannel: "email" as const,
+        firstOpenedAt: Date.parse("2026-09-02T10:00:00.000Z"),
+        createdAt: Date.parse("2026-08-01T10:00:00.000Z"),
+        updatedAt: Date.parse("2026-09-02T10:00:00.000Z"),
+    };
+
+    it("un ospite Convex diventa la riga della tabella, con null dove il campo manca", () => {
+        const guest = toGuestWithStatus({
+            ...guestRow,
+            rsvpStatus: "confirmed",
+            respondedAt: Date.parse("2026-09-03T10:00:00.000Z"),
+            totalPeople: 3,
+        } as never);
+
+        expect(guest).toMatchObject({
+            id: "g1",
+            eventId: "e1",
+            phone: null,
+            groupName: null,
+            notes: null,
+            removedAt: null,
+            emailOpenedAt: null,
+            sentAt: "2026-09-01T10:00:00.000Z",
+            firstOpenedAt: "2026-09-02T10:00:00.000Z",
+            respondedAt: "2026-09-03T10:00:00.000Z",
+            rsvpStatus: "confirmed",
+            totalPeople: 3,
+        });
+        // Nessun campo Convex interno trapela nella shape della UI.
+        expect(guest).not.toHaveProperty("_id");
+        expect(guest).not.toHaveProperty("organizationId");
+    });
+
+    it("il dettaglio converte risposta e attività, e una risposta mai aggiornata resta null", () => {
+        const detail = toGuestDetail({
+            guest: guestRow,
+            response: {
+                _id: "r1",
+                _creationTime: 0,
+                organizationId: "o1",
+                eventId: "e1",
+                guestId: "g1",
+                attending: "yes",
+                companionsCount: 1,
+                answers: { q_menu: "Carne" },
+                submittedAt: Date.parse("2026-09-03T10:00:00.000Z"),
+            },
+            activities: [
+                {
+                    _id: "a1",
+                    _creationTime: 0,
+                    organizationId: "o1",
+                    eventId: "e1",
+                    guestId: "g1",
+                    type: "link_opened",
+                    meta: { nth: 2 },
+                    createdAt: Date.parse("2026-09-02T10:00:00.000Z"),
+                },
+            ],
+        } as never);
+
+        expect(detail.response).toEqual({
+            attending: "yes",
+            companionsCount: 1,
+            answers: { q_menu: "Carne" },
+            declineMessage: null,
+            submittedAt: "2026-09-03T10:00:00.000Z",
+            updatedAt: null,
+        });
+        expect(detail.activities).toEqual([
+            { id: "a1", guestId: "g1", type: "link_opened", meta: { nth: 2 }, createdAt: "2026-09-02T10:00:00.000Z" },
+        ]);
+    });
+
+    it("il payload dell'invito passa da millisecondi a ISO, e l'anteprima resta marcata", () => {
+        const event = {
+            title: "Giulia & Tommaso",
+            type: "matrimonio",
+            templateKey: "toscana",
+            theme: null,
+            inviteFont: null,
+            eventDate: Date.parse("2026-10-10T00:00:00.000Z"),
+            eventTime: "16:00",
+            blocks: [],
+            rsvpConfig: [],
+            rsvpDeadline: null,
+            rsvpClosedMessage: "Chiuso",
+            slug: "giulia-tommaso",
+        };
+
+        const invite = toPublicInvitePayload({
+            event,
+            guest: { firstName: "Ada", lastName: "Lovelace" },
+            response: {
+                attending: "no",
+                companionsCount: 0,
+                answers: {},
+                declineMessage: "Mi dispiace",
+                updatedAt: Date.parse("2026-09-05T10:00:00.000Z"),
+            },
+            deadlinePassed: false,
+        } as never);
+
+        expect(invite.event.eventDate).toBe("2026-10-10T00:00:00.000Z");
+        expect(invite.event.rsvpDeadline).toBeNull();
+        expect(invite.response?.updatedAt).toBe("2026-09-05T10:00:00.000Z");
+        expect(invite).not.toHaveProperty("preview");
+
+        const preview = toPublicInvitePayload({
+            event,
+            guest: { firstName: "Anna", lastName: "" },
+            response: null,
+            deadlinePassed: false,
+            preview: true,
+        } as never);
+        expect(preview.preview).toBe(true);
+    });
+
+    it("la risposta del submit è la stessa shape dai due backend del bridge", () => {
+        // Convex (millisecondi) e legacy Drizzle (ISO) durante il blue-green.
+        const fromConvex = toPublicRsvpResponse({
+            attending: "yes",
+            companionsCount: 0,
+            answers: {},
+            updatedAt: Date.parse("2026-09-05T10:00:00.000Z"),
+        });
+        const fromLegacy = toPublicRsvpResponse({
+            attending: "yes",
+            companionsCount: 0,
+            answers: {},
+            declineMessage: null,
+            updatedAt: "2026-09-05T10:00:00.000Z",
+        });
+        expect(fromConvex).toEqual(fromLegacy);
+    });
+
+    it("un reminder inviato porta la data ISO, uno in attesa null", () => {
+        const base = {
+            _creationTime: 0,
+            organizationId: "o1",
+            eventId: "e1",
+            daysBefore: 7,
+            subject: "S",
+            message: "M",
+            enabled: true,
+            pending: true,
+            createdAt: 0,
+            updatedAt: 0,
+        };
+        expect(toEventReminderData({ ...base, _id: "r1" } as never).sentAt).toBeNull();
+        expect(
+            toEventReminderData({ ...base, _id: "r2", sentAt: Date.parse("2026-09-01T00:00:00.000Z") } as never)
+                .sentAt,
+        ).toBe("2026-09-01T00:00:00.000Z");
     });
 });
 

@@ -14,11 +14,8 @@ import type {
     RsvpQuestion,
     RsvpAnswerValue,
 } from "~~/shared/types/ceremly";
-import type {
-    GuestDetailResult,
-    GuestImportResult,
-    GuestListSummary,
-} from "~/composables/useEventGuests";
+import type { GuestImportResult } from "~/composables/useEventGuests";
+import { convexErrorCode, convexErrorMessage } from "~/composables/useConvexError";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -28,10 +25,7 @@ const toast = useToast();
 const { t } = useI18n();
 const eventId = computed(() => String(route.params.id ?? ""));
 
-const {
-    listGuests, getGuest, createGuest, updateGuest, deleteGuest, importGuests,
-} = useEventGuests();
-const { withRefetch } = useRefetching();
+const { createGuest, updateGuest, deleteGuest, importGuests } = useEventGuests();
 
 // ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
@@ -44,8 +38,8 @@ function getTypeLabel(type: string): string {
     return translated !== key ? translated : type;
 }
 
-// Task 14: l'evento è una query viva; gli ospiti seguono ancora il composable
-// legacy (`useEventGuests`), che è la parte successiva dello stesso step.
+// Task 14: evento e ospiti sono query vive. Dopo una scrittura la lista si
+// aggiorna da sola: niente più `refreshGuests()`.
 const { event: eventData } = useEvent(eventId);
 
 watch(eventData, (event) => {
@@ -60,48 +54,16 @@ watchEffect(() => {
     crumbs.value = [t("ceremly.event.guests.crumbEvents"), label, t("ceremly.event.guests.crumbGuests")];
 });
 
-// ─── Errori $fetch (shape minima, niente any) ────────────────────────
-interface FetchErrorLike {
-    statusCode?: number;
-    data?: { statusMessage?: string; message?: string };
-    message?: string;
-}
-
-function errOf(e: unknown): FetchErrorLike {
-    return (e ?? {}) as FetchErrorLike;
-}
-
-// ─── Dati ────────────────────────────────────────────────────────────
-const guests = ref<GuestWithStatus[]>([]);
-const summary = ref<GuestListSummary | null>(null);
-const loading = ref(true);
-const loadError = ref<string | null>(null);
-
-async function loadAll() {
-    loading.value = true;
-    loadError.value = null;
-    try {
-        const res = await listGuests(eventId.value);
-        guests.value = res.guests;
-        summary.value = res.summary;
-    } catch (e) {
-        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || t("ceremly.event.guests.loadError");
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function refreshGuests() {
-    try {
-        const res = await withRefetch(() => listGuests(eventId.value));
-        guests.value = res.guests;
-        summary.value = res.summary;
-    } catch {
-        toast.add({ title: t("common.error"), description: t("ceremly.event.guests.refreshError"), color: "error" });
-    }
-}
-
-onMounted(loadAll);
+// ─── Dati (query viva) ───────────────────────────────────────────────
+const {
+    guests,
+    summary,
+    isLoading: loading,
+    error: listError,
+    retry: loadAll,
+} = useEventGuestList(eventId);
+// Il messaggio grezzo di Convex è un codice (`EVENT_NOT_FOUND`): all'utente il testo della pagina.
+const loadError = computed(() => (listError.value ? t("ceremly.event.guests.loadError") : null));
 
 // ─── Derivati header ─────────────────────────────────────────────────
 const activeGuests = computed(() => guests.value.filter(g => !g.removedAt));
@@ -211,29 +173,24 @@ function responseCell(g: GuestWithStatus): string {
     return g.rsvpStatus === "not_opened" ? t("ceremly.event.guests.responseNotOpened") : t("ceremly.event.guests.responseOpenedNoReply");
 }
 
-// ─── Drawer dettaglio ────────────────────────────────────────────────
-const drawerRow = ref<GuestWithStatus | null>(null);
-const drawerDetail = ref<GuestDetailResult | null>(null);
-const drawerLoading = ref(false);
-const drawerError = ref<string | null>(null);
+// ─── Drawer dettaglio (vivo mentre è aperto) ─────────────────────────
+const drawerGuestId = ref<string | null>(null);
+/** La riga segue la lista viva: uno stato RSVP che cambia si vede nel drawer aperto. */
+const drawerRow = computed<GuestWithStatus | null>(() =>
+    drawerGuestId.value ? guests.value.find(g => g.id === drawerGuestId.value) ?? null : null);
+const {
+    detail: drawerDetail,
+    isLoading: drawerLoading,
+    error: drawerDetailError,
+} = useGuestDetail(eventId, drawerGuestId);
+const drawerError = computed(() => (drawerDetailError.value ? t("ceremly.event.guests.drawerLoadError") : null));
 
-async function openDrawer(g: GuestWithStatus) {
-    drawerRow.value = g;
-    drawerDetail.value = null;
-    drawerError.value = null;
-    drawerLoading.value = true;
-    try {
-        drawerDetail.value = await getGuest(eventId.value, g.id);
-    } catch (e) {
-        drawerError.value = errOf(e).data?.statusMessage || t("ceremly.event.guests.drawerLoadError");
-    } finally {
-        drawerLoading.value = false;
-    }
+function openDrawer(g: GuestWithStatus) {
+    drawerGuestId.value = g.id;
 }
 
 function closeDrawer() {
-    drawerRow.value = null;
-    drawerDetail.value = null;
+    drawerGuestId.value = null;
     confirmDeleteOpen.value = false;
 }
 
@@ -356,9 +313,8 @@ async function confirmDelete() {
         await deleteGuest(eventId.value, drawerRow.value.id);
         toast.add({ title: t("ceremly.event.guests.deleteSuccessTitle"), description: t("ceremly.event.guests.deleteSuccessDesc"), color: "success" });
         closeDrawer();
-        await refreshGuests();
     } catch (e) {
-        toast.add({ title: t("common.error"), description: errOf(e).data?.statusMessage || t("ceremly.event.guests.deleteError"), color: "error" });
+        toast.add({ title: t("common.error"), description: convexErrorMessage(e, t("ceremly.event.guests.deleteError")), color: "error" });
     } finally {
         deleting.value = false;
     }
@@ -400,14 +356,12 @@ async function submitAdd() {
         });
         toast.add({ title: t("ceremly.event.guests.addSuccessTitle"), description: t("ceremly.event.guests.addSuccessDesc", { firstName: addForm.firstName, lastName: addForm.lastName }), color: "success" });
         addOpen.value = false;
-        await refreshGuests();
     } catch (e) {
-        const err = errOf(e);
-        if (err.statusCode === 402) {
+        if (convexErrorCode(e) === "GUEST_LIMIT_REACHED") {
             addOpen.value = false;
-            openPaywall(err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit"));
+            openPaywall(convexErrorMessage(e, t("ceremly.event.guests.addErrorPlanLimit")));
         } else {
-            addError.value = err.data?.statusMessage || t("ceremly.event.guests.addErrorGeneric");
+            addError.value = convexErrorMessage(e, t("ceremly.event.guests.addErrorGeneric"));
         }
     } finally {
         addSaving.value = false;
@@ -461,14 +415,12 @@ async function submitImport() {
             groupName: r.groupName,
         })));
         importStep.value = "done";
-        await refreshGuests();
     } catch (e) {
-        const err = errOf(e);
-        if (err.statusCode === 402) {
+        if (convexErrorCode(e) === "GUEST_LIMIT_REACHED") {
             importOpen.value = false;
-            openPaywall(err.data?.statusMessage || t("ceremly.event.guests.addErrorPlanLimit"));
+            openPaywall(convexErrorMessage(e, t("ceremly.event.guests.addErrorPlanLimit")));
         } else {
-            importSubmitError.value = err.data?.statusMessage || t("ceremly.event.guests.importError");
+            importSubmitError.value = convexErrorMessage(e, t("ceremly.event.guests.importError"));
         }
     } finally {
         importSaving.value = false;
@@ -505,9 +457,8 @@ async function submitGroup() {
         toast.add({ title: t("ceremly.event.guests.groupSuccessTitle"), description: t("ceremly.event.guests.groupSuccessDesc", { count: selected.value.size, name }), color: "success" });
         groupOpen.value = false;
         clearSelection();
-        await refreshGuests();
     } catch (e) {
-        toast.add({ title: t("common.error"), description: errOf(e).data?.statusMessage || t("ceremly.event.guests.groupError"), color: "error" });
+        toast.add({ title: t("common.error"), description: convexErrorMessage(e, t("ceremly.event.guests.groupError")), color: "error" });
     } finally {
         groupSaving.value = false;
     }

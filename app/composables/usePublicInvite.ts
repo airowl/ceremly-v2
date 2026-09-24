@@ -1,20 +1,39 @@
 /**
- * usePublicInvite — pagina pubblica ospite (/e/:slug/:token).
+ * usePublicInvite — pagina pubblica ospite (/e/:slug/:token), Task 14 part a.
  *
- * Wrapper tipizzati stile useProjects per i contratti §6.2:
- * - GET  /api/public/invite/:token       → PublicInvitePayload (useFetch, SSR)
- * - POST /api/public/invite/:token/rsvp  → { response } | 410 | 422
+ * Tre operazioni, tre trasporti, e ognuno ha una ragione:
  *
- * Nessuna auth: il token opaco è l'unica autorità. Il submit normalizza gli
- * errori HTTP in un esito discriminato così la pagina non parsa FetchError.
+ * - **apertura dell'invito** → `api.rsvp.publicInvite` via il client **HTTP** di
+ *   Convex, dentro `useAsyncData`. È una *mutation* (conta l'apertura: `openCount`,
+ *   `firstOpenedAt`, attività `link_opened`), e gira nel render server, perché
+ *   l'HTML deve contenere l'anteprima OG che WhatsApp e Telegram leggono. Il
+ *   server ha solo il client HTTP (`app/plugins/convex.server.ts`: niente
+ *   websocket in un Worker); il browser idrata dal payload e non la richiama, quindi
+ *   un'apertura conta una volta, come nel legacy.
+ * - **anteprima firmata** → `api.rsvp.previewInvite`, stesso client HTTP: è una
+ *   lettura pubblica senza sessione, e un'anteprima non ha niente da tenere vivo.
+ * - **submit RSVP** → resta sul bridge anonimo del Worker
+ *   (`POST /api/public/invite/:token/rsvp`, Task 12): è lì che l'IP diventa un
+ *   digest firmato per il rate limit, e Convex non vede mai l'indirizzo.
+ *
+ * Nessuna auth: il token opaco (o la firma dell'anteprima) è l'unica autorità.
+ * Il submit normalizza gli errori HTTP in un esito discriminato così la pagina non
+ * parsa FetchError.
  */
+import { useConvexHttpClient } from "convex-vue";
+import { api } from "~~/convex/_generated/api";
+import {
+    toPublicInvitePayload,
+    toPublicRsvpResponse,
+    type PublicRsvpResponse,
+} from "~/lib/publicInvite";
 import type {
     AttendingStatus,
     PublicInvitePayload,
     RsvpAnswers,
 } from "~~/shared/types/ceremly";
 
-export type PublicRsvpResponse = NonNullable<PublicInvitePayload["response"]>;
+export type { PublicRsvpResponse };
 
 export interface PublicRsvpPayload {
     attending: AttendingStatus;
@@ -34,23 +53,25 @@ export type SubmitRsvpResult =
 
 export function usePublicInvite() {
     const isSubmitting = ref(false);
+    // Preso in setup: `inject` non risolve dentro il callback di `useAsyncData`.
+    const convex = useConvexHttpClient();
 
-    /** Fetch SSR dell'invito: da chiamare con await nel setup della pagina. */
+    /** Apertura SSR dell'invito: da chiamare con await nel setup della pagina. */
     function fetchInvite(token: string) {
-        return useFetch<PublicInvitePayload>(
-            `/api/public/invite/${encodeURIComponent(token)}`,
-            { key: `public-invite-${token}` },
+        return useAsyncData<PublicInvitePayload>(
+            `public-invite-${token}`,
+            async () => toPublicInvitePayload(await convex.mutation(api.rsvp.publicInvite, { token })),
         );
     }
 
     /**
-     * Fetch SSR dell'anteprima firmata (token "preview"): slug + sig dalla query.
+     * Anteprima firmata (token "preview"): slug + sig dalla query.
      * Stessa shape di fetchInvite, con `preview: true` nel payload.
      */
     function fetchPreview(slug: string, sig: string) {
-        return useFetch<PublicInvitePayload>(
-            "/api/public/preview",
-            { query: { slug, sig }, key: `public-preview-${slug}` },
+        return useAsyncData<PublicInvitePayload>(
+            `public-preview-${slug}`,
+            async () => toPublicInvitePayload(await convex.query(api.rsvp.previewInvite, { slug, sig })),
         );
     }
 
@@ -60,11 +81,11 @@ export function usePublicInvite() {
     ): Promise<SubmitRsvpResult> {
         isSubmitting.value = true;
         try {
-            const res = await $fetch<{ response: PublicRsvpResponse }>(
+            const res = await $fetch<{ response: Parameters<typeof toPublicRsvpResponse>[0] }>(
                 `/api/public/invite/${encodeURIComponent(token)}/rsvp`,
                 { method: "POST", body: payload },
             );
-            return { ok: true, response: res.response };
+            return { ok: true, response: toPublicRsvpResponse(res.response) };
         } catch (e) {
             const err = e as {
                 statusCode?: number;

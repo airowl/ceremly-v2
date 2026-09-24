@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Dashboard evento "Andamento" — port fedele di docs/ui/project/screens/event-dashboard.jsx
 // (incluso RsvpChart svg con hover interattivo e GuestDetailDrawer).
-// Dati reali: Convex (Task 14) — `api.events.stats`, `api.events.get`,
-// GET /api/events/:id/guests (+ /:guestId per il drawer).
+// Dati reali: Convex (Task 14), tutti vivi — `api.events.stats`, `api.events.get`,
+// `api.guests.list` e `api.guests.get` per il drawer.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import KpiCard from "~/components/ceremly/KpiCard.vue";
 import StatusPill from "~/components/ceremly/StatusPill.vue";
@@ -15,7 +15,6 @@ import type {
     RsvpAnswerValue,
     RsvpPerPersonAnswer,
 } from "~~/shared/types/ceremly";
-import type { GuestDetailResult } from "~/composables/useEventGuests";
 
 definePageMeta({
     layout: "ceremly",
@@ -111,24 +110,14 @@ const dateLine = computed(() => {
 });
 
 // ─── Lista ospiti (sub KPI "con email" + default drawer) ───────────────
-const { listGuests, getGuest } = useEventGuests();
-const guestsIndex = ref<GuestWithStatus[] | null>(null);
-
-async function loadGuests() {
-    try {
-        const res = await listGuests(eventId.value);
-        guestsIndex.value = res.guests.filter((g) => !g.removedAt);
-        // Default drawer: l'ultimo ospite che ha risposto
-        if (!selectedGuestId.value) {
-            const responded = guestsIndex.value
-                .filter((g) => g.respondedAt)
-                .sort((a, b) => new Date(b.respondedAt!).getTime() - new Date(a.respondedAt!).getTime());
-            if (responded[0]) void selectGuest(responded[0].id);
-        }
-    } catch {
-        guestsIndex.value = null; // degradazione: sub KPI vuoto, drawer in empty state
-    }
-}
+const {
+    guests: allGuests,
+    isLoading: guestsLoading,
+    error: guestsError,
+} = useEventGuestList(eventId);
+/** `null` finché carica o se fallisce (degradazione: sub KPI vuoto, drawer in empty state). */
+const guestsIndex = computed<GuestWithStatus[] | null>(() =>
+    guestsLoading.value || guestsError.value ? null : allGuests.value.filter((g) => !g.removedAt));
 
 const withEmailCount = computed(
     () => guestsIndex.value?.filter((g) => g.email).length ?? null,
@@ -304,24 +293,34 @@ const allergyTotal = computed(
 
 // ─── Drawer dettaglio ospite ───────────────────────────────────────────
 const selectedGuestId = ref<string | null>(null);
-const detail = ref<GuestDetailResult | null>(null);
-const detailLoading = ref(false);
-const detailError = ref<string | null>(null);
+// Vivo mentre un ospite è selezionato: un RSVP o un'apertura compaiono nel drawer.
+const {
+    detail,
+    isLoading: detailLoading,
+    error: detailQueryError,
+    retry: retryDetail,
+} = useGuestDetail(eventId, selectedGuestId);
+const detailError = computed(() => (detailQueryError.value ? t("ceremly.event.detail.errorLoadGuest") : null));
 
-async function selectGuest(guestId: string) {
-    if (selectedGuestId.value === guestId && detail.value) return;
+function selectGuest(guestId: string) {
     selectedGuestId.value = guestId;
-    detailLoading.value = true;
-    detailError.value = null;
-    try {
-        detail.value = await getGuest(eventId.value, guestId);
-    } catch {
-        detail.value = null;
-        detailError.value = t("ceremly.event.detail.errorLoadGuest");
-    } finally {
-        detailLoading.value = false;
-    }
 }
+
+/**
+ * Default drawer: l'ultimo ospite che ha risposto, scelto **una volta** alla
+ * prima lettura. La lista è viva: rieleggere il default a ogni RSVP sposterebbe il
+ * drawer sotto l'utente.
+ */
+const defaultGuestPicked = ref(false);
+watch(guestsIndex, (index) => {
+    if (!index || defaultGuestPicked.value) return;
+    defaultGuestPicked.value = true;
+    if (selectedGuestId.value) return;
+    const responded = index
+        .filter((g) => g.respondedAt)
+        .sort((a, b) => new Date(b.respondedAt!).getTime() - new Date(a.respondedAt!).getTime());
+    if (responded[0]) selectGuest(responded[0].id);
+}, { immediate: true });
 
 function initials(name: string): string {
     return name
@@ -524,7 +523,6 @@ async function maybeReconcileUnlock() {
 
 onMounted(() => {
     void maybeReconcileUnlock();
-    void loadGuests();
     tickTimer = setInterval(() => {
         nowTick.value = Date.now();
     }, 1000);
@@ -914,7 +912,7 @@ onUnmounted(() => {
                             v-if="selectedGuestId"
                             class="cer-btn ghost small"
                             type="button"
-                            @click="selectGuest(selectedGuestId)"
+                            @click="retryDetail()"
                         >
                             {{ $t('common.retry') }}
                         </button>

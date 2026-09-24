@@ -40,6 +40,18 @@ export function convexErrorMessage(e: unknown, fallback = "Si è verificato un e
 }
 
 /**
+ * Il `code` di un `ConvexError`, o `null`.
+ *
+ * Le pagine legacy decidevano sullo status HTTP (`402` → paywall); con Convex la
+ * decisione è sul codice di dominio (`GUEST_LIMIT_REACHED`), che è più preciso di
+ * uno status e non dipende da come il trasporto lo traduce.
+ */
+export function convexErrorCode(e: unknown): string | null {
+    const code = (e as { data?: { code?: unknown } } | null)?.data?.code;
+    return typeof code === "string" ? code : null;
+}
+
+/**
  * Versione reattiva: `null` finché non c'è errore, altrimenti il messaggio.
  *
  * Il tipo di ritorno è `string | null` (e non `Error`) perché i template

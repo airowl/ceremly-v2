@@ -2,11 +2,13 @@
 // Reminder automatici — port fedele di docs/ui/project/screens/reminders.jsx.
 // Sinistra: deadline RSVP + fino a 3 ReminderCard editabili (R1/R2/R3).
 // Destra: destinatari, esclusioni per ospite (remindersDisabled), card "Niente spam".
-// Salvataggio: PUT /api/events/:id/reminders (bulk) + PUT rsvpDeadline se cambiata.
+// Salvataggio: `api.reminders.save` (bulk) + `api.events.update` della deadline se
+// cambiata. Ospiti e reminder sono query vive (Task 14).
 import type { EventReminderData, GuestWithStatus } from "~~/shared/types/ceremly";
 import { CEREMLY_TIER_LIMITS } from "~~/shared/constants/pricing";
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import CerToggle from "~/components/ceremly/CerToggle.vue";
+import { convexErrorMessage } from "~/composables/useConvexError";
 
 definePageMeta({
     layout: "ceremly",
@@ -17,7 +19,7 @@ const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
 const { isAtelier } = useSubscription();
-const { listGuests, updateGuest } = useEventGuests();
+const { updateGuest } = useEventGuests();
 const eventId = computed(() => String(route.params.id ?? ""));
 
 const TYPE_LABELS: Record<string, string> = {
@@ -39,8 +41,22 @@ interface LocalReminder {
 }
 
 // ─── Stato pagina ────────────────────────────────────────────────────
-const loading = ref(true);
-const loadError = ref<string | null>(null);
+const {
+    guests,
+    isLoading: guestsLoading,
+    error: guestsError,
+    retry: retryGuests,
+} = useEventGuestList(eventId);
+const {
+    reminders: serverReminders,
+    isLoading: remindersLoading,
+    error: remindersError,
+    retry: retryReminders,
+    saveReminders,
+} = useEventReminders(eventId);
+const loading = computed(() => guestsLoading.value || remindersLoading.value);
+const loadError = computed(() =>
+    guestsError.value || remindersError.value ? t("ceremly.event.reminders.loadError") : null);
 const saveBtn = useButtonSuccess();
 const { event: eventData } = useEvent(eventId);
 const { updateEvent } = useEventActions();
@@ -51,7 +67,6 @@ watch(eventData, (event) => {
     crumbs.value = [t("ceremly.event.reminders.crumbEvents"), TYPE_LABELS[event.type] ?? event.title, t("ceremly.event.reminders.pageTitle")];
 }, { immediate: true });
 const reminders = ref<LocalReminder[]>([]);
-const guests = ref<GuestWithStatus[]>([]);
 const savedRemindersSnapshot = ref("[]");
 const deadlineInput = ref("");
 const savedDeadlineInput = ref("");
@@ -77,10 +92,8 @@ function pad2(n: number): string {
     return String(n).padStart(2, "0");
 }
 
-/** Estrae il messaggio (statusMessage del server o message) da un errore $fetch. */
-function errorMessage(e: unknown): string | undefined {
-    const err = e as { data?: { statusMessage?: string }, message?: string } | null;
-    return err?.data?.statusMessage || err?.message;
+function errorMessage(e: unknown): string {
+    return convexErrorMessage(e);
 }
 
 function toDateInputValue(iso: string | null | undefined): string {
@@ -104,26 +117,22 @@ function setRemindersFromServer(list: EventReminderData[]) {
     savedRemindersSnapshot.value = JSON.stringify(reminders.value);
 }
 
-async function load() {
-    loading.value = true;
-    loadError.value = null;
-    try {
-        // Task 14: l'evento è una query viva (non più una GET nel Promise.all);
-        // reminder e ospiti seguono ancora il loro trasporto legacy.
-        const [remRes, guestsRes] = await Promise.all([
-            $fetch<{ reminders: EventReminderData[] }>(`/api/events/${eventId.value}/reminders`),
-            listGuests(eventId.value),
-        ]);
-        guests.value = guestsRes.guests ?? [];
-        setRemindersFromServer(remRes.reminders ?? []);
-    } catch (e) {
-        loadError.value = errorMessage(e) || t("ceremly.event.reminders.loadError");
-    } finally {
-        loading.value = false;
-    }
+function load() {
+    retryGuests();
+    retryReminders();
 }
 
-onMounted(load);
+/**
+ * I reminder del form seguono la query viva **solo** senza modifiche in corso:
+ * `savedRemindersSnapshot` è la sentinella (la stessa del pulsante Salva). Un
+ * reminder inviato dal cron cambia stato da solo; una bozza non viene mai
+ * riscritta sotto le dita dell'utente.
+ */
+watch(serverReminders, (list) => {
+    if (!list) return;
+    if (JSON.stringify(reminders.value) !== savedRemindersSnapshot.value) return;
+    setRemindersFromServer(list);
+}, { immediate: true });
 
 // ─── Dirty guard ─────────────────────────────────────────────────────
 const dirty = computed(() =>
@@ -253,11 +262,8 @@ function guestInitials(g: GuestWithStatus): string {
 async function setGuestExcluded(guestId: string, excluded: boolean) {
     exclusionBusyId.value = guestId;
     try {
-        const updated = await updateGuest(eventId.value, guestId, { remindersDisabled: excluded });
-        const idx = guests.value.findIndex(g => g.id === guestId);
-        if (idx >= 0) {
-            guests.value[idx] = { ...guests.value[idx]!, ...updated };
-        }
+        // La lista è viva: l'esclusione compare da sola, senza patch locale.
+        await updateGuest(eventId.value, guestId, { remindersDisabled: excluded });
         toast.add({
             title: excluded ? t("ceremly.event.reminders.toastGuestExcluded") : t("ceremly.event.reminders.toastGuestReenabled"),
             color: "success",
@@ -311,22 +317,14 @@ async function saveAll() {
             }
 
             // 2. Bulk upsert reminder (gli inviati sono skip silenzioso lato server)
-            const res = await $fetch<{ reminders: EventReminderData[] }>(
-                `/api/events/${eventId.value}/reminders`,
-                {
-                    method: "PUT",
-                    body: {
-                        reminders: reminders.value.map(r => ({
-                            ...(r.id ? { id: r.id } : {}),
-                            daysBefore: Number(r.daysBefore),
-                            subject: r.subject.trim(),
-                            message: r.message.trim(),
-                            enabled: r.enabled,
-                        })),
-                    },
-                },
-            );
-            setRemindersFromServer(res.reminders ?? []);
+            const saved = await saveReminders(reminders.value.map(r => ({
+                ...(r.id ? { id: r.id } : {}),
+                daysBefore: Number(r.daysBefore),
+                subject: r.subject.trim(),
+                message: r.message.trim(),
+                enabled: r.enabled,
+            })));
+            setRemindersFromServer(saved);
         });
         toast.add({ title: t("ceremly.event.reminders.toastSaved"), color: "success" });
     } catch (e) {

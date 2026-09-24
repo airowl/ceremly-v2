@@ -3,7 +3,7 @@
 // composer email con anteprima inbox, copia&incolla WhatsApp, colonna destinatari.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import type { GuestWithStatus } from "~~/shared/types/ceremly";
-import type { GuestListSummary } from "~/composables/useEventGuests";
+import { convexErrorMessage } from "~/composables/useConvexError";
 
 definePageMeta({ layout: "ceremly" });
 
@@ -13,8 +13,7 @@ const config = useRuntimeConfig();
 const { t } = useI18n();
 const eventId = computed(() => String(route.params.id ?? ""));
 
-const { listGuests, sendInvites, sendTest, markWhatsappSent } = useEventGuests();
-const { withRefetch } = useRefetching();
+const { sendInvites, sendTest, markWhatsappSent } = useEventGuests();
 
 // ─── Contesto evento (sidebar) + breadcrumbs ─────────────────────────
 interface CeremlyEventCtx { id: string; title: string; type: string }
@@ -36,22 +35,17 @@ watchEffect(() => {
     crumbs.value = [t("ceremly.event.distribution.crumbEvents"), label, t("ceremly.event.distribution.crumbDistribution")];
 });
 
-// ─── Errori $fetch (shape minima, niente any) ────────────────────────
-interface FetchErrorLike {
-    statusCode?: number;
-    data?: { statusMessage?: string; message?: string };
-    message?: string;
-}
-
-function errOf(e: unknown): FetchErrorLike {
-    return (e ?? {}) as FetchErrorLike;
-}
-
 // ─── Dati ────────────────────────────────────────────────────────────
-const guests = ref<GuestWithStatus[]>([]);
-const summary = ref<GuestListSummary | null>(null);
-const loading = ref(true);
-const loadError = ref<string | null>(null);
+// Task 14: la lista ospiti è una query viva. Un invio, un "Copia" WhatsApp o un
+// RSVP arrivato nel frattempo aggiornano destinatari e cronologia da soli.
+const {
+    guests,
+    summary,
+    isLoading: loading,
+    error: listError,
+    retry: loadAll,
+} = useEventGuestList(eventId);
+const loadError = computed(() => (listError.value ? t("ceremly.event.distribution.loadError") : null));
 
 const subject = ref("");
 const body = ref("");
@@ -77,36 +71,19 @@ watch(eventData, (event) => {
     waTemplate.value = event.distribution.whatsappTemplate || FALLBACK_WA_TEMPLATE;
 }, { immediate: true });
 
-async function loadAll() {
-    loading.value = true;
-    loadError.value = null;
-    try {
-        // Task 14: l'evento arriva dalla query viva (i campi del form si
-        // riempiono nel watch qui sotto, così restano modificabili).
-        const res = await listGuests(eventId.value);
-        guests.value = res.guests;
-        summary.value = res.summary;
-        if (emailTargets.value.length === 0 && waTargets.value.length > 0) {
-            channel.value = "whatsapp";
-        }
-    } catch (e) {
-        loadError.value = errOf(e).data?.statusMessage || errOf(e).message || t("ceremly.event.distribution.loadError");
-    } finally {
-        loading.value = false;
+/**
+ * Canale iniziale: WhatsApp se nessuno ha un'email ma qualcuno può ricevere il
+ * messaggio. Deciso **una volta**, alla prima lettura: una query viva che
+ * cambiasse canale sotto l'utente a ogni aggiornamento sarebbe un difetto.
+ */
+const channelSeeded = ref(false);
+watch(guests, () => {
+    if (channelSeeded.value || loading.value) return;
+    channelSeeded.value = true;
+    if (emailTargets.value.length === 0 && waTargets.value.length > 0) {
+        channel.value = "whatsapp";
     }
-}
-
-async function refreshGuests() {
-    try {
-        const res = await withRefetch(() => listGuests(eventId.value));
-        guests.value = res.guests;
-        summary.value = res.summary;
-    } catch {
-        // refresh silenzioso: i dati visibili restano validi
-    }
-}
-
-onMounted(loadAll);
+});
 
 // ─── Selezione da ?guests= (action bar pagina ospiti) ────────────────
 const preselectedIds = computed<Set<string>>(() => {
@@ -222,9 +199,9 @@ const previewMeta = computed(() => {
 });
 
 // ─── Invio email (overlay a fasi: idle → sending → done) ─────────────
-// L'invio è proporzionale al numero di ospiti (1 dispatch QStash per ospite,
-// sequenziale lato server), quindi è un'operazione lunga e non interrompibile
-// → overlay bloccante con avanzamento reale (pattern C della guida UI).
+// L'invio è proporzionale al numero di ospiti (1 job Convex per ospite,
+// `api.guests.sendInvites` a blocchi), quindi è un'operazione lunga e non
+// interrompibile → overlay bloccante con avanzamento reale (pattern C della guida UI).
 const confirmSendOpen = ref(false);
 const sendPhase = ref<"idle" | "sending" | "done">("idle");
 const testBtn = useButtonSuccess();
@@ -239,10 +216,10 @@ const sendFailed = ref(false); // l'invio si è interrotto a metà
 const sendErrMsg = ref<string | null>(null);
 const sendEta = ref<number | null>(null); // secondi rimanenti stimati
 
-// Chunk ridotto (schema accetta max 200): più risposte intermedie reali →
+// Chunk ridotto (la mutation accetta max 200): più risposte intermedie reali →
 // la barra avanza per step realmente completati e l'ETA è onesta. 50 è il
-// compromesso tra granularità della barra e numero di entry audit/scritture
-// DB (1 logAudit 'invite.sent' + updateEvent per chunk, lato server).
+// compromesso tra granularità della barra e numero di audit/scritture
+// (1 audit 'invite.sent' + patch dell'evento per chunk, lato server).
 const SEND_CHUNK = 50;
 
 const sendPct = computed(() => sendTotal.value > 0 ? Math.round((sentN.value / sendTotal.value) * 100) : 0);
@@ -304,11 +281,10 @@ async function doSend() {
     } catch (e) {
         // Interruzione a metà: i chunk già completati restano accodati.
         sendFailed.value = true;
-        sendErrMsg.value = errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastSendFailDesc");
+        sendErrMsg.value = convexErrorMessage(e, t("ceremly.event.distribution.toastSendFailDesc"));
     } finally {
         sendEta.value = null;
         sendPhase.value = "done";
-        await refreshGuests();
     }
 }
 
@@ -322,7 +298,7 @@ async function doSendTest() {
         });
         toast.add({ title: t("ceremly.event.distribution.toastTestSentTitle"), description: t("ceremly.event.distribution.toastTestSentDesc"), color: "success" });
     } catch (e) {
-        toast.add({ title: t("ceremly.event.distribution.toastTestFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastTestFailDesc"), color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastTestFailTitle"), description: convexErrorMessage(e, t("ceremly.event.distribution.toastTestFailDesc")), color: "error" });
     }
 }
 
@@ -346,7 +322,7 @@ async function saveWaTemplate() {
         });
         toast.add({ title: t("ceremly.event.distribution.toastWaSavedTitle"), description: t("ceremly.event.distribution.toastWaSavedDesc"), color: "success" });
     } catch (e) {
-        toast.add({ title: t("ceremly.event.distribution.toastWaSaveFailTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastWaSaveFailDesc"), color: "error" });
+        toast.add({ title: t("ceremly.event.distribution.toastWaSaveFailTitle"), description: convexErrorMessage(e, t("ceremly.event.distribution.toastWaSaveFailDesc")), color: "error" });
     }
 }
 
@@ -369,9 +345,8 @@ async function copyOne(g: GuestWithStatus) {
     }, 2000);
     try {
         await markWhatsappSent(eventId.value, [g.id]);
-        await refreshGuests();
     } catch (e) {
-        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastCopyOneWarnDesc"), color: "warning" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: convexErrorMessage(e, t("ceremly.event.distribution.toastCopyOneWarnDesc")), color: "warning" });
     }
 }
 
@@ -388,9 +363,8 @@ async function copyAll() {
             await markWhatsappSent(eventId.value, ids.slice(i, i + 500));
         }
         toast.add({ title: t("ceremly.event.distribution.toastCopyAllTitle"), description: t("ceremly.event.distribution.toastCopyAllDesc", { n: waTargets.value.length }), color: "success" });
-        await refreshGuests();
     } catch (e) {
-        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: errOf(e).data?.statusMessage || t("ceremly.event.distribution.toastCopyAllWarnDesc"), color: "warning" });
+        toast.add({ title: t("ceremly.event.distribution.toastCopyWarnTitle"), description: convexErrorMessage(e, t("ceremly.event.distribution.toastCopyAllWarnDesc")), color: "warning" });
     } finally {
         copyingAll.value = false;
     }
