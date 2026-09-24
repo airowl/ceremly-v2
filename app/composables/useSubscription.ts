@@ -17,8 +17,9 @@ import type { Id } from "~~/convex/_generated/dataModel";
  * The exposed surface is unchanged (`currentTier`, `isAtelier`, `unlockEvent`,
  * `openCustomerPortal`, `refreshSubscription`, ...) with one behavioural note:
  * the plan is a **live query**, so it changes by itself when the Creem webhook
- * lands. `refreshSubscription()` is kept as a resolved no-op for its callers;
- * there is nothing to re-fetch.
+ * lands. `refreshSubscription()` is kept as a resolved no-op for API
+ * compatibility (the brief requires it); no UI calls it any more — the
+ * subscription page shows the plan as real-time state instead of a sync button.
  *
  * Every caller gets its own `useConvexQuery`, which is cheap: the Convex client
  * shares one subscription per (query, args) across all of them.
@@ -45,8 +46,13 @@ export function useSubscription() {
     const currentTier = computed<"free" | "atelier">(() => plan.value?.plan ?? "free");
     const isAtelier = computed<boolean>(() => currentTier.value === "atelier");
 
-    /** Owner only, answered by the server (checkout and portal refuse everyone else). */
+    /**
+     * What the billing actions will accept for this caller, answered by the server
+     * from the same role lists the actions check (legacy parity: every member).
+     * `false` while loading: never offer a control the server has not confirmed.
+     */
     const canManageBilling = computed<boolean>(() => plan.value?.canManageBilling ?? false);
+    const canUnlockEvents = computed<boolean>(() => plan.value?.canUnlockEvents ?? false);
 
     /** Kept for existing callers: the plan query is live, so this resolves immediately. */
     async function refreshSubscription(): Promise<void> {
@@ -97,6 +103,7 @@ export function useSubscription() {
         currentTier,
         isAtelier,
         canManageBilling,
+        canUnlockEvents,
         isUpdating,
         planError,
 

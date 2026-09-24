@@ -3,19 +3,12 @@
 // Sidebar 240px + topbar con breadcrumbs (useState 'ceremly-crumbs') e
 // Teleport target '#ceremly-topbar-actions' per le azioni di pagina.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
+import CerEventContextSync from "~/components/ceremly/CerEventContextSync.vue";
 
 interface CeremlyEventCtx {
     id: string;
     title: string;
     type: string;
-}
-
-// Shape difensiva: GET /api/events/:id può rispondere { event } o l'evento diretto
-interface EventLookupResponse {
-    event?: { id?: string; title?: string; type?: string };
-    id?: string;
-    title?: string;
-    type?: string;
 }
 
 const { t, locale, setLocale } = useI18n();
@@ -57,22 +50,7 @@ const eventId = computed(() => {
 // Cache leggera del contesto evento (titolo/tipo) condivisa con le pagine
 const eventCtx = useState<CeremlyEventCtx | null>("ceremly-event-ctx", () => null);
 
-watch(
-    eventId,
-    async (id) => {
-        if (!id || eventCtx.value?.id === id) return;
-        try {
-            const res = await $fetch<EventLookupResponse>(`/api/events/${id}`);
-            const ev = res.event ?? res;
-            if (ev.id && ev.title) {
-                eventCtx.value = { id: ev.id, title: ev.title, type: ev.type ?? "" };
-            }
-        } catch {
-            eventCtx.value = { id, title: t("ceremly.layout.eventFallback"), type: "" };
-        }
-    },
-    { immediate: true },
-);
+// Filled by <CerEventContextSync> (live `events.get`) and by the event pages.
 
 const eventGroupLabel = computed(() => {
     if (!eventCtx.value || eventCtx.value.id !== eventId.value) return t("ceremly.layout.eventFallback");
@@ -138,6 +116,7 @@ onMounted(async () => {
             </NuxtLink>
 
             <template v-if="eventId">
+                <CerEventContextSync v-if="eventId" :event-id="eventId" />
                 <div class="cer-nav-group">{{ eventGroupLabel }}</div>
                 <NuxtLink
                     v-for="item in eventNav"

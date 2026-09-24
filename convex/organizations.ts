@@ -771,16 +771,48 @@ export const updateOrganization = mutation({
 });
 
 /**
- * Deletes the active organization and everything that hangs off it.
+ * Deletes an organization and everything that hangs off it, in one transaction.
  *
- * Owner only (plugin parity). Members are detached rather than deleted: their
- * `appUsers` row keeps existing, without an active organization, and the next
- * login self-heals a personal workspace.
+ * Owner only (plugin parity). The target is the caller's active organization,
+ * or `organizationId` when given (the delete modal names one): that id is not
+ * trusted — the caller's own membership in it is looked up and must be `owner`,
+ * exactly as `setActive` verifies its target. Task 14 part b, fix round 1: the
+ * UI used to activate the target, delete, then activate a fallback — three
+ * mutations, so a failure in between could switch organizations without
+ * deleting, or delete and still report failure. Target check, delete and
+ * fallback are now this one mutation.
+ *
+ * Members are detached rather than deleted: their `appUsers` row keeps existing.
+ * Anyone whose active organization was the deleted one is repointed to another
+ * organization they belong to (oldest membership first — the legacy fallback
+ * was "first in list"), or left without one if there is none (the next login
+ * self-heals a personal workspace).
  */
 export const deleteOrganization = mutation({
-    args: {},
-    handler: async (ctx) => {
-        const authz = await requireRole(ctx, ORGANIZATION_DELETE_ROLES);
+    args: { organizationId: v.optional(v.id("organizations")) },
+    handler: async (ctx, args) => {
+        let authz: { appUserId: Id<"appUsers">; authUserId: string; organizationId: Id<"organizations"> };
+        if (args.organizationId === undefined) {
+            authz = await requireRole(ctx, ORGANIZATION_DELETE_ROLES);
+        } else {
+            const appUser = await requireAppUser(ctx);
+            const target = await findMembership(ctx, args.organizationId, appUser._id);
+            if (!target) {
+                // A foreign organization is indistinguishable from a missing one.
+                throw forbidden("MEMBERSHIP_NOT_FOUND", { organizationId: args.organizationId });
+            }
+            if (!ORGANIZATION_DELETE_ROLES.includes(target.role)) {
+                throw forbidden("INSUFFICIENT_ROLE", {
+                    role: target.role,
+                    required: [...ORGANIZATION_DELETE_ROLES],
+                });
+            }
+            authz = {
+                appUserId: appUser._id,
+                authUserId: appUser.authUserId,
+                organizationId: args.organizationId,
+            };
+        }
         const organizationId = authz.organizationId;
 
         const memberships = await ctx.db
@@ -793,7 +825,15 @@ export const deleteOrganization = mutation({
 
             const member = await ctx.db.get(membership.userId);
             if (member?.activeOrganizationId === organizationId) {
-                await ctx.db.patch(member._id, { activeOrganizationId: undefined });
+                const next = (
+                    await ctx.db
+                        .query("memberships")
+                        .withIndex("by_user", (q) => q.eq("userId", member._id))
+                        .collect()
+                )
+                    .filter((other) => other.organizationId !== organizationId)
+                    .sort((a, b) => a.createdAt - b.createdAt)[0];
+                await ctx.db.patch(member._id, { activeOrganizationId: next?.organizationId });
             }
         }
 
@@ -822,10 +862,21 @@ export const deleteOrganization = mutation({
             actorAuthUserId: authz.authUserId,
             targetType: "organization",
             targetId: organizationId,
-            details: { memberships: memberships.length, invitations: invitations.length },
+            details: {
+                memberships: memberships.length,
+                invitations: invitations.length,
+                explicitTarget: args.organizationId !== undefined,
+            },
         });
 
-        return { deleted: true, memberships: memberships.length, invitations: invitations.length };
+        const caller = await ctx.db.get(authz.appUserId);
+        return {
+            deleted: true,
+            memberships: memberships.length,
+            invitations: invitations.length,
+            // Where the caller landed (null: no organization left).
+            activeOrganizationId: caller?.activeOrganizationId ?? null,
+        };
     },
 });
 

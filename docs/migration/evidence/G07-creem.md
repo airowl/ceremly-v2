@@ -91,6 +91,17 @@ expose. The billing functions therefore call `requireRole(ctx, ["owner"])` throu
 (`billingAuthz`) and orchestrate the SDK call themselves — the documented SDK usage plus the two
 component mutations the component itself performs.
 
+**Correction (2026-09-24, Task 14 part b, fix round 1):** the owner-only rule above was a behaviour
+change against the legacy, not a decision. The product ruling is parity: the legacy Celebration
+unlock (`POST /api/events/:id/unlock`) used `requireWrite` (owner | admin | member), and Atelier
+checkout plus the customer portal were Creem Better Auth plugin endpoints that checked only the
+session. `checkoutsCreate` and `customersPortalUrl` now accept every role
+(`CELEBRATION_CHECKOUT_ROLES`, `SUBSCRIPTION_BILLING_ROLES` in `convex/billing.ts`), and the gate row
+"anonymous and non-owner callers refused" now reads "anonymous callers refused; every member reaches
+the provider". The billing entity is still the organization, so a member opening the portal manages
+the organization's subscription — the one difference from the user-scoped legacy plugin. Hermetic
+coverage: one case per role in `convex/billing.test.ts`; the live case was updated but **not re-run**.
+
 ## Verified alongside
 
 - `pnpm test:gate:g07` → 7 live tests passed, three consecutive runs

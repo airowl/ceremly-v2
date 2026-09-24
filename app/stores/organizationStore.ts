@@ -84,9 +84,20 @@ export const useOrganizationStore = defineStore('organization', () => {
 
     const isLoading = computed(() => organizationsQuery.isPending.value || activeQuery.isPending.value);
 
+    /**
+     * The members page waits for both of its lists. Only meaningful with an active
+     * organization: without one the two queries refuse and never become "loaded".
+     */
+    const isTeamLoading = computed(() => isLoading.value || (currentOrganization.value !== null
+        && (membersQuery.isPending.value || invitationsQuery.isPending.value)));
+
+    // A failed read is an error, never an empty list: without the invitations
+    // query here, a failure would look like "no pending invitations".
     const error = computed<string | null>(() => {
         const failed = organizationsQuery.error.value ?? activeQuery.error.value
-            ?? (currentOrganization.value ? membersQuery.error.value : null);
+            ?? (currentOrganization.value
+                ? membersQuery.error.value ?? invitationsQuery.error.value
+                : null);
         return failed ? convexErrorMessage(failed) : null;
     });
 
@@ -142,20 +153,16 @@ export const useOrganizationStore = defineStore('organization', () => {
     }
 
     /**
-     * Deletes an organization. The server deletes the **active** one (owner only),
-     * so a different target is activated first; afterwards the caller lands on
-     * another organization they belong to, if any (legacy fallback: first in list).
+     * Deletes an organization in **one** mutation: the server verifies the caller
+     * owns `organizationId`, deletes it and repoints every affected active
+     * organization (the caller's included) in the same transaction. There is no
+     * client-side "activate, delete, activate fallback" sequence to fail halfway.
      */
-    async function deleteOrganization(organizationId: string): Promise<ActionResult> {
-        const result = await run(async () => {
-            if (currentOrganization.value?.id !== organizationId) {
-                await setActiveMutation.mutate({ organizationId: organizationId as Id<'organizations'> });
-            }
-            await deleteMutation.mutate({});
-            const next = organizations.value.find(o => o.id !== organizationId);
-            if (next) await setActiveMutation.mutate({ organizationId: next.id as Id<'organizations'> });
-        }, 'Error deleting organization');
-        return result;
+    function deleteOrganization(organizationId: string): Promise<ActionResult> {
+        return run(
+            () => deleteMutation.mutate({ organizationId: organizationId as Id<'organizations'> }),
+            'Error deleting organization',
+        );
     }
 
     function inviteMember(email: string, inviteRole: OrgRole = 'member'): Promise<ActionResult> {
@@ -189,6 +196,7 @@ export const useOrganizationStore = defineStore('organization', () => {
         members,
         pendingInvitations,
         isLoading,
+        isTeamLoading,
         error,
         // Getters
         role,

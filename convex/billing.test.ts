@@ -114,35 +114,64 @@ const processEvent = (t: Test, args: Record<string, unknown>) =>
 // ---------------------------------------------------------------------------
 
 describe("checkout authorization", () => {
-    it("refuses anonymous and non-owner callers before the provider is needed", async () => {
-        const { t, ownerSession, organizationId } = await bootstrap();
-        const eventId = await insertEvent(t, organizationId);
+    it("refuses anonymous callers before the provider is needed", async () => {
+        const { t } = await bootstrap();
 
-        // No identity at all.
         await expectCode(t.action(api.billing.checkoutsCreate, { tier: "atelier" }), "UNAUTHENTICATED");
+        await expectCode(t.action(api.billing.customersPortalUrl, {}), "UNAUTHENTICATED");
+    });
 
-        // A member of the same organization: allowed to see the plan, not to pay.
-        const invite = await ownerSession.mutation(api.organizations.inviteMember, {
-            email: member.email,
-            role: "member",
+    // Legacy parity (Task 14 part b, fix round 1): `POST /api/events/:id/unlock`
+    // used `requireWrite` (owner | admin | member), and Atelier checkout and the
+    // portal were Creem Better Auth plugin endpoints that checked only the session.
+    // Every role therefore passes authorization and stops at the missing provider
+    // credential — proof that no provider call happens before the guards.
+    for (const role of ["owner", "admin", "member"] as const) {
+        it(`lets a ${role} start both checkouts and open the portal, as the legacy did`, async () => {
+            const { t, ownerSession, organizationId } = await bootstrap();
+            const eventId = await insertEvent(t, organizationId);
+
+            let caller = ownerSession;
+            if (role !== "owner") {
+                const invite = await ownerSession.mutation(api.organizations.inviteMember, {
+                    email: member.email,
+                    role,
+                });
+                caller = session(t, member);
+                await caller.mutation(api.organizations.ensureProvisioned, {});
+                await caller.mutation(api.organizations.acceptInvitation, { token: invite.token });
+            }
+
+            await expectCode(
+                caller.action(api.billing.checkoutsCreate, { tier: "celebration", eventId }),
+                "CREEM_API_KEY_NOT_CONFIGURED",
+            );
+            await expectCode(
+                caller.action(api.billing.checkoutsCreate, { tier: "atelier" }),
+                "CREEM_API_KEY_NOT_CONFIGURED",
+            );
+            await expectCode(caller.action(api.billing.customersPortalUrl, {}), "CREEM_API_KEY_NOT_CONFIGURED");
+
+            const plan = await caller.query(api.billing.planForActiveOrganization, {});
+            expect(plan.canManageBilling).toBe(true);
+            expect(plan.canUnlockEvents).toBe(true);
         });
-        const memberSession = session(t, member);
-        await memberSession.mutation(api.organizations.ensureProvisioned, {});
-        await memberSession.mutation(api.organizations.acceptInvitation, { token: invite.token });
+    }
 
-        await expectCode(
-            memberSession.action(api.billing.checkoutsCreate, { tier: "celebration", eventId }),
-            "INSUFFICIENT_ROLE",
+    it("refuses a caller who is not a member of the active organization", async () => {
+        const { t } = await bootstrap();
+        const outsider = session(t, member);
+        const outsiderAccount = await outsider.mutation(api.organizations.ensureProvisioned, {});
+        // Point the outsider's active organization at one they do not belong to.
+        const foreign = await t.run(async (ctx) =>
+            await ctx.db.insert("organizations", { name: "Foreign", slug: "foreign-org", createdAt: Date.now() }),
         );
-        await expectCode(memberSession.action(api.billing.customersPortalUrl, {}), "INSUFFICIENT_ROLE");
+        await t.run(async (ctx) => {
+            await ctx.db.patch(outsiderAccount.appUserId, { activeOrganizationId: foreign });
+        });
 
-        // The owner gets past authorization and stops at the missing provider
-        // credential — proof that no provider call happens before the guards.
-        await expectCode(
-            ownerSession.action(api.billing.checkoutsCreate, { tier: "celebration", eventId }),
-            "CREEM_API_KEY_NOT_CONFIGURED",
-        );
-        await expectCode(ownerSession.action(api.billing.customersPortalUrl, {}), "CREEM_API_KEY_NOT_CONFIGURED");
+        await expectCode(outsider.action(api.billing.customersPortalUrl, {}), "MEMBERSHIP_NOT_FOUND");
+        await expectCode(outsider.action(api.billing.checkoutsCreate, { tier: "atelier" }), "MEMBERSHIP_NOT_FOUND");
     });
 
     it("does not accept an entityId from the client", async () => {
@@ -324,7 +353,8 @@ describe("plan for the active organization", () => {
 
         const memberPlan = await memberSession.query(api.billing.planForActiveOrganization, {});
         expect(memberPlan.plan).toBe("free");
-        expect(memberPlan.canManageBilling).toBe(false);
+        // Legacy parity: every member could reach the Creem plugin endpoints.
+        expect(memberPlan.canManageBilling).toBe(true);
     });
 
     it("is atelier while the subscription is active, and back to free when it ends", async () => {

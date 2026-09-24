@@ -12,9 +12,33 @@ import { action, internalAction, internalMutation, internalQuery, query } from "
 import type { ActionCtx, MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { forbidden } from "./lib/identity";
-import { requireActiveOrganization, requireRole, type OrganizationRole } from "./lib/authorization";
+import {
+    DOMAIN_WRITE_ROLES,
+    ORGANIZATION_ROLES,
+    requireActiveOrganization,
+    requireRole,
+    type OrganizationRole,
+} from "./lib/authorization";
+
 import { writeAudit } from "./lib/audit";
 import { limitsForOrgPlan, productIdForTier, type OrgPlan, type PaidTier } from "./lib/pricing";
+
+/**
+ * Who may pay, mirrored from the legacy runtime (Task 14 part b, fix round 1).
+ *
+ * - **Celebration** (per-event unlock): `POST /api/events/:id/unlock` guarded with
+ *   `requireWrite`, i.e. owner | admin | member — every role writes domain data.
+ * - **Atelier checkout and the customer portal**: the legacy used the Creem
+ *   Better Auth plugin endpoints (`/api/auth/creem/*`), which check only for a
+ *   session — no organization role at all. So every member of the organization.
+ *
+ * G07 had made both owner-only; that was a behaviour change nobody decided, and
+ * the product ruling is parity. What did change, and is stated rather than
+ * hidden: the billing entity is now the **organization**, not the user, so a
+ * member opening the portal manages the organization's subscription.
+ */
+export const CELEBRATION_CHECKOUT_ROLES: readonly OrganizationRole[] = DOMAIN_WRITE_ROLES;
+export const SUBSCRIPTION_BILLING_ROLES: readonly OrganizationRole[] = ORGANIZATION_ROLES;
 
 
 /**
@@ -243,9 +267,9 @@ function requireCreemConfiguration(): void {
 /**
  * `api.billing.checkoutsCreate` — starts a payment for the active organization.
  *
- * Owner only (legacy: only the billing owner could start a checkout). The event
- * is validated here *and* again at fulfillment: a foreign event id is refused
- * before Creem is even called.
+ * Roles per tier as in the legacy (see `CELEBRATION_CHECKOUT_ROLES` /
+ * `SUBSCRIPTION_BILLING_ROLES`). The event is validated here *and* again at
+ * fulfillment: a foreign event id is refused before Creem is even called.
  */
 export const checkoutsCreate = action({
     args: {
@@ -257,7 +281,9 @@ export const checkoutsCreate = action({
         // Explicit return type on purpose: `internal.billing.*` is referenced from
         // inside, so without it TypeScript cannot break the inference cycle.
         const identity: BillingIdentity = await ctx.runQuery(internal.billing.billingAuthz, {
-            roles: ["owner"],
+            roles: [
+                ...(args.tier === "celebration" ? CELEBRATION_CHECKOUT_ROLES : SUBSCRIPTION_BILLING_ROLES),
+            ],
         });
         const productId = productIdForTier(args.tier);
         if (!productId) {
@@ -303,13 +329,14 @@ export const checkoutsCreate = action({
 
 /**
  * `api.billing.customersPortalUrl` — the Creem customer portal for the active
- * organization. Owner only: it exposes invoices and payment methods.
+ * organization. Any member, as the legacy plugin endpoint (session only); it
+ * exposes the organization's invoices and payment methods.
  */
 export const customersPortalUrl = action({
     args: {},
     handler: async (ctx): Promise<{ url: string }> => {
         const identity: BillingIdentity = await ctx.runQuery(internal.billing.billingAuthz, {
-            roles: ["owner"],
+            roles: [...SUBSCRIPTION_BILLING_ROLES],
         });
         requireCreemConfiguration();
 
@@ -328,8 +355,9 @@ export const customersPortalUrl = action({
  * `api.billing.planForActiveOrganization` — the plan the active organization is
  * on, with the limits the domain enforces.
  *
- * Readable by any member (the dashboard shows the plan); mutations are what
- * require the owner.
+ * Readable by any member (the dashboard shows the plan). `canManageBilling` /
+ * `canUnlockEvents` tell the UI what the billing actions will accept for this
+ * caller, from the same role lists the actions check.
  */
 export const planForActiveOrganization = query({
     args: {},
@@ -351,7 +379,8 @@ export const planForActiveOrganization = query({
             organizationId: authz.organizationId,
             plan,
             limits: limitsForOrgPlan(plan),
-            canManageBilling: authz.role === "owner",
+            canManageBilling: SUBSCRIPTION_BILLING_ROLES.includes(authz.role),
+            canUnlockEvents: CELEBRATION_CHECKOUT_ROLES.includes(authz.role),
             subscription: subscription
                 ? {
                     id: subscription.id,

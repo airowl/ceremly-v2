@@ -1295,6 +1295,8 @@
   },
   "subscription": {
     "title": "Subscription",
+    "realtime": "Updated in real time",
+    "noBillingPermission": "Billing for this plan is managed by whoever can administer the organization's subscription.",
     "sync": "Sync",
     "synced": "Synced",
     "syncError": "Sync error",
@@ -3753,8 +3755,7 @@
       "loading": "Redirecting to payment…",
       "later": "Maybe later",
       "errorTitle": "Something went wrong",
-      "errorDesc": "We could not start the payment. Please try again in a few seconds.",
-      "ownerOnly": "Only the organization owner can start a payment."
+      "errorDesc": "We could not start the payment. Please try again in a few seconds."
     }
   }
 }

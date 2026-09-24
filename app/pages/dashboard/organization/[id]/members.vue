@@ -143,7 +143,7 @@ async function cancelInvitation(inv: OrganizationInvitation) {
         <template #body>
             <div class="p-4 sm:p-6 space-y-6">
                 <AppTableSkeleton
-                    v-if="orgStore.isLoading && !orgStore.currentOrganization"
+                    v-if="orgStore.isTeamLoading"
                     :rows="4"
                     :columns="3"
                     avatar

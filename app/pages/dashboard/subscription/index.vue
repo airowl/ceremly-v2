@@ -1,12 +1,11 @@
 <script setup lang="ts">
 
 const { t, locale } = useI18n();
-// Task 14 (part b): the plan is a live Convex query of the active organization;
-// `refreshSubscription` is kept by the composable as a no-op for the sync button.
-const { subscription, isAtelier, hasActiveSubscription, canManageBilling, openCustomerPortal, refreshSubscription } = useSubscription();
+// Task 14 (part b): the plan is a live Convex query of the active organization,
+// so there is no "sync" to run — the page shows it as real-time state instead.
+const { subscription, isAtelier, hasActiveSubscription, canManageBilling, openCustomerPortal } = useSubscription();
 // Task 14: lista eventi da Convex (`events` è una query viva).
-const { events, isLoading: eventsLoading, retry: retryEvents } = useEvents();
-const { fetchSession } = useAuth();
+const { events, isLoading: eventsLoading } = useEvents();
 const localePath = useLocalePath();
 const toast = useToast();
 
@@ -38,19 +37,9 @@ async function handleOpenPortal() {
     finally { isPortalLoading.value = false; }
 }
 
-// Sync
-const isSyncing = ref(false);
-async function handleSync() {
-    isSyncing.value = true;
-    try {
-        await refreshSubscription();
-        await fetchSession();
-        retryEvents();
-        toast.add({ title: t("subscription.synced"), color: "success" });
-    } catch { toast.add({ title: t("subscription.syncError"), color: "error" }); }
-    finally { isSyncing.value = false; }
-}
-
+// Every portal control follows the same rule the server applies
+// (`billing.customersPortalUrl` accepts the roles behind `canManageBilling`).
+const canOpenPortal = computed(() => isAtelier.value && hasActiveSubscription.value && canManageBilling.value);
 </script>
 
 <template>
@@ -59,9 +48,9 @@ async function handleSync() {
             <UDashboardNavbar :title="$t('subscription.title')">
                 <template #leading><UDashboardSidebarCollapse /></template>
                 <template #right>
-                    <UTooltip :text="$t('subscription.sync')">
-                        <UButton :loading="isSyncing" color="neutral" variant="ghost" icon="i-lucide-refresh-cw" size="sm" square @click="handleSync" />
-                    </UTooltip>
+                    <UBadge color="success" variant="subtle" size="sm" leading-icon="i-lucide-radio">
+                        {{ $t('subscription.realtime') }}
+                    </UBadge>
                 </template>
             </UDashboardNavbar>
         </template>
@@ -87,9 +76,12 @@ async function handleSync() {
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <UButton v-if="isAtelier && hasActiveSubscription && canManageBilling" :loading="isPortalLoading" color="neutral" variant="soft" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">
+                            <UButton v-if="canOpenPortal" :loading="isPortalLoading" color="neutral" variant="soft" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">
                                 {{ $t('subscription.manageAtelier') }}
                             </UButton>
+                            <p v-else-if="isAtelier" class="text-sm text-muted max-w-56">
+                                {{ $t('subscription.noBillingPermission') }}
+                            </p>
                             <UButton v-else :to="localePath('/pricing')" color="primary" size="sm" leading-icon="i-lucide-sparkles">
                                 {{ $t('subscription.discoverAtelier') }}
                             </UButton>
@@ -118,7 +110,7 @@ async function handleSync() {
                 </div>
 
                 <!-- Gestione fatturazione Atelier -->
-                <div v-if="isAtelier && hasActiveSubscription" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div v-if="canOpenPortal" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <UPageCard :title="$t('subscription.paymentMethods.title')" variant="subtle">
                         <UButton :loading="isPortalLoading" color="neutral" variant="outline" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">{{ $t('subscription.paymentMethods.cta') }}</UButton>
                     </UPageCard>

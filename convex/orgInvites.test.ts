@@ -358,3 +358,71 @@ describe("organization reads for the UI", () => {
         expect(bobRow.userId).toBe(bob.appUserId satisfies Id<"appUsers">);
     });
 });
+
+describe("organizations.deleteOrganization is one atomic step (fix round 1)", () => {
+    async function twoOrganizations() {
+        const { t, alice } = await bootstrap();
+        const second = await alice.s.mutation(api.organizations.createOrganization, { name: "Seconda" });
+        // `createOrganization` activates the new one: go back to the first.
+        await alice.s.mutation(api.organizations.setActive, { organizationId: alice.organizationId });
+        return { t, alice, secondId: second.organizationId };
+    }
+
+    it("deletes a named organization without touching the caller's active one", async () => {
+        const { t, alice, secondId } = await twoOrganizations();
+
+        const result = await alice.s.mutation(api.organizations.deleteOrganization, { organizationId: secondId });
+
+        expect(result).toMatchObject({ deleted: true, activeOrganizationId: alice.organizationId });
+        expect(await t.run(async (ctx) => await ctx.db.get(secondId))).toBeNull();
+        const active = await alice.s.query(api.organizations.getActiveOrganization, {});
+        expect(active?.organizationId).toBe(alice.organizationId);
+        const audit = (await rows(t, "auditLogs")).filter((row) => row.action === "organization.deleted");
+        expect(audit).toHaveLength(1);
+        expect(audit[0]).toMatchObject({ targetId: secondId, details: { explicitTarget: true } });
+    });
+
+    it("repoints everyone whose active organization was deleted, in the same transaction", async () => {
+        const { t, alice, secondId } = await twoOrganizations();
+        // Bob belongs to Alice's first organization and to his own; his active one is Alice's.
+        const { token } = await alice.s.mutation(api.organizations.inviteMember, {
+            email: "bob@example.com",
+            role: "member",
+        });
+        const bob = await addUser(t, "bob@example.com", "Bob");
+        await bob.s.mutation(api.organizations.acceptInvitation, { token });
+
+        const result = await alice.s.mutation(api.organizations.deleteOrganization, {});
+
+        // Alice lands on her remaining organization, Bob on his personal one.
+        expect(result.activeOrganizationId).toBe(secondId);
+        expect((await alice.s.query(api.organizations.getActiveOrganization, {}))?.organizationId).toBe(secondId);
+        expect((await bob.s.query(api.organizations.getActiveOrganization, {}))?.organizationId).toBe(bob.organizationId);
+    });
+
+    it("refuses an admin of the target and a non-member, and changes nothing", async () => {
+        const { t, alice, secondId } = await twoOrganizations();
+        const { token } = await alice.s.mutation(api.organizations.inviteMember, {
+            email: "bob@example.com",
+            role: "admin",
+        });
+        const bob = await addUser(t, "bob@example.com", "Bob");
+        await bob.s.mutation(api.organizations.acceptInvitation, { token });
+        const carol = await addUser(t, "carol@example.com", "Carol");
+        const bobActiveBefore = (await bob.s.query(api.organizations.getActiveOrganization, {}))?.organizationId;
+
+        await expectCode(
+            bob.s.mutation(api.organizations.deleteOrganization, { organizationId: alice.organizationId }),
+            "INSUFFICIENT_ROLE",
+        );
+        await expectCode(
+            carol.s.mutation(api.organizations.deleteOrganization, { organizationId: secondId }),
+            "MEMBERSHIP_NOT_FOUND",
+        );
+
+        expect(await t.run(async (ctx) => await ctx.db.get(alice.organizationId))).not.toBeNull();
+        expect(await t.run(async (ctx) => await ctx.db.get(secondId))).not.toBeNull();
+        expect((await bob.s.query(api.organizations.getActiveOrganization, {}))?.organizationId).toBe(bobActiveBefore);
+        expect((await rows(t, "auditLogs")).filter((row) => row.action === "organization.deleted")).toHaveLength(0);
+    });
+});

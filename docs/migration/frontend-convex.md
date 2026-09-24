@@ -344,14 +344,21 @@ sono mutation `organizations.*`. Cambiano tre cose per chi lo usa:
 Le pagine di dettaglio aprono su un id di rotta: `ensureActiveOrganization` cambia
 organizzazione **solo se diversa** dall'attiva, perché `setActive` scrive un audit
 `organization.activated` e il legacy lo faceva a ogni montaggio. `deleteOrganization`
-lato server cancella l'organizzazione **attiva** (owner): lo store attiva il bersaglio
-se serve, cancella, e poi ripiega sulla prima organizzazione rimasta (il fallback che
-il legacy faceva in `loadCurrentOrganization`). `createOrganization` in Convex rende
+è **una sola mutation atomica** (fix round 1): accetta un `organizationId` bersaglio
+opzionale, verificato come in `setActive` (membership del chiamante, ruolo `owner`),
+cancella e riposiziona **nella stessa transazione** l'organizzazione attiva di
+chiunque la stesse usando (la membership più vecchia rimasta, il fallback "primo in
+lista" del legacy). La prima versione faceva attiva→cancella→attiva fallback con tre
+mutation dal client: un guasto a metà poteva cambiare organizzazione senza cancellare,
+o cancellare e riportare errore. `createOrganization` in Convex rende
 attiva la nuova organizzazione (il plugin no): differenza voluta, la mantengo.
 
 Tre letture additive nel backend, perché la UI non aveva dove prenderle:
 `listMembers` aggiunge `name`/`image` (vivono nel componente Better Auth, Task 12) e
-`isSelf`; `listMyOrganizations` aggiunge `createdAt` (colonna della tabella). Gli
+`isSelf`; `listMyOrganizations` aggiunge `createdAt` (colonna della tabella).
+L'errore dello store include anche la query degli inviti (un guasto non si presenta
+più come "nessun invito pendente") e la pagina membri aspetta entrambe le liste
+(`isTeamLoading`). Gli
 adattatori (ms → ISO, forma `member.user` del plugin, nome mancante → email) sono in
 `app/lib/organizations.ts`, testati nel gate.
 
@@ -362,7 +369,9 @@ adattatori (ms → ISO, forma `member.user` del plugin, nome mancante → email)
 `refreshSubscription`, `isUpdating`) più `canManageBilling`. Il piano è
 `billing.planForActiveOrganization`, **viva**: cambia da sola quando atterra il
 webhook Creem, quindi `refreshSubscription()` è un **no-op dichiarato** tenuto per
-i chiamanti (bottone "sincronizza"). Sul caricamento o su un errore il tier è
+compatibilità dell'API; nessuna UI lo chiama più (fix round 1): il bottone
+"sincronizza" della pagina abbonamento, che diceva sempre "sincronizzato" dopo una
+funzione vuota, è sostituito da un badge "Aggiornato in tempo reale". Sul caricamento o su un errore il tier è
 `free`: il client non concede mai un piano che il server non ha dichiarato.
 
 Checkout e portale sono **action** (chiamano Creem), e `convex-vue` 0.1.5 non ha un
@@ -374,11 +383,21 @@ risolta dal server, il mapping tier → product id è configurazione server, nes
 segreto Creem nel browser (il gate verifica anche che `useSubscription` non contenga
 `organizationId`).
 
-Differenza di comportamento da sapere: il checkout Convex è **owner-only** (G07),
-il legacy `POST /api/events/:id/unlock` accettava ogni membro con permesso di
-scrittura. Il paywall ora dice "solo il proprietario può avviare un pagamento"
-(`ceremly.paywall.ownerOnly`) invece di "riprova", e il bottone del portale nella
-pagina abbonamento compare solo con `canManageBilling`.
+**Ruoli: parità col legacy (fix round 1, decisione di prodotto).** La prima versione
+ereditava da G07 un checkout e un portale **owner-only**, che era un cambiamento di
+comportamento mai deciso. Il legacy: sblocco Celebrazione `POST /api/events/:id/unlock`
+con `requireWrite` (owner | admin | member); checkout Atelier e portale erano gli
+endpoint del plugin Creem Better Auth, che controllano solo la sessione. Ora
+`checkoutsCreate` e `customersPortalUrl` accettano tutti i ruoli
+(`CELEBRATION_CHECKOUT_ROLES`, `SUBSCRIPTION_BILLING_ROLES` in `convex/billing.ts`),
+`planForActiveOrganization` restituisce `canManageBilling`/`canUnlockEvents` dalle
+stesse liste, un caso convex-test per ruolo, e la correzione è annotata nell'evidenza
+G07. Differenza che resta, dichiarata: l'entità di billing è l'**organizzazione**, non
+l'utente, quindi un membro che apre il portale gestisce l'abbonamento
+dell'organizzazione. Nella pagina abbonamento **ogni** controllo del portale (gestisci,
+metodi di pagamento, storico fatture) segue `canOpenPortal` (Atelier attivo e
+`canManageBilling`), e chi è su Atelier senza permesso vede un messaggio informativo
+invece di "Scopri Atelier".
 
 `userStore` non espone più `subscription`/`getSubscription`/`fetchSubscription`
 (inutilizzati): chiamavano `useSubscription()` dentro un `computed`, che con una
@@ -437,18 +456,24 @@ le email "senza coda" è corretto). Resta aperto solo lo **sweep** degli inviti
 `expired`: igiene del dato, non correttezza (la scadenza è valutata in lettura
 ovunque).
 
-### Un residuo dello Step 3 trovato qui
+### Un residuo dello Step 3, e il gate che non lo vedeva (fix round 1)
 
-`app/layouts/ceremly.vue` legge ancora titolo/tipo dell'evento con
-`$fetch("/api/events/${id}")` per il gruppo di navigazione. Il gate non lo vede
-(scansiona composable e store, non i layout). Non è billing, quindi non l'ho toccato:
-va migrato a `api.events.get` (o letto dalla query viva della pagina), ed è un buon
-motivo per estendere la scansione `/api/**` a `app/layouts`.
+`app/layouts/ceremly.vue` leggeva titolo/tipo dell'evento con
+`$fetch("/api/events/${id}")`. Ora lo fa `CerEventContextSync` (un componente montato
+dal layout solo con un id, perché `useConvexQuery` non ha uno "skip") con `useEvent`,
+la stessa query viva della pagina (una sola sottoscrizione per query+args). Il gate ha
+un secondo scan `/api/**` su `app/layouts`, `app/pages`, `app/components`, con un
+registro diviso per motivo — trasporto (bridge anonimi, download CSV/PNG), debito
+Step 5 (upload, export), una pagina morta del template (`profile/members.vue`, rotta
+inesistente) — e l'asserzione "ogni voce è ancora vera". Visto **rosso** con tre
+sonde: il vecchio layout, un componente nuovo con `$fetch` a `/api/organizations/…`,
+e una voce del registro resa falsa.
 
 ### Commit
 
-`a440b31` (backend: consegna dell'invito org + letture per la UI), più il commit UI
-`feat(migration): move organization and billing UI to Convex`.
+`a440b31` (backend: consegna dell'invito org + letture per la UI), `0a08636` (UI,
+gate), più il commit del fix round 1 (parità ruoli billing, delete atomico, portale,
+layout, gate UI).
 
 ### Nessuna run live
 
@@ -536,7 +561,8 @@ consegna in `inviteMember`, campi additivi in `listMembers`/`listMyOrganizations
 `app/stores/userStore.ts`, le pagine `dashboard/organization/{index,[id]/index,[id]/members}.vue`,
 `dashboard/subscription/index.vue`, `dashboard/events/[id]/index.vue`, `invite/[id].vue`,
 `layouts/ceremly.vue`, i componenti `admin/orgs/AddOrgModal.client.vue` e
-`ceremly/CerCelebrationPaywall.vue`, `i18n/locales/*` (`ceremly.paywall.ownerOnly`).
+`ceremly/CerCelebrationPaywall.vue`, `ceremly/CerEventContextSync.vue` (fix round 1),
+`i18n/locales/*` (`subscription.realtime`, `subscription.noBillingPermission`).
 Test: `convex/orgInvites.test.ts` (11 casi, nuovo), +8 casi nel gate; `BETTER_AUTH_SECRET`
 impostato nelle suite che invitano (`organizations`, `billing`, `auxiliaryFlows`).
 

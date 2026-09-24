@@ -225,6 +225,100 @@ describe("frontend data layer: una strada sola per i dati di dominio", () => {
 });
 
 /**
+ * Task 14 part b, fix round 1 — the `/api/**` scan above covers only
+ * `app/composables` and `app/stores`, and that blind spot was real: the
+ * `ceremly` layout read the event with `$fetch("/api/events/:id")` after Step 3
+ * had "finished" events. This second scan covers the UI layer (`app/layouts`,
+ * `app/pages`, `app/components`) with its own ledger, split by reason:
+ *
+ * - `UI_TRANSPORT`: not debt — anonymous Worker bridges (the IP becomes a signed
+ *   digest there) and binary/signed downloads opened as a URL;
+ * - `UI_PENDING`: debt with a deadline, like `PENDING` above;
+ * - `UI_DEAD`: a template leftover whose endpoint does not exist.
+ *
+ * Each entry names the exact path, and a second assertion demands every entry is
+ * still present — the list can only shrink.
+ */
+const UI_DIRS = ["app/layouts", "app/pages", "app/components"] as const;
+
+const UI_TRANSPORT: Record<string, readonly string[]> = {
+    "app/pages/index.vue": ["/api/waiting-list/subscribe"],
+    "app/components/landing/Contact.vue": ["/api/contact"],
+    "app/components/landing/WaitingListCTA.vue": ["/api/waiting-list/subscribe"],
+    "app/components/blog/BlogSidebar.vue": ["/api/waiting-list/subscribe"],
+    "app/components/blog/BlogNewsletter.vue": ["/api/waiting-list/subscribe"],
+    // CSV and PNG downloads opened in a new tab (binary transport).
+    "app/pages/dashboard/events/[id]/index.vue": ["/api/events/${eventId.value}/export"],
+    "app/pages/dashboard/events/[id]/distribution.vue": ["/api/events/${eventId.value}/guests/${g.id}/qr"],
+};
+
+const UI_PENDING: Record<string, { paths: readonly string[]; step: string }> = {
+    "app/pages/dashboard/profile/index.vue": { paths: ["/api/file/upload"], step: "Step 5 (upload)" },
+    "app/pages/dashboard/events/[id]/editor.vue": { paths: ["/api/file/upload"], step: "Step 5 (upload)" },
+    "app/components/profile/DataExportHistory.vue": {
+        // The signed download URL stays (transport); the history read is Step 5.
+        paths: ["/api/user/data-export/history", "/api/user/data-export/download/${token}"],
+        step: "Step 5 (export)",
+    },
+    "app/components/profile/DataExportSection.vue": {
+        paths: [
+            "/api/user/data-export/status",
+            "/api/user/data-export/request",
+            "/api/user/data-export/download/${currentExport.value.downloadToken}",
+        ],
+        step: "Step 5 (export)",
+    },
+};
+
+const UI_DEAD: Record<string, readonly string[]> = {
+    // Nuxt UI dashboard template page, not linked anywhere; `/api/members` has no route.
+    "app/pages/dashboard/profile/members.vue": ["/api/members"],
+};
+
+function uiFiles(): { relative: string; source: string }[] {
+    return UI_DIRS.flatMap((dir) => appSourceFiles(join(PROJECT_ROOT, dir)));
+}
+
+function declaredUiPaths(relative: string): readonly string[] {
+    return [
+        ...(UI_TRANSPORT[relative] ?? []),
+        ...(UI_PENDING[relative]?.paths ?? []),
+        ...(UI_DEAD[relative] ?? []),
+    ];
+}
+
+describe("frontend UI layer: no undeclared road to the Nuxt CRUD", () => {
+    it("no layout, page or component calls /api/** outside the declared ledger", () => {
+        const violations = uiFiles()
+            .map(({ relative, source }) => ({
+                relative,
+                paths: apiPathsIn(relative, source)
+                    .filter((path) => !isAllowed(path))
+                    .filter((path) => !declaredUiPaths(relative).includes(path)),
+            }))
+            .filter(({ paths }) => paths.length > 0);
+
+        expect(
+            violations,
+            "these UI files opened a road to /api/** that is neither transport nor declared debt:\n"
+            + violations.map((v) => `  ${v.relative}: ${v.paths.join(", ")}`).join("\n"),
+        ).toEqual([]);
+    });
+
+    it("every UI ledger entry is still true (the ledger can only shrink)", () => {
+        const present = new Map(
+            uiFiles().map(({ relative, source }) => [relative, new Set(apiPathsIn(relative, source))]),
+        );
+        const stale = [...Object.keys(UI_TRANSPORT), ...Object.keys(UI_PENDING), ...Object.keys(UI_DEAD)]
+            .flatMap((relative) => declaredUiPaths(relative)
+                .filter((path) => !present.get(relative)?.has(path))
+                .map((path) => `${relative}: ${path}`));
+
+        expect(stale).toEqual([]);
+    });
+});
+
+/**
  * Task 14, Step 4 — the second road nobody sees in a `/api/**` scan.
  *
  * The organization store never called `$fetch`: it talked to the Better Auth

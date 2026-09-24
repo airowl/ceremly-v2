@@ -302,7 +302,7 @@ describe.skipIf(!armed)("G07 live · Creem test mode", () => {
         gateCustomerId = customer.id;
     }, 120000);
 
-    it("refuses anonymous and non-owner callers before the provider is needed", async () => {
+    it("refuses anonymous callers before the provider is needed, and lets every member pay (legacy parity)", async () => {
         const anonymous = asClient();
         await expectCode(
             anonymous.action(api.billing.checkoutsCreate, { tier: "atelier" }),
@@ -318,15 +318,15 @@ describe.skipIf(!armed)("G07 live · Creem test mode", () => {
         await member.mutation(api.organizations.ensureProvisioned, {});
         await member.mutation(api.organizations.acceptInvitation, { token: invitation.token });
 
-        await expectCode(
-            member.action(api.billing.checkoutsCreate, { tier: "atelier" }),
-            "INSUFFICIENT_ROLE",
-        );
-        await expectCode(member.action(api.billing.customersPortalUrl, {}), "INSUFFICIENT_ROLE");
-        // The member may still read the plan: the dashboard shows it.
+        // Legacy parity (Task 14 part b, fix round 1): a plain member may pay and
+        // open the portal, as with the legacy `requireWrite` unlock route and the
+        // session-only Creem plugin endpoints. No member checkout is created here
+        // (it would be a second real test-mode checkout); the hermetic suite
+        // (`convex/billing.test.ts`) covers each role reaching the provider.
         const plan = await member.query(api.billing.planForActiveOrganization, {});
         expect(plan.organizationId).toBe(organizationId);
-        expect(plan.canManageBilling).toBe(false);
+        expect(plan.canManageBilling).toBe(true);
+        expect(plan.canUnlockEvents).toBe(true);
     }, 60000);
 
     it("charges the organization, not the browser: a real test-mode checkout", async () => {

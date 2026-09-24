@@ -407,8 +407,13 @@ describe("tenant isolation", () => {
         expect(await invitationsOfOrg(aliceCtx.t, aliceCtx.organizationId)).toHaveLength(0);
         expect(await aliceCtx.t.run(async (c) => c.db.get(aliceCtx.organizationId))).toBeNull();
 
+        // Task 14 part b (fix round 1): a member whose active organization was
+        // deleted is repointed, in the same transaction, to another organization
+        // they belong to — here Carol's personal workspace — instead of being left
+        // without one until the next login.
         const carolUser = await appUserByEmail(aliceCtx.t, carol.email.toLowerCase());
-        expect(carolUser?.activeOrganizationId).toBeUndefined();
+        expect(carolUser?.activeOrganizationId).toBeDefined();
+        expect(carolUser?.activeOrganizationId).not.toBe(aliceCtx.organizationId);
 
         // The removed member keeps working: the next login rebuilds a workspace.
         const healed = await carolSession.mutation(api.organizations.ensureProvisioned, {});

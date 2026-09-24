@@ -1295,6 +1295,8 @@
   },
   "subscription": {
     "title": "Abbonamento",
+    "realtime": "Aggiornato in tempo reale",
+    "noBillingPermission": "La fatturazione di questo piano è gestita da chi può amministrare l'abbonamento dell'organizzazione.",
     "sync": "Sincronizza",
     "synced": "Sincronizzato",
     "syncError": "Errore sincronizzazione",
@@ -3753,8 +3755,7 @@
       "loading": "Reindirizzo al pagamento…",
       "later": "Forse dopo",
       "errorTitle": "Qualcosa non ha funzionato",
-      "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo.",
-      "ownerOnly": "Solo il proprietario dell'organizzazione può avviare un pagamento."
+      "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo."
     }
   }
 }
