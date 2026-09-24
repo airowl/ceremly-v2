@@ -26,10 +26,15 @@ import { forbidden } from "./identity";
  * (`data-export`, `image-variant`, `send-invite-email`, `send-reminder-email`) più
  * i due nati con la migrazione (`event-cleanup-warning`, `account-purge`). Le email
  * transazionali che nel legacy non passavano dalla coda — verifica, reset, cambio
- * email, invito org, contatto, waiting list — restano azioni schedulate
+ * email, contatto, waiting list — restano azioni schedulate
  * direttamente: dare loro un tipo di job significherebbe un tipo che il piano non
  * prevede, e il valore del retry persistito lì è molto minore (nessun destinatario
  * a valle attende il risultato).
+ *
+ * Eccezione (Task 14, part b): l'invito a un'organizzazione **è** un job
+ * (`send-org-invite-email`). Nel legacy lo spediva l'hook del plugin; in Convex
+ * nessuno lo spediva affatto (handoff G06), e il destinatario a valle esiste: è la
+ * persona che aspetta il link per entrare nel team.
  */
 
 export const JOB_TYPES = {
@@ -48,6 +53,15 @@ export const JOB_TYPES = {
      * fuori dai sei del piano: dichiarato in `docs/migration/frontend-convex.md`.
      */
     sendTestInviteEmail: "send-test-invite-email",
+    /**
+     * Organization invitation email (Task 14, part b). The legacy sent it from the
+     * Better Auth plugin hook, fire-and-forget; here the invitation is created in a
+     * mutation and delivery is an external effect, so it goes through the job state
+     * machine. Payload `{ invitationId }` only: the token is re-derived when the job
+     * runs (`convex/lib/invitationToken.ts`). Eighth type, outside the plan's six:
+     * declared in `docs/migration/frontend-convex.md`.
+     */
+    sendOrgInviteEmail: "send-org-invite-email",
     /** Generazione varianti immagine via bridge media (legacy QStash `image-variant`). */
     imageVariant: "image-variant",
     /** Avviso di cleanup di un evento stale, prima della cancellazione. */
@@ -74,6 +88,7 @@ export const JOB_MAX_ATTEMPTS: Record<JobType, number> = {
     [JOB_TYPES.sendInviteEmail]: 5,
     [JOB_TYPES.sendReminderEmail]: 5,
     [JOB_TYPES.sendTestInviteEmail]: 5,
+    [JOB_TYPES.sendOrgInviteEmail]: 5,
     [JOB_TYPES.imageVariant]: 3,
     [JOB_TYPES.eventCleanupWarning]: 5,
 };

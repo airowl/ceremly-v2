@@ -26,6 +26,11 @@ import { buildCheckoutMetadata, isAtelierSubscription, type WebhookOutcome } fro
 process.env.CREEM_PRODUCT_ID_CELEBRATION = "prod_test_celebration";
 process.env.CREEM_PRODUCT_ID_ATELIER = "prod_test_atelier";
 
+// Task 14 (part b): `inviteMember` derives the invitation token from the id with
+// the Better Auth secret (`convex/lib/invitationToken.ts`), so any suite that
+// invites needs one. The value only has to be stable within the file.
+process.env.BETTER_AUTH_SECRET ??= "test-secret-for-invitation-tokens";
+
 // The Creem client captures the signing secret when its module is first
 // evaluated, so the value has to exist *before* the imports above run. `vi.hoisted`
 // is the only hook that executes above them, which is why the env lives here and

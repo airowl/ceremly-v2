@@ -40,6 +40,7 @@ import type * as lib_domainBatchDigest from "../lib/domainBatchDigest.js";
 import type * as lib_emailSubjects from "../lib/emailSubjects.js";
 import type * as lib_env from "../lib/env.js";
 import type * as lib_identity from "../lib/identity.js";
+import type * as lib_invitationToken from "../lib/invitationToken.js";
 import type * as lib_inviteTemplates from "../lib/inviteTemplates.js";
 import type * as lib_jobQueue from "../lib/jobQueue.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
@@ -104,6 +105,7 @@ declare const fullApi: ApiFromModules<{
   "lib/emailSubjects": typeof lib_emailSubjects;
   "lib/env": typeof lib_env;
   "lib/identity": typeof lib_identity;
+  "lib/invitationToken": typeof lib_invitationToken;
   "lib/inviteTemplates": typeof lib_inviteTemplates;
   "lib/jobQueue": typeof lib_jobQueue;
   "lib/magicBytes": typeof lib_magicBytes;

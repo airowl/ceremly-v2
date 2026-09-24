@@ -17,6 +17,11 @@ import {
     slugify,
 } from "./organizations";
 
+// Task 14 (part b): `inviteMember` derives the invitation token from the id with
+// the Better Auth secret (`convex/lib/invitationToken.ts`), so any suite that
+// invites needs one. The value only has to be stable within the file.
+process.env.BETTER_AUTH_SECRET ??= "test-secret-for-invitation-tokens";
+
 /**
  * G06 — application organizations and RBAC on Convex (plan Task 5).
  *

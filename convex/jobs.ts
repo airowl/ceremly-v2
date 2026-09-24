@@ -18,6 +18,9 @@ import { forbidden } from "./lib/identity";
 import { JOB_TYPES, enqueueJob, retryDelayMs } from "./lib/jobQueue";
 import { BRIDGE_PATH, callBridge, errorMessage, tryBridge } from "./lib/storageBridge";
 import { PREVIEW_TOKEN } from "./lib/previewToken";
+import { requireEnv, siteUrl } from "./lib/env";
+import { buildOrgInviteLink, deriveInvitationToken } from "./lib/invitationToken";
+import { hashInvitationToken } from "./organizations";
 import { buildTestInviteEmail } from "./guests";
 
 /**
@@ -267,6 +270,7 @@ async function dispatch(
     if (name === JOB_TYPES.sendInviteEmail) return await runSendInviteEmail(ctx, payload);
     if (name === JOB_TYPES.sendReminderEmail) return await runSendReminderEmail(ctx, payload);
     if (name === JOB_TYPES.sendTestInviteEmail) return await runSendTestInviteEmail(ctx, payload);
+    if (name === JOB_TYPES.sendOrgInviteEmail) return await runSendOrgInviteEmail(ctx, payload);
     if (name === JOB_TYPES.imageVariant) return await runImageVariant(ctx, payload);
     if (name === JOB_TYPES.eventCleanupWarning) return await runEventCleanupWarning(ctx, payload);
 
@@ -627,6 +631,65 @@ async function runSendTestInviteEmail(
             // events subdomain — a test must not pollute the invite metrics.
             eventScoped: false,
             idempotencyKey: `invite-test/${testRequestId}`,
+            context: { organizationId: context.organizationId },
+        },
+    );
+
+    return {
+        sent: result.sent,
+        ...(result.reason ? { reason: result.reason } : {}),
+        ...(result.messageId ? { providerId: result.messageId } : {}),
+    };
+}
+
+/**
+ * `send-org-invite-email` (Task 14, part b): the organization invitation.
+ *
+ * Legacy parity with the Better Auth plugin hook (`server/utils/auth.ts`,
+ * `sendInvitationEmail`): same template (`org-invite`), inviter name with the
+ * organization name as fallback, language from the inviter's locale. What
+ * changes is the link — `{SITE_URL}/invite/{token}` instead of the plugin's
+ * invitation id — and the delivery, which is now retried and idempotent.
+ *
+ * The token is re-derived from the invitation id and checked against the stored
+ * hash before anything is sent: if they disagree (the secret rotated after the
+ * invitation was created), the link would be dead, and a terminal skip is better
+ * than five deliveries of the same useless email.
+ */
+async function runSendOrgInviteEmail(
+    ctx: ActionCtx,
+    payload: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+    const invitationId = payload.invitationId as Id<"invitations"> | undefined;
+    if (!invitationId) throw new Error("SEND_ORG_INVITE_JOB_WITHOUT_INVITATION_ID");
+
+    const context = await ctx.runQuery(internal.organizations.orgInviteEmailContext, { invitationId });
+    if ("skipped" in context) return { skipped: context.skipped };
+
+    const token = await deriveInvitationToken(requireEnv("BETTER_AUTH_SECRET"), invitationId);
+    if (!context.tokenHash || (await hashInvitationToken(token)) !== context.tokenHash) {
+        return { skipped: "token_mismatch" };
+    }
+
+    const inviteUrl = buildOrgInviteLink(siteUrl(), token);
+    const language = context.inviterLocale?.toLowerCase().startsWith("en") ? "en" : "it";
+    const expiresInDays = Math.max(1, Math.ceil((context.expiresAt - Date.now()) / DAY_MS));
+
+    const result: { sent: boolean; messageId: string | null; reason?: string } = await ctx.runAction(
+        internal.email.sendTemplate,
+        {
+            request: {
+                template: "org-invite",
+                to: context.email,
+                language,
+                inviteUrl,
+                orgName: context.organizationName,
+                invitedByName: context.inviterName || context.organizationName,
+                expiresInDays,
+            },
+            // Transactional sender (legacy `type: "invitation"`), not an event email.
+            eventScoped: false,
+            idempotencyKey: `org-invite/${invitationId}`,
             context: { organizationId: context.organizationId },
         },
     );

@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
     findAppUserByAuthId,
@@ -21,6 +21,10 @@ import {
     requireRole,
 } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
+import { requireEnv } from "./lib/env";
+import { deriveInvitationToken } from "./lib/invitationToken";
+import { JOB_TYPES, enqueueJob } from "./lib/jobQueue";
+import { components } from "./_generated/api";
 
 /**
  * Organizations, memberships and invitations (plan Task 5).
@@ -339,6 +343,29 @@ export const ensureProvisioned = mutation({
     },
 });
 
+/** `name`/`image` of a Better Auth user; empty values when the row cannot be read. */
+async function findAuthProfile(
+    ctx: QueryCtx | MutationCtx,
+    authUserId: string,
+): Promise<{ name: string | null; image: string | null }> {
+    let row: { name?: unknown; image?: unknown } | null = null;
+    try {
+        row = (await ctx.runQuery(components.betterAuth.adapter.findOne, {
+            model: "user",
+            where: [{ field: "_id", value: authUserId }],
+        })) as { name?: unknown; image?: unknown } | null;
+    } catch {
+        // A subject the component cannot decode (test identities, foreign
+        // issuers) is "no profile", not a failed members page.
+        row = null;
+    }
+
+    return {
+        name: typeof row?.name === "string" && row.name.length > 0 ? row.name : null,
+        image: typeof row?.image === "string" && row.image.length > 0 ? row.image : null,
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------------
@@ -364,6 +391,7 @@ export const listMyOrganizations = query({
                     name: organization.name,
                     slug: organization.slug,
                     logo: organization.logo ?? null,
+                    createdAt: organization.createdAt,
                     role: membership.role,
                     isActive: organization._id === appUser.activeOrganizationId,
                 };
@@ -427,14 +455,24 @@ export const listMembers = query({
                 const member = await ctx.db.get(membership.userId);
                 if (!member) return null;
 
+                // Name and avatar live in the Better Auth component (Task 12):
+                // the members table of the UI shows them, the legacy plugin
+                // payload carried them as `member.user`.
+                const profile = await findAuthProfile(ctx, member.authUserId);
+
                 return {
                     membershipId: membership._id,
                     userId: member._id,
                     email: member.email,
+                    name: profile.name,
+                    image: profile.image,
                     globalRole: member.globalRole,
                     locale: member.locale,
                     role: membership.role,
                     createdAt: membership.createdAt,
+                    // The UI cannot compare its Better Auth user id with an
+                    // `appUsers` id, so "is this row me" is answered here.
+                    isSelf: member._id === authz.appUserId,
                 };
             }),
         );
@@ -504,6 +542,107 @@ export const listMyInvitations = query({
                 };
             }),
         );
+    },
+});
+
+/**
+ * What the `/invite/{token}` page shows before accepting (Task 14, part b).
+ *
+ * Public on purpose: the page offers sign-in and sign-up to a visitor who has no
+ * session yet, and the legacy page showed the organization and the inviter in
+ * that state too. The token is the bearer credential sent to the invited address
+ * (256 bits), so holding it is what authorizes reading this; an unknown token and
+ * an empty one are the same `null`, and nothing internal (ids, hash) is returned.
+ *
+ * Expiry is evaluated on read, exactly like `acceptInvitation`: a pending row past
+ * `expiresAt` is reported as `expired` even before any sweep rewrites its status.
+ */
+export const getInvitationByToken = query({
+    args: { token: v.string() },
+    handler: async (ctx, args) => {
+        if (!/^[0-9a-f]{64}$/.test(args.token)) {
+            return null;
+        }
+
+        const tokenHash = await hashInvitationToken(args.token);
+        const invitation = await ctx.db
+            .query("invitations")
+            .withIndex("by_token_hash", (q) => q.eq("tokenHash", tokenHash))
+            .unique();
+        if (!invitation) {
+            return null;
+        }
+
+        const [organization, inviter] = await Promise.all([
+            ctx.db.get(invitation.organizationId),
+            ctx.db.get(invitation.inviterUserId),
+        ]);
+        const inviterProfile = inviter
+            ? await findAuthProfile(ctx, inviter.authUserId)
+            : { name: null, image: null };
+
+        const status =
+            invitation.status === "pending" && invitation.expiresAt <= Date.now()
+                ? ("expired" as const)
+                : invitation.status;
+
+        return {
+            email: invitation.email,
+            role: invitation.role,
+            status,
+            expiresAt: invitation.expiresAt,
+            organizationName: organization?.name ?? null,
+            inviterName: inviterProfile.name,
+            inviterEmail: inviter?.email ?? null,
+        };
+    },
+});
+
+/**
+ * Everything the `send-org-invite-email` job needs, resolved when it runs.
+ *
+ * A canceled, accepted or expired invitation is a skip reason rather than an
+ * error: retrying five times would not give it a recipient again.
+ */
+export const orgInviteEmailContext = internalQuery({
+    args: { invitationId: v.id("invitations") },
+    handler: async (
+        ctx,
+        args,
+    ): Promise<
+        | { skipped: "invitation_not_found" | "invitation_not_pending" | "invitation_expired" }
+        | {
+              organizationId: Id<"organizations">;
+              email: string;
+              tokenHash: string | null;
+              organizationName: string;
+              inviterName: string | null;
+              inviterLocale: string | null;
+              expiresAt: number;
+          }
+    > => {
+        const invitation = await ctx.db.get(args.invitationId);
+        if (!invitation) return { skipped: "invitation_not_found" };
+        if (invitation.status !== "pending") return { skipped: "invitation_not_pending" };
+        if (invitation.expiresAt <= Date.now()) return { skipped: "invitation_expired" };
+
+        const organization = await ctx.db.get(invitation.organizationId);
+        if (!organization) return { skipped: "invitation_not_found" };
+
+        const inviter = await ctx.db.get(invitation.inviterUserId);
+        const inviterProfile = inviter
+            ? await findAuthProfile(ctx, inviter.authUserId)
+            : { name: null, image: null };
+
+        return {
+            organizationId: organization._id,
+            email: invitation.email,
+            tokenHash: invitation.tokenHash ?? null,
+            organizationName: organization.name,
+            inviterName: inviterProfile.name,
+            inviterLocale: inviter?.locale ?? null,
+            expiresAt: invitation.expiresAt,
+        };
     },
 });
 
@@ -731,9 +870,11 @@ export const setActive = mutation({
 /**
  * Invites an address into the active organization.
  *
- * Returns the plaintext token exactly once: the caller sends it (Task 13 wires
- * delivery), and only its hash is persisted, so a leaked database cannot be
- * replayed against `acceptInvitation`.
+ * Returns the plaintext token exactly once, and only its hash is persisted, so a
+ * leaked database cannot be replayed against `acceptInvitation`. Delivery is a
+ * `send-org-invite-email` job queued in the same transaction (Task 14, part b):
+ * the email carries `{SITE_URL}/invite/{token}`, with the token re-derived from
+ * the invitation id when the job runs.
  */
 export const inviteMember = mutation({
     args: {
@@ -779,17 +920,27 @@ export const inviteMember = mutation({
             throw forbidden("INVITATION_ALREADY_PENDING", { email });
         }
 
-        const token = generateInvitationToken();
         const expiresAt = now + INVITATION_TTL_MS;
         const invitationId = await ctx.db.insert("invitations", {
             organizationId: authz.organizationId,
             email,
             role: args.role,
             status: "pending",
-            tokenHash: await hashInvitationToken(token),
             inviterUserId: authz.appUserId,
             expiresAt,
             createdAt: now,
+        });
+        // The token is derived from the id (Task 14, part b), so the delivery job
+        // can recompute it from an ID-only payload. Same transaction as the
+        // insert: there is never a pending invitation without a hash.
+        const token = await deriveInvitationToken(requireEnv("BETTER_AUTH_SECRET"), invitationId);
+        await ctx.db.patch(invitationId, { tokenHash: await hashInvitationToken(token) });
+
+        // Delivery (G06 handoff, closed here): a durable job, one per invitation.
+        await enqueueJob(ctx, {
+            type: JOB_TYPES.sendOrgInviteEmail,
+            payload: { invitationId },
+            dedupeKey: `org-invite:${invitationId}`,
         });
 
         await writeAudit(ctx, {

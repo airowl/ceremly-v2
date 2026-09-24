@@ -11,6 +11,11 @@ import { signBridgeRequest } from "./lib/bridgeHmac";
 import { hashClientIp, isIpHashShaped } from "./lib/spam";
 import { getTemplatesByType } from "./lib/inviteTemplates";
 
+// Task 14 (part b): `inviteMember` derives the invitation token from the id with
+// the Better Auth secret (`convex/lib/invitationToken.ts`), so any suite that
+// invites needs one. The value only has to be stable within the file.
+process.env.BETTER_AUTH_SECRET ??= "test-secret-for-invitation-tokens";
+
 /** Chiave del template matrimonio: la stessa che usa il client per creare un evento. */
 const MATRIMONIO_TEMPLATE = getTemplatesByType("matrimonio")[0]!.key;
 
