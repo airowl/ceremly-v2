@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { action, internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { action, readAction } from "./lib/functions";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { forbidden } from "./lib/identity";
@@ -812,7 +813,8 @@ export const releaseOrphanFile = internalMutation({
     },
 });
 
-export const downloadUrl = action({
+// Read-only (signs a GET URL): not guarded, a download stays possible in every mode.
+export const downloadUrl = readAction({
     args: { fileId: v.id("files") },
     handler: async (ctx, args): Promise<{ url: string; expiresAt: number | null }> => {
         const authz: UploadAuthz = await ctx.runQuery(internal.files.uploadAuthz, {});

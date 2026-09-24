@@ -667,6 +667,9 @@ function parseArgs(argv: string[]): CliOptions {
         const arg = argv[index];
         if (arg === "--manifest") options.manifest = argv[++index] ?? null;
         else if (arg === "--out") options.out = argv[++index] ?? null;
+        // Production gate flags (Task 17): consumed by `connectTarget`.
+        else if (arg === "--production") continue;
+        else if (arg === "--confirm-deployment" || arg === "--preflight-report") index += 1;
         else throw new Error(`Unknown argument: ${arg}`);
     }
     return options;
@@ -675,7 +678,7 @@ function parseArgs(argv: string[]): CliOptions {
 async function main() {
     const { config } = await import("dotenv");
     const { readSourceSnapshot, tableChecksum } = await import("./export-neon");
-    const { connectStagingTarget } = await import("./convex-target");
+    const { connectTarget } = await import("./convex-target");
     const { listAllObjects, r2ListerFromEnv } = await import("./r2-bucket");
     const { migrationKeyFromEnv } = await import("./crypto");
     const { verifyManifestMac, validateManifest } = await import("./manifest");
@@ -694,7 +697,7 @@ async function main() {
         validateManifest(manifest, EXPECTED_BATCH_TABLES);
     }
 
-    const target = await connectStagingTarget();
+    const target = await connectTarget(process.argv.slice(2));
     const deployment = target.deployment;
     const lister = r2ListerFromEnv(process.env);
     const started = Date.now();

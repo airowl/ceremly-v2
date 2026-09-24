@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { internalQuery, mutation, query } from "./_generated/server";
+import { internalQuery, query } from "./_generated/server";
+import { mutation } from "./lib/functions";
 import { DOMAIN_WRITE_ROLES, requireActiveOrganization, requireRole } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden } from "./lib/identity";

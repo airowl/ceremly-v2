@@ -1,5 +1,8 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query, mutation as rawMutation } from "./_generated/server";
+import { mutation, tagged } from "./lib/functions";
+import { assertWritableMode, writesAllowed } from "./lib/writeGuard";
+import { readSiteMode } from "./siteSettings";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
@@ -323,10 +326,26 @@ export const provisionAuthUser = internalMutation({
  * The client calls this once per login. It is idempotent: existing records are
  * verified (and repaired if needed), never duplicated.
  */
-export const ensureProvisioned = mutation({
+// Guard inline (Task 17 fix round 1): called on every login, so outside the
+// modes that allow writes an existing account is answered from what is stored
+// (no repair, no refresh) and only a first provisioning is refused.
+export const ensureProvisioned = tagged("inline", rawMutation({
     args: { locale: v.optional(v.string()) },
     handler: async (ctx, args) => {
         const identity = await requireIdentity(ctx);
+
+        if (!writesAllowed(await readSiteMode(ctx), "domain")) {
+            const existing = await findAppUserByAuthId(ctx, identity.authUserId);
+            if (!existing?.activeOrganizationId) {
+                assertWritableMode(await readSiteMode(ctx), "domain");
+            }
+            return {
+                appUserId: existing!._id,
+                organizationId: existing!.activeOrganizationId!,
+                provisioned: false,
+            };
+        }
+
         const email = await getAuthEmail(ctx, identity.authUserId);
 
         const result = await provisionAppUser(ctx, {
@@ -342,7 +361,7 @@ export const ensureProvisioned = mutation({
             provisioned: result.created,
         };
     },
-});
+}));
 
 /** `name`/`image` of a Better Auth user; empty values when the row cannot be read. */
 async function findAuthProfile(

@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
     PREFLIGHT_CHECK_IDS,
+    encodeDnsQuery,
+    parseDnsAnswerTtls,
     parseGateLedger,
     readMarkedJson,
     readOnlyFetch,
@@ -54,6 +56,7 @@ const goodRehearsal = { status: "PASS", completedAt: hoursAgo(3), commitSha: HEA
 const goodEvidence = {
     environment: "production",
     siteOrigin: SITE,
+    convexSiteUrl: "https://happy-otter-123.eu-west-1.convex.site",
     neonBackup: { projectId: "proj-1", branchId: "br-backup" },
     dns: { host: "ceremly.com", approvedTtlSeconds: 300, approvedBy: "ops", approvedAt: hoursAgo(2) },
     google: {
@@ -69,6 +72,7 @@ const goodEvidence = {
         workerVersion: "worker-version-1",
         legacyVercelDeployment: "dpl_legacy",
         legacyRollbackRef: "legacy-final",
+        builtFromCommit: HEAD.slice(0, 12),
     },
 };
 
@@ -86,7 +90,11 @@ interface Fixture {
     dlq?: unknown[];
     convexEnv?: Record<string, string>;
     ttls?: number[];
+    cnameTtls?: number[];
+    nameservers?: string[];
     corsXml?: string;
+    convexMode?: string;
+    dirty?: string[];
 }
 
 const goodCors = `<CORSConfiguration><CORSRule><AllowedOrigin>${SITE}</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod></CORSRule></CORSConfiguration>`;
@@ -114,6 +122,9 @@ function makeDeps(fixture: Fixture = {}) {
         if (url.includes("/v2/events")) {
             return new Response(JSON.stringify({ events: fixture.qstashEvents ?? [] }), { status: 200 });
         }
+        if (url === "https://happy-otter-123.eu-west-1.convex.site/public/site-mode") {
+            return new Response(JSON.stringify({ mode: fixture.convexMode ?? "maintenance-readonly" }), { status: 200 });
+        }
         if (url.includes("/v2/dlq")) {
             return new Response(JSON.stringify({ messages: fixture.dlq ?? [] }), { status: 200 });
         }
@@ -130,6 +141,7 @@ function makeDeps(fixture: Fixture = {}) {
         },
         gitHead: () => HEAD,
         changedFilesSince: () => fixture.changedSince ?? ["docs/migration/rehearsal.md", "graphify-out/graph.json"],
+        dirtyFiles: () => fixture.dirty ?? [],
         env: {
             MIGRATION_ENCRYPTION_KEY: KEY,
             NEON_API_KEY: "neon-key",
@@ -138,7 +150,11 @@ function makeDeps(fixture: Fixture = {}) {
             ...fixture.env,
         },
         fetch: readOnlyFetch(rawFetch as typeof fetch),
-        resolveTtls: async () => fixture.ttls ?? [300, 120],
+        dns: {
+            nameservers: async () => fixture.nameservers ?? ["198.51.100.1"],
+            query: async (_server, _host, type) =>
+                type === "A" ? (fixture.ttls ?? [300, 120]) : (fixture.cnameTtls ?? []),
+        },
         convexEnv: async () =>
             fixture.convexEnv ?? {
                 BETTER_AUTH_SECRET: "same-secret",
@@ -192,6 +208,8 @@ describe("preflight: each failing check is exit 1", () => {
         ["rehearsal older than 24h", { rehearsal: { ...goodRehearsal, completedAt: hoursAgo(25) } }, "rehearsal"],
         ["rehearsal in the future", { rehearsal: { ...goodRehearsal, completedAt: hoursAgo(-1) } }, "rehearsal"],
         ["rehearsal on another commit (code changed since)", { changedSince: ["server/middleware/0.site-mode.ts"] }, "rehearsal"],
+        ["uncommitted code in the working tree", { dirty: ["server/utils/auth.ts"] }, "rehearsal"],
+        ["deployed builds made from different code", { changedSince: ["server/x.ts"], rehearsal: { ...goodRehearsal } }, "deploymentIds"],
         ["rehearsal commit unknown", { rehearsal: { ...goodRehearsal, commitSha: null } }, "rehearsal"],
         ["rehearsal block missing", { rehearsal: "not-an-object" }, "rehearsal"],
         ["Neon backup older than 24h", { neonBranch: { id: "br-backup", created_at: hoursAgo(30), default: false, parent_id: "br-main" } }, "neonBackup"],
@@ -219,6 +237,10 @@ describe("preflight: each failing check is exit 1", () => {
             "authSecretParity",
         ],
         ["DNS TTL above the approved value", { ttls: [3600] }, "dnsTtl"],
+        // A recursive resolver would have answered 60 s (cached countdown); the
+        // authoritative CNAME the operator changes still says 3600 s.
+        ["authoritative CNAME TTL high while the A answer is low", { ttls: [60], cnameTtls: [3600] }, "dnsTtl"],
+        ["no authoritative name server", { nameservers: [] }, "dnsTtl"],
         ["DNS TTL not approved", { evidence: { ...goodEvidence, dns: { ...goodEvidence.dns, approvedBy: null } } }, "dnsTtl"],
         [
             "Google production callback missing",
@@ -237,6 +259,7 @@ describe("preflight: each failing check is exit 1", () => {
             { evidence: { ...goodEvidence, deployments: { ...goodEvidence.deployments, legacyRollbackRef: "" } } },
             "deploymentIds",
         ],
+        ["Convex target still active before the switch", { convexMode: "active" }, "convexReadOnly"],
         ["evidence for another environment", { evidence: { ...goodEvidence, environment: "staging" } }, "deploymentIds"],
     ];
 
@@ -324,5 +347,27 @@ describe("preflight: parsers", () => {
         expect(readMarkedJson(block("rehearsal", { a: 1 }), "rehearsal")).toEqual({ a: 1 });
         expect(() => readMarkedJson("no block here", "rehearsal")).toThrow(/preflight:rehearsal/);
         expect(() => readMarkedJson("<!-- preflight:rehearsal -->\n```json\n{oops\n```", "rehearsal")).toThrow();
+    });
+});
+
+describe("preflight: authoritative DNS wire format", () => {
+    it("encodes a non-recursive query and parses answer TTLs (with name compression)", () => {
+        const query = encodeDnsQuery(0x1234, "ceremly.com", "A");
+        expect(query.readUInt16BE(0)).toBe(0x1234);
+        expect(query.readUInt16BE(2) & 0x0100).toBe(0); // RD off
+        // Response: the question echoed, one CNAME (TTL 3600) and one A (TTL 300),
+        // both owner names as compression pointers to the question (offset 12).
+        const header = Buffer.from([0x12, 0x34, 0x84, 0x00, 0, 1, 0, 2, 0, 0, 0, 0]);
+        const question = query.subarray(12);
+        const cname = Buffer.from([0xc0, 0x0c, 0, 5, 0, 1, 0, 0, 0x0e, 0x10, 0, 2, 0xc0, 0x0c]);
+        const a = Buffer.from([0xc0, 0x0c, 0, 1, 0, 1, 0, 0, 0x01, 0x2c, 0, 4, 192, 0, 2, 1]);
+        const response = Buffer.concat([header, question, cname, a]);
+        expect(parseDnsAnswerTtls(response, "CNAME")).toEqual([3600]);
+        expect(parseDnsAnswerTtls(response, "A")).toEqual([300]);
+    });
+
+    it("refuses an error response", () => {
+        const bad = Buffer.from([0, 1, 0x84, 0x02, 0, 0, 0, 0, 0, 0, 0, 0]);
+        expect(() => parseDnsAnswerTtls(bad, "A")).toThrow(/rcode 2/);
     });
 });

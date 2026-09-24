@@ -1,4 +1,5 @@
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
+import { mutation } from "./lib/functions";
 import { v } from "convex/values";
 
 // Public liveness probe used by the migration gate G02 to prove the reactive

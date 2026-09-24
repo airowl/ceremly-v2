@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 import { execFileSync } from "node:child_process";
-import { createHmac, createHash, hkdfSync, timingSafeEqual } from "node:crypto";
-import { resolve4 } from "node:dns/promises";
+import { createHmac, createHash, hkdfSync, randomBytes, timingSafeEqual } from "node:crypto";
+import { createSocket } from "node:dgram";
+import { resolve4, resolveNs } from "node:dns/promises";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { AwsClient } from "aws4fetch";
@@ -51,6 +52,7 @@ export const PREFLIGHT_CHECK_IDS = [
     "costAlerts",
     "r2Cors",
     "deploymentIds",
+    "convexReadOnly",
 ] as const;
 export type PreflightCheckId = (typeof PREFLIGHT_CHECK_IDS)[number];
 
@@ -86,11 +88,22 @@ export interface PreflightDeps {
     gitHead: () => string;
     /** Files changed between `sha` and HEAD (`git diff --name-only`). */
     changedFilesSince: (sha: string) => string[];
+    /** Uncommitted paths in the working tree (`git status --porcelain`). */
+    dirtyFiles: () => string[];
     env: Record<string, string | undefined>;
     /** Must be wrapped in `readOnlyFetch`. */
     fetch: typeof fetch;
-    /** A-record TTLs as seen by the resolver. */
-    resolveTtls: (host: string) => Promise<number[]>;
+    /**
+     * Authoritative DNS, never the recursive resolver: a resolver answers with
+     * the *remaining* cache TTL, so a 3600 s record cached with 200 s left would
+     * pass a 300 s check (review fix round 1).
+     */
+    dns: {
+        /** IP addresses of the zone's authoritative name servers. */
+        nameservers: (host: string) => Promise<string[]>;
+        /** TTLs of `type` records for `host` as answered by `server` directly. */
+        query: (server: string, host: string, type: "A" | "CNAME") => Promise<number[]>;
+    };
     /** Environment variables of the target Convex deployment (read). */
     convexEnv: () => Promise<Record<string, string>>;
     /** The R2 bucket CORS configuration XML (signed GET `?cors`). */
@@ -161,6 +174,8 @@ const attestation = { verifiedBy: z.string().min(1), verifiedAt: isoDate };
 const evidenceSchema = z.object({
     environment: z.enum(["production", "staging"]),
     siteOrigin: z.string().url(),
+    /** `https://<prod>.convex.site`: where the target's site mode is read. */
+    convexSiteUrl: z.string().url(),
     neonBackup: z.object({ projectId: z.string().min(1), branchId: z.string().min(1) }),
     dns: z.object({
         host: z.string().min(1),
@@ -176,6 +191,8 @@ const evidenceSchema = z.object({
     }),
     costAlerts: z.object({ convex: z.boolean(), cloudflare: z.boolean(), resend: z.boolean(), ...attestation }),
     deployments: z.object({
+        /** Commit the deployed Worker and Convex builds were made from. */
+        builtFromCommit: z.string().regex(/^[0-9a-f]{7,40}$/),
         convexProduction: z.string().min(1),
         workerVersion: z.string().min(1),
         legacyVercelDeployment: z.string().min(1),
@@ -250,7 +267,10 @@ const CHECKS: Record<PreflightCheckId, Check> = {
         if (!r.commitSha) return fail("rehearsal commitSha missing", "document");
         // "Same commit": the rehearsal record is itself committed afterwards, so
         // HEAD differs by construction. What must not differ is the code.
-        const changed = ctx.deps.changedFilesSince(r.commitSha);
+        // Deviation from a literal "same SHA", stated: commits touching only
+        // docs/graph/process files after the rehearsal are allowed; uncommitted
+        // code in the working tree is not.
+        const changed = [...ctx.deps.changedFilesSince(r.commitSha), ...ctx.deps.dirtyFiles()];
         const code = changed.filter((file) => !NON_CODE_PREFIXES.some((prefix) => file.startsWith(prefix)));
         if (code.length) {
             return fail(
@@ -374,12 +394,27 @@ const CHECKS: Record<PreflightCheckId, Check> = {
         const dns = ctx.evidence("dns");
         const stale = withinLastDay(dns.approvedAt, ctx.deps.now());
         if (stale) return fail(`DNS TTL approval ${stale}`, "measured");
-        const ttls = await ctx.deps.resolveTtls(dns.host);
-        if (!ttls.length) return fail(`no A record for ${dns.host}`, "measured");
-        const max = Math.max(...ttls);
-        return max > dns.approvedTtlSeconds
-            ? fail(`${dns.host} TTL ${max}s > approved ${dns.approvedTtlSeconds}s`, "measured")
-            : pass(`${dns.host} TTL ≤ ${max}s (approved ${dns.approvedTtlSeconds}s by ${dns.approvedBy})`, "measured");
+        const servers = await ctx.deps.dns.nameservers(dns.host);
+        if (!servers.length) return fail(`no authoritative name server found for ${dns.host}`, "measured");
+        const errors: string[] = [];
+        for (const server of servers) {
+            try {
+                // A and CNAME: with a CNAME/ALIAS chain the record the operator
+                // changes is the CNAME, whose TTL is not the final A's.
+                const ttls = [
+                    ...(await ctx.deps.dns.query(server, dns.host, "A")),
+                    ...(await ctx.deps.dns.query(server, dns.host, "CNAME")),
+                ];
+                if (!ttls.length) return fail(`${server} has no A/CNAME record for ${dns.host}`, "measured");
+                const max = Math.max(...ttls);
+                return max > dns.approvedTtlSeconds
+                    ? fail(`${dns.host} authoritative TTL ${max}s (${server}) > approved ${dns.approvedTtlSeconds}s`, "measured")
+                    : pass(`${dns.host} authoritative TTL ${max}s at ${server} (approved ${dns.approvedTtlSeconds}s by ${dns.approvedBy})`, "measured");
+            } catch (error) {
+                errors.push(`${server}: ${(error as Error).message}`);
+            }
+        }
+        return fail(`no authoritative server answered: ${errors.join("; ")}`, "measured");
     },
 
     async googleCallbacks(ctx) {
@@ -424,18 +459,119 @@ const CHECKS: Record<PreflightCheckId, Check> = {
             : fail(`R2 CORS has no rule allowing PUT from ${origin} (${rules.length} rule(s))`, "measured");
     },
 
+    async convexReadOnly(ctx) {
+        // The target must already refuse writes before Google/Creem/DNS move to it
+        // (runbook step 8.0): otherwise the first user on the new DNS writes to
+        // Convex and the pre-write rollback is gone before the smoke even runs.
+        const base = ctx.evidence("convexSiteUrl").replace(/\/+$/, "");
+        const response = await ctx.deps.fetch(`${base}/public/site-mode`, { method: "GET", headers: { accept: "application/json" } });
+        if (!response.ok) return fail(`GET ${base}/public/site-mode → ${response.status}`, "measured");
+        const { mode } = (await response.json()) as { mode?: unknown };
+        return mode === "maintenance-readonly"
+            ? pass(`Convex target site mode maintenance-readonly (${base})`, "measured")
+            : fail(`Convex target site mode is ${String(mode)}, must be maintenance-readonly before the switch`, "measured");
+    },
+
     async deploymentIds(ctx) {
         const environment = ctx.evidence("environment");
         if (environment !== ctx.environment) {
             return fail(`evidence block is for ${environment}, preflight run for ${ctx.environment}`, "attested");
         }
         const d = ctx.evidence("deployments");
+        // The deployed builds must be the rehearsed code: no code change between
+        // the commit they were built from and HEAD.
+        const code = ctx.deps
+            .changedFilesSince(d.builtFromCommit)
+            .filter((file) => !NON_CODE_PREFIXES.some((prefix) => file.startsWith(prefix)));
+        if (code.length) {
+            return fail(`deployed builds (${d.builtFromCommit}) differ from HEAD in code: ${code.slice(0, 5).join(", ")}`, "attested");
+        }
         return pass(
             `convex=${d.convexProduction} worker=${d.workerVersion} legacy=${d.legacyVercelDeployment} rollbackRef=${d.legacyRollbackRef}`,
             "attested",
         );
     },
 };
+
+// ---------------------------------------------------------------------------
+// Minimal DNS over UDP (one question, read-only)
+// ---------------------------------------------------------------------------
+
+const DNS_TYPES = { A: 1, CNAME: 5 } as const;
+
+export function encodeDnsQuery(id: number, host: string, type: "A" | "CNAME"): Buffer {
+    const header = Buffer.alloc(12);
+    header.writeUInt16BE(id, 0);
+    header.writeUInt16BE(0x0000, 2); // standard query, RD=0: ask the authority, no recursion
+    header.writeUInt16BE(1, 4); // QDCOUNT
+    const labels = host.replace(/\.$/, "").split(".").map((label) => {
+        const bytes = Buffer.from(label, "ascii");
+        return Buffer.concat([Buffer.from([bytes.length]), bytes]);
+    });
+    const tail = Buffer.alloc(4);
+    tail.writeUInt16BE(DNS_TYPES[type], 0);
+    tail.writeUInt16BE(1, 2); // IN
+    return Buffer.concat([header, ...labels, Buffer.from([0]), tail]);
+}
+
+function skipName(buf: Buffer, offset: number): number {
+    let at = offset;
+    for (;;) {
+        const len = buf[at];
+        if (len === undefined) throw new Error("truncated DNS name");
+        if ((len & 0xc0) === 0xc0) return at + 2; // compression pointer
+        if (len === 0) return at + 1;
+        at += len + 1;
+    }
+}
+
+/** TTLs of the answer records of `type` in a DNS response. */
+export function parseDnsAnswerTtls(buf: Buffer, type: "A" | "CNAME"): number[] {
+    if (buf.length < 12) throw new Error("short DNS response");
+    const rcode = buf.readUInt16BE(2) & 0x000f;
+    if (rcode !== 0 && rcode !== 3) throw new Error(`DNS rcode ${rcode}`);
+    const qd = buf.readUInt16BE(4);
+    const an = buf.readUInt16BE(6);
+    let at = 12;
+    for (let i = 0; i < qd; i += 1) at = skipName(buf, at) + 4;
+    const ttls: number[] = [];
+    for (let i = 0; i < an; i += 1) {
+        at = skipName(buf, at);
+        const recordType = buf.readUInt16BE(at);
+        const ttl = buf.readUInt32BE(at + 4);
+        const rdlength = buf.readUInt16BE(at + 8);
+        if (recordType === DNS_TYPES[type]) ttls.push(ttl);
+        at += 10 + rdlength;
+    }
+    return ttls;
+}
+
+function udpDnsQuery(server: string, host: string, type: "A" | "CNAME"): Promise<number[]> {
+    return new Promise((resolvePromise, reject) => {
+        const id = randomBytes(2).readUInt16BE(0);
+        const socket = createSocket(server.includes(":") ? "udp6" : "udp4");
+        const timer = setTimeout(() => {
+            socket.close();
+            reject(new Error("DNS timeout"));
+        }, 3000);
+        socket.once("message", (message) => {
+            clearTimeout(timer);
+            socket.close();
+            try {
+                if (message.readUInt16BE(0) !== id) throw new Error("DNS id mismatch");
+                resolvePromise(parseDnsAnswerTtls(message, type));
+            } catch (error) {
+                reject(error);
+            }
+        });
+        socket.once("error", (error) => {
+            clearTimeout(timer);
+            socket.close();
+            reject(error);
+        });
+        socket.send(encodeDnsQuery(id, host, type), 53, server);
+    });
+}
 
 // ---------------------------------------------------------------------------
 // Runner
@@ -450,6 +586,30 @@ function canonical(value: unknown): string {
             .join(",")}}`;
     }
     return JSON.stringify(value);
+}
+
+/** Signs a report (exported so the production import gate can verify it). */
+export function signPreflightReport(report: Omit<PreflightReport, "signature">, encodedKey: string | undefined): string {
+    return sign(report, encodedKey);
+}
+
+/**
+ * Verifies a report's signature with the migration key. Returns the report or
+ * throws: an `unsigned` report, another key, or any edited byte is refused.
+ */
+export function verifyPreflightReport(value: unknown, encodedKey: string | undefined): PreflightReport {
+    if (!value || typeof value !== "object") throw new Error("preflight report is not an object");
+    const { signature, ...unsigned } = value as PreflightReport;
+    if (typeof signature !== "string" || !signature.startsWith("hmac-sha256:")) {
+        throw new Error("preflight report has no valid signature");
+    }
+    const expected = sign(unsigned, encodedKey);
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (expected === "unsigned" || a.length !== b.length || !timingSafeEqual(a, b)) {
+        throw new Error("preflight report signature does not verify with MIGRATION_ENCRYPTION_KEY");
+    }
+    return value as PreflightReport;
 }
 
 function sign(report: Omit<PreflightReport, "signature">, encodedKey: string | undefined): string {
@@ -559,9 +719,32 @@ function realDeps(environment: Environment): PreflightDeps {
             execFileSync("git", ["diff", "--name-only", `${sha}..HEAD`], { encoding: "utf8" })
                 .split("\n")
                 .filter(Boolean),
+        dirtyFiles: () =>
+            execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" })
+                .split("\n")
+                .filter(Boolean)
+                .map((line) => line.slice(3)),
         env,
         fetch: readOnlyFetch(globalThis.fetch),
-        resolveTtls: async (host) => (await resolve4(host, { ttl: true })).map((record) => record.ttl),
+        dns: {
+            nameservers: async (host) => {
+                // Walk up the labels to the zone apex that has NS records.
+                const labels = host.split(".");
+                for (let i = 0; i < labels.length - 1; i += 1) {
+                    try {
+                        const names = await resolveNs(labels.slice(i).join("."));
+                        if (names.length) {
+                            const ips = await Promise.all(names.map((name) => resolve4(name).catch(() => [] as string[])));
+                            return ips.flat();
+                        }
+                    } catch {
+                        // not a zone apex: go up one label
+                    }
+                }
+                return [];
+            },
+            query: (server, host, type) => udpDnsQuery(server, host, type),
+        },
         // `convex env list` reads; stdout stays in memory and is never printed.
         convexEnv: () =>
             (convexCache ??= Promise.resolve(
@@ -598,7 +781,10 @@ async function main(): Promise<void> {
     for (const check of report.checks) {
         console.error(`${check.status === "PASS" ? "PASS" : "FAIL"}  ${check.id.padEnd(17)} ${check.detail}`);
     }
-    console.error(`verdict=${report.verdict} exit=${exitCode}`);
+    if (report.partial) {
+        console.error(`PARTIAL (${report.partial.join(",")}) — not a GO preflight; the import gate refuses it`);
+    }
+    console.error(`verdict=${report.verdict} exit=${exitCode}${report.partial ? " (partial)" : ""}`);
     process.exit(exitCode);
 }
 

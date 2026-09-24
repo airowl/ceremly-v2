@@ -8,7 +8,7 @@ import { v7 as uuidv7 } from "uuid";
 import * as schema from "../database/schema";
 import { asc, eq } from "drizzle-orm";
 import type { SupportedLanguage } from "../emailTemplates";
-import { logAudit } from "./audit";
+import { auditAuthEvent, shouldSelfHealOrg } from "./authAudit";
 import type { AuditAction } from "./audit/types";
 import { getDB } from "./db";
 import { cacheClient } from "./drivers";
@@ -139,7 +139,9 @@ export const createBetterAuth = () =>
                         // Self-heal: se l'utente non ha org (signup→org fallito, o utente legacy
                         // pre-1b), creane una personale ORA. È la garanzia robusta di "no utente
                         // orfano", indipendente dall'atomicità del hook user.create.after.
-                        if (!rows[0]) {
+                        // Non in maintenance-readonly (Task 17): scriverebbe org + member dopo il
+                        // watermark del cutover.
+                        if (!rows[0] && (await shouldSelfHealOrg())) {
                             try {
                                 const users = await db
                                     .select({ name: schema.user.name, email: schema.user.email })
@@ -293,7 +295,7 @@ export const createBetterAuth = () =>
                         returned.status == "FOUND" && userId
                     ) {
                         const provider = ctx.params.id;
-                        await logAudit(null, 'auth.oauth_callback', {
+                        await auditAuthEvent('auth.oauth_callback', {
                             userId,
                             targetType,
                             targetId,
@@ -303,7 +305,7 @@ export const createBetterAuth = () =>
                             details: { provider },
                         });
                     } else {
-                        await logAudit(null, 'auth.failed', {
+                        await auditAuthEvent('auth.failed', {
                             userId: ctx.context.session?.user.id,
                             targetType,
                             targetId,
@@ -326,7 +328,7 @@ export const createBetterAuth = () =>
                         } else {
                             userId = ctx.context.session?.user.id;
                         }
-                        await logAudit(null, action, {
+                        await auditAuthEvent(action, {
                             userId,
                             targetType,
                             targetId,
@@ -336,7 +338,7 @@ export const createBetterAuth = () =>
                         });
 
                         if (ctx.path === "/sign-up/email" && userId) {
-                            await logAudit(null, 'auth.tos_accepted', {
+                            await auditAuthEvent('auth.tos_accepted', {
                                 userId,
                                 targetType: "user",
                                 targetId: userId,
@@ -376,7 +378,7 @@ export const createBetterAuth = () =>
                 },
                 organizationHooks: {
                     afterCreateInvitation: async (data) => {
-                        await logAudit(null, "team.member_invited", {
+                        await auditAuthEvent("team.member_invited", {
                             userId: data.inviter.id,
                             organizationId: data.organization.id,
                             targetType: "email",
@@ -386,7 +388,7 @@ export const createBetterAuth = () =>
                         });
                     },
                     afterAcceptInvitation: async (data) => {
-                        await logAudit(null, "team.invite_accepted", {
+                        await auditAuthEvent("team.invite_accepted", {
                             userId: data.user.id,
                             organizationId: data.organization.id,
                             targetType: "user",
@@ -396,7 +398,7 @@ export const createBetterAuth = () =>
                         });
                     },
                     afterRemoveMember: async (data) => {
-                        await logAudit(null, "team.member_removed", {
+                        await auditAuthEvent("team.member_removed", {
                             organizationId: data.organization.id,
                             targetType: "user",
                             targetId: data.member.userId,
@@ -404,7 +406,7 @@ export const createBetterAuth = () =>
                         });
                     },
                     afterUpdateMemberRole: async (data) => {
-                        await logAudit(null, "team.permissions_updated", {
+                        await auditAuthEvent("team.permissions_updated", {
                             organizationId: data.organization.id,
                             targetType: "user",
                             targetId: data.member.userId,

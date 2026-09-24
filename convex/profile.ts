@@ -1,7 +1,8 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { components } from "./_generated/api";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { mutation } from "./lib/functions";
 import type { MutationCtx } from "./_generated/server";
 import { requireAppUser } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";

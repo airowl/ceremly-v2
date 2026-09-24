@@ -6,6 +6,7 @@ import { httpAction } from "./_generated/server";
 import { verifyBridgeRequest } from "./lib/bridgeHmac";
 import { isIpHashShaped } from "./lib/spam";
 import { verifySvixSignature } from "./lib/svix";
+import { writesAllowed } from "./lib/writeGuard";
 import { isOwnAddressDomain } from "./emailEvents";
 import { api, internal } from "./_generated/api";
 
@@ -232,12 +233,16 @@ http.route({
 // functions these handlers call. The handler is transport: verify, parse, delegate,
 // translate the refusal back into an HTTP status.
 const PUBLIC_FORM_ROUTES = [
-    { path: "/public/contact", entity: "internal.publicForms.contact" as const },
-    { path: "/public/waiting-list", entity: "internal.publicForms.waitingList" as const },
+    // `policy` (Task 17 fix round 1): the two internal entities are not reached by
+    // the public-builder guard, so the route applies `lib/writeGuard.ts` itself.
+    // Contact is a `domain` write; the waiting list is open where guest writes are
+    // (active + waitinglist — the legacy kept it open in waitinglist).
+    { path: "/public/contact", entity: "internal.publicForms.contact" as const, policy: "domain" as const },
+    { path: "/public/waiting-list", entity: "internal.publicForms.waitingList" as const, policy: "guest" as const },
     // `rsvp.submit` is a public mutation (the guest page calls it directly through
     // convex-vue); the bridge calls the same function, adding the IP dimension to
     // the rate-limit key.
-    { path: "/public/rsvp", entity: "api.rsvp.submit" as const },
+    { path: "/public/rsvp", entity: "api.rsvp.submit" as const, policy: "guest" as const },
 ] as const;
 
 for (const route of PUBLIC_FORM_ROUTES) {
@@ -278,6 +283,11 @@ for (const route of PUBLIC_FORM_ROUTES) {
             // address would silently create a weaker per-caller bucket.
             if (!isIpHashShaped(payload.ipHash)) {
                 return json({ ok: false, code: "IP_HASH_REQUIRED" }, 400);
+            }
+
+            const { mode } = await ctx.runQuery(internal.siteSettings.getForWorker, {});
+            if (!writesAllowed(mode, route.policy)) {
+                return json({ ok: false, code: "SITE_READ_ONLY", mode }, 503);
             }
 
             return await runPublicForm(ctx, route.entity, payload);

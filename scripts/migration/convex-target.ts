@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 import { convexToJson, jsonToConvex, type Value } from "convex/values";
+
+import { verifyPreflightReport } from "./preflight";
 
 /**
  * The one door from the migration scripts to the target deployment (Task 16).
@@ -215,7 +218,108 @@ function readCliAccessToken(): string | null {
     }
 }
 
-/** Selection → verified credentials → client. The only constructor the scripts use. */
+// ---------------------------------------------------------------------------
+// Production mode (migration Task 17, fix round 1)
+// ---------------------------------------------------------------------------
+//
+// The cutover's delta import must write to the production deployment, and the
+// dev-only guard above rightly refuses it. This is the one reviewed way in —
+// not a bypass: it is never the default, and every condition is independent.
+//
+// 1. `--production` on the command line (nothing in the environment can select it);
+// 2. `--confirm-deployment <prod:name>`, typed by the operator, equal to…
+// 3. …the `deployments.convexProduction` of a **passing** preflight report
+//    (`--preflight-report <path>`) whose HMAC verifies with the migration key,
+//    for `production`, not `partial`, for the same commit as HEAD, < 24 h old;
+// 4. the Task 16 environment sanitization (no deploy key, no self-hosted or
+//    provisioning override; `CONVEX_DEPLOYMENT`, if set, must agree);
+// 5. explicit credentials only: `MIGRATION_CONVEX_ADMIN_KEY` of exactly that
+//    `prod:` deployment and its `https://<name>.<region>.convex.cloud` URL —
+//    no fallback to the CLI login.
+
+export const PRODUCTION_FLAG = "--production";
+const REPORT_MAX_AGE_MS = 24 * 3_600_000;
+
+export interface ProductionGate {
+    argv: string[];
+    env: NodeJS.ProcessEnv;
+    headSha: string;
+    readText: (path: string) => string;
+    now: () => Date;
+}
+
+function argValue(argv: string[], flag: string): string | undefined {
+    const at = argv.indexOf(flag);
+    return at === -1 ? undefined : argv[at + 1];
+}
+
+export function resolveProductionTarget(gate: ProductionGate): { selection: TargetSelection; credentials: TargetCredentials } {
+    if (!gate.argv.includes(PRODUCTION_FLAG)) throw new Error(`${PRODUCTION_FLAG} is required to target production`);
+
+    const confirm = argValue(gate.argv, "--confirm-deployment");
+    if (!confirm) throw new Error("--confirm-deployment <prod:name> is required (typed by the operator)");
+    const reportPath = argValue(gate.argv, "--preflight-report");
+    if (!reportPath) throw new Error("--preflight-report <path> is required");
+
+    let raw: unknown;
+    try {
+        raw = JSON.parse(gate.readText(reportPath));
+    } catch {
+        throw new Error("Preflight report is not readable JSON");
+    }
+    const report = verifyPreflightReport(raw, gate.env.MIGRATION_ENCRYPTION_KEY);
+    if (report.verdict !== "PASS") throw new Error(`Preflight verdict is ${report.verdict}`);
+    if (report.partial) throw new Error("Preflight report is partial (--only): not a GO preflight");
+    if (report.environment !== "production") throw new Error("Preflight report is not for production");
+    if (report.commitSha !== gate.headSha) {
+        throw new Error(`Preflight report is for commit ${report.commitSha}, HEAD is ${gate.headSha}`);
+    }
+    const age = gate.now().getTime() - Date.parse(report.generatedAt);
+    if (Number.isNaN(age) || age < 0) throw new Error("Preflight report is dated in the future");
+    if (age > REPORT_MAX_AGE_MS) throw new Error("Preflight report is older than 24 h");
+
+    const deployment = report.deployments?.convexProduction ?? "";
+    const match = /^prod:([a-z]+-[a-z]+-\d+)$/.exec(deployment);
+    if (!match) throw new Error(`Preflight names ${deployment || "no deployment"}, expected prod:<name>`);
+    if (confirm !== deployment) throw new Error(`--confirm-deployment ${confirm} does not match the preflight's ${deployment}`);
+    const deploymentName = match[1]!;
+
+    if (gate.env.CONVEX_DEPLOYMENT !== undefined && gate.env.CONVEX_DEPLOYMENT !== deployment) {
+        throw new Error(`Conflicting deployment selection: CONVEX_DEPLOYMENT=${gate.env.CONVEX_DEPLOYMENT}, confirmed ${deployment}`);
+    }
+    for (const name of CONFLICTING_ENV) {
+        if (gate.env[name]) throw new Error(`Refusing to run with ${name} set: it selects a deployment outside the confirmed one`);
+    }
+
+    const adminKey = gate.env.MIGRATION_CONVEX_ADMIN_KEY;
+    if (!adminKey) throw new Error("MIGRATION_CONVEX_ADMIN_KEY (the production deploy key) is required: no CLI-login fallback in production");
+    if (!adminKey.startsWith(`${deployment}|`)) throw new Error("MIGRATION_CONVEX_ADMIN_KEY does not belong to the confirmed deployment");
+    const url = gate.env.MIGRATION_CONVEX_URL ?? "";
+    assertDeploymentUrl(url, deploymentName);
+
+    return {
+        selection: { deployment, deploymentName },
+        credentials: { deploymentName, url, adminKey },
+    };
+}
+
+/**
+ * The constructor the scripts use: production only behind `--production` and
+ * the gate above; otherwise the Task 16 staging path, unchanged.
+ */
+export async function connectTarget(argv: string[]): Promise<ConvexTarget> {
+    if (!argv.includes(PRODUCTION_FLAG)) return connectStagingTarget();
+    const { selection, credentials } = resolveProductionTarget({
+        argv,
+        env: process.env,
+        headSha: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+        readText: (path) => readFileSync(resolve(path), "utf8"),
+        now: () => new Date(),
+    });
+    return createTarget(selection, credentials, fetch);
+}
+
+/** Selection → verified credentials → client (staging: the dev deployment of `.env.local`). */
 export async function connectStagingTarget(): Promise<ConvexTarget> {
     let envLocal: string | null = null;
     try {

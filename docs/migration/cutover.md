@@ -29,8 +29,8 @@ aperti al 2026-09-25.
 |---|---|---|
 | B1 | Gate `G04` (Google) e `G10` (alert di costo) `PASS` in `gates.md` | **BLOCCANTE** — entrambi `NOT_RUN` |
 | B2 | Rehearsal live `PASS` < 24 h, stesso codice (blocco machine-readable di `rehearsal.md`) | **BLOCCANTE** — `BLOCKED` (staging da ripulire, vedi `rehearsal.md`) |
-| B3 | `scripts/migration/convex-target.ts` accetta **solo** deployment `dev:` da `.env.local`: `import-convex.ts` oggi non può scrivere sul deployment di produzione. Serve una modalità produzione revisionata (conferma esplicita del nome, come `MIGRATION_SOURCE_CONFIRM` per Neon), non un bypass della guardia | **BLOCCANTE** — fuori scope Task 17 (tocca la guardia del Task 16) |
-| B4 | `maintenance-readonly` è applicata dal **Worker** (tutte le API `/api/*` e il bridge), **non** dalle mutation Convex: il client Convex del browser scrive direttamente sul deployment. Durante la finestra verde-readonly un utente con la SPA aperta può quindi scrivere su Convex. Decidere prima del GO: (a) guardia server-side nelle mutation Convex che rispetta `siteSettings` (raccomandato), oppure (b) accettare che la "prima write Convex" sia **misurata** (passo 9) e non impedita | **DECISIONE RICHIESTA** |
+| ~~B3~~ | Import verso produzione. **Chiuso (fix round 1):** `convex-target.ts` ha una modalità produzione guardata (`resolveProductionTarget`): mai di default, richiede `--production`, `--confirm-deployment <prod:nome>` digitato uguale al `deployments.convexProduction` di un report di preflight `PASS` firmato (HMAC con la chiave di migrazione), non parziale, di produzione, stesso commit di HEAD, < 24 h; sanitizzazione env del Task 16 invariata; solo credenziali esplicite `MIGRATION_CONVEX_ADMIN_KEY` (`prod:<nome>\|…`) + `MIGRATION_CONVEX_URL`, nessun fallback sul login CLI. 20 casi ermetici, uno per rifiuto, più il caso positivo (`test/migration/convex-target.test.ts`). Mai eseguita | chiuso |
+| ~~B4~~ | Read-only sul verde. **Chiuso (fix round 1):** ogni mutation/action pubblica Convex passa dai builder di `convex/lib/functions.ts`, che rifiutano con `SITE_READ_ONLY` secondo la matrice di `convex/lib/writeGuard.ts` (`domain` solo in `active`; `guest` — RSVP — in `active` e `waitinglist`; il cambio di modalità del superAdmin in ogni modalità, break-glass). Un test **enumera** le funzioni pubbliche e fallisce su una senza guardia (`convex/writeGuard.test.ts`). Anche il sign-up Better Auth sull'host `.convex.site` e i form pubblici HTTP seguono la stessa matrice. Il passo 10 è quindi il vero interruttore | chiuso |
 | B5 | Approvazione umana del runbook (GO) e della finestra | **BLOCCANTE** — Task 18 |
 
 ### 0.2 Prerequisiti operativi (verificati dal preflight o dalla checklist)
@@ -68,8 +68,11 @@ aperti al 2026-09-25.
    (dotenv `override: false`): non usarlo mai nella finestra; se la produzione ha bisogno di una
    migrazione Drizzle, farla prima, con l'URL inline, e rimisurare il drift dello schema (il
    manifest dell'export lo riporta: sul branch dev mancano le colonne della `0011`).
-7. **Import full di produzione** (T-1): export full + import + reconcile `exit 0` sul deployment
-   di produzione mentre il blu è ancora attivo. Le righe portano `legacyId` e sono ricostruibili
+7. **Import full di produzione** (T-1): export full + import (modalità produzione, vedi passo 4)
+   + reconcile `exit 0` sul deployment di produzione mentre il blu è ancora attivo; **subito
+   dopo**, il deployment Convex va in `maintenance-readonly` e ci resta fino al passo 10
+   (`npx convex run --prod siteSettings:set '{"mode":"maintenance-readonly","reason":"cutover T-1"}'`;
+   il preflight lo verifica, `convexReadOnly`). Le righe portano `legacyId` e sono ricostruibili
    da Neon: non sono "write Convex" ai fini del rollback. `email_events` e `creem_subscription`
    entrano **da questo pipeline** (Task 16), non da un replay dei provider.
 8. **DNS**: TTL del record del sito abbassato (valore approvato, es. 300 s) almeno un TTL vecchio
@@ -99,9 +102,14 @@ echo "exit=$?"   # deve essere 0
 ```
 
 Controlli (`PREFLIGHT_CHECK_IDS`): `gates` (G01–G10 `PASS`), `rehearsal` (`PASS` < 24 h, nessun
-cambio di codice dal commit provato), `neonBackup`, `exportKey`, `legacyJobs` (0 messaggi QStash
-non terminali nelle ultime 72 h e DLQ vuota), `webhookSecrets`, `authSecretParity`, `dnsTtl`,
-`googleCallbacks`, `costAlerts`, `r2Cors`, `deploymentIds`. Un controllo che non riesce a
+cambio di codice dal commit provato né codice non committato — deviazione dichiarata dal "stesso
+SHA" letterale: sono ammessi commit che toccano solo `docs/`, `graphify-out/`, `.superpowers/`),
+`neonBackup`, `exportKey`, `legacyJobs` (0 messaggi QStash
+non terminali nelle ultime 72 h e DLQ vuota), `webhookSecrets`, `authSecretParity`, `dnsTtl`
+(TTL **autoritativo** di A e CNAME, interrogando direttamente i name server della zona: il
+resolver ricorsivo risponderebbe col TTL residuo della cache), `googleCallbacks`, `costAlerts`,
+`r2Cors`, `deploymentIds` (anche: i build deployati — `builtFromCommit` — non differiscono in
+codice da HEAD), `convexReadOnly` (il target Convex risponde `maintenance-readonly`). Un controllo che non riesce a
 *provare* la propria condizione fallisce; un fallimento è `exit 1`. Rete solo in GET (guardia
 `readOnlyFetch`), sottoprocessi solo `git rev-parse`/`git diff --name-only`/`convex env list`,
 nessuna scrittura (nemmeno locale: il report va su stdout). Il report è firmato
@@ -109,7 +117,7 @@ nessuna scrittura (nemmeno locale: il report va su stdout). Il report è firmato
 deployment, mai segreti. Test: `test/migration/preflight.test.ts`.
 
 **Esito misurato sullo stato attuale** (2026-09-25, `--environment staging`, commit `c68c5df` +
-modifiche del Task 17, solo letture): `exit 1`, 2 PASS su 12. `gates` FAIL (G04, G10 `NOT_RUN`),
+modifiche del Task 17, solo letture; ripetuto dopo il fix round 1 con 13 controlli, stesso esito più `convexReadOnly` FAIL per evidenza vuota): `exit 1`, 2 PASS. `gates` FAIL (G04, G10 `NOT_RUN`),
 `rehearsal` FAIL (`BLOCKED`), `exportKey` FAIL (nessuna chiave in shell), `webhookSecrets` FAIL
 (**`RESEND_WEBHOOK_SECRET` non impostato sul deployment Convex di staging**), `r2Cors` FAIL
 (**`GetBucketCors` → HTTP 403** con le chiavi S3 di `.env`: sono chiavi per oggetti, non leggono la
@@ -126,6 +134,7 @@ Compilato dall'operatore il giorno del cutover; `null` = non ancora vero (il pre
 {
   "environment": "production",
   "siteOrigin": "https://ceremly.com",
+  "convexSiteUrl": null,
   "neonBackup": { "projectId": null, "branchId": null },
   "dns": { "host": "ceremly.com", "approvedTtlSeconds": null, "approvedBy": null, "approvedAt": null },
   "google": {
@@ -140,7 +149,8 @@ Compilato dall'operatore il giorno del cutover; `null` = non ancora vero (il pre
     "convexProduction": null,
     "workerVersion": null,
     "legacyVercelDeployment": null,
-    "legacyRollbackRef": null
+    "legacyRollbackRef": null,
+    "builtFromCommit": null
   }
 }
 ```
@@ -167,8 +177,12 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://$HOST/"                       
 ```
 
 Cosa resta aperto (`READONLY_ALLOWED_WRITES` in `shared/constants/siteMode.ts`): il toggle
-`/api/admin/site-mode` (rollback), `POST /api/jobs/*` (drain), i webhook Creem/Resend (verità del
-provider), login password + TOTP e logout (solo sessioni, effimere). Tutto il resto che scrive —
+`/api/admin/site-mode` (rollback), `POST /api/jobs/*` (drain), il webhook Creem (verità del
+provider, finestra di retry corta), login password + TOTP e logout. Il login in read-only **non**
+scrive `audit_log` (diventa una riga di log strutturata) e **non** esegue il self-heal
+dell'organizzazione (`server/utils/authAudit.ts`): resta solo la sessione, effimera. Il webhook
+Resend risponde `503`: Svix ritenta per circa un giorno, quindi gli eventi arrivano allo stack
+servito dal DNS dopo la finestra invece di essere scritti dopo il watermark. Tutto il resto che scrive —
 RSVP, checkout, upload, profilo, account, org, admin, cron, OAuth, verifica email — è `503`.
 L'elenco non è scritto a mano route per route: il test enumera `server/api/**` e fallisce su una
 scrittura nuova non esplicitamente ammessa.
@@ -198,17 +212,24 @@ prima. Il watermark del delta (passo 4) è scritto dall'export nel proprio manif
 export MIGRATION_ENCRYPTION_KEY=…   # la stessa del full
 MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> \
   time pnpm tsx scripts/migration/export-neon.ts --out .migration-cutover/delta --mode delta --since "$W"
-time pnpm tsx scripts/migration/import-convex.ts --bundle .migration-cutover/delta   # richiede B3
+# modalità produzione (fix round 1): report del preflight GO del passo 0.3, nome digitato a mano
+export MIGRATION_CONVEX_ADMIN_KEY=<deploy key prod:…> MIGRATION_CONVEX_URL=https://$CX NUXT_MIGRATION_API_KEY=<MIGRATION_API_KEY di prod>
+time pnpm tsx scripts/migration/import-convex.ts --bundle .migration-cutover/delta \
+  --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json
 ```
 
-L'import verifica tag/checksum di ogni file prima della prima scrittura; `upsert` delle righe
+Senza `--production` lo script va sullo staging di `.env.local`, come nel Task 16. Con
+`--production` rifiuta se il report non è un preflight `PASS` completo, firmato, di produzione,
+per lo stesso commit di HEAD e < 24 h, o se il nome digitato non è quello del report. L'import verifica tag/checksum di ogni file prima della prima scrittura; `upsert` delle righe
 cambiate, `prune` delle righe sparite (figli prima dei padri).
 
 ### 5. Reconcile automatico
 
 ```bash
-time pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
-  --out .migration-cutover/reconcile-delta.json    # exit 0 obbligatorio
+MIGRATION_SOURCE_CONFIRM=<ep-id prod> NUXT_DATABASE_URL=<url prod> \
+  time pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/manifest.json \
+  --out .migration-cutover/reconcile-delta.json \
+  --production --confirm-deployment prod:<nome> --preflight-report .migration-cutover/preflight.json   # exit 0 obbligatorio
 ```
 
 Count/checksum per tabella, riferimenti, R2 (presenza, chiavi in più, dimensione), piani/limiti,
@@ -229,27 +250,46 @@ customer/subscription/order Creem. `exit 1` → rollback §A.
 ### 7. Invalida le sessioni legacy
 
 Le sessioni non si migrano. Sul blu, cancellare le chiavi di sessione di Better Auth dalla
-`secondaryStorage` Upstash (`active-sessions-*` e i token che elencano) — **non** un flush
-dell'intero database: `site:mode` tiene la read-only del passo 1 e sparirebbe con lui. Sul verde
+`secondaryStorage` Upstash con lo script dedicato (legge le liste `active-sessions-*`, poi cancella
+solo quelle e i token che elencano; rifiuta `site:mode` e qualunque chiave non di sessione) —
+**mai** un flush o un `DEL` per pattern: `site:mode` tiene la read-only del passo 1.
+
+```bash
+export NUXT_UPSTASH_REDIS_REST_URL=… NUXT_UPSTASH_REDIS_REST_TOKEN=…   # Upstash di produzione
+pnpm tsx scripts/migration/invalidate-legacy-sessions.ts             # dry run: conta liste e token
+pnpm tsx scripts/migration/invalidate-legacy-sessions.ts --execute   # cancella
+curl -s -o /dev/null -w '%{http_code}\n' -X POST "https://$HOST/api/public/invite/x/rsvp"   # ancora 503: read-only intatta
+```
+
+ Sul verde
 un cookie legacy è sconosciuto a Convex e vale come anonimo. `BETTER_AUTH_SECRET` **non** si
 ruota (2FA). Effetto sul rollback: chi torna sul blu rifà il login.
 
 ### 8. Cambia callback Google, webhook Creem, DNS
 
+0. **Verifica che il verde rifiuti le scritture** — prima di toccare Google, Creem o DNS:
+   ```bash
+   curl -fsS "https://$CXS/public/site-mode"      # {"mode":"maintenance-readonly"} — altrimenti STOP
+   pnpm tsx scripts/migration/preflight.ts --environment production --only convexReadOnly   # exit 0
+   ```
+   Se la risposta non è `maintenance-readonly`: `npx convex run --prod siteSettings:set
+   '{"mode":"maintenance-readonly","reason":"cutover 8.0"}'`, poi ripetere la verifica. Con il
+   verde in `active` il primo utente sul nuovo DNS scriverebbe su Convex e il rollback §A sparirebbe
+   prima dello smoke.
 1. **Google**: verificare le redirect URI registrate (0.2 §9) e che `GOOGLE_CLIENT_*` siano
    nell'env Convex; il path `/api/auth/callback/google` non cambia (proxy same-origin).
 2. **Creem**: endpoint webhook da `https://$HOST/api/auth/creem/webhook` a
    `https://$CXS/creem/events`, con il segreto uguale a `CREEM_WEBHOOK_SECRET` di Convex.
    Da questo momento un pagamento scrive su Convex: vedi la definizione di "prima write" in
    `rollback.md`. Il webhook Resend **non cambia URL** (il Worker lo inoltra a Convex con
-   `NUXT_EMAIL_BACKEND=convex`): cambia solo chi lo serve quando cambia il DNS.
+   `NUXT_EMAIL_BACKEND=convex`): cambia solo chi lo serve quando cambia il DNS; nella finestra
+   read-only risponde `503` su entrambi gli stack e Svix ritenta dopo.
 3. **DNS**: il record di `$HOST` passa al Worker (custom domain Cloudflare). Annotare l'ora; la
    propagazione è bounded dal TTL approvato.
 
 ### 9. Smoke read-only
 
-Il deployment Convex è in `maintenance-readonly` (`npx convex run --prod siteSettings:set
-'{"mode":"maintenance-readonly","reason":"cutover"}'`, impostato prima del passo 8).
+Il deployment Convex è in `maintenance-readonly` dal T-1 (0.2 §7), riverificato al passo 8.0.
 
 ```bash
 pnpm tsx scripts/migration/smoke-production.ts --read-only --base-url "https://$HOST" \
@@ -261,13 +301,16 @@ pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/mani
 Lo smoke fa solo GET più una query Convex (`/api/query`, che non può scrivere): home con HSTS e
 CSP che ammette l'origine Convex del build, `/login`, sessione anonima, site mode Convex, query
 HTTP. Il secondo reconcile è la misura del punto di non ritorno: righe `only_in_target` o nuovi
-`webhookEvents` = **write Convex avvenute** (con B4 non risolto sono possibili). Esito ≠ 0 →
-rollback §A se nessuna write, altrimenti §B.
+`webhookEvents` = **write Convex avvenute**. Con la guardia Convex (B4 chiuso) le scritture degli
+utenti sono rifiutate, quindi l'unica fonte attesa è un webhook Creem arrivato dopo il passo 8.2.
+Esito ≠ 0 → rollback §A se nessuna write, altrimenti §B.
 
 ### 10. Abilita le scritture Convex — punto di non ritorno
 
 ```bash
+# L'interruttore vero: fino a qui ogni mutation/action pubblica rispondeva SITE_READ_ONLY.
 npx convex run --prod siteSettings:set '{"mode":"active","reason":"cutover GO <ticket>"}'
+curl -fsS "https://$CXS/public/site-mode"                              # {"mode":"active"}
 curl -fsS -X POST "https://<legacy>.vercel.app/api/admin/site-mode" -H "X-Admin-API-Key: $ADMIN" \
   -H 'content-type: application/json' -d '{"mode":"maintenance"}'     # il blu non scrive più, mai
 pnpm tsx scripts/migration/smoke-production.ts --write-canary --base-url "https://$HOST" \
@@ -279,7 +322,8 @@ Da qui vale solo `rollback.md` §B.
 ### 11. Monitor intensivo (≥ 2 h, poi 24 h ridotto)
 
 - error rate e latenza del Worker (Cloudflare observability), log Convex (funzioni in errore);
-- `jobExecutions`: nessun `dead`; email consegnate (Resend), webhook Resend ricevuti;
+- `jobExecutions`: nessun `dead`; email consegnate (Resend), webhook Resend ricevuti (anche i
+  ritentativi Svix degli eventi rimandati dalla finestra read-only);
 - webhook Creem ricevuti in `webhookEvents`; `reconcile-creem.ts --prod` (sola lettura) a +1 h e +24 h;
 - login password/Google/2FA reali, RSVP reali, upload;
 - dashboard costi Convex/Cloudflare/Resend vs `cost-model.md`.

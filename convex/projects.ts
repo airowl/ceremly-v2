@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
+import { mutation } from "./lib/functions";
 import { requireActiveOrganization } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { forbidden } from "./lib/identity";

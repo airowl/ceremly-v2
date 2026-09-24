@@ -8,7 +8,8 @@ import {
     type CreemWebhookEvent,
 } from "@creem_io/convex";
 import { components, internal } from "./_generated/api";
-import { action, internalAction, internalMutation, internalQuery, query } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
+import { action } from "./lib/functions";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { forbidden } from "./lib/identity";

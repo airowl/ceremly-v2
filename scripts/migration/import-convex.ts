@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { IMPORT_ORDER } from "../../shared/migration/domainBatch";
-import { connectStagingTarget, type ConvexTarget } from "./convex-target";
+import { connectTarget, type ConvexTarget } from "./convex-target";
 import { assertBatchDigest, decryptJson, migrationKeyFromEnv, sha256Bytes } from "./crypto";
 import { EXPECTED_BATCH_TABLES } from "./export-neon";
 import { assertIdsPayload, validateManifest, verifyManifestMac } from "./manifest";
@@ -303,7 +303,7 @@ async function main() {
     config({ path: ".env", quiet: true });
     const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
     if (!migrationKey) throw new Error("NUXT_MIGRATION_API_KEY is not set (the deployment's MIGRATION_API_KEY)");
-    const target = await connectStagingTarget();
+    const target = await connectTarget(process.argv.slice(2));
 
     const result = await importBundle(target, bundle, migrationKey, { prune });
     console.log(JSON.stringify({

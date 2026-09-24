@@ -11,8 +11,9 @@ tornare al blu significherebbe buttare dati reali — quindi non si torna indiet
 
 Una scrittura sul deployment Convex di produzione **non prodotta dal pipeline di import** (le
 righe dell'import portano `legacyId` e sono ricostruibili da Neon in qualunque momento). Include:
-azioni utente dalla SPA o dalle API del Worker, webhook Creem (dopo il passo 8.2), webhook Resend
-(dopo il DNS), job e cron Convex che mutano dati di dominio.
+azioni utente dalla SPA o dalle API del Worker, webhook Creem (dopo il passo 8.2), job e cron
+Convex che mutano dati di dominio. Il webhook Resend no: in read-only risponde `503` e Svix
+ritenta dopo la finestra.
 
 Si **misura**, non si presume:
 
@@ -25,9 +26,10 @@ pnpm tsx scripts/migration/reconcile.ts --manifest .migration-cutover/delta/mani
   passo 6 → **nessuna write**: vale §A.
 - altrimenti → **write avvenute**: vale §B.
 
-Perché misurare: `maintenance-readonly` è applicata dal Worker, non dalle mutation Convex (cutover
-B4). Finché B4 non è risolto con una guardia server-side, "abbiamo impostato la read-only" non
-implica "nessuno ha scritto".
+Perché misurare anche con la guardia Convex (cutover B4, chiuso): la guardia copre le funzioni
+pubbliche, non i percorsi interni e provider (webhook Creem, job, cron), che scrivono per
+costruzione. "Abbiamo impostato la read-only" riduce le write possibili a quelle; la misura dice se
+sono avvenute.
 
 In caso di dubbio (reconcile non eseguibile, report ambiguo) si assume §B.
 
@@ -46,14 +48,20 @@ Ordine (inverso rispetto al runbook, ognuno registrato con ora UTC):
    Convex** → non si è in §A: ricontrollare la misura.
 3. **Callback Google**: nessun cambio di path (proxy same-origin); se durante la finestra sono
    state rimosse URI legacy, ripristinarle.
-4. **Riabilita scritture ed enqueue sul blu**:
+4. **Riabilita scritture ed enqueue sul blu** — sull'URL **del deployment legacy registrato**
+   (`deployments.legacyVercelDeployment`, es. `https://<legacy>.vercel.app`), **mai** sull'host
+   pubblico: durante la propagazione del DNS `ceremly.com` può ancora risolvere sul Worker, che
+   serve la stessa route e cambierebbe la modalità del verde (o fallirebbe) lasciando il blu in
+   read-only, e la verifica darebbe un falso positivo.
    ```bash
-   curl -fsS -X DELETE "https://ceremly.com/api/admin/site-mode" -H "X-Admin-API-Key: $NUXT_ADMIN_API_KEY"
+   LEGACY=https://<legacy>.vercel.app      # dal blocco evidenze / registro
+   curl -fsS -X DELETE "$LEGACY/api/admin/site-mode" -H "X-Admin-API-Key: $NUXT_ADMIN_API_KEY"
    # (o POST {"mode":"active"} se l'env di Vercel non è `active`)
+   curl -s -o /dev/null -w '%{http_code}\n' -X POST "$LEGACY/api/public/invite/x/rsvp"   # non più 503
    ```
    Con la modalità `active` tornano le scritture, l'enqueue QStash e i cron Vercel (il deploy
-   legacy li ha ancora: `legacy-vercel-final`). Verifica: `POST /api/public/invite/x/rsvp` non
-   risponde più `503`.
+   legacy li ha ancora: `legacy-vercel-final`). Solo quando il DNS è propagato si ripete la
+   verifica anche sull'host pubblico.
 5. **Convex** va in `maintenance` (`npx convex run --prod siteSettings:set
    '{"mode":"maintenance","reason":"rollback <ticket>"}'`) e **non** è authority: i dati
    importati restano come copia inerte e verranno riscritti dal prossimo full/delta. Nessuna

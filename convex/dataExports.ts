@@ -1,13 +1,8 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { components, internal } from "./_generated/api";
-import {
-    action,
-    internalMutation,
-    internalQuery,
-    mutation,
-    query,
-} from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { mutation, readAction } from "./lib/functions";
 import type { ReadCtx } from "./lib/identity";
 import { forbidden } from "./lib/identity";
 import { requireAppUser } from "./lib/authorization";
@@ -198,7 +193,8 @@ export const history = query({
  * L'action non tocca mai le credenziali R2: chiede al Worker un URL per la chiave
  * già memorizzata, e il bridge la valida contro il namespace `exports/`.
  */
-export const downloadUrl = action({
+// Read-only (signs a GET URL): not guarded, a download stays possible in every mode.
+export const downloadUrl = readAction({
     args: { exportId: v.id("dataExports") },
     handler: async (ctx, args): Promise<{ url: string; expiresAt: number }> => {
         const appUser: Doc<"appUsers"> = await ctx.runQuery(internal.dataExports.authz, {});

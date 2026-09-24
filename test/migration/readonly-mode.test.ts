@@ -184,9 +184,10 @@ describe("maintenance-readonly: pages, login and public reads stay open", () => 
         await expectAllowed("/api/admin/site-mode", "DELETE");
         // Jobs already enqueued must finish *before* the watermark.
         await expectAllowed("/api/jobs/send-invite-email", "POST");
-        // Provider webhooks: external truth, reconciled after the switch.
+        // Creem: external truth with a short retry window, reconciled after the switch.
         await expectAllowed("/api/auth/creem/webhook", "POST");
-        await expectAllowed("/api/webhooks/resend", "POST");
+        // Resend (Svix) retries for about a day: deferred, not written after the watermark.
+        await expectBlocked("/api/webhooks/resend", "POST");
     });
 
     it("the auth catch-all serves the login subset instead of going dark", () => {
@@ -252,7 +253,6 @@ describe("maintenance-readonly: drift guards over server/api", () => {
             "DELETE /api/admin/site-mode",
             "POST /api/admin/site-mode",
             "POST /api/jobs/x",
-            "POST /api/webhooks/resend",
         ]);
         expect(READONLY_ALLOWED_WRITES.length).toBeGreaterThan(0);
     });

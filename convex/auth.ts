@@ -7,6 +7,13 @@ import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { requireEnv, siteUrl } from "./lib/env";
 import authConfig from "./auth.config";
+import { writesAllowed } from "./lib/writeGuard";
+import type { SiteMode } from "./siteSettings";
+
+/** Sign-up is an account write: `domain` policy of `lib/writeGuard.ts`. */
+export function signUpAllowed(mode: SiteMode): boolean {
+    return writesAllowed(mode, "domain");
+}
 
 // Task 4 (migration): Better Auth is the only identity provider. It runs inside
 // Convex and stores users/sessions/accounts/2FA in the `betterAuth` component.
@@ -204,6 +211,16 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         databaseHooks: {
             user: {
                 create: {
+                    // Task 17 fix round 1: the Better Auth routes are reachable on
+                    // the deployment's own `.convex.site` host, bypassing the
+                    // Worker's read-only gate. A sign-up is an account write, so it
+                    // follows the same policy as every public mutation (`domain`):
+                    // refused outside `active`. Login of existing users is untouched.
+                    before: async (user: { email: string }) => {
+                        const { mode } = await ctx.runQuery(internal.siteSettings.getForWorker, {});
+                        if (!signUpAllowed(mode)) return false;
+                        return { data: user };
+                    },
                     after: async (user: { id: string; email: string; name?: string | null }) => {
                         scheduleAppUserProvisioning(ctx, user);
                     },

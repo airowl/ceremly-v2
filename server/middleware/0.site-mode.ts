@@ -47,6 +47,11 @@ export default defineEventHandler(async (event) => {
     // (evita anche un round-trip Redis inutile sugli asset).
     if (path.startsWith("/_")) return;
 
+    // Read before the exemptions below (review fix round 1, minor): the read-only
+    // rule must see jobs/cron/public/webhooks too. The cost is one lookup on those
+    // paths, the Creem webhook included — cached per instance for 10 s
+    // (`server/utils/siteMode.ts`), and a Redis failure falls back to the env
+    // value instead of throwing, so a webhook is never failed by this read.
     const siteMode = await getServerSiteMode();
 
     // === MAINTENANCE-READONLY ===

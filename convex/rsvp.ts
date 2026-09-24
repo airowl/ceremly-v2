@@ -1,9 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { query, mutation as rawMutation } from "./_generated/server";
+import { guestMutation, tagged } from "./lib/functions";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./lib/domain";
 import { requireEnv } from "./lib/env";
+import { writesAllowed } from "./lib/writeGuard";
+import { readSiteMode } from "./siteSettings";
 import { verifyPreviewToken } from "./lib/previewToken";
 import { RATE_LIMIT_CODE, assertRateLimit } from "./lib/rateLimit";
 import { getVisibleQuestions, validateRsvpSubmission } from "./lib/rsvpLogic";
@@ -131,28 +134,31 @@ export interface PublicInviteResult {
  * Side effect di tracking: `openCount + 1`, `firstOpenedAt` al primo accesso,
  * attività `link_opened` con `{ nth }` (il numero progressivo di apertura).
  */
-export const publicInvite = mutation({
+// Guard inline (Task 17 fix round 1): the invitation is served in every mode,
+// the open is recorded only where guest writes are allowed (`lib/writeGuard.ts`).
+export const publicInvite = tagged("inline", rawMutation({
     args: { token: v.string() },
     handler: async (ctx, args): Promise<PublicInviteResult> => {
         const { guest, event, response } = await findActiveInvite(ctx, args.token);
-
-        const isFirst = guest.firstOpenedAt === undefined;
-        const nth = guest.openCount + 1;
         const now = Date.now();
 
-        await ctx.db.patch(guest._id, {
-            openCount: nth,
-            updatedAt: now,
-            ...(isFirst ? { firstOpenedAt: now } : {}),
-        });
-        await ctx.db.insert("guestActivities", {
-            organizationId: guest.organizationId,
-            eventId: guest.eventId,
-            guestId: guest._id,
-            type: "link_opened",
-            meta: { nth },
-            createdAt: now,
-        });
+        if (writesAllowed(await readSiteMode(ctx), "guest")) {
+            const isFirst = guest.firstOpenedAt === undefined;
+            const nth = guest.openCount + 1;
+            await ctx.db.patch(guest._id, {
+                openCount: nth,
+                updatedAt: now,
+                ...(isFirst ? { firstOpenedAt: now } : {}),
+            });
+            await ctx.db.insert("guestActivities", {
+                organizationId: guest.organizationId,
+                eventId: guest.eventId,
+                guestId: guest._id,
+                type: "link_opened",
+                meta: { nth },
+                createdAt: now,
+            });
+        }
 
         // Evento `closed`: l'invito resta visibile (più cortese di un 404) ma il
         // form è chiuso, esattamente come a deadline passata.
@@ -163,7 +169,7 @@ export const publicInvite = mutation({
             deadlinePassed: isInviteClosed(event, now),
         };
     },
-});
+}));
 
 const submitArgs = {
     token: v.string(),
@@ -193,7 +199,7 @@ const submitArgs = {
  * errori in chiaro per l'ospite). Validare prima di sapere se l'invito è chiuso
  * direbbe a un estraneo quali domande esistono.
  */
-export const submit = mutation({
+export const submit = guestMutation({
     args: submitArgs,
     handler: async (ctx, args) => {
         // Limite per token (30/min, la costante del legacy) prima di qualunque
@@ -388,9 +394,11 @@ export const previewInvite = query({
  * il pixel risponde comunque 200, e un pixel che rivela l'esistenza di un token
  * sarebbe un oracolo.
  */
-export const trackEmailOpen = mutation({
+// Guard inline: outside the modes that allow guest writes the pixel is a no-op.
+export const trackEmailOpen = tagged("inline", rawMutation({
     args: { token: v.string() },
     handler: async (ctx, args): Promise<{ tracked: boolean }> => {
+        if (!writesAllowed(await readSiteMode(ctx), "guest")) return { tracked: false };
         const guest = await ctx.db
             .query("guests")
             .withIndex("by_token", (q) => q.eq("token", args.token))
@@ -412,4 +420,4 @@ export const trackEmailOpen = mutation({
 
         return { tracked: true };
     },
-});
+}));

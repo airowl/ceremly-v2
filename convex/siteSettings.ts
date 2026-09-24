@@ -70,6 +70,12 @@ async function readOverride(ctx: ReadCtx): Promise<string | null> {
     return row ? row.value : null;
 }
 
+/** Effective site mode inside a query/mutation (the write guard reads this). */
+export async function readSiteMode(ctx: ReadCtx): Promise<SiteMode> {
+    const override = await readOverride(ctx);
+    return override === null ? DEFAULT_SITE_MODE : resolveSiteMode(override);
+}
+
 /**
  * Lettura pubblica: usata dal middleware del Worker (via HTTP) e da chiunque
  * debba sapere se il sito è aperto. Read-only per costruzione: è una `query`.

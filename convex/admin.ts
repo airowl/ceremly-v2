@@ -2,7 +2,8 @@ import { paginationOptsValidator, type PaginationOptions } from "convex/server";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { action, mutation, siteModeMutation } from "./lib/functions";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { creem, isAtelierSubscription, requireCreemConfiguration } from "./billing";
 import { retryDeadJob } from "./jobs";
@@ -1246,7 +1247,7 @@ export const listAudit = query({
 // ---------------------------------------------------------------------------
 
 /** Sets the site mode (`null` clears the override) — `siteSettings` with a reason. */
-export const setSiteMode = mutation({
+export const setSiteMode = siteModeMutation({
     args: {
         mode: v.union(
             v.literal("active"),

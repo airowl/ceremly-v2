@@ -235,14 +235,19 @@ export const READONLY_ALLOWED_WRITES: readonly ReadonlyWriteRule[] = [
         path: "/api/auth/creem/webhook",
         why: "provider truth: Creem retries only for a limited window; reconciled after the switch",
     },
-    {
-        methods: ["POST"],
-        match: "exact",
-        path: "/api/webhooks/resend",
-        why: "provider truth: delivery/bounce events; reconciled after the switch",
-    },
-    // Password login (+ TOTP) and logout. They write only sessions, which are
-    // ephemeral and never imported (the runbook invalidates them anyway).
+    // Deliberately absent: `/api/webhooks/resend`. Resend delivers through Svix,
+    // which retries a non-2xx for about a day — far longer than the ≤ 30 min
+    // window — so a `503` here defers delivery-/open-events to whichever stack
+    // the DNS points at afterwards instead of writing them after the watermark
+    // (legacy) or turning every open-tracking event into a "first Convex write"
+    // (new stack, review fix round 1). Creem stays open: its retry window is short.
+    // Password login (+ TOTP) and logout. On the legacy stack they would also
+    // write an `audit_log` row (auth `after` hook) and possibly an organization
+    // (login self-heal): in this mode both are suppressed
+    // (`server/utils/authAudit.ts`, tested in readonly-auth-writes.test.ts), so
+    // what is left is the session, which is ephemeral and never imported (the
+    // runbook invalidates sessions anyway). On the Convex stack the login's
+    // `ensureProvisioned` is read-only outside `active` (`convex/lib/writeGuard.ts`).
     // Deliberately absent: OAuth (`sign-in/social`, `callback/*` can create a
     // user) and `two-factor/verify-backup-code` (consumes a credential).
     { methods: ["POST"], match: "exact", path: "/api/auth/sign-in/email", why: "login" },
