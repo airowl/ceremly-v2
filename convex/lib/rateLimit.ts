@@ -64,6 +64,12 @@ export const RATE_LIMIT_POLICY = {
     filePresign: { limit: 100, windowMs: 60_000, subject: "appUserId + organizationId" },
     fileConfirm: { limit: 200, windowMs: 60_000, subject: "appUserId + organizationId" },
     admin: { limit: 60, windowMs: 60_000, subject: "superAdmin appUserId" },
+    /**
+     * Organizer email sends (`guests.sendInvites`, `guests.sendTest`), final review
+     * M2. The legacy routes sat behind the global 100 req/min middleware
+     * (`3.rate-limit.ts`), which does not exist on Convex; mirrored, not tightened.
+     */
+    emailSend: { limit: 100, windowMs: 60_000, subject: "appUserId + organizationId" },
 } as const;
 
 export type RateLimitBucket = keyof typeof RATE_LIMIT_POLICY;
@@ -80,6 +86,7 @@ const bucket = v.union(
     v.literal("filePresign"),
     v.literal("fileConfirm"),
     v.literal("admin"),
+    v.literal("emailSend"),
 );
 
 export interface RateLimitRequest {

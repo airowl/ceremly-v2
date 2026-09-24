@@ -435,6 +435,42 @@ const testJobs = async (t: Test) =>
     (await rows(t, "jobExecutions")).filter((job) => job.name === JOB_TYPES.sendTestInviteEmail);
 
 describe("guests.sendTest", () => {
+    it("final review M2: the emailSend bucket limits sendTest and sendInvites per caller", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture, { slug: "rate-limited" });
+        // Exhaust the caller's budget directly: 100 requests are not the point here.
+        const { internal: internalApi } = await import("./_generated/api");
+        for (let i = 0; i < 100; i += 1) {
+            await fixture.t.mutation(internalApi.lib.rateLimit.consume, {
+                bucket: "emailSend",
+                key: `${fixture.appUserId}:${fixture.organizationId}`,
+            });
+        }
+        let caught: unknown;
+        try {
+            await fixture.s.mutation(api.guests.sendTest, { eventId });
+        } catch (error) {
+            caught = error;
+        }
+        expect((caught as { data?: { code?: string; bucket?: string } }).data).toMatchObject({
+            code: "RATE_LIMITED",
+            bucket: "emailSend",
+        });
+        caught = undefined;
+        try {
+            await fixture.s.mutation(api.guests.sendInvites, {
+                eventId,
+                guestIds: [],
+                subject: "s",
+                body: "b",
+            });
+        } catch (error) {
+            caught = error;
+        }
+        expect((caught as { data?: { code?: string } }).data?.code).toBe("RATE_LIMITED");
+        expect(await testJobs(fixture.t)).toHaveLength(0);
+    });
+
     it("queues a durable job with an ID-only payload, and the job sends to the caller as Anna", async () => {
         const fixture = await bootstrap();
         const eventId = await seedEvent(fixture, {

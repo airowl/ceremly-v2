@@ -20,6 +20,7 @@ import {
 import { emailSubjects } from "./lib/emailSubjects";
 import { requireEnv, siteUrl } from "./lib/env";
 import { JOB_TYPES, enqueueJob } from "./lib/jobQueue";
+import { assertRateLimit } from "./lib/rateLimit";
 import { PREVIEW_TOKEN, signPreviewToken } from "./lib/previewToken";
 
 /**
@@ -739,6 +740,8 @@ export const sendInvites = mutation({
     },
     handler: async (ctx, args) => {
         const authz = await requireRole(ctx, DOMAIN_WRITE_ROLES);
+        // Final review M2: per-caller budget (legacy: global 100 req/min).
+        await assertRateLimit(ctx, { bucket: "emailSend", key: `${authz.appUserId}:${authz.organizationId}` });
 
         if (args.guestIds.length === 0 || args.guestIds.length > MAX_SEND_GUESTS) {
             throw new ConvexError({ code: "INVALID_INPUT", field: "guestIds", max: MAX_SEND_GUESTS });
@@ -833,6 +836,8 @@ export const sendTest = mutation({
     },
     handler: async (ctx, args): Promise<{ queued: true }> => {
         const authz = await requireRole(ctx, DOMAIN_WRITE_ROLES);
+        // Final review M2: per-caller budget (legacy: global 100 req/min).
+        await assertRateLimit(ctx, { bucket: "emailSend", key: `${authz.appUserId}:${authz.organizationId}` });
         const subject = optionalText(args.subject, MAX_SUBJECT_LENGTH, "subject");
         const body = optionalText(args.body, MAX_BODY_LENGTH, "body");
 

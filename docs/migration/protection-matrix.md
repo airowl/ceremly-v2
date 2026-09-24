@@ -52,6 +52,7 @@ limit and asserted by a test.
 | `filePresign` | 100 | 60 s | `fileManager.uploadRateLimit` (100 per 1 min, per user) |
 | `fileConfirm` | 200 | 60 s | new — confirm reads the object and can start variant work |
 | `admin` | 60 | 60 s | legacy `/api/admin/*` had no limiter (API key only) |
+| `emailSend` | 100 | 60 s | global `3.rate-limit.ts` (100 req/min) in front of `send-invites`/`send-test` (final review M2) |
 
 The numbers are mirrored rather than tightened on purpose: a migration must not
 silently throttle what production allows. Where the legacy had **no** limiter
