@@ -7,6 +7,42 @@
 **Chiave:** `MIGRATION_ENCRYPTION_KEY` effimera (`openssl rand -base64 32`), viva solo nella shell del rehearsal, mai scritta su disco né committata. `NUXT_MIGRATION_EXPORT_KEY` di `.env` è una passphrase esadecimale da 64 caratteri, non una chiave base64 da 32 byte: non è stata usata.
 **Artefatti:** `.migration-rehearsal/` (git-ignored, directory `0700`, file `0600`): bundle cifrati, manifest, inventario, stdout. Nessuna riga in chiaro su disco.
 
+## Fix round 1 della review (2026-09-25, commit `bbb9801`)
+
+Il pipeline eseguito sopra è quello di `6fbe3c5`. La review ha chiesto dieci correzioni, tutte
+applicate e verdi ermeticamente; **nessuna è ancora stata eseguita contro lo staging** (vedi
+"Stato del blocco"). Cosa cambia per il rehearsal:
+
+| # | Correzione | Effetto sul rehearsal |
+|---|---|---|
+| 1 | niente più `convex run`: client HTTPS con credenziali admin del solo deployment `dev:` di `.env.local` (`convex-target.ts`); `CONVEX_DEPLOYMENT` diverso, `CONVEX_DEPLOY_KEY` e simili nell'ambiente → rifiuto; nome, tipo `dev` e host delle credenziali verificati prima della prima chiamata | il target non può essere spostato dall'ambiente |
+| 2 | manifest autenticato (HMAC-SHA256, chiave derivata HKDF da `MIGRATION_ENCRYPTION_KEY`); liste id cifrate come `{version, table, watermark, ids}` e verificate | i bundle di questo documento (formato precedente) **non** sono più accettati: il rehearsal riparte da un export nuovo |
+| 3 | `creem_subscription` ora **importata** nel componente Creem (`migrations/billingImport`), agganciata alle organizzazioni di cui l'utente pagante è owner (regola legacy `resolveOrgOwnerId`) | classe `production/imported`; righe senza id subscription o customer, e owner senza organizzazioni, sono deferral contati |
+| 4 | `email_events.svix_id` → `svixId` (spec d'import + chiave naturale `by_svix_id`) | la perdita descritta in "Scoperte" §2 è chiusa |
+| 5 | inventario del bucket R2 (`ListObjectsV2`, solo lettura) nel namespace dei file (`evt/`, `global/`): oggetto mancante, in più o di dimensione diversa = mismatch; senza credenziali il reconcile fallisce chiuso | voce R2 ora verificabile live (credenziali `NUXT_CF_*` presenti in `.env`) |
+| 6 | Creem: prodotti configurati, piano ed effective limits per organizzazione (override inclusi), customer, order id della subscription (`metadata.legacyOrderId`), checkout divergente → tutti mismatch | la voce billing confronta fatti, non solo count |
+| 7 | exit `1` anche su count o checksum diversi | — |
+| 8 | inventario del manifest validato per intero prima della prima scrittura (tabelle esatte, niente duplicati, batch contigui, liste id del delta) | — |
+| 9 | record e credenziali nel body TLS, mai in argv (anche il gate G03–G05 è passato al client HTTPS) | il limite "Argomenti di `convex run`" sotto non vale più |
+| 10 | una riga `auditLogs` per ogni batch importato/potato (`admin.migration_*`), solo count e digest | — |
+
+### Stato del blocco (2026-09-25)
+
+L'utente ha autorizzato la cancellazione **solo** degli 8 documenti `events` sintetici del gate G07
+(`order_gate_*`), a condizione di verificare prima che fossero esattamente 8 e tutti conformi al
+pattern. Elenco (solo forma e prefissi, eseguito in sola lettura):
+
+| Documenti | Campi | `creemOrderId` | `creemCheckoutId` |
+|---:|---|---|---|
+| 6 | `creemCheckoutId, creemOrderId, organizationId, tier` | `order_gate_*` | `checkout_gate_*` |
+| 2 | `creemCheckoutId, organizationId, tier` | — | `ch_…` (id di checkout reale del sandbox Creem) |
+
+Il conteggio è 8, ma **2 documenti su 8 non corrispondono al pattern `order_gate_*`**: sono
+probabilmente gli eventi della checkout reale del gate G07 live (`checkouts.create` contro il
+sandbox), ma non rientrano nell'autorizzazione così com'è formulata. Per la condizione posta,
+**nessun documento è stato cancellato** e il deploy/rehearsal live resta fermo in attesa di
+un'autorizzazione che includa anche i 2 `ch_…` (o di una diversa indicazione).
+
 ## Verdetto
 
 **NON PASS — rehearsal live BLOCCATO (`NEEDS_CONTEXT`).**
@@ -95,7 +131,7 @@ Checksum = SHA-256 del JSON canonico di tutte le righe ordinate per id (prefisso
 | `audit_log` | production | imported | 502 | `ed3f935eb3adbe77` |
 | `contact_messages` | production | imported | 0 | `4f53cda18c2baa0c` |
 | `waiting_list` | production | imported | 0 | `4f53cda18c2baa0c` |
-| `creem_subscription` | production | not-imported (esportato, riconciliato) | 0 | `4f53cda18c2baa0c` |
+| `creem_subscription` | production | imported → componente Creem (fix round 1; nel run sopra era `not-imported`) | 0 | `4f53cda18c2baa0c` |
 | oggetti R2 | production | manifest-only | — | — |
 | Redis rate limit | ephemeral | not-imported | — | — |
 | Redis `site:mode` | regenerable | not-imported (lo imposta il runbook) | — | — |
@@ -196,9 +232,9 @@ report `--out`; lo stdout porta count, prefissi dei checksum e l'exit code.
 
 - **Plaintext in memoria.** I buffer JSON cifrati sono azzerati (`fill(0)`); le stringhe
   JavaScript delle righe no (immutabili, gestite dal GC). Su disco non arriva nulla in chiaro.
-- **Argomenti di `convex run`.** I record viaggiano come argomento della CLI (l'unica porta
-  verso le funzioni `internal*`), quindi sono visibili a `ps` sulla macchina che esegue
-  l'import. Batch limitati a 350 KB per stare sotto `ARG_MAX`.
+- **Trasporto.** Dal fix round 1 i record viaggiano nel body HTTPS verso `/api/function` con
+  credenziali admin del deployment verificato; il `convex run` del run qui sopra li passava in
+  argv (visibili a `ps`). Batch limitati a 350 KB.
 - **Delta basato su `updatedAt`.** Le tabelle senza colonna di modifica sono reinviate intere;
   un `updatedAt` non aggiornato dal legacy lascerebbe una riga vecchia — il reconcile la vede
   (`field_mismatch`, exit 1) e la cura è un full in modalità delta.
@@ -206,7 +242,13 @@ report `--out`; lo stdout porta count, prefissi dei checksum e l'exit code.
   solo-Convex (`inviteTestRequests`, `organizationLimitOverrides`), vuote prima del cutover. Un
   utente cancellato nel legacy perde `appUsers` ma non la credenziale del componente (che non
   ha `legacyId`): il reconcile auth la conta come `only_in_target`.
-- **`creem_subscription`** non ha un percorso d'import nel componente Creem: è esportata e
-  riconciliata (una subscription legacy mancante fa fallire il reconcile). 0 righe su dev.
-- **R2:** si confrontano chiave, dimensione e SHA-256 delle righe `files`; l'HEAD di ogni
-  oggetto nel bucket non è eseguito (stesso bucket, chiavi invariate) — verifica del Task 17.
+- **`creem_subscription`** (fix round 1): importata nel componente Creem senza inventare
+  importo, valuta, intervallo o data di creazione (assenti nel legacy: `null`/inizio periodo);
+  una riga cancellata nel legacy non viene potata dal componente (il reconcile la mostra come
+  `subscription_only_in_convex`, nota). Le righe `pending` restano un mismatch (regola Task 6).
+  0 righe su dev: verificato solo ermeticamente.
+- **R2** (fix round 1): inventario `ListObjectsV2` del namespace dei file; gli ETag non sono
+  confrontati (le righe hanno SHA-256, l'ETag R2 è MD5/multipart); gli oggetti fuori da
+  `evt/`/`global/` sono solo contati.
+- **`reconcile-creem.ts` standalone** usa ancora `convex run` (sola lettura, supporta `--prod`):
+  il reconcile del Task 16 non lo invoca più, usa il comparatore in-process.
