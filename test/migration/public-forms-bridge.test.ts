@@ -295,6 +295,27 @@ describe("public forms bridge: refusals", () => {
         });
     });
 
+    it("carries the RSVP validation errors where the invite page reads them", async () => {
+        responder = () =>
+            new Response(
+                JSON.stringify({
+                    ok: false,
+                    code: "RSVP_INVALID",
+                    message: "Indica il menu",
+                    errors: ["Indica il menu", "Indica i nomi"],
+                }),
+                { status: 422, headers: { "content-type": "application/json" } },
+            );
+
+        await expect(
+            forwardPublicForm(fakeEvent() as never, PUBLIC_FORM_PATHS.rsvp, { token: "t", attending: "yes" }),
+        ).rejects.toMatchObject({
+            statusCode: 422,
+            statusMessage: "Indica il menu",
+            data: { code: "RSVP_INVALID", errors: ["Indica il menu", "Indica i nomi"] },
+        });
+    });
+
     it("does not read a refusal as a success when the answer is not JSON", async () => {
         responder = () => new Response("<html>502</html>", { status: 502 });
 

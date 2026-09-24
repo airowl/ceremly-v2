@@ -372,11 +372,19 @@ async function runPublicForm(
         const code = typeof data?.code === "string" ? data.code : "PUBLIC_FORM_FAILED";
         const status = typeof data?.status === "number" ? data.status : 500;
         const message = typeof data?.message === "string" ? data.message : undefined;
+        // The RSVP validator returns every error, not only the first (legacy 422
+        // `data.errors`): the invite page lists them all next to the form.
+        const errors = Array.isArray(data?.errors)
+            ? data.errors.filter((item): item is string => typeof item === "string")
+            : undefined;
 
         // A named refusal is never swallowed into a 200: the bridge answers with the
         // status the domain chose (429 for the limiter, 400 for a disposable
-        // address), so the UI can show the legacy message.
-        return json({ ok: false, code, ...(message ? { message } : {}) }, status);
+        // address, 404/410/422 for the RSVP), so the UI can show the legacy message.
+        return json(
+            { ok: false, code, ...(message ? { message } : {}), ...(errors ? { errors } : {}) },
+            status,
+        );
     }
 }
 

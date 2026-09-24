@@ -169,6 +169,9 @@ export async function forwardPublicForm(
                 typeof parsed.message === "string" ? parsed.message : "Richiesta rifiutata. Riprova.",
             data: {
                 code: typeof parsed.code === "string" ? parsed.code : "PUBLIC_FORM_REFUSED",
+                // RSVP 422: every validation error, where the legacy route put them
+                // (`data.errors`), which is where the invite page reads them.
+                ...(Array.isArray(parsed.errors) ? { errors: parsed.errors } : {}),
             },
         });
     }

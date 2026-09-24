@@ -1,9 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { DEFAULT_RSVP_CLOSED_MESSAGE } from "./lib/domain";
-import { assertRateLimit } from "./lib/rateLimit";
+import { requireEnv } from "./lib/env";
+import { verifyPreviewToken } from "./lib/previewToken";
+import { RATE_LIMIT_CODE, assertRateLimit } from "./lib/rateLimit";
 import { getVisibleQuestions, validateRsvpSubmission } from "./lib/rsvpLogic";
 
 /**
@@ -33,9 +35,16 @@ import { getVisibleQuestions, validateRsvpSubmission } from "./lib/rsvpLogic";
  * spostasse in una mutation separata che il client potrebbe non chiamare.
  */
 
-/** 404 generico §8.2: la stessa risposta per ogni causa. */
-function inviteNotFound(): ConvexError<{ code: string }> {
-    return new ConvexError({ code: "INVITE_NOT_FOUND" });
+/**
+ * 404 generico §8.2: la stessa risposta per ogni causa.
+ *
+ * `status` (Task 14) è ciò che il bridge del Worker (`http.ts` → `runPublicForm`)
+ * restituisce come codice HTTP: senza, ogni rifiuto dell'RSVP pubblico arrivava
+ * alla pagina come `500`, e la pagina — che distingue 410 e 422 — mostrava un
+ * errore generico al posto di "risposte chiuse" o degli errori di validazione.
+ */
+function inviteNotFound(): ConvexError<{ code: string; status: number }> {
+    return new ConvexError({ code: "INVITE_NOT_FOUND", status: 404 });
 }
 
 interface ActiveInvite {
@@ -189,10 +198,23 @@ export const submit = mutation({
     handler: async (ctx, args) => {
         // Limite per token (30/min, la costante del legacy) prima di qualunque
         // lavoro: una richiesta rifiutata non deve costare una lettura di invito.
-        await assertRateLimit(ctx, {
-            bucket: "rsvp",
-            key: args.ipHash ? `${args.token}|${args.ipHash}` : args.token,
-        });
+        try {
+            await assertRateLimit(ctx, {
+                bucket: "rsvp",
+                key: args.ipHash ? `${args.token}|${args.ipHash}` : args.token,
+            });
+        } catch (error) {
+            // Il messaggio del legacy (`rsvp.post.ts`), con lo status che il bridge
+            // restituisce: lo stesso schema dei form pubblici (`publicForms.ts`).
+            if ((error as { data?: { code?: unknown } }).data?.code === RATE_LIMIT_CODE) {
+                throw new ConvexError({
+                    code: RATE_LIMIT_CODE,
+                    status: 429,
+                    message: "Troppe richieste. Riprova tra poco.",
+                });
+            }
+            throw error;
+        }
 
         const { guest, event } = await findActiveInvite(ctx, args.token);
         const now = Date.now();
@@ -201,6 +223,7 @@ export const submit = mutation({
             const closedMessage = event.rsvpClosedMessage ?? DEFAULT_RSVP_CLOSED_MESSAGE;
             throw new ConvexError({
                 code: "RSVP_CLOSED",
+                status: 410,
                 message: closedMessage,
                 rsvpClosedMessage: closedMessage,
             });
@@ -217,6 +240,7 @@ export const submit = mutation({
         if (!result.ok) {
             throw new ConvexError({
                 code: "RSVP_INVALID",
+                status: 422,
                 message: result.errors[0] ?? "Risposta non valida",
                 errors: result.errors,
             });
@@ -311,6 +335,46 @@ export const submit = mutation({
 
         const saved = await ctx.db.get(responseId);
         return { response: saved ? buildResponse(saved) : null };
+    },
+});
+
+/** The sample guest of the signed preview (legacy `PREVIEW_GUEST_NAME`). */
+const PREVIEW_GUEST_NAME = "Anna";
+
+/**
+ * `api.rsvp.previewInvite` — the signed preview of the "send a test to me" email
+ * (legacy `GET /api/public/preview`, Task 14).
+ *
+ * The HMAC is the only authority: no session, no guest. A bad, foreign or expired
+ * signature and an unknown slug are the same generic 404, like the guest path, so
+ * the endpoint cannot be used to enumerate slugs. A **query**, unlike
+ * `publicInvite`: the preview tracks nothing (no open count, no activity), so
+ * there is nothing to write.
+ *
+ * A draft event previews fine, as in the legacy: the organizer tests the email
+ * before the first send, which is exactly when the event is still a draft. The
+ * payload comes from the same builder as the guest invite, so what the organizer
+ * sees is what the guests will see, including "closed" and a passed deadline.
+ */
+export const previewInvite = query({
+    args: { slug: v.string(), sig: v.string() },
+    handler: async (ctx, args): Promise<PublicInviteResult & { preview: true }> => {
+        const valid = await verifyPreviewToken(requireEnv("BETTER_AUTH_SECRET"), args.slug, args.sig);
+        if (!valid) throw inviteNotFound();
+
+        const event = await ctx.db
+            .query("events")
+            .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+            .first();
+        if (!event) throw inviteNotFound();
+
+        return {
+            event: buildInviteEvent(event),
+            guest: { firstName: PREVIEW_GUEST_NAME, lastName: "" },
+            response: null,
+            deadlinePassed: isInviteClosed(event, Date.now()),
+            preview: true,
+        };
     },
 });
 

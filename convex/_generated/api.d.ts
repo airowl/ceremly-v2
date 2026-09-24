@@ -45,6 +45,7 @@ import type * as lib_jobQueue from "../lib/jobQueue.js";
 import type * as lib_magicBytes from "../lib/magicBytes.js";
 import type * as lib_media from "../lib/media.js";
 import type * as lib_migrationKey from "../lib/migrationKey.js";
+import type * as lib_previewToken from "../lib/previewToken.js";
 import type * as lib_pricing from "../lib/pricing.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_rsvpLogic from "../lib/rsvpLogic.js";
@@ -108,6 +109,7 @@ declare const fullApi: ApiFromModules<{
   "lib/magicBytes": typeof lib_magicBytes;
   "lib/media": typeof lib_media;
   "lib/migrationKey": typeof lib_migrationKey;
+  "lib/previewToken": typeof lib_previewToken;
   "lib/pricing": typeof lib_pricing;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/rsvpLogic": typeof lib_rsvpLogic;
