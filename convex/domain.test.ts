@@ -443,6 +443,58 @@ describe("tenant isolation", () => {
 // ---------------------------------------------------------------------------
 
 describe("guests", () => {
+    it("final review M1: enforces the legacy Zod length limits on create, update and import", async () => {
+        const { s } = await bootstrap();
+        const event = await createEvent(s);
+        const long = (n: number) => "x".repeat(n);
+
+        // At the bound: accepted.
+        const guest = await createGuest(s, event._id, {
+            firstName: long(80),
+            lastName: long(80),
+            phone: long(40),
+            groupName: long(80),
+            notes: long(1000),
+        } as never);
+        expect(guest!.firstName).toHaveLength(80);
+
+        // One past the bound, field by field: refused.
+        for (const [field, value] of [
+            ["firstName", long(81)],
+            ["lastName", long(81)],
+            ["phone", long(41)],
+            ["groupName", long(81)],
+            ["notes", long(1001)],
+            ["email", "non-una-email"],
+            ["email", `${long(250)}@x.it`],
+            ["firstName", ""],
+        ] as const) {
+            await expectCode(createGuest(s, event._id, { [field]: value } as never), "INVALID_INPUT");
+            await expectCode(
+                s.mutation(api.guests.update, {
+                    eventId: event._id,
+                    guestId: guest!._id,
+                    input: { [field]: value },
+                } as never),
+                "INVALID_INPUT",
+            );
+        }
+
+        const row = { firstName: "Ada", lastName: "Lovelace" };
+        await expectCode(s.mutation(api.guests.importRows, { eventId: event._id, rows: [] }), "INVALID_INPUT");
+        await expectCode(
+            s.mutation(api.guests.importRows, { eventId: event._id, rows: Array.from({ length: 501 }, () => row) }),
+            "INVALID_INPUT",
+        );
+        await expectCode(
+            s.mutation(api.guests.importRows, {
+                eventId: event._id,
+                rows: [row, { ...row, notes: long(1001) }],
+            }),
+            "INVALID_INPUT",
+        );
+    });
+
     it("creates a guest with a token the legacy format accepts", async () => {
         const { s } = await bootstrap();
         const event = await createEvent(s);

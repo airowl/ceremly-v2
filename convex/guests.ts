@@ -167,6 +167,66 @@ const guestInput = {
 };
 
 /**
+ * Legacy Zod bounds (`shared/schemas/ceremly.ts`: `createGuestSchema`,
+ * `updateGuestSchema`, `importGuestsSchema`), final review M1. The browser now
+ * reaches these mutations directly, without the Nuxt route that parsed the
+ * body, so the limits live here: without them a member could store strings up
+ * to the 1 MB document limit and degrade exports and CSV.
+ */
+export const GUEST_FIELD_LIMITS = {
+    firstName: 80,
+    lastName: 80,
+    email: 254,
+    phone: 40,
+    groupName: 80,
+    notes: 1000,
+} as const;
+export const GUEST_IMPORT_MAX_ROWS = 500;
+
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type GuestFieldsInput = {
+    firstName?: string;
+    lastName?: string;
+    email?: string | null;
+    phone?: string | null;
+    groupName?: string | null;
+    notes?: string | null;
+};
+
+function invalidGuestInput(field: string, extra: Record<string, unknown> = {}): ConvexError<Record<string, unknown>> {
+    return new ConvexError({ code: "INVALID_INPUT", field, ...extra });
+}
+
+/** `required`: names must be present (create/import); on update only what is sent is checked. */
+function assertGuestFields(input: GuestFieldsInput, required: boolean, extra: Record<string, unknown> = {}): void {
+    for (const field of ["firstName", "lastName"] as const) {
+        const value = input[field];
+        if (value === undefined) {
+            if (required) throw invalidGuestInput(field, extra);
+            continue;
+        }
+        // Legacy `nonEmptyString.max(80)`.
+        if (value.length === 0 || value.length > GUEST_FIELD_LIMITS[field]) {
+            throw invalidGuestInput(field, { max: GUEST_FIELD_LIMITS[field], ...extra });
+        }
+    }
+    for (const field of ["phone", "groupName", "notes"] as const) {
+        const value = input[field];
+        if (typeof value === "string" && value.length > GUEST_FIELD_LIMITS[field]) {
+            throw invalidGuestInput(field, { max: GUEST_FIELD_LIMITS[field], ...extra });
+        }
+    }
+    const email = input.email;
+    if (typeof email === "string" && email.trim() !== "") {
+        // Legacy `z.string().email()` (or ""): a bounded, shape-checked address.
+        if (email.length > GUEST_FIELD_LIMITS.email || !EMAIL_SHAPE.test(email.trim())) {
+            throw invalidGuestInput("email", { max: GUEST_FIELD_LIMITS.email, ...extra });
+        }
+    }
+}
+
+/**
  * Token nuovo e **non collidente**.
  *
  * Non è una formalità: `guests.token` è l'unica credenziale dell'ospite e in
@@ -235,6 +295,7 @@ export const create = mutation({
     args: { eventId: v.id("events"), input: v.object(guestInput) },
     handler: async (ctx, args) => {
         const authz = await requireActiveOrganization(ctx);
+        assertGuestFields(args.input, true);
         const event = await requireOwnedEvent(ctx, authz.organizationId, args.eventId);
 
         await assertGuestCapacity(ctx, event, 1);
@@ -296,6 +357,7 @@ export const update = mutation({
     },
     handler: async (ctx, args) => {
         const authz = await requireActiveOrganization(ctx);
+        assertGuestFields(args.input, false);
         await requireOwnedEvent(ctx, authz.organizationId, args.eventId);
         const guest = await requireOwnedGuest(ctx, authz.organizationId, args.eventId, args.guestId);
 
@@ -417,6 +479,12 @@ export const importRows = mutation({
     },
     handler: async (ctx, args) => {
         const authz = await requireActiveOrganization(ctx);
+        // Legacy `importGuestsSchema`: 1..500 rows, each a valid `createGuestSchema`
+        // (one bad row refused the whole request with 400, as here).
+        if (args.rows.length < 1 || args.rows.length > GUEST_IMPORT_MAX_ROWS) {
+            throw invalidGuestInput("rows", { max: GUEST_IMPORT_MAX_ROWS });
+        }
+        args.rows.forEach((row, index) => assertGuestFields(row, true, { row: index + 1 }));
         const event = await requireOwnedEvent(ctx, authz.organizationId, args.eventId);
 
         const capacity = await assertGuestCapacity(ctx, event, 0);
