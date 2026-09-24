@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { register } from "@creem_io/convex/test";
 import { api, components, internal } from "./_generated/api";
 import type { Doc, Id, TableNames } from "./_generated/dataModel";
-import { eventFixture, initConvexTestWithAuthComponent } from "./test.setup";
+import { eventFixture, initConvexTestWithAuthComponent, ranCron } from "./test.setup";
 import { JOB_TYPES } from "./lib/jobQueue";
 import { signBridgeRequest } from "./lib/bridgeHmac";
 import { hashClientIp } from "./lib/spam";
@@ -624,7 +624,7 @@ describe("inviteTestRequests retention", () => {
         });
         await seedRequest(fixture, stale);
 
-        const result = await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {}));
 
         expect(result.deleted).toBe(1);
         expect(await requestIds(fixture.t)).toEqual([]);

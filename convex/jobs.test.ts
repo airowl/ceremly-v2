@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { register } from "@creem_io/convex/test";
 import { api, components, internal } from "./_generated/api";
 import type { Doc, Id, TableNames } from "./_generated/dataModel";
-import { eventFixture, initConvexTestWithAuthComponent } from "./test.setup";
+import { eventFixture, initConvexTestWithAuthComponent, ranCron } from "./test.setup";
 import { JOB_TYPES, enqueueJob, retryDelayMs } from "./lib/jobQueue";
 import { signSvixPayload } from "./lib/svix";
 
@@ -855,7 +855,7 @@ describe("cron", () => {
         await seedGuest(fixture, eventId, { token: "tok0000020" });
         await seedGuest(fixture, eventId, { token: "tok0000021" });
 
-        const result = await fixture.t.mutation(internal.jobs.cronSendDueReminders, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronSendDueReminders, {}));
 
         expect(result).toMatchObject({ processed: 1, queued: 2, skipped: 0 });
 
@@ -884,7 +884,7 @@ describe("cron", () => {
         await seedReminder(fixture, eventId, 3);
         await seedGuest(fixture, eventId);
 
-        const result = await fixture.t.mutation(internal.jobs.cronSendDueReminders, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronSendDueReminders, {}));
 
         expect(result.processed).toBe(0);
         expect(await jobRows(fixture.t)).toHaveLength(0);
@@ -933,7 +933,7 @@ describe("cron", () => {
                 }),
         );
 
-        const result = await fixture.t.mutation(internal.jobs.cronRequeueImageVariants, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronRequeueImageVariants, {}));
 
         expect(result).toMatchObject({ candidates: 1, queued: 1 });
         const jobs = await jobRows(fixture.t);
@@ -941,7 +941,7 @@ describe("cron", () => {
         expect(jobs[0]!.payload).toMatchObject({ fileId: pending });
 
         // Un secondo giro non duplica: la chiave di dedup è l'id del file.
-        const again = await fixture.t.mutation(internal.jobs.cronRequeueImageVariants, {});
+        const again = ranCron(await fixture.t.mutation(internal.jobs.cronRequeueImageVariants, {}));
         expect(again.queued).toBe(0);
         expect(await jobRows(fixture.t)).toHaveLength(1);
     });
@@ -968,7 +968,7 @@ describe("cron", () => {
         });
         const guestId = await seedGuest(fixture, toDelete, { token: "tok0000030" });
 
-        const result = await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {}));
 
         expect(result.warned).toBe(1);
         expect(result.deleted).toBe(1);
@@ -1008,7 +1008,7 @@ describe("cron", () => {
                 }),
         );
 
-        const result = await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {}));
 
         expect(result.warned).toBe(0);
         expect(result.deleted).toBe(0);
@@ -1058,7 +1058,7 @@ describe("cron", () => {
                 }),
         );
 
-        const result = await fixture.t.mutation(internal.jobs.cronRecoverStalledJobs, {});
+        const result = ranCron(await fixture.t.mutation(internal.jobs.cronRecoverStalledJobs, {}));
 
         expect(result).toMatchObject({ rescheduled: 1, orphaned: 1 });
 
@@ -1097,7 +1097,7 @@ describe("cron", () => {
                 }),
         );
 
-        const result = await fixture.t.action(internal.jobs.cronCleanupOrphanFiles, {});
+        const result = ranCron(await fixture.t.action(internal.jobs.cronCleanupOrphanFiles, {}));
 
         expect(result).toMatchObject({ claimed: 1, deleted: 1, failed: 0 });
         expect(await fixture.t.run(async (ctx) => await ctx.db.get(orphan))).toBeNull();
@@ -1134,7 +1134,7 @@ describe("cron", () => {
 
         bridgeResponder = () => ({ status: 500, body: { ok: false } });
 
-        const result = await fixture.t.action(internal.jobs.cronCleanupOrphanFiles, {});
+        const result = ranCron(await fixture.t.action(internal.jobs.cronCleanupOrphanFiles, {}));
 
         expect(result).toMatchObject({ claimed: 1, deleted: 0, failed: 1 });
 

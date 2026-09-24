@@ -22,6 +22,10 @@ import { requireEnv, siteUrl } from "./lib/env";
 import { buildOrgInviteLink, deriveInvitationToken } from "./lib/invitationToken";
 import { hashInvitationToken } from "./organizations";
 import { buildTestInviteEmail } from "./guests";
+import { readSiteMode } from "./siteSettings";
+import type { SiteMode } from "./siteSettings";
+import { sideEffectsAllowed } from "./lib/writeGuard";
+import type { ReadCtx } from "./lib/identity";
 
 /**
  * Esecutore dei job e produttori dei cron (plan Task 13).
@@ -50,6 +54,30 @@ import { buildTestInviteEmail } from "./guests";
  * tocca mai `jobExecutions` direttamente.
  */
 
+/**
+ * Site-mode gate for crons and jobs (final review C2).
+ *
+ * Returns the blocking mode (and logs it) when side effects are paused, `null`
+ * when the caller may proceed. Outside `active` the green deployment must not
+ * email anyone, delete anything or call a provider: see `lib/writeGuard.ts`.
+ */
+export type SiteModeSkip = { skipped: "site_mode"; mode: SiteMode };
+
+async function pausedBySiteMode(ctx: ReadCtx, what: string): Promise<SiteModeSkip | null> {
+    const mode = await readSiteMode(ctx);
+    if (sideEffectsAllowed(mode)) return null;
+    console.log(`[jobs] ${what} skipped: site mode is ${mode}`);
+    return { skipped: "site_mode", mode };
+}
+
+/** Same gate for an action (crons that talk to the network directly). */
+async function pausedBySiteModeInAction(ctx: ActionCtx, what: string): Promise<SiteModeSkip | null> {
+    const { mode }: { mode: SiteMode } = await ctx.runQuery(internal.siteSettings.getForWorker, {});
+    if (sideEffectsAllowed(mode)) return null;
+    console.log(`[jobs] ${what} skipped: site mode is ${mode}`);
+    return { skipped: "site_mode", mode };
+}
+
 /** Lease del diritto esclusivo di esecuzione. */
 const RUN_LEASE_MS = 10 * 60 * 1000;
 
@@ -70,12 +98,22 @@ export const getJob = internalQuery({
  * `null` significa "non tocca a questa consegna": job assente, già concluso, già in
  * volo (lease valido) o terminale. Il chiamante non distingue i casi di proposito —
  * l'unica azione sensata è fermarsi.
+ *
+ * `{ deferred }` (final review C2): the site is not `active`, so the job is left
+ * exactly as it is — same status, no attempt consumed, no lease — and
+ * `cronRecoverStalledJobs` redelivers it once the mode is `active` again.
  */
 export const markRunning = internalMutation({
     args: { jobId: v.id("jobExecutions") },
-    handler: async (ctx, args): Promise<{ name: string; payload: Record<string, unknown> } | null> => {
+    handler: async (
+        ctx,
+        args,
+    ): Promise<{ name: string; payload: Record<string, unknown> } | { deferred: SiteMode } | null> => {
         const job = await ctx.db.get(args.jobId);
         if (!job) return null;
+
+        const paused = await pausedBySiteMode(ctx, `job ${job.name} (${job._id})`);
+        if (paused) return { deferred: paused.mode };
 
         // `failed` è il valore scritto dal Task 12 (mai da un percorso nuovo): è
         // terminale come `dead`, e riprenderlo riscriverebbe un esito già deciso.
@@ -236,11 +274,13 @@ export async function retryDeadJob(
 export const run = internalAction({
     args: { jobId: v.id("jobExecutions") },
     handler: async (ctx, args): Promise<{ status: string }> => {
-        const running: { name: string; payload: Record<string, unknown> } | null = await ctx.runMutation(
-            internal.jobs.markRunning,
-            { jobId: args.jobId },
-        );
-        if (!running) return { status: "skipped" };
+        const claim:
+            | { name: string; payload: Record<string, unknown> }
+            | { deferred: SiteMode }
+            | null = await ctx.runMutation(internal.jobs.markRunning, { jobId: args.jobId });
+        if (!claim) return { status: "skipped" };
+        if ("deferred" in claim) return { status: "deferred" };
+        const running = claim;
 
         try {
             const result = (await dispatch(ctx, running.name, running.payload)) as
@@ -939,7 +979,10 @@ const STALE_DAYS_CELEBRATION = 90;
  */
 export const enqueueDuePurges = internalMutation({
     args: { limit: v.optional(v.number()) },
-    handler: async (ctx, args): Promise<{ enqueued: boolean; due: number }> => {
+    handler: async (ctx, args): Promise<{ enqueued: boolean; due: number } | SiteModeSkip> => {
+        const paused = await pausedBySiteMode(ctx, "cron purge-deleted-accounts");
+        if (paused) return paused;
+
         const due: Array<{ appUserId: Id<"appUsers">; authUserId: string }> = await ctx.runQuery(
             internal.profile.dueAccounts,
             { limit: args.limit },
@@ -1037,7 +1080,10 @@ export const cronCleanupStaleEvents = internalMutation({
     handler: async (
         ctx,
         args,
-    ): Promise<{ warned: number; skippedAtelier: number; deleted: number; drained: number }> => {
+    ): Promise<{ warned: number; skippedAtelier: number; deleted: number; drained: number } | SiteModeSkip> => {
+        const paused = await pausedBySiteMode(ctx, "cron cleanup-stale-events");
+        if (paused) return paused;
+
         const now = Date.now();
         const warnLimit = args.warnLimit ?? CRON_BATCH;
         const deleteLimit = args.deleteLimit ?? 5;
@@ -1229,7 +1275,10 @@ export const cronSendDueReminders = internalMutation({
     handler: async (
         ctx,
         args,
-    ): Promise<{ processed: number; queued: number; skipped: number }> => {
+    ): Promise<{ processed: number; queued: number; skipped: number } | SiteModeSkip> => {
+        const paused = await pausedBySiteMode(ctx, "cron send-due-reminders");
+        if (paused) return paused;
+
         const limit = args.limit ?? CRON_BATCH;
         const guestsPerReminder = args.guestsPerReminder ?? 200;
 
@@ -1290,7 +1339,10 @@ export const cronSendDueReminders = internalMutation({
 /** Cron varianti immagine: rimette in coda gli originali mai processati. */
 export const cronRequeueImageVariants = internalMutation({
     args: { limit: v.optional(v.number()) },
-    handler: async (ctx, args): Promise<{ candidates: number; queued: number }> => {
+    handler: async (ctx, args): Promise<{ candidates: number; queued: number } | SiteModeSkip> => {
+        const paused = await pausedBySiteMode(ctx, "cron requeue-image-variants");
+        if (paused) return paused;
+
         const candidates: Array<Id<"files">> = await ctx.runQuery(internal.media.variantsNeedingWork, {
             limit: args.limit ?? CRON_BATCH,
         });
@@ -1325,7 +1377,13 @@ export const cronRequeueImageVariants = internalMutation({
  */
 export const cronRecoverStalledJobs = internalMutation({
     args: { limit: v.optional(v.number()) },
-    handler: async (ctx, args): Promise<{ rescheduled: number; orphaned: number }> => {
+    handler: async (ctx, args): Promise<{ rescheduled: number; orphaned: number } | SiteModeSkip> => {
+        // Rescheduling alone is harmless (the runner defers), but a sweep that
+        // redelivers every pending job each hour only to defer it is noise: the
+        // recovery starts with the first hourly run after `active`.
+        const paused = await pausedBySiteMode(ctx, "cron recover-stalled-jobs");
+        if (paused) return paused;
+
         const limit = args.limit ?? CRON_BATCH;
         const now = Date.now();
         let rescheduled = 0;
@@ -1372,7 +1430,11 @@ export const cronRecoverStalledJobs = internalMutation({
  */
 export const cronCleanupOrphanFiles = internalAction({
     args: { limit: v.optional(v.number()), graceHours: v.optional(v.number()) },
-    handler: async (ctx, args): Promise<{ claimed: number; deleted: number; failed: number }> => {
+    handler: async (ctx, args): Promise<{ claimed: number; deleted: number; failed: number } | SiteModeSkip> => {
+        // R2 is the shared bucket the legacy stack still serves before step 10.
+        const paused = await pausedBySiteModeInAction(ctx, "cron cleanup-orphan-files");
+        if (paused) return paused;
+
         const claimed: Array<{ fileId: Id<"files">; path: string; leaseAt: number }> =
             await ctx.runMutation(internal.files.claimOrphanFiles, {
                 limit: args.limit ?? 50,

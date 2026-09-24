@@ -7,6 +7,14 @@
 **Chiave:** `MIGRATION_ENCRYPTION_KEY` effimera (`openssl rand -base64 32`), viva solo nella shell del rehearsal, mai scritta su disco né committata. `NUXT_MIGRATION_EXPORT_KEY` di `.env` è una passphrase esadecimale da 64 caratteri, non una chiave base64 da 32 byte: non è stata usata.
 **Artefatti:** `.migration-rehearsal/` (git-ignored, directory `0700`, file `0600`): bundle cifrati, manifest, inventario, stdout. Nessuna riga in chiaro su disco.
 
+## Cron e job dello staging (final review C2, 2026-09-25)
+
+Cron e job Convex girano solo con il deployment in `active` (`convex/siteModeSideEffects.test.ts`).
+Durante il rehearsal lo staging con i dati importati da dev resta in `maintenance-readonly` finché
+non si è verificato che il bucket del bridge dello staging **non** è condiviso con dev o prod (TODO
+aperto: bucket R2 condiviso staging/prod). Solo allora si passa ad `active` per le verifiche E2E;
+altrimenti `cleanup-orphan-files` e il purge cancellerebbero oggetti di un altro ambiente.
+
 ## Fix round 1 della review (2026-09-25, commit `bbb9801`)
 
 Il pipeline eseguito sopra è quello di `6fbe3c5`. La review ha chiesto dieci correzioni, tutte

@@ -30,9 +30,19 @@ import type { SiteMode } from "../siteSettings";
  *   break-glass that must be able to undo any mode, so it is allowed in all.
  *
  * Reads are never guarded (queries, and actions tagged `read`). Internal
- * functions (import, webhooks, jobs, crons, the CLI `siteSettings.set`) are not
- * public and are not guarded: they are operator or provider paths, and the
- * runbook controls them (the job queue drains; webhooks are provider truth).
+ * functions (import, webhooks, the CLI `siteSettings.set`) are not public and
+ * are not guarded by this matrix: they are operator or provider paths.
+ *
+ * Crons and the job runner are internal too, but they are **not** exempt
+ * (final review C2): they produce external or destructive side effects (emails
+ * to guests and organizers, R2 deletions, account purge, event deletion,
+ * exports, image variants). From the T-1 production import until runbook step
+ * 10 — and after a §A rollback — the blue stack is the live one, so the green
+ * deployment must stay inert. `sideEffectsAllowed` is the one rule: only
+ * `active` runs them. Outside `active` every cron is a logged no-op and
+ * `jobs.run` leaves the job `pending`/`retrying` untouched (no attempt counted,
+ * never dead-lettered); `cronRecoverStalledJobs` picks it up once the mode is
+ * `active` again.
  */
 
 export type WritePolicy = "domain" | "guest" | "siteModeSwitch";
@@ -48,6 +58,11 @@ const ALLOWED: Record<SiteMode, readonly WritePolicy[]> = {
 
 export function writesAllowed(mode: SiteMode, policy: WritePolicy): boolean {
     return ALLOWED[mode].includes(policy);
+}
+
+/** Crons and jobs (external/destructive side effects) run only in `active`. */
+export function sideEffectsAllowed(mode: SiteMode): boolean {
+    return mode === "active";
 }
 
 export function assertWritableMode(mode: SiteMode, policy: WritePolicy): void {

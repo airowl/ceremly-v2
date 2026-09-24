@@ -13,7 +13,10 @@ Una scrittura sul deployment Convex di produzione **non prodotta dal pipeline di
 righe dell'import portano `legacyId` e sono ricostruibili da Neon in qualunque momento). Include:
 azioni utente dalla SPA o dalle API del Worker, webhook Creem (dopo il passo 8.2), job e cron
 Convex che mutano dati di dominio. Il webhook Resend no: in read-only risponde `503` e Svix
-ritenta dopo la finestra.
+ritenta dopo la finestra. Job e cron Convex girano **solo** in `active` (final review C2,
+`sideEffectsAllowed` in `convex/lib/writeGuard.ts`): prima del passo 10 non possono produrre
+write, quindi in pratica l'unica fonte possibile prima del passo 10 è un webhook Creem. Il test
+`convex/siteModeSideEffects.test.ts` enumera ogni cron e ogni tipo di job.
 
 Si **misura**, non si presume:
 
@@ -34,7 +37,7 @@ direbbe "nessuna write" e aprirebbe un rollback §A sbagliato.
 - altrimenti → **write avvenute**: vale §B.
 
 Perché misurare anche con la guardia Convex (cutover B4, chiuso): la guardia copre le funzioni
-pubbliche, non i percorsi interni e provider (webhook Creem, job, cron), che scrivono per
+pubbliche e (C2) cron e job, non i percorsi provider (webhook Creem), che scrivono per
 costruzione. "Abbiamo impostato la read-only" riduce le write possibili a quelle; la misura dice se
 sono avvenute.
 
@@ -72,7 +75,8 @@ Ordine (inverso rispetto al runbook, ognuno registrato con ora UTC):
 5. **Convex** va in `maintenance` (`npx convex run --prod siteSettings:set
    '{"mode":"maintenance","reason":"rollback <ticket>"}'`) e **non** è authority: i dati
    importati restano come copia inerte e verranno riscritti dal prossimo full/delta. Nessuna
-   cancellazione nella finestra.
+   cancellazione nella finestra. In `maintenance` cron e job Convex sono no-op (C2): nessun
+   reminder, purge, cleanup o delete R2 parte dalla copia stantia, per quanto a lungo resti lì.
 6. **Sessioni**: se il passo 7 era stato fatto, gli utenti rifanno il login sul blu (atteso).
 7. **Incidente**: registrare in `cutover.md` (Registro) e in un record d'incidente: ora di inizio
    e fine, passo raggiunto, trigger, report del preflight/reconcile/smoke, decisione, prossimo

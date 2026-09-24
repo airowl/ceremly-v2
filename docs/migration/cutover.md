@@ -79,6 +79,14 @@ aperti al 2026-09-25.
       --preflight-report .migration-cutover/preflight-t1.json` (stessi comandi e variabili dei
       passi 4–5), `exit 0`, mentre il blu è ancora attivo.
 
+   **Cron e job Convex sono inerti fuori da `active`** (final review C2): ogni cron di
+   `convex/crons.ts` è un no-op loggato (`{ skipped: "site_mode" }`) e `jobs.run` lascia il job
+   `pending`/`retrying` senza consumare tentativi. Dal passo 7.1 al passo 10 il verde quindi non
+   manda reminder a ospiti, avvisi di cleanup, non cancella eventi, non esegue purge di account e
+   non cancella oggetti dal bucket R2 **condiviso** con il blu. Il passo 7.1 va fatto **prima**
+   dell'import: un deployment senza override vale `active`. Test enumerativo:
+   `convex/siteModeSideEffects.test.ts`.
+
    Il giorno del cutover il preflight si rifà (passo 0.3, `preflight.json`): è quello che
    accettano delta e reconcile della finestra. Le righe portano `legacyId` e sono ricostruibili
    da Neon: non sono "write Convex" ai fini del rollback. `email_events` e `creem_subscription`

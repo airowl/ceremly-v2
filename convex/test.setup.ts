@@ -80,3 +80,14 @@ export async function initConvexTestWithAuthComponent() {
 
     return t;
 }
+
+/**
+ * Narrows a cron result to "it ran" (final review C2: crons return
+ * `{ skipped: "site_mode" }` outside `active`). Fails loudly if it was skipped.
+ */
+export function ranCron<T>(result: T): Exclude<T, { skipped: "site_mode" }> {
+    if (result && typeof result === "object" && (result as { skipped?: unknown }).skipped === "site_mode") {
+        throw new Error(`cron skipped by site mode: ${JSON.stringify(result)}`);
+    }
+    return result as Exclude<T, { skipped: "site_mode" }>;
+}
