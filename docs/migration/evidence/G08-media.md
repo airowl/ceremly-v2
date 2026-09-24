@@ -132,3 +132,9 @@ the stored object's measured size must equal the declared one and stay within 5 
 — otherwise the row fails, the object is deleted and `file.upload_rejected` is
 audited (the presigned PUT signs the Content-Type, not the length).
 
+Task 14c fix round 2: the tenant check moved **into** `finalizeUpload`'s transaction.
+The mutation takes no identity/tenant args; it re-resolves the caller, the
+membership and the active organization itself, and an org switch or membership
+removal during the bridge `inspect` call now fails the row (`tenant_changed`,
+audited, object deleted) instead of activating the file in the previous tenant.
+

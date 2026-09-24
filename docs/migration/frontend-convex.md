@@ -606,6 +606,18 @@ Vercel continua a funzionare durante il blue-green.
   (o la perdita della membership) lo stesso utente poteva rendere attivo un file nel
   tenant precedente. Ora entrambi confrontano `file.organizationId` con
   l'organizzazione risolta da `uploadAuthz`; due casi in `convex/media.test.ts`.
+- **Fix round 2: la verifica sta nella transazione che scrive.** Il controllo del
+  round 1 confrontava il file con l'autorizzazione presa dall'action **prima** della
+  chiamata `inspect` al bridge: un cambio di organizzazione o una rimozione della
+  membership durante quella chiamata passavano. Ora `finalizeUpload` non riceve più
+  identità né tenant negli argomenti: ri-risolve utente, membership e organizzazione
+  attiva (`requireAppUser` + `requireRole`) nella propria transazione e, se il tenant
+  del file non è più l'attivo o la membership non esiste più, marca la riga `failed`,
+  audita `file.upload_rejected` (`tenant_changed`) e l'action cancella l'oggetto da
+  R2. Il controllo prima di `inspect` resta come fast path. Test: cambio di
+  organizzazione attiva e **cancellazione reale** della riga di membership fra
+  presign e finalize, entrambi chiamando `finalizeUpload` (rossi togliendo il
+  controllo, verdi con esso).
 - **Dedup mai fra visibilità diverse.** Un avatar pubblico identico a un file privato
   veniva cancellato a favore del privato (senza URL: upload fallito), e al contrario
   un upload privato ereditava id e URL non firmato di quello pubblico. Il candidato
@@ -636,7 +648,8 @@ Un solo commit, `feat(migration): move profile, export and public forms UI to
 Convex` (profilo, export, form, upload, gate, CSP): upload e profilo condividono la
 pagina profilo e il file del gate, e separarli avrebbe lasciato un commit col gate
 rosso. Il fix round 1 è un commit a parte
-(`fix(migration): harden upload confirm, export expiry and Convex CSP`).
+(`fix(migration): harden upload confirm, export expiry and Convex CSP`), il round 2
+un altro (`fix(migration): re-resolve tenant inside the upload finalize transaction`).
 
 ### Nessuna run live
 

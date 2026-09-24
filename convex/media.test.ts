@@ -131,11 +131,8 @@ async function seedActiveImage(
         uploadedBy: args.uploadedBy,
         mimeType: args.mimeType ?? "image/png",
     });
-    const finalized = await t.mutation(internal.files.finalizeUpload, {
+    const finalized = await session(t, alice).mutation(internal.files.finalizeUpload, {
         fileId,
-        organizationId: args.organizationId,
-        appUserId: args.uploadedBy,
-        authUserId: alice.subject,
         headBytes: args.headBytes ?? PNG_HEAD,
         sha256: args.sha256 ?? "a".repeat(64),
         size: 1024,
@@ -318,11 +315,8 @@ describe("upload confirmation", () => {
         const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
         const fileId = await seedPending(t, { organizationId, uploadedBy: userId, mimeType: "image/png" });
 
-        const result = await t.mutation(internal.files.finalizeUpload, {
+        const result = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: NOT_A_PNG,
             sha256: "b".repeat(64),
             size: 1024,
@@ -347,11 +341,8 @@ describe("upload confirmation", () => {
             ["image/avif", AVIF_HEAD],
         ] as const) {
             const fileId = await seedPending(t, { organizationId, uploadedBy: userId, mimeType });
-            const result = await t.mutation(internal.files.finalizeUpload, {
+            const result = await session(t, alice).mutation(internal.files.finalizeUpload, {
                 fileId,
-                organizationId,
-                appUserId: userId,
-                authUserId: alice.subject,
                 headBytes: head,
                 sha256: `${mimeType.length}`.padStart(64, "c") + mimeType.replace(/\W/g, ""),
                 size: 1024,
@@ -374,11 +365,8 @@ describe("upload confirmation", () => {
             originalName: "doc.pdf",
             fileSize: 2048,
         });
-        const finalized = await t.mutation(internal.files.finalizeUpload, {
+        const finalized = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: pdfId,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PDF_HEAD,
             sha256: "d".repeat(64),
             size: 2048,
@@ -399,11 +387,8 @@ describe("upload confirmation", () => {
         const first = await seedActiveImage(t, { organizationId, uploadedBy: userId, sha256: sha });
 
         const secondId = await seedPending(t, { organizationId, uploadedBy: userId, originalName: "copy.png" });
-        const duplicated = await t.mutation(internal.files.finalizeUpload, {
+        const duplicated = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: secondId,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PNG_HEAD,
             sha256: sha,
             size: 1024,
@@ -419,11 +404,8 @@ describe("upload confirmation", () => {
             uploadedBy: bobUserId,
             originalName: "same.png",
         });
-        const foreign = await t.mutation(internal.files.finalizeUpload, {
+        const foreign = await session(t, bob).mutation(internal.files.finalizeUpload, {
             fileId: foreignId,
-            organizationId: bobOrgId,
-            appUserId: bobUserId,
-            authUserId: bob.subject,
             headBytes: PNG_HEAD,
             sha256: sha,
             size: 1024,
@@ -437,36 +419,93 @@ describe("upload confirmation", () => {
 // ---------------------------------------------------------------------------
 
 describe("upload confirmation: tenant, visibility and size", () => {
-    it("refuses to confirm into an organization that is no longer the caller's active one", async () => {
+    // Fix round 2: the finalizing mutation re-resolves identity, membership and
+    // active organization inside its own transaction. The action's earlier
+    // authorization snapshot is only a fast path — an org switch or a membership
+    // removal while the bridge inspects the object must still stop the write.
+
+    it("rejects finalize after an active-organization switch between presign and finalize", async () => {
         const { t, aliceSession, organizationId } = await bootstrap();
         const userId = await appUserId(aliceSession, alice.email);
         const fileId = await seedPending(t, { organizationId, uploadedBy: userId });
 
-        // Alice switches to (creates) another organization: the pending upload was
-        // issued for the previous tenant and must not be finalized from here.
+        // Presign happened in `organizationId`; Alice then creates (and so
+        // activates) another organization before the confirm finishes.
         const { organizationId: otherOrgId } = await aliceSession.mutation(
             api.organizations.createOrganization,
             { name: "Second" },
         );
-        const active = await aliceSession.query(internal.files.uploadAuthz, {});
-        expect(active.organizationId).toBe(otherOrgId);
+        expect((await aliceSession.query(internal.files.uploadAuthz, {})).organizationId).toBe(otherOrgId);
+
+        const result = await aliceSession.mutation(internal.files.finalizeUpload, {
+            fileId,
+            headBytes: PNG_HEAD,
+            sha256: "1".repeat(64),
+            size: 1024,
+        });
+
+        expect(result).toEqual({ status: "failed", fileId, reason: "tenant_changed" });
+        const row = await fileById(t, fileId);
+        expect(row?.uploadStatus).toBe("failed");
+        expect(row?.isActive).toBe(false);
+        const actions = await auditActions(t);
+        expect(actions).toContain("file.upload_rejected");
+        expect(actions).not.toContain("file.upload_confirmed");
+    });
+
+    it("rejects finalize after the membership was really deleted between presign and finalize", async () => {
+        const { t, organizationId } = await bootstrap();
+        const { s: bobSession } = await addUser(t, bob);
+        const bobUserId = await appUserId(bobSession, bob.email);
+
+        // Bob is a real member of Alice's organization, active there, and has a
+        // pending upload issued in it.
+        await t.run(async (c) => {
+            await c.db.insert("memberships", {
+                organizationId,
+                userId: bobUserId,
+                role: "member",
+                createdAt: Date.now(),
+            });
+            await c.db.patch(bobUserId, { activeOrganizationId: organizationId });
+        });
+        expect((await bobSession.query(internal.files.uploadAuthz, {})).organizationId).toBe(organizationId);
+        const fileId = await seedPending(t, { organizationId, uploadedBy: bobUserId });
+
+        // The membership row is deleted (removed by an admin) before finalize.
+        await t.run(async (c) => {
+            const membership = await c.db
+                .query("memberships")
+                .withIndex("by_org_user", (q) => q.eq("organizationId", organizationId).eq("userId", bobUserId))
+                .unique();
+            await c.db.delete(membership!._id);
+        });
+
+        const result = await bobSession.mutation(internal.files.finalizeUpload, {
+            fileId,
+            headBytes: PNG_HEAD,
+            sha256: "5".repeat(64),
+            size: 1024,
+        });
+
+        expect(result).toEqual({ status: "failed", fileId, reason: "tenant_changed" });
+        expect((await fileById(t, fileId))?.uploadStatus).toBe("failed");
+        expect(await auditActions(t)).not.toContain("file.upload_confirmed");
+    });
+
+    it("still refuses a pending row that is not the caller's, without touching it", async () => {
+        const { t, organizationId } = await bootstrap();
+        const { s: bobSession } = await addUser(t, bob);
+        const aliceId = await t.run(async (c) =>
+            (await c.db.query("appUsers").withIndex("by_email", (q) => q.eq("email", alice.email)).unique())!._id,
+        );
+        const fileId = await seedPending(t, { organizationId, uploadedBy: aliceId });
 
         await expectCode(
-            aliceSession.query(internal.files.getPendingForConfirm, {
+            bobSession.mutation(internal.files.finalizeUpload, {
                 fileId,
-                appUserId: userId,
-                organizationId: active.organizationId,
-            }),
-            "PENDING_UPLOAD_NOT_FOUND",
-        );
-        await expectCode(
-            t.mutation(internal.files.finalizeUpload, {
-                fileId,
-                organizationId: active.organizationId,
-                appUserId: userId,
-                authUserId: alice.subject,
                 headBytes: PNG_HEAD,
-                sha256: "1".repeat(64),
+                sha256: "6".repeat(64),
                 size: 1024,
             }),
             "PENDING_UPLOAD_NOT_FOUND",
@@ -474,38 +513,13 @@ describe("upload confirmation: tenant, visibility and size", () => {
         expect((await fileById(t, fileId))?.uploadStatus).toBe("pending");
     });
 
-    it("refuses to confirm after the membership in the upload's organization is gone", async () => {
-        const { t, organizationId } = await bootstrap();
-        const { s: bobSession, organizationId: bobOrgId } = await addUser(t, bob);
-        const bobUserId = await appUserId(bobSession, bob.email);
-
-        // A pending row in Alice's organization issued to Bob — the state left
-        // behind when a member uploads and is then removed: his active
-        // organization is his own, so the row is out of his reach.
-        const fileId = await seedPending(t, { organizationId, uploadedBy: bobUserId });
-        const active = await bobSession.query(internal.files.uploadAuthz, {});
-        expect(active.organizationId).toBe(bobOrgId);
-
-        await expectCode(
-            bobSession.query(internal.files.getPendingForConfirm, {
-                fileId,
-                appUserId: bobUserId,
-                organizationId: active.organizationId,
-            }),
-            "PENDING_UPLOAD_NOT_FOUND",
-        );
-    });
-
     it("never deduplicates a public upload onto a private file, nor the reverse", async () => {
         const { t, organizationId } = await bootstrap();
         const userId = await t.run(async (c) => (await c.db.query("appUsers").first())!._id);
         const sha = "2".repeat(64);
         const finalize = (fileId: Id<"files">) =>
-            t.mutation(internal.files.finalizeUpload, {
+            session(t, alice).mutation(internal.files.finalizeUpload, {
                 fileId,
-                organizationId,
-                appUserId: userId,
-                authUserId: alice.subject,
                 headBytes: PNG_HEAD,
                 sha256: sha,
                 size: 1024,
@@ -544,11 +558,8 @@ describe("upload confirmation: tenant, visibility and size", () => {
         // The presigned PUT binds the Content-Type, not the length: the declared
         // size proves nothing until the stored object is measured.
         const lying = await seedPending(t, { organizationId, uploadedBy: userId, fileSize: 1024 });
-        const result = await t.mutation(internal.files.finalizeUpload, {
+        const result = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: lying,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PNG_HEAD,
             sha256: "3".repeat(64),
             size: 4096,
@@ -565,11 +576,8 @@ describe("upload confirmation: tenant, visibility and size", () => {
             uploadedBy: userId,
             fileSize: MAX_FILE_SIZE_BYTES + 1,
         });
-        const over = await t.mutation(internal.files.finalizeUpload, {
+        const over = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: oversize,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PNG_HEAD,
             sha256: "4".repeat(64),
             size: MAX_FILE_SIZE_BYTES + 1,
@@ -612,11 +620,8 @@ describe("public URL of an upload", () => {
         const sha = "f".repeat(64);
 
         const firstId = await seedPending(t, { organizationId, uploadedBy: userId, publicUrl: PUBLIC });
-        const first = await t.mutation(internal.files.finalizeUpload, {
+        const first = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: firstId,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PNG_HEAD,
             sha256: sha,
             size: 1024,
@@ -631,11 +636,8 @@ describe("public URL of an upload", () => {
             originalName: "copy.png",
             publicUrl: "https://media.example.com/global/2026-09/y/original.png",
         });
-        const copy = await t.mutation(internal.files.finalizeUpload, {
+        const copy = await session(t, alice).mutation(internal.files.finalizeUpload, {
             fileId: copyId,
-            organizationId,
-            appUserId: userId,
-            authUserId: alice.subject,
             headBytes: PNG_HEAD,
             sha256: sha,
             size: 1024,

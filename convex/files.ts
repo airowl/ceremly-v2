@@ -3,7 +3,7 @@ import { action, internalAction, internalMutation, internalQuery } from "./_gene
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { forbidden } from "./lib/identity";
-import { DOMAIN_WRITE_ROLES, requireRole } from "./lib/authorization";
+import { DOMAIN_WRITE_ROLES, requireAppUser, requireRole, type AuthzContext } from "./lib/authorization";
 import { writeAudit } from "./lib/audit";
 import { validateMagicBytes } from "./lib/magicBytes";
 import { assertRateLimit } from "./lib/rateLimit";
@@ -246,21 +246,55 @@ export type FinalizeResult =
  *    variants that were never produced.
  */
 export const finalizeUpload = internalMutation({
+    // No identity or tenant in the args (Task 14c fix round 2): the caller, their
+    // membership and their active organization are re-resolved **here**, in the
+    // transaction that writes. The action's `uploadAuthz` snapshot is taken before
+    // the bridge `inspect` call, and an org switch or a membership removal during
+    // that call must still stop the file from becoming active in the old tenant.
     args: {
         fileId: v.id("files"),
-        organizationId: v.id("organizations"),
-        appUserId: v.id("appUsers"),
-        authUserId: v.string(),
         headBytes: v.string(),
         sha256: v.string(),
         size: v.number(),
     },
     handler: async (ctx, args): Promise<FinalizeResult> => {
+        const appUser = await requireAppUser(ctx);
         const file = await ctx.db.get(args.fileId);
-        // Re-checked here, not only in the action's read: the transition is what
-        // must not be reachable for the wrong tenant.
-        if (!isConfirmableBy(file, args)) {
+        // Not the caller's pending row: nothing to finalize and nothing to touch.
+        if (!file || file.uploadStatus !== "pending" || file.uploadedBy !== appUser._id) {
             throw forbidden("PENDING_UPLOAD_NOT_FOUND", { fileId: args.fileId });
+        }
+
+        // The caller's own pending row, but is the upload's tenant still theirs
+        // and still active? A refused role/membership is a rejection of *this*
+        // upload (row failed, object deleted by the action), not an exception that
+        // would leave the row pending and the object in the bucket.
+        let authz: AuthzContext | null = null;
+        try {
+            authz = await requireRole(ctx, DOMAIN_WRITE_ROLES);
+        } catch {
+            authz = null;
+        }
+        const actor = { appUserId: appUser._id, authUserId: appUser.authUserId };
+        if (!authz || authz.organizationId !== file.organizationId) {
+            await ctx.db.patch(file._id, {
+                uploadStatus: "failed",
+                isActive: false,
+                updatedAt: Date.now(),
+            });
+            await writeAudit(ctx, {
+                action: "file.upload_rejected",
+                actorAppUserId: actor.appUserId,
+                actorAuthUserId: actor.authUserId,
+                organizationId: file.organizationId,
+                targetType: "file",
+                targetId: file._id,
+                details: {
+                    reason: "tenant_changed",
+                    activeOrganizationId: authz?.organizationId ?? null,
+                },
+            });
+            return { status: "failed", fileId: file._id, reason: "tenant_changed" };
         }
 
         // The presigned PUT binds the Content-Type, not the length: the size
@@ -280,8 +314,8 @@ export const finalizeUpload = internalMutation({
             });
             await writeAudit(ctx, {
                 action: "file.upload_rejected",
-                actorAppUserId: args.appUserId,
-                actorAuthUserId: args.authUserId,
+                actorAppUserId: actor.appUserId,
+                actorAuthUserId: actor.authUserId,
                 organizationId: file.organizationId,
                 targetType: "file",
                 targetId: file._id,
@@ -333,8 +367,8 @@ export const finalizeUpload = internalMutation({
             });
             await writeAudit(ctx, {
                 action: "file.dedup_matched",
-                actorAppUserId: args.appUserId,
-                actorAuthUserId: args.authUserId,
+                actorAppUserId: actor.appUserId,
+                actorAuthUserId: actor.authUserId,
                 organizationId: file.organizationId,
                 targetType: "file",
                 targetId: duplicate._id,
@@ -364,8 +398,8 @@ export const finalizeUpload = internalMutation({
 
         await writeAudit(ctx, {
             action: "file.upload_confirmed",
-            actorAppUserId: args.appUserId,
-            actorAuthUserId: args.authUserId,
+            actorAppUserId: actor.appUserId,
+            actorAuthUserId: actor.authUserId,
             organizationId: file.organizationId,
             targetType: "file",
             targetId: file._id,
@@ -373,8 +407,8 @@ export const finalizeUpload = internalMutation({
         });
         await writeAudit(ctx, {
             action: "file.uploaded",
-            actorAppUserId: args.appUserId,
-            actorAuthUserId: args.authUserId,
+            actorAppUserId: actor.appUserId,
+            actorAuthUserId: actor.authUserId,
             organizationId: file.organizationId,
             targetType: "file",
             targetId: file._id,
@@ -585,11 +619,10 @@ export const confirmUpload = action({
             throw forbidden("UPLOAD_OBJECT_MISSING", { fileId: args.fileId });
         }
 
+        // `finalizeUpload` re-resolves caller, membership and active organization
+        // itself: `authz` above is a fast path, taken before the bridge call.
         const finalized: FinalizeResult = await ctx.runMutation(internal.files.finalizeUpload, {
             fileId: args.fileId,
-            organizationId: authz.organizationId,
-            appUserId: authz.appUserId,
-            authUserId: authz.authUserId,
             headBytes: inspect.headBytes,
             sha256: inspect.sha256,
             size: inspect.size,
@@ -597,6 +630,9 @@ export const confirmUpload = action({
 
         if (finalized.status === "failed") {
             await tryBridge(BRIDGE_PATH.object, { op: "delete", key: pending.path });
+            if (finalized.reason === "tenant_changed") {
+                throw forbidden("PENDING_UPLOAD_NOT_FOUND", { fileId: args.fileId });
+            }
             if (finalized.reason === "size_mismatch") {
                 throw forbidden("UPLOAD_SIZE_MISMATCH", { fileId: args.fileId });
             }
