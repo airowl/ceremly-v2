@@ -92,7 +92,16 @@ dell'organizzazione (`organizations.deleteOrganization`, purge account).
    stesso una funzione admin: non esiste una sonda pubblica del ruolo) e rimanda
    alla dashboard su qualsiasi errore. È una comodità: il layout `admin.vue` non
    monta la pagina finché `whoami` non risponde, e il gate vero resta Convex.
-6. **Break-glass del site mode** (fix round 1): in `maintenance` e `waitinglist` la
+6. **Cosa la console può fare fuori da `active`** (final review M3): solo cambiare modalità
+   (`admin.setSiteMode`, policy `siteModeSwitch`). Ogni altra write della console —
+   `retryJob`, `setOrganizationLimits`, `setGlobalRole` e anche la verifica Creem di sola
+   lettura `reconcileOrganizationBilling` (un'action con policy `domain`) — risponde
+   `SITE_READ_ONLY` in `waitinglist`, `maintenance-readonly` e `maintenance`. È voluto (nella
+   finestra del cutover nessuna write deve partire) ma va saputo: per un job da riprendere o un
+   limite da cambiare durante una manutenzione si torna in `active` o si usa la CLI del
+   deployment (`npx convex run jobs:retryDead`, con motivazione). E dalla C2 i job ripresi
+   partono comunque solo in `active`.
+7. **Break-glass del site mode** (fix round 1): in `maintenance` e `waitinglist` la
    shell `/admin/**`, il login diretto alla console (`/login?redirect=/admin…`) e le
    sole API di sessione di Better Auth restano raggiungibili — dalla final review I2 per
    **path esatto**: `sign-in/email`, `two-factor/verify-totp`,
