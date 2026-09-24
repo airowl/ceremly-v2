@@ -1,8 +1,8 @@
 # Task 15 — console `/admin` su Convex
 
 **Stato: code-complete ermeticamente (2026-09-24), verifica browser NON eseguita.**
-La console è scritta, coperta da 28 casi `convex-test` (più 13 casi di site mode /
-break-glass) e verde su build/typecheck — incluso il fix round 1 della review;
+La console è scritta, coperta da 29 casi `convex-test` (più 13 casi di site mode /
+break-glass) e verde su build/typecheck — inclusi i fix round 1–2 della review;
 la spec Playwright esiste (`test/migration/admin-console-live.test.ts`) ma **non è
 stata eseguita**: richiede un deployment con due account reali (un superAdmin e un
 utente normale) e questo ambiente non ha credenziali di staging. È parte del
@@ -27,8 +27,11 @@ key: è basata sulla sessione Better Auth e sul ruolo globale `appUsers.globalRo
 (nessun endpoint admin cancella dati; l'override dei limiti si "cancella"
 svuotando i campi, e la storia resta nell'audit). **Billing:** solo i due wrapper non
 distruttivi sopra, via l'astrazione Creem esistente (`creem.sdk.subscriptions.get`,
-`creem.customers.portalUrl`), con motivazione e audit scritto **prima** della chiamata
-al provider. Il mirror degli abbonamenti resta scritto solo dal webhook: la verifica
+`creem.customers.portalUrl`), con motivazione. L'audit è in due tempi (fix round 2):
+`admin.billing_*_requested` **prima** della chiamata (intento, rate limit) e l'esito
+**dopo** (`admin.billing_reconciled` / `admin.billing_portal_link_created`, con
+`status: "failure"` e `errorCode` se il provider fallisce) — mai un record di successo
+per qualcosa che non è avvenuto. Il mirror degli abbonamenti resta scritto solo dal webhook: la verifica
 riporta le differenze, non le ripara (il rimedio è la riconsegna del webhook dalla
 dashboard Creem). Disdette, rimborsi e cambi piano non esistono nella console.
 
@@ -119,7 +122,7 @@ restituiscono `capped: true` quando li toccano (la UI mostra `≥ N`):
 | eventi (dashboard; il documento porta l'intero invito) | 500 più recenti |
 | risposte RSVP | 4.000 |
 | organizzazioni lette per lo stato billing (una query al componente Creem ciascuna) | 200 più recenti |
-| (ogni contatore restituisce `{ total, capped }`; la conversione, se il campione è troncato, è marcata come approssimata) | |
+| (ogni contatore restituisce `{ total, capped }`; le ripartizioni — per stato, sì/no/forse, stati degli abbonamenti, esiti webhook — portano un flag `sampled` e la UI le marca come campione; la conversione campionata è marcata `≈`) | |
 | esiti webhook | ultimi 100 |
 | dettaglio org: eventi / dettaglio evento: ospiti, RSVP | 1.000 / 2.000 |
 

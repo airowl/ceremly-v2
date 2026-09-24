@@ -91,13 +91,23 @@ const cards = computed(() => {
 
         <section v-if="events" class="grid gap-4 md:grid-cols-2">
             <div class="rounded-lg border border-neutral-200 bg-white p-4">
-                <h2 class="mb-2 font-medium">{{ t('adminConsole.overview.byStatus') }}</h2>
+                <h2 class="mb-2 font-medium">
+                    {{ t('adminConsole.overview.byStatus') }}
+                    <UBadge v-if="events.events.sampled" size="sm" color="warning" variant="subtle" data-testid="sampled-by-status">
+                        {{ t('adminConsole.sampled', { n: overview?.caps.events ?? '' }) }}
+                    </UBadge>
+                </h2>
                 <ul class="space-y-1 text-sm">
                     <li v-for="(count, status) in events.events.byStatus" :key="status">
                         {{ t(`adminConsole.events.statuses.${status}`) }}: <span class="tabular-nums">{{ count }}</span>
                     </li>
                     <li>{{ t('adminConsole.overview.celebration') }}: <span class="tabular-nums">{{ formatCount(events.celebration.total, events.celebration.capped) }}</span></li>
-                    <li>{{ t('adminConsole.overview.attending') }}: <span class="tabular-nums">{{ events.rsvp.yes }} / {{ events.rsvp.no }} / {{ events.rsvp.maybe }}</span></li>
+                    <li>
+                        {{ t('adminConsole.overview.attending') }}: <span class="tabular-nums">{{ events.rsvp.yes }} / {{ events.rsvp.no }} / {{ events.rsvp.maybe }}</span>
+                        <UBadge v-if="events.rsvp.sampled" size="sm" color="warning" variant="subtle">
+                            {{ t('adminConsole.sampled', { n: overview?.caps.rsvpResponses ?? '' }) }}
+                        </UBadge>
+                    </li>
                 </ul>
             </div>
             <div v-if="billing" class="rounded-lg border border-neutral-200 bg-white p-4">
@@ -107,10 +117,16 @@ const cards = computed(() => {
                     <li>
                         {{ t('adminConsole.overview.subscriptionStatuses') }}:
                         <span v-for="(count, status) in billing.subscriptionStatuses" :key="status" class="mr-2">{{ status }} {{ count }}</span>
+                        <UBadge v-if="billing.subscriptionStatusesSampled" size="sm" color="warning" variant="subtle">
+                            {{ t('adminConsole.sampled', { n: overview?.caps.billingOrganizations ?? '' }) }}
+                        </UBadge>
                     </li>
                     <li>
                         {{ t('adminConsole.overview.webhookOutcomes') }}:
                         <span v-for="(count, outcome) in billing.recentWebhookOutcomes" :key="outcome" class="mr-2">{{ outcome }} {{ count }}</span>
+                        <UBadge v-if="billing.recentWebhookOutcomesSampled" size="sm" color="neutral" variant="subtle">
+                            {{ t('adminConsole.lastN', { n: overview?.caps.webhookEvents ?? '' }) }}
+                        </UBadge>
                     </li>
                     <li>{{ t('adminConsole.overview.lastWebhook') }}: {{ formatDateTime(billing.lastWebhookAt, locale) }}</li>
                 </ul>

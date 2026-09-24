@@ -113,9 +113,12 @@ const AUDIT_ACTION_CATEGORY = {
     "admin.super_admin_bootstrapped": "admin",
     "admin.role_changed": "admin",
     "admin.limits_updated": "admin",
-    // Billing wrappers (Task 15 fix round 1): non-destructive, audited before the
-    // provider call.
+    // Billing wrappers (Task 15 fix rounds 1–2): non-destructive. `*_requested`
+    // is written before the provider call (intent), the other after it with the
+    // real outcome (`status: "failure"` + `errorCode` when the provider failed).
+    "admin.billing_reconcile_requested": "admin",
     "admin.billing_reconciled": "admin",
+    "admin.billing_portal_link_requested": "admin",
     "admin.billing_portal_link_created": "admin",
     // Email (Task 13). I due nomi sono quelli del legacy (`server/utils/email.ts`
     // auditava ogni invio e ogni fallimento con `email.sent`/`email.failed`), quindi

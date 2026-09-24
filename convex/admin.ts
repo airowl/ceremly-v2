@@ -143,6 +143,11 @@ const AUDIT_DETAIL_KEYS = new Set([
     "subscriptionId",
     "subscriptionIds",
     "customerId",
+    "errorCode",
+    "checked",
+    "driftCount",
+    "driftSubscriptionIds",
+    "providerErrors",
 ]);
 
 /** Longest free string shown (the operator's own `reason` has its own cap). */
@@ -471,12 +476,19 @@ export const eventMetrics = query({
         }
 
         return {
-            events: { total: sample.length, capped: eventsCapped, byStatus },
+            // `sampled`: the breakdown covers the most recent `METRIC_CAPS.events` only.
+            events: { total: sample.length, capped: eventsCapped, byStatus, sampled: eventsCapped },
             celebration: { total: celebration, capped: eventsCapped },
             unlocked: { total: unlocked, capped: eventsCapped },
             conversionRate: sample.length === 0 ? 0 : celebration / sample.length,
             conversionSampled: eventsCapped,
-            rsvp: { total: Math.min(responses.length, METRIC_CAPS.rsvpResponses), capped: rsvpCapped, ...rsvp },
+            rsvp: {
+                total: Math.min(responses.length, METRIC_CAPS.rsvpResponses),
+                capped: rsvpCapped,
+                // The yes/no/maybe split covers the counted responses only.
+                sampled: rsvpCapped,
+                ...rsvp,
+            },
         };
     },
 });
@@ -515,7 +527,11 @@ export const billingMetrics = query({
             organizationsScanned: { total: scanned.length, capped },
             atelierActive: { total: atelierActive, capped },
             subscriptionStatuses: statuses,
+            // Statuses cover the scanned organizations only.
+            subscriptionStatusesSampled: capped,
             recentWebhookOutcomes: webhookOutcomes,
+            // A window, not a total: the last `METRIC_CAPS.webhookEvents` deliveries.
+            recentWebhookOutcomesSampled: webhooks.length >= METRIC_CAPS.webhookEvents,
             lastWebhookAt: webhooks[0]?.processedAt ?? null,
         };
     },
@@ -806,7 +822,14 @@ export const setOrganizationLimits = mutation({
 /** Most subscriptions compared per provider check (one Creem API call each). */
 export const MAX_RECONCILE_SUBSCRIPTIONS = 10;
 
-const BILLING_ADMIN_ACTIONS = v.union(
+/** Written before the provider call (intent) — rate limited. */
+const BILLING_REQUEST_ACTIONS = v.union(
+    v.literal("admin.billing_reconcile_requested"),
+    v.literal("admin.billing_portal_link_requested"),
+);
+
+/** Written after the provider call: what actually happened, success or failure. */
+const BILLING_OUTCOME_ACTIONS = v.union(
     v.literal("admin.billing_reconciled"),
     v.literal("admin.billing_portal_link_created"),
 );
@@ -828,14 +851,15 @@ export const billingActionContext = internalQuery({
 });
 
 /**
- * Rate limit + audit of a billing action, written **before** the provider call:
- * a portal link that exists was audited first. Re-checks the role (the identity
- * is propagated from the action).
+ * Rate limit + audit of a billing **request**, written before the provider call:
+ * the intent (who, why, which ids) is recorded even if the provider then fails.
+ * It never claims an outcome — that is `recordBillingOutcome`'s job. Re-checks
+ * the role (the identity is propagated from the action).
  */
-export const recordBillingAction = internalMutation({
+export const recordBillingRequest = internalMutation({
     args: {
         organizationId: v.id("organizations"),
-        action: BILLING_ADMIN_ACTIONS,
+        action: BILLING_REQUEST_ACTIONS,
         reason: v.string(),
         subscriptionIds: v.optional(v.array(v.string())),
     },
@@ -857,6 +881,44 @@ export const recordBillingAction = internalMutation({
         });
     },
 });
+
+/**
+ * The outcome of a billing action, written after the provider answered (or
+ * failed): `status: "failure"` with a sanitized `errorCode`, never a success
+ * record for something that did not happen.
+ */
+export const recordBillingOutcome = internalMutation({
+    args: {
+        organizationId: v.id("organizations"),
+        action: BILLING_OUTCOME_ACTIONS,
+        reason: v.string(),
+        ok: v.boolean(),
+        errorCode: v.optional(v.string()),
+        checked: v.optional(v.number()),
+        driftCount: v.optional(v.number()),
+        driftSubscriptionIds: v.optional(v.array(v.string())),
+        providerErrors: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireSuperAdmin(ctx);
+        const { organizationId, action, ok, reason: rawReason, ...rest } = args;
+        await writeAudit(ctx, {
+            action,
+            actorAppUserId: admin._id,
+            actorAuthUserId: admin.authUserId,
+            organizationId,
+            targetType: "organization",
+            targetId: organizationId,
+            status: ok ? "success" : "failure",
+            details: { reason: requireReason(rawReason), ...rest },
+        });
+    },
+});
+
+/** A provider failure, as the console reports it: a code, never the provider's text. */
+function providerFailure() {
+    return forbidden("PROVIDER_ERROR");
+}
 
 interface ReconcileItem {
     subscriptionId: string;
@@ -884,9 +946,9 @@ export const reconcileOrganizationBilling = action({
         });
         const subset = local.slice(0, MAX_RECONCILE_SUBSCRIPTIONS);
 
-        await ctx.runMutation(internal.admin.recordBillingAction, {
+        await ctx.runMutation(internal.admin.recordBillingRequest, {
             organizationId: args.organizationId,
-            action: "admin.billing_reconciled",
+            action: "admin.billing_reconcile_requested",
             reason,
             subscriptionIds: subset.map((subscription) => subscription.id),
         });
@@ -928,6 +990,21 @@ export const reconcileOrganizationBilling = action({
             }
         }
 
+        const drifted = items.filter((item) => item.drift.length > 0);
+        const providerErrors = items.filter((item) => item.errorCode !== null).length;
+        // Outcome: a check where every call failed is a failure, not a clean bill.
+        await ctx.runMutation(internal.admin.recordBillingOutcome, {
+            organizationId: args.organizationId,
+            action: "admin.billing_reconciled",
+            reason,
+            ok: subset.length === 0 || providerErrors < subset.length,
+            ...(subset.length > 0 && providerErrors === subset.length ? { errorCode: "PROVIDER_ERROR" } : {}),
+            checked: subset.length,
+            driftCount: drifted.length,
+            driftSubscriptionIds: drifted.map((item) => item.subscriptionId),
+            providerErrors,
+        });
+
         return { checked: subset.length, truncated: local.length > subset.length, items };
     },
 });
@@ -948,13 +1025,33 @@ export const customerPortalLink = action({
         });
         if (!customer) throw forbidden("BILLING_CUSTOMER_NOT_FOUND");
 
-        await ctx.runMutation(internal.admin.recordBillingAction, {
+        await ctx.runMutation(internal.admin.recordBillingRequest, {
             organizationId: args.organizationId,
-            action: "admin.billing_portal_link_created",
+            action: "admin.billing_portal_link_requested",
             reason,
         });
 
-        return await creem.customers.portalUrl(ctx, { entityId: args.organizationId });
+        let url: string;
+        try {
+            ({ url } = await creem.customers.portalUrl(ctx, { entityId: args.organizationId }));
+        } catch {
+            await ctx.runMutation(internal.admin.recordBillingOutcome, {
+                organizationId: args.organizationId,
+                action: "admin.billing_portal_link_created",
+                reason,
+                ok: false,
+                errorCode: "PROVIDER_ERROR",
+            });
+            throw providerFailure();
+        }
+
+        await ctx.runMutation(internal.admin.recordBillingOutcome, {
+            organizationId: args.organizationId,
+            action: "admin.billing_portal_link_created",
+            reason,
+            ok: true,
+        });
+        return { url };
     },
 });
 

@@ -3779,6 +3779,8 @@
     "error": "Impossibile caricare i dati",
     "empty": "Nessun risultato",
     "capped": "valore minimo: il conteggio ha raggiunto il limite di lettura",
+    "sampled": "campione: solo gli ultimi {n}",
+    "lastN": "ultimi {n}",
     "prev": "Precedente",
     "next": "Successiva",
     "search": "Cerca",

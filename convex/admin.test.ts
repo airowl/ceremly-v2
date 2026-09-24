@@ -676,7 +676,8 @@ describe("admin reads", () => {
         expect(overview.siteMode).toBe("active");
 
         const events = await f.admin.query(api.admin.eventMetrics, {});
-        expect(events.events).toMatchObject({ total: 2, capped: false });
+        expect(events.events).toMatchObject({ total: 2, capped: false, sampled: false });
+        expect(events.rsvp.sampled).toBe(false);
         expect(events.events.byStatus).toMatchObject({ draft: 1, active: 1, closed: 0 });
         expect(events.celebration).toEqual({ total: 1, capped: false });
         expect(events.unlocked).toEqual({ total: 1, capped: false });
@@ -686,6 +687,8 @@ describe("admin reads", () => {
         const billing = await f.admin.query(api.admin.billingMetrics, {});
         expect(billing.organizationsScanned).toEqual({ total: 2, capped: false });
         expect(billing.atelierActive).toEqual({ total: 0, capped: false });
+        expect(billing.subscriptionStatusesSampled).toBe(false);
+        expect(billing.recentWebhookOutcomesSampled).toBe(false);
     });
 
     it("returns no secret, hash, token or job payload", async () => {
@@ -923,16 +926,27 @@ describe("billing wrappers", () => {
         );
         expect(mirror?.status).toBe("active");
 
-        const [audit] = await billingAudits(f.t);
-        expect(audit).toMatchObject({
-            action: "admin.billing_reconciled",
+        // Intent before the call, outcome after it.
+        const [requested, outcome] = await billingAudits(f.t);
+        expect(requested).toMatchObject({
+            action: "admin.billing_reconcile_requested",
             actorAppUserId: f.adminId,
             organizationId: f.userOrgId,
             targetId: f.userOrgId,
+            status: "success",
         });
-        expect(audit!.details).toEqual({ reason: "customer says it was canceled", subscriptionIds: ["sub_1"] });
+        expect(requested!.details).toEqual({ reason: "customer says it was canceled", subscriptionIds: ["sub_1"] });
+        expect(outcome).toMatchObject({ action: "admin.billing_reconciled", status: "success", actorAppUserId: f.adminId });
+        expect(outcome!.details).toEqual({
+            reason: "customer says it was canceled",
+            checked: 1,
+            driftCount: 1,
+            driftSubscriptionIds: ["sub_1"],
+            providerErrors: 0,
+        });
 
-        // A provider failure is a code, not the provider's text.
+        // Provider failure: a code, not the provider's text — and a failure record,
+        // not a clean "reconciled".
         get.mockRejectedValue(new Error("Creem 500: internal detail for mario.rossi"));
         const failed = await f.admin.action(api.admin.reconcileOrganizationBilling, {
             organizationId: f.userOrgId,
@@ -940,6 +954,16 @@ describe("billing wrappers", () => {
         });
         expect(failed.items[0]).toMatchObject({ errorCode: "PROVIDER_ERROR", remoteStatus: null });
         expect(JSON.stringify(failed)).not.toContain("mario.rossi");
+
+        const audits = await billingAudits(f.t);
+        expect(audits.map((row) => [row.action, row.status])).toEqual([
+            ["admin.billing_reconcile_requested", "success"],
+            ["admin.billing_reconciled", "success"],
+            ["admin.billing_reconcile_requested", "success"],
+            ["admin.billing_reconciled", "failure"],
+        ]);
+        expect(audits[3]!.details).toMatchObject({ reason: "retry", errorCode: "PROVIDER_ERROR", providerErrors: 1 });
+        expect(JSON.stringify(audits)).not.toContain("mario.rossi");
     });
 
     it("portal link: requires a customer, audits before calling the provider", async () => {
@@ -964,8 +988,37 @@ describe("billing wrappers", () => {
         expect(link).toEqual({ url: "https://portal.creem.test/session" });
         expect(portalUrl).toHaveBeenCalledWith(expect.anything(), { entityId: f.userOrgId });
 
-        const [audit] = await billingAudits(f.t);
-        expect(audit).toMatchObject({ action: "admin.billing_portal_link_created", actorAppUserId: f.adminId });
-        expect(audit!.details).toEqual({ reason: "owner lost the email" });
+        expect((await billingAudits(f.t)).map((row) => [row.action, row.status])).toEqual([
+            ["admin.billing_portal_link_requested", "success"],
+            ["admin.billing_portal_link_created", "success"],
+        ]);
+        const created = (await billingAudits(f.t))[1]!;
+        expect(created).toMatchObject({ actorAppUserId: f.adminId, targetId: f.userOrgId });
+        expect(created.details).toEqual({ reason: "owner lost the email" });
+    });
+
+    it("portal link: a provider failure is audited as a failure, never as a created link", async () => {
+        const f = await bootstrap();
+        process.env.CREEM_API_KEY = "creem_test_dummy";
+        process.env.CREEM_SERVER = "test";
+        await seedSubscription(f, Date.now() + 86_400_000);
+
+        const portalUrl = vi.fn(async () => {
+            throw new Error("Creem 502: upstream said something about mario.rossi@example.com");
+        });
+        vi.spyOn(creem, "customers", "get").mockReturnValue({ portalUrl, retrieve: vi.fn() } as never);
+
+        await expectCode(
+            f.admin.action(api.admin.customerPortalLink, { organizationId: f.userOrgId, reason: "owner asked" }),
+            "PROVIDER_ERROR",
+        );
+
+        const audits = await billingAudits(f.t);
+        expect(audits.map((row) => [row.action, row.status])).toEqual([
+            ["admin.billing_portal_link_requested", "success"],
+            ["admin.billing_portal_link_created", "failure"],
+        ]);
+        expect(audits[1]!.details).toEqual({ reason: "owner asked", errorCode: "PROVIDER_ERROR" });
+        expect(JSON.stringify(audits)).not.toContain("mario.rossi");
     });
 });

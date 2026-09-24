@@ -3779,6 +3779,8 @@
     "error": "Could not load the data",
     "empty": "No results",
     "capped": "lower bound: the count reached its read cap",
+    "sampled": "sample: latest {n} only",
+    "lastN": "last {n}",
     "prev": "Previous",
     "next": "Next",
     "search": "Search",
