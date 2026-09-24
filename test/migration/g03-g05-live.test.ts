@@ -2,7 +2,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { decryptJson, parseEncryptedEnvelope, sha256Hex } from "../../scripts/migration/crypto";
+import { assertBatchDigest, decryptJson, parseMigrationKey } from "../../scripts/migration/crypto";
+import type { MigrationBatch } from "../../scripts/migration/types";
 import { AUTH_FIXTURES, GATE_TOTP_SECRET, type AuthFixture } from "../../scripts/migration/auth-fixtures";
 import { generateTotp } from "./totp";
 
@@ -31,7 +32,7 @@ const appOrigin = (process.env.G03_APP_ORIGIN ?? process.env.NUXT_PUBLIC_BASE_UR
     .trim()
     .split(/\s+/)[0]!;
 const migrationKey = process.env.NUXT_MIGRATION_API_KEY ?? "";
-const exportKey = process.env.NUXT_MIGRATION_EXPORT_KEY ?? "";
+const exportKey = process.env.MIGRATION_ENCRYPTION_KEY ?? "";
 
 const fixtureOf = (gate: AuthFixture["gate"]): AuthFixture => {
     const fixture = AUTH_FIXTURES.find((candidate) => candidate.gate === gate);
@@ -39,19 +40,11 @@ const fixtureOf = (gate: AuthFixture["gate"]): AuthFixture => {
     return fixture;
 };
 
-interface ImportBatch<T> {
-    version: string;
-    table: string;
-    watermark: string;
-    batchIndex: number;
-    records: T[];
-    sha256: string;
-}
-
 /** Reads and decrypts every batch of a table, verifying each digest. */
 function readBatches<T>(table: string): T[] {
     const files = readdirSync(exportDir)
-        .filter((file) => file.startsWith(`${table}.batch-`) && file.endsWith(".json.enc"))
+        // `.batch-N.enc` only: pre-Task-16 `.json.enc` envelopes are a different format.
+        .filter((file) => new RegExp(`^${table}\\.batch-\\d+\\.enc$`).test(file))
         .sort();
 
     if (files.length === 0) {
@@ -59,12 +52,12 @@ function readBatches<T>(table: string): T[] {
     }
 
     return files.flatMap((file) => {
-        const envelope = parseEncryptedEnvelope(readFileSync(join(exportDir, file), "utf8"));
-        const batch = decryptJson<ImportBatch<T>>(envelope, exportKey);
-
-        if (sha256Hex(batch.records) !== batch.sha256) {
-            throw new Error(`Batch digest mismatch for ${file}: the payload was tampered with`);
-        }
+        const batch = decryptJson<MigrationBatch<T>>(
+            readFileSync(join(exportDir, file)),
+            parseMigrationKey(exportKey),
+        );
+        // Throws on a payload that does not match its own digest.
+        assertBatchDigest(batch);
 
         return batch.records;
     });

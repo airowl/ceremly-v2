@@ -5,6 +5,7 @@ import { internalMutation } from "../_generated/server";
 import { normalizeEmail } from "../lib/identity";
 import { assertMigrationKey } from "../lib/migrationKey";
 import { isProcessableImage } from "../lib/media";
+import { canonicalJson } from "../lib/bridgeHmac";
 import {
     IMPORT_DEPENDENCIES,
     domainBatchDigest,
@@ -54,7 +55,7 @@ import {
 // Specs: the legacy → Convex translation, one declaration per table
 // ---------------------------------------------------------------------------
 
-interface RefSpec {
+export interface RefSpec {
     /** Legacy column carrying the parent's legacy id. */
     field: string;
     /** Table the reference points at. */
@@ -68,7 +69,7 @@ interface RefSpec {
     mode: "strict" | "best-effort";
 }
 
-interface NaturalKey {
+export interface NaturalKey {
     /** Convex index, in the exact field order it was declared with. */
     index: string;
     fields: readonly string[];
@@ -85,7 +86,7 @@ interface NaturalKey {
  * invariant "every tenant resource is reachable only through its own org" true
  * after the migration.
  */
-interface CoherenceRule {
+export interface CoherenceRule {
     /** Resolved local field holding the parent id. */
     field: string;
     /** Table the parent lives in. */
@@ -95,7 +96,7 @@ interface CoherenceRule {
     localField: string;
 }
 
-interface TableSpec {
+export interface TableSpec {
     table: DomainImportTable;
     /** Columns copied verbatim (present and not null). */
     fields: readonly string[];
@@ -119,6 +120,12 @@ interface TableSpec {
     ignored?: Readonly<Record<string, string>>;
     /** Columns whose value is derived rather than copied. */
     computed?: readonly string[];
+    /**
+     * Computed columns the Convex runtime owns after the import (e.g. the
+     * variant pipeline's progress). An `upsert` never rewrites them: the legacy
+     * has no opinion on state that only exists on the new stack.
+     */
+    preserveOnUpdate?: readonly string[];
     /** Computed values, possibly async (component lookups, derived keys). */
     build?: (
         ctx: MutationCtx,
@@ -433,6 +440,7 @@ const SPECS: readonly TableSpec[] = [
             variantsGeneratedAt: "superseded by `variantUpdatedAt`/`variantStatus`",
         },
         computed: ["basePath", "variantType", "variantStatus", "variantAttempts", "variantUpdatedAt"],
+        preserveOnUpdate: ["variantStatus", "variantAttempts", "variantUpdatedAt"],
         build: async (_ctx, record) => {
             const path = String(record.path);
             const variantType = typeof record.variantType === "string" ? record.variantType : "original";
@@ -572,6 +580,13 @@ const SPECS: readonly TableSpec[] = [
     },
 ];
 
+/**
+ * The translation table, exported read-only for `scripts/migration/reconcile.ts`:
+ * the reconciliation compares exactly the columns the import copies, from this
+ * declaration rather than from a second list that could drift from it.
+ */
+export const DOMAIN_IMPORT_SPECS: readonly TableSpec[] = SPECS;
+
 const SPEC_BY_TABLE = new Map<DomainImportTable, TableSpec>(
     SPECS.map((spec) => [spec.table, spec]),
 );
@@ -593,7 +608,7 @@ const SPEC_BY_TABLE = new Map<DomainImportTable, TableSpec>(
  *   tenant. A file with no organization needs a placement decision, not a
  *   default.
  */
-function deferReason(table: DomainImportTable, record: Record<string, unknown>): string | null {
+export function deferReason(table: DomainImportTable, record: Record<string, unknown>): string | null {
     if (table === "invitations" && (record.status === "pending" || record.status === undefined)) {
         return "pendingInvitation";
     }
@@ -621,6 +636,8 @@ export interface DomainImportBatchResult {
     imported: number;
     /** Records whose natural key already existed (a re-import, or a self-duplicate). */
     skipped: number;
+    /** Migrated records whose changed columns were rewritten (`upsert` only). */
+    updated: number;
     /** Records deliberately not imported, by reason. */
     deferred: Record<string, number>;
     /** Legacy columns with a declared reason for having no Convex home. */
@@ -742,15 +759,64 @@ const knownColumns = (spec: TableSpec): Set<string> => {
 // Runner
 // ---------------------------------------------------------------------------
 
+/**
+ * `insert` (default, Task 10): an existing natural key is skipped.
+ * `upsert` (Task 16 delta): a row this migration created (same `legacyId`) whose
+ * source changed since the full import is rewritten — see `upsertPatch`.
+ */
+export type DomainImportMode = "insert" | "upsert";
+
+/**
+ * The columns of a migrated row that an `upsert` must rewrite so the row equals
+ * what a fresh import of `document` would produce.
+ *
+ * Copied columns (fields, timestamps, references) are rewritten **and cleared**
+ * when the source nulled them — `patch` with `undefined` removes the field.
+ * Computed columns are rewritten only when the import computes a value, never
+ * cleared: an absent computed value (an invitation's `tokenHash`) means "the
+ * import has no opinion", not "delete what the new stack wrote". Columns in
+ * `preserveOnUpdate` are never touched.
+ */
+function upsertPatch(
+    spec: TableSpec,
+    current: Record<string, unknown>,
+    document: Record<string, unknown>,
+): Record<string, unknown> {
+    const preserved = new Set(spec.preserveOnUpdate ?? []);
+    const copied = new Set<string>([
+        ...spec.fields.map((field) => spec.rename?.[field] ?? field),
+        ...(spec.timestamps ?? []),
+        ...(spec.refs ?? []).map((reference) => reference.as ?? reference.field),
+    ]);
+    const computed = new Set((spec.computed ?? []).filter((column) => !preserved.has(column)));
+
+    const patch: Record<string, unknown> = {};
+    const differs = (column: string) =>
+        canonicalJson(current[column] ?? null) !== canonicalJson(document[column] ?? null);
+
+    for (const column of copied) {
+        if (column === "legacyId" || preserved.has(column)) continue;
+        if (differs(column)) patch[column] = document[column];
+    }
+    for (const column of computed) {
+        if (copied.has(column) || document[column] === undefined) continue;
+        if (differs(column)) patch[column] = document[column];
+    }
+
+    return patch;
+}
+
 async function importRecords(
     ctx: MutationCtx,
     spec: TableSpec,
     records: Record<string, unknown>[],
+    mode: DomainImportMode = "insert",
 ): Promise<Omit<DomainImportBatchResult, "table" | "batchIndex" | "replayed" | "digest">> {
     const result = {
         records: records.length,
         imported: 0,
         skipped: 0,
+        updated: 0,
         deferred: {} as Record<string, number>,
         ignoredColumns: Object.keys(spec.ignored ?? {}).sort(),
         unknownColumns: new Set<string>(),
@@ -914,11 +980,22 @@ async function importRecords(
             // An existing row that predates the migration (provisioned at first
             // login, or imported in an earlier run) gets the legacy id stamped so
             // later batches can reference it.
-            const doc = (await ctx.db.get(existing as never)) as { legacyId?: string } | null;
+            const doc = (await ctx.db.get(existing as never)) as Record<string, unknown> | null;
+            inserted.set(`${spec.table}:${legacyId}`, existing);
+
             if (doc && doc.legacyId === undefined) {
                 await ctx.db.patch(existing as never, { legacyId } as never);
+            } else if (mode === "upsert" && doc && doc.legacyId === legacyId) {
+                // Only a row this migration created is ever rewritten: a row
+                // adopted through a natural key keeps what the new stack wrote.
+                const patch = upsertPatch(spec, doc, document);
+                if (Object.keys(patch).length > 0) {
+                    await ctx.db.patch(existing as never, patch as never);
+                    result.updated += 1;
+                    continue;
+                }
             }
-            inserted.set(`${spec.table}:${legacyId}`, existing);
+
             result.skipped += 1;
             continue;
         }
@@ -1011,6 +1088,7 @@ export const importBatch = internalMutation({
         watermark: v.optional(v.string()),
         records: v.array(v.any()),
         sha256: v.string(),
+        mode: v.optional(v.union(v.literal("insert"), v.literal("upsert"))),
     },
     handler: async (ctx, args): Promise<DomainImportBatchResult> => {
         assertMigrationKey(args.migrationKey);
@@ -1055,7 +1133,7 @@ export const importBatch = internalMutation({
 
         await assertDependenciesImported(ctx, spec, records);
 
-        const outcome = await importRecords(ctx, spec, records);
+        const outcome = await importRecords(ctx, spec, records, args.mode ?? "insert");
 
         await ctx.db.insert("migrationRecords", {
             table: args.table,
@@ -1066,6 +1144,7 @@ export const importBatch = internalMutation({
             records: outcome.records,
             imported: outcome.imported,
             skipped: outcome.skipped,
+            ...(outcome.updated > 0 ? { updated: outcome.updated } : {}),
             importedAt: Date.now(),
         });
 
@@ -1076,5 +1155,55 @@ export const importBatch = internalMutation({
             digest,
             ...outcome,
         };
+    },
+});
+
+/** Upper bound of one prune call: one transaction, bounded reads and writes. */
+const PRUNE_BATCH_LIMIT = 200;
+
+/**
+ * `internal.migrations.domainImport.pruneBatch` (plan Task 16, delta import).
+ *
+ * Deletes the rows **this migration created** whose source row no longer
+ * exists: a member removed, an event deleted between the full import and the
+ * cutover. Without it a hard delete in the legacy would survive on the new
+ * stack — for a membership, that is a removed person keeping access.
+ *
+ * Scope is deliberately narrow: lookup by `legacyId` only, so a row the
+ * migration did not create can never be matched. The caller (`import-convex.ts`)
+ * computes the orphans from the source's full id list and sends them in reverse
+ * import order, children before parents. Convex-only tables that point at a
+ * pruned row (`inviteTestRequests`, `organizationLimitOverrides`) are not
+ * cascaded here: before the cutover the target has no such rows.
+ */
+export const pruneBatch = internalMutation({
+    args: {
+        migrationKey: v.string(),
+        table: v.string(),
+        legacyIds: v.array(v.string()),
+    },
+    handler: async (ctx, args): Promise<{ table: string; deleted: number; missing: number }> => {
+        assertMigrationKey(args.migrationKey);
+
+        if (!isDomainImportTable(args.table)) {
+            throw new ConvexError({ code: "UNKNOWN_IMPORT_TABLE", table: args.table });
+        }
+        if (args.legacyIds.length > PRUNE_BATCH_LIMIT) {
+            throw new ConvexError({ code: "PRUNE_BATCH_TOO_LARGE", limit: PRUNE_BATCH_LIMIT });
+        }
+
+        let deleted = 0;
+        let missing = 0;
+        for (const legacyId of args.legacyIds) {
+            const id = legacyId ? await findById(ctx, args.table, legacyId) : null;
+            if (!id) {
+                missing += 1;
+                continue;
+            }
+            await ctx.db.delete(id as never);
+            deleted += 1;
+        }
+
+        return { table: args.table, deleted, missing };
     },
 });

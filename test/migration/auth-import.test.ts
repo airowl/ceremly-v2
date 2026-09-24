@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
     importAuthRecordsIdempotently,
@@ -8,20 +9,23 @@ import {
     type LegacyAuthUser,
     type LegacyTwoFactor,
 } from "../../convex/migrations/authImport";
-import { decryptJson, encryptJson, parseEncryptedEnvelope } from "../../scripts/migration/crypto";
+import { decryptJson, encryptJson } from "../../scripts/migration/crypto";
 
 /**
  * Task 4 (migration), Step 4: the import orchestration is a pure function over
  * an adapter interface, so its contract — idempotency, natural keys, refusal of
  * orphan records — is tested here without a deployment or a database.
  */
+type FakeDoc = { id: string } & Record<string, unknown>;
+
 interface FakeAdapterState {
-    users: Map<string, { id: string; email: string }>;
-    accounts: Map<string, { id: string }>;
-    twoFactors: Map<string, { id: string }>;
+    users: Map<string, FakeDoc>;
+    accounts: Map<string, FakeDoc>;
+    twoFactors: Map<string, FakeDoc>;
     createdUsers: Array<Record<string, unknown>>;
     createdAccounts: Array<Record<string, unknown>>;
     createdTwoFactors: Array<Record<string, unknown>>;
+    updates: Array<{ model: string; id: string; data: Record<string, unknown> }>;
 }
 
 function createFakeAdapter(): { adapter: AuthImportAdapter; state: FakeAdapterState } {
@@ -32,6 +36,13 @@ function createFakeAdapter(): { adapter: AuthImportAdapter; state: FakeAdapterSt
         createdUsers: [],
         createdAccounts: [],
         createdTwoFactors: [],
+        updates: [],
+    };
+    const patch = (map: Map<string, FakeDoc>, model: string, id: string, data: Record<string, unknown>) => {
+        for (const doc of map.values()) {
+            if (doc.id === id) Object.assign(doc, data);
+        }
+        state.updates.push({ model, id, data });
     };
     let sequence = 0;
     const nextId = (prefix: string) => `${prefix}_${(sequence += 1)}`;
@@ -45,7 +56,7 @@ function createFakeAdapter(): { adapter: AuthImportAdapter; state: FakeAdapterSt
             async createUser(data) {
                 const id = nextId("user");
                 const email = String(data.email);
-                state.users.set(email, { id, email });
+                state.users.set(email, { ...data, id, email });
                 state.createdUsers.push({ ...data, id });
                 return { id };
             },
@@ -54,7 +65,7 @@ function createFakeAdapter(): { adapter: AuthImportAdapter; state: FakeAdapterSt
             },
             async createAccount(data) {
                 const id = nextId("account");
-                state.accounts.set(`${data.providerId}:${data.accountId}`, { id });
+                state.accounts.set(`${data.providerId}:${data.accountId}`, { ...data, id });
                 state.createdAccounts.push({ ...data, id });
                 return { id };
             },
@@ -63,9 +74,18 @@ function createFakeAdapter(): { adapter: AuthImportAdapter; state: FakeAdapterSt
             },
             async createTwoFactor(data) {
                 const id = nextId("twoFactor");
-                state.twoFactors.set(String(data.userId), { id });
+                state.twoFactors.set(String(data.userId), { ...data, id });
                 state.createdTwoFactors.push({ ...data, id });
                 return { id };
+            },
+            async updateUser(id, data) {
+                patch(state.users, "user", id, data);
+            },
+            async updateAccount(id, data) {
+                patch(state.accounts, "account", id, data);
+            },
+            async updateTwoFactor(id, data) {
+                patch(state.twoFactors, "twoFactor", id, data);
             },
         },
     };
@@ -137,9 +157,9 @@ describe("importAuthRecordsIdempotently", () => {
         expect(result.imported).toBe(3);
         expect(result.skipped).toBe(0);
         expect(result.detail).toEqual({
-            users: { imported: 1, skipped: 0 },
-            accounts: { imported: 1, skipped: 0 },
-            twoFactors: { imported: 1, skipped: 0 },
+            users: { imported: 1, skipped: 0, updated: 0 },
+            accounts: { imported: 1, skipped: 0, updated: 0 },
+            twoFactors: { imported: 1, skipped: 0, updated: 0 },
         });
 
         // Credentials survive verbatim; timestamps become epoch ms.
@@ -262,29 +282,98 @@ describe("importAuthRecordsIdempotently", () => {
     });
 });
 
-describe("encrypted migration batches", () => {
-    const passphrase = "gate-passphrase";
+describe("importAuthRecordsIdempotently — upsert (Task 16 delta)", () => {
+    it("default mode never rewrites an existing credential, even a changed one", async () => {
+        const { adapter, state } = createFakeAdapter();
+        await importAuthRecordsIdempotently(adapter, batch());
 
-    it("round-trips a batch and leaves no plaintext in the envelope", () => {
-        const payload = batch({ twoFactors: [legacyTwoFactor()] });
-        const envelope = encryptJson(payload, passphrase);
-        const serialized = JSON.stringify(envelope);
+        const replay = await importAuthRecordsIdempotently(adapter, batch({
+            accounts: [legacyAccount({ password: "$scrypt$new-hash" })],
+        }));
 
-        expect(serialized).not.toContain("$scrypt$hash");
-        expect(serialized).not.toContain("7f3a91c25b0e4d88aa61f0c3");
-        // JSON is the transport format: `Date` values arrive as ISO strings and
-        // `toEpochMs` handles both, so equality is asserted on the wire shape.
-        expect(decryptJson<AuthImportBatch>(parseEncryptedEnvelope(serialized), passphrase)).toEqual(
-            JSON.parse(JSON.stringify(payload)),
-        );
+        expect(replay.imported).toBe(0);
+        expect(replay.updated).toBe(0);
+        expect(state.updates).toHaveLength(0);
     });
 
-    it("fails to decrypt with the wrong passphrase or a tampered ciphertext", () => {
-        const envelope = encryptJson(batch(), passphrase);
+    it("upsert carries a password changed after the full import", async () => {
+        const { adapter, state } = createFakeAdapter();
+        await importAuthRecordsIdempotently(adapter, batch());
 
-        expect(() => decryptJson(envelope, "other-passphrase")).toThrow();
+        const delta = await importAuthRecordsIdempotently(
+            adapter,
+            batch({ accounts: [legacyAccount({ password: "$scrypt$new-hash" })] }),
+            { mode: "upsert" },
+        );
 
-        const tampered = { ...envelope, ciphertext: Buffer.from("tampered").toString("base64") };
-        expect(() => decryptJson(tampered, passphrase)).toThrow();
+        expect(delta.updated).toBe(1);
+        expect(delta.detail.accounts).toEqual({ imported: 0, skipped: 0, updated: 1 });
+        expect(state.updates).toEqual([
+            { model: "account", id: expect.any(String), data: { password: "$scrypt$new-hash" } },
+        ]);
+    });
+
+    it("upsert carries a user profile and a 2FA rotation, and only the changed columns", async () => {
+        const { adapter, state } = createFakeAdapter();
+        await importAuthRecordsIdempotently(adapter, batch({ twoFactors: [legacyTwoFactor()] }));
+
+        const delta = await importAuthRecordsIdempotently(
+            adapter,
+            batch({
+                users: [legacyUser({ name: "Renamed", twoFactorEnabled: true })],
+                twoFactors: [legacyTwoFactor({ backupCodes: "99aa" })],
+            }),
+            { mode: "upsert" },
+        );
+
+        expect(delta.detail.users.updated).toBe(1);
+        expect(delta.detail.twoFactors.updated).toBe(1);
+        expect(state.updates.map((update) => [update.model, Object.keys(update.data).sort()])).toEqual([
+            ["user", ["name", "twoFactorEnabled"]],
+            ["twoFactor", ["backupCodes"]],
+        ]);
+    });
+
+    it("an unchanged upsert replay writes nothing", async () => {
+        const { adapter, state } = createFakeAdapter();
+        await importAuthRecordsIdempotently(adapter, batch({ twoFactors: [legacyTwoFactor()] }));
+
+        const replay = await importAuthRecordsIdempotently(
+            adapter,
+            batch({ twoFactors: [legacyTwoFactor()] }),
+            { mode: "upsert" },
+        );
+
+        expect(replay.updated).toBe(0);
+        expect(replay.skipped).toBe(3);
+        expect(state.updates).toHaveLength(0);
+    });
+});
+
+describe("encrypted migration batches", () => {
+    // The envelope moved to the Task 16 bundle format (`crypto.test.ts` pins
+    // it); this case keeps the credential-specific guarantee next to the import.
+    const key = randomBytes(32);
+
+    it("round-trips a credential batch and leaves no secret in the file", () => {
+        const payload = batch({ twoFactors: [legacyTwoFactor()] });
+        const bundle = encryptJson(payload, key);
+        const asText = bundle.toString("latin1");
+
+        expect(asText).not.toContain("$scrypt$hash");
+        expect(asText).not.toContain("7f3a91c25b0e4d88aa61f0c3");
+        // JSON is the transport format: `Date` values arrive as ISO strings and
+        // `toEpochMs` handles both, so equality is asserted on the wire shape.
+        expect(decryptJson<AuthImportBatch>(bundle, key)).toEqual(JSON.parse(JSON.stringify(payload)));
+    });
+
+    it("fails to decrypt with the wrong key or a tampered ciphertext", () => {
+        const bundle = encryptJson(batch(), key);
+
+        expect(() => decryptJson(bundle, randomBytes(32))).toThrow();
+
+        const tampered = Buffer.from(bundle);
+        tampered[tampered.length - 1] = tampered[tampered.length - 1]! ^ 0xff;
+        expect(() => decryptJson(tampered, key)).toThrow();
     });
 });

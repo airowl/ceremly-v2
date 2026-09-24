@@ -700,6 +700,8 @@ export default defineSchema({
         records: v.number(),
         imported: v.number(),
         skipped: v.number(),
+        /** Rows rewritten by an `upsert` batch (Task 16 delta); absent otherwise. */
+        updated: v.optional(v.number()),
         importedAt: v.number(),
     })
         .index("by_table_batch", ["table", "batchIndex"])

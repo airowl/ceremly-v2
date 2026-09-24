@@ -46,6 +46,7 @@ interface BatchInput {
     /** Overrides the digest, to exercise the integrity check. */
     sha256?: string;
     migrationKey?: string;
+    mode?: "insert" | "upsert";
 }
 
 async function send(t: Test, input: BatchInput) {
@@ -66,6 +67,7 @@ async function send(t: Test, input: BatchInput) {
         ...(envelope.watermark ? { watermark: envelope.watermark } : {}),
         records: input.records,
         sha256,
+        ...(input.mode ? { mode: input.mode } : {}),
     });
 }
 
@@ -874,5 +876,141 @@ describe("reporting", () => {
 
         const guest = await t.run(async (c) => await c.db.query("guests").first());
         expect(guest?.email).toBe("ada@example.com");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Task 16: upsert (delta import) and prune
+// ---------------------------------------------------------------------------
+
+describe("upsert mode (Task 16 delta)", () => {
+    async function importEventGraph(t: Test) {
+        await send(t, { table: "organizations", records: [legacyOrganization("org-1", "acme")] });
+        await send(t, { table: "events", records: [legacyEvent("ev-1", "org-1", "nozze")] });
+        await send(t, { table: "guests", records: [legacyGuest("g-1", "org-1", "ev-1", "tok-1")] });
+    }
+
+    const guestDoc = (t: Test) =>
+        t.run(async (c) =>
+            await c.db.query("guests").withIndex("by_legacy_id", (q) => q.eq("legacyId", "g-1")).unique(),
+        );
+
+    it("default mode leaves a changed row untouched (Task 10 contract)", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await importEventGraph(t);
+
+        const replay = await send(t, {
+            table: "guests",
+            batchIndex: 1,
+            records: [{ ...legacyGuest("g-1", "org-1", "ev-1", "tok-1"), lastName: "Byron" }],
+        });
+
+        expect(replay.skipped).toBe(1);
+        expect(replay.updated).toBe(0);
+        expect((await guestDoc(t))?.lastName).toBe("Lovelace");
+    });
+
+    it("rewrites the changed columns of a migrated row and clears a column nulled in the source", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await send(t, { table: "organizations", records: [legacyOrganization("org-1", "acme")] });
+        await send(t, { table: "events", records: [legacyEvent("ev-1", "org-1", "nozze")] });
+        await send(t, {
+            table: "guests",
+            records: [{ ...legacyGuest("g-1", "org-1", "ev-1", "tok-1"), phone: "+39 111", notes: "vegano" }],
+        });
+
+        const delta = await send(t, {
+            table: "guests",
+            batchIndex: 1,
+            mode: "upsert",
+            records: [{
+                ...legacyGuest("g-1", "org-1", "ev-1", "tok-1"),
+                lastName: "Byron",
+                phone: null,
+                notes: "vegano",
+                removedAt: "2026-04-01T00:00:00.000Z",
+            }],
+        });
+
+        expect(delta.imported).toBe(0);
+        expect(delta.updated).toBe(1);
+        const doc = await guestDoc(t);
+        expect(doc?.lastName).toBe("Byron");
+        expect(doc?.phone).toBeUndefined();
+        expect(doc?.notes).toBe("vegano");
+        expect(doc?.removedAt).toBe(Date.parse("2026-04-01T00:00:00.000Z"));
+        expect(await count(t, "guests")).toBe(1);
+    });
+
+    it("an unchanged upsert replay writes nothing and inserts what is new", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await importEventGraph(t);
+
+        const delta = await send(t, {
+            table: "guests",
+            batchIndex: 1,
+            mode: "upsert",
+            records: [
+                legacyGuest("g-1", "org-1", "ev-1", "tok-1"),
+                // Another address: `(eventId, email)` is a natural key.
+                { ...legacyGuest("g-2", "org-1", "ev-1", "tok-2"), email: "grace@example.com" },
+            ],
+        });
+
+        expect(delta).toMatchObject({ imported: 1, skipped: 1, updated: 0 });
+        expect(await count(t, "guests")).toBe(2);
+    });
+
+    it("still refuses a tenant-incoherent update", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await importEventGraph(t);
+        await send(t, { table: "organizations", batchIndex: 1, records: [legacyOrganization("org-2", "globex")] });
+
+        await expectCode(
+            send(t, {
+                table: "guests",
+                batchIndex: 1,
+                mode: "upsert",
+                records: [{ ...legacyGuest("g-1", "org-2", "ev-1", "tok-1") }],
+            }),
+            "INCOHERENT_TENANT_REFERENCE",
+        );
+        expect((await guestDoc(t))?.lastName).toBe("Lovelace");
+    });
+});
+
+describe("pruneBatch (Task 16 delta)", () => {
+    const prune = (t: Test, table: string, legacyIds: string[], migrationKey = MIGRATION_KEY) =>
+        t.mutation(internal.migrations.domainImport.pruneBatch, { migrationKey, table, legacyIds });
+
+    it("deletes migrated rows by legacy id and reports the ones already gone", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await send(t, {
+            table: "organizations",
+            records: [legacyOrganization("org-1", "acme"), legacyOrganization("org-2", "globex")],
+        });
+
+        const result = await prune(t, "organizations", ["org-2", "org-missing"]);
+
+        expect(result).toEqual({ table: "organizations", deleted: 1, missing: 1 });
+        expect(await count(t, "organizations")).toBe(1);
+    });
+
+    it("never touches a row the migration did not create (no legacyId)", async () => {
+        const t = await initConvexTestWithAuthComponent();
+        await seedProfile(t, "native");
+        const before = await count(t, "organizations");
+
+        const result = await prune(t, "organizations", [""]);
+
+        expect(result.deleted).toBe(0);
+        expect(await count(t, "organizations")).toBe(before);
+    });
+
+    it("refuses the wrong key and a table outside the migration", async () => {
+        const t = await initConvexTestWithAuthComponent();
+
+        await expectCode(prune(t, "organizations", ["org-1"], "wrong"), "INVALID_MIGRATION_KEY");
+        await expectCode(prune(t, "siteSettings", ["x"]), "UNKNOWN_IMPORT_TABLE");
     });
 });

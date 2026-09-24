@@ -32,3 +32,5 @@ migrationsDocs
 
 # Gate locale (Task 3+): chiavi private e batch di credenziali cifrati, mai nel repo
 .gate/
+# Rehearsal/cutover della migrazione (Task 16): bundle cifrati, manifest e report, mai nel repo
+.migration-rehearsal/

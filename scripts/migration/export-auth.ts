@@ -5,7 +5,7 @@ import { inArray, sql } from "drizzle-orm";
 
 import { getDB } from "../../server/utils/db";
 import * as schema from "../../server/database/schema";
-import { encryptJson, MIGRATION_BATCH_VERSION, sha256Hex } from "./crypto";
+import { encryptJson, parseMigrationKey, sealBatch } from "./crypto";
 import { fixtureEmails } from "./auth-fixtures";
 
 /**
@@ -22,23 +22,17 @@ import { fixtureEmails } from "./auth-fixtures";
  *     --email gate-user@example.com
  *   npx tsx scripts/migration/export-auth.ts --out .gate/auth-export --fixtures
  *
+ * Needs `MIGRATION_ENCRYPTION_KEY` (32 bytes, base64; `--key-env NAME` to read
+ * another variable). Files use the Task 16 bundle format (`crypto.ts`).
+ *
  * Read-only against the source database; the only write is the encrypted output.
  */
-
-interface MigrationBatch<T> {
-    version: string;
-    table: string;
-    watermark: string;
-    batchIndex: number;
-    records: T[];
-    sha256: string;
-}
 
 interface CliOptions {
     out: string;
     emails: string[];
     batchSize: number;
-    passphrase: string | undefined;
+    keyEnv: string;
     fixtures: boolean;
 }
 
@@ -47,7 +41,7 @@ const parseArgs = (argv: string[]): CliOptions => {
         out: ".gate/auth-export",
         emails: [],
         batchSize: 200,
-        passphrase: undefined,
+        keyEnv: "MIGRATION_ENCRYPTION_KEY",
         fixtures: false,
     };
 
@@ -64,8 +58,7 @@ const parseArgs = (argv: string[]): CliOptions => {
         } else if (arg === "--batch-size") {
             options.batchSize = Number(argv[++index] ?? options.batchSize);
         } else if (arg === "--key-env") {
-            const envName = argv[++index] ?? "NUXT_MIGRATION_EXPORT_KEY";
-            options.passphrase = process.env[envName];
+            options.keyEnv = argv[++index] ?? options.keyEnv;
         } else {
             throw new Error(`Unknown argument: ${arg}`);
         }
@@ -86,14 +79,8 @@ async function main() {
     config({ path: process.env.NUXT_ENV === "prod" ? ".env.prod" : ".env" });
 
     const options = parseArgs(process.argv.slice(2));
-    const passphrase = options.passphrase ?? process.env.NUXT_MIGRATION_EXPORT_KEY;
-
-    if (!passphrase) {
-        throw new Error(
-            "Missing export passphrase: set NUXT_MIGRATION_EXPORT_KEY (or pass --key-env NAME). " +
-            "Auth exports are never written in clear text.",
-        );
-    }
+    // Same key and bundle format as the full export (Task 16): 32 bytes, base64.
+    const key = parseMigrationKey(process.env[options.keyEnv]);
 
     if (options.fixtures) {
         options.emails.push(...fixtureEmails());
@@ -134,19 +121,19 @@ async function main() {
     let files = 0;
     for (const { table, records } of tables) {
         for (const [batchIndex, batchRecords] of chunk(records, options.batchSize).entries()) {
-            const batch: MigrationBatch<unknown> = {
-                version: MIGRATION_BATCH_VERSION,
+            // JSON round trip first: `Date` columns become ISO strings, which is
+            // the wire shape the digest (and the importer) sees.
+            const batch = sealBatch({
                 table,
                 watermark,
                 batchIndex,
-                records: batchRecords,
-                sha256: sha256Hex(batchRecords),
-            };
+                records: JSON.parse(JSON.stringify(batchRecords)) as unknown[],
+            });
 
             // Only the batch index, the record count and the digest are logged:
             // hashes and 2FA secrets never reach stdout.
-            const file = join(outDir, `${table}.batch-${batchIndex}.json.enc`);
-            await writeFile(file, JSON.stringify(encryptJson(batch, passphrase), null, 2), "utf8");
+            const file = join(outDir, `${table}.batch-${batchIndex}.enc`);
+            await writeFile(file, encryptJson(batch, key), { mode: 0o600 });
             files += 1;
         }
     }

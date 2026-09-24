@@ -54,17 +54,41 @@ export interface AuthImportBatch {
     twoFactors: LegacyTwoFactor[];
 }
 
+/** A stored component document: its id plus whatever columns it holds. */
+export type StoredAuthDoc = { id: string } & Record<string, unknown>;
+
 /**
  * The slice of the Better Auth adapter the import needs, so the orchestration
  * is a pure function over an interface and can be tested without a deployment.
+ *
+ * The `update*` methods are only called in `upsert` mode (Task 16 delta).
  */
 export interface AuthImportAdapter {
-    findUserByEmail(email: string): Promise<{ id: string } | null>;
+    findUserByEmail(email: string): Promise<StoredAuthDoc | null>;
     createUser(data: Record<string, unknown>): Promise<{ id: string }>;
-    findAccount(args: { providerId: string; accountId: string }): Promise<{ id: string } | null>;
+    findAccount(args: { providerId: string; accountId: string }): Promise<StoredAuthDoc | null>;
     createAccount(data: Record<string, unknown>): Promise<{ id: string }>;
-    findTwoFactor(userId: string): Promise<{ id: string } | null>;
+    findTwoFactor(userId: string): Promise<StoredAuthDoc | null>;
     createTwoFactor(data: Record<string, unknown>): Promise<{ id: string }>;
+    updateUser?(id: string, data: Record<string, unknown>): Promise<void>;
+    updateAccount?(id: string, data: Record<string, unknown>): Promise<void>;
+    updateTwoFactor?(id: string, data: Record<string, unknown>): Promise<void>;
+}
+
+/**
+ * `insert` (default): an existing natural key is left untouched — the Task 4
+ * contract, and what makes a replay write nothing.
+ * `upsert` (Task 16 delta): an existing record whose imported columns changed in
+ * the source since the full import is updated, column by column. Without it a
+ * password changed (or a 2FA rotated) between the full import and the cutover
+ * would silently keep its old value on the new stack.
+ */
+export type AuthImportMode = "insert" | "upsert";
+
+interface AuthImportCounts {
+    imported: number;
+    skipped: number;
+    updated: number;
 }
 
 export interface AuthImportResult {
@@ -72,10 +96,12 @@ export interface AuthImportResult {
     imported: number;
     /** Records left untouched because the same natural key already existed. */
     skipped: number;
+    /** Existing records whose changed columns were rewritten (`upsert` only). */
+    updated: number;
     detail: {
-        users: { imported: number; skipped: number };
-        accounts: { imported: number; skipped: number };
-        twoFactors: { imported: number; skipped: number };
+        users: AuthImportCounts;
+        accounts: AuthImportCounts;
+        twoFactors: AuthImportCounts;
     };
     /**
      * Legacy user columns the Better Auth component cannot store (its table has
@@ -109,6 +135,31 @@ const toEpochMs = (value: number | string | Date | null | undefined): number => 
 };
 
 const nullable = <T>(value: T | null | undefined): T | null => value ?? null;
+
+/** Epoch ms or `null`: the comparable form of an optional date column. */
+const optionalEpoch = (value: unknown): number | null =>
+    value === null || value === undefined || value === ""
+        ? null
+        : toEpochMs(value as number | string | Date);
+
+/**
+ * The columns of `desired` whose value differs from `stored`. Dates are compared
+ * as epoch ms (the component may hand back a `Date` for a column written as a
+ * number), everything else by value with `undefined` ≡ `null`.
+ */
+function changedColumns(
+    stored: Record<string, unknown>,
+    desired: Record<string, unknown>,
+    dateColumns: readonly string[] = [],
+): Record<string, unknown> {
+    const changed: Record<string, unknown> = {};
+    for (const [column, value] of Object.entries(desired)) {
+        const before = dateColumns.includes(column) ? optionalEpoch(stored[column]) : (stored[column] ?? null);
+        const after = dateColumns.includes(column) ? optionalEpoch(value) : (value ?? null);
+        if (before !== after) changed[column] = value;
+    }
+    return changed;
+}
 
 const PROFILE_FIELDS_DEFERRED_TO_APP_TABLES = [
     "role",
@@ -163,14 +214,17 @@ function assertTwoFactorRecord(record: LegacyTwoFactor, index: number): void {
 export async function importAuthRecordsIdempotently(
     adapter: AuthImportAdapter,
     batch: AuthImportBatch,
+    options: { mode?: AuthImportMode } = {},
 ): Promise<AuthImportResult> {
+    const upsert = options.mode === "upsert";
     const result: AuthImportResult = {
         imported: 0,
         skipped: 0,
+        updated: 0,
         detail: {
-            users: { imported: 0, skipped: 0 },
-            accounts: { imported: 0, skipped: 0 },
-            twoFactors: { imported: 0, skipped: 0 },
+            users: { imported: 0, skipped: 0, updated: 0 },
+            accounts: { imported: 0, skipped: 0, updated: 0 },
+            twoFactors: { imported: 0, skipped: 0, updated: 0 },
         },
         deferredProfileFields: [...PROFILE_FIELDS_DEFERRED_TO_APP_TABLES],
         normalizedEmails: 0,
@@ -178,6 +232,33 @@ export async function importAuthRecordsIdempotently(
 
     // legacy user id -> Better Auth (Convex document) id
     const userIds = new Map<string, string>();
+
+    /**
+     * An existing record: skipped, or — in `upsert` mode, when an imported
+     * column changed — updated with exactly the changed columns.
+     */
+    const reconcileExisting = async (
+        model: keyof AuthImportResult["detail"],
+        existing: StoredAuthDoc,
+        desired: Record<string, unknown>,
+        update: ((id: string, data: Record<string, unknown>) => Promise<void>) | undefined,
+        dateColumns: readonly string[] = [],
+    ): Promise<void> => {
+        const changed = upsert ? changedColumns(existing, desired, dateColumns) : {};
+
+        if (Object.keys(changed).length === 0) {
+            result.skipped += 1;
+            result.detail[model].skipped += 1;
+            return;
+        }
+        if (!update) {
+            throw new ConvexError({ code: "AUTH_IMPORT_UPSERT_UNSUPPORTED", model });
+        }
+
+        await update(existing.id, changed);
+        result.updated += 1;
+        result.detail[model].updated += 1;
+    };
 
     for (const [index, record] of batch.users.entries()) {
         assertUserRecord(record, index);
@@ -190,8 +271,17 @@ export async function importAuthRecordsIdempotently(
         const existing = await adapter.findUserByEmail(email);
         if (existing) {
             userIds.set(record.id, existing.id);
-            result.skipped += 1;
-            result.detail.users.skipped += 1;
+            await reconcileExisting(
+                "users",
+                existing,
+                {
+                    name: record.name,
+                    emailVerified: Boolean(record.emailVerified),
+                    image: nullable(record.image),
+                    twoFactorEnabled: record.twoFactorEnabled ?? null,
+                },
+                adapter.updateUser?.bind(adapter),
+            );
             continue;
         }
 
@@ -233,8 +323,21 @@ export async function importAuthRecordsIdempotently(
             accountId: record.accountId,
         });
         if (existing) {
-            result.skipped += 1;
-            result.detail.accounts.skipped += 1;
+            await reconcileExisting(
+                "accounts",
+                existing,
+                {
+                    password: nullable(record.password),
+                    accessToken: nullable(record.accessToken),
+                    refreshToken: nullable(record.refreshToken),
+                    idToken: nullable(record.idToken),
+                    accessTokenExpiresAt: optionalEpoch(record.accessTokenExpiresAt),
+                    refreshTokenExpiresAt: optionalEpoch(record.refreshTokenExpiresAt),
+                    scope: nullable(record.scope),
+                },
+                adapter.updateAccount?.bind(adapter),
+                ["accessTokenExpiresAt", "refreshTokenExpiresAt"],
+            );
             continue;
         }
 
@@ -267,8 +370,12 @@ export async function importAuthRecordsIdempotently(
         const userId = await resolveUserId(record.userId, "twoFactor", index);
         const existing = await adapter.findTwoFactor(userId);
         if (existing) {
-            result.skipped += 1;
-            result.detail.twoFactors.skipped += 1;
+            await reconcileExisting(
+                "twoFactors",
+                existing,
+                { secret: record.secret, backupCodes: record.backupCodes },
+                adapter.updateTwoFactor?.bind(adapter),
+            );
             continue;
         }
 
@@ -294,6 +401,13 @@ export function createAdapterBridge(adapter: DBAdapter): AuthImportAdapter {
         const id = (doc as { id?: unknown } | null | undefined)?.id;
         return id === undefined || id === null ? null : String(id);
     };
+    const stored = (doc: unknown): StoredAuthDoc | null => {
+        const id = readId(doc);
+        return id ? { ...(doc as Record<string, unknown>), id } : null;
+    };
+    const update = async (model: string, id: string, data: Record<string, unknown>) => {
+        await adapter.update({ model, where: [{ field: "id", value: id }], update: data });
+    };
 
     return {
         async findUserByEmail(email) {
@@ -303,8 +417,7 @@ export function createAdapterBridge(adapter: DBAdapter): AuthImportAdapter {
                 model: "user",
                 where: [{ field: "email", value: email }],
             });
-            const id = readId(doc);
-            return id ? { id } : null;
+            return stored(doc);
         },
         async createUser(data) {
             const doc = await adapter.create({ model: "user", data });
@@ -320,8 +433,7 @@ export function createAdapterBridge(adapter: DBAdapter): AuthImportAdapter {
                     { field: "accountId", value: accountId },
                 ],
             });
-            const id = readId(doc);
-            return id ? { id } : null;
+            return stored(doc);
         },
         async createAccount(data) {
             const doc = await adapter.create({ model: "account", data });
@@ -334,14 +446,22 @@ export function createAdapterBridge(adapter: DBAdapter): AuthImportAdapter {
                 model: "twoFactor",
                 where: [{ field: "userId", value: userId }],
             });
-            const id = readId(doc);
-            return id ? { id } : null;
+            return stored(doc);
         },
         async createTwoFactor(data) {
             const doc = await adapter.create({ model: "twoFactor", data });
             const id = readId(doc);
             if (!id) throw new Error("Better Auth did not return an id for the imported 2FA record");
             return { id };
+        },
+        async updateUser(id, data) {
+            await update("user", id, data);
+        },
+        async updateAccount(id, data) {
+            await update("account", id, data);
+        },
+        async updateTwoFactor(id, data) {
+            await update("twoFactor", id, data);
         },
     };
 }
@@ -357,6 +477,7 @@ export const importBatch = internalMutation({
         users: v.array(v.any()),
         accounts: v.array(v.any()),
         twoFactors: v.array(v.any()),
+        mode: v.optional(v.union(v.literal("insert"), v.literal("upsert"))),
     },
     handler: async (ctx, args): Promise<AuthImportResult> => {
         assertMigrationKey(args.migrationKey);
@@ -368,6 +489,6 @@ export const importBatch = internalMutation({
             users: args.users as LegacyAuthUser[],
             accounts: args.accounts as LegacyAuthAccount[],
             twoFactors: args.twoFactors as LegacyTwoFactor[],
-        });
+        }, { mode: args.mode ?? "insert" });
     },
 });
