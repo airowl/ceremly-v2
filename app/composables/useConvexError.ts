@@ -16,6 +16,28 @@ import { computed, type ComputedRef, type Ref } from "vue";
  * (dove esiste un errore, non un ref) — è la sostituta di `extractErrorMessage`
  * di `useApi.ts`, che leggeva `data.statusMessage` di ofetch.
  */
+/**
+ * User-facing text for the codes every user can meet (final review M6).
+ *
+ * `SITE_READ_ONLY` is what every write returns during the cutover window
+ * (`convex/lib/writeGuard.ts`); showing the raw code would be the only thing a
+ * user sees for up to 30 minutes. A static map, not `useI18n()`: this module is
+ * also imported outside a Nuxt context (tests, `catch` blocks after an
+ * `await`), so the locale is read from `<html lang>`, which `app.vue` sets.
+ */
+export const KNOWN_ERROR_MESSAGES: Record<string, { it: string; en: string }> = {
+    SITE_READ_ONLY: {
+        it: "Il sito è temporaneamente in sola lettura per manutenzione: puoi consultare i tuoi dati, le modifiche saranno di nuovo possibili tra pochi minuti.",
+        en: "The site is temporarily read-only for maintenance: you can view your data, and changes will be possible again in a few minutes.",
+    },
+};
+
+function uiLocale(): "it" | "en" {
+    const lang = (globalThis as { document?: { documentElement?: { lang?: string } } }).document?.documentElement
+        ?.lang;
+    return typeof lang === "string" && lang.toLowerCase().startsWith("en") ? "en" : "it";
+}
+
 export function convexErrorMessage(e: unknown, fallback = "Si è verificato un errore"): string {
     const err = e as {
         data?: { message?: unknown; code?: unknown };
@@ -24,6 +46,8 @@ export function convexErrorMessage(e: unknown, fallback = "Si è verificato un e
 
     const payload = err?.data;
     if (payload && typeof payload === "object") {
+        const known = typeof payload.code === "string" ? KNOWN_ERROR_MESSAGES[payload.code] : undefined;
+        if (known) return known[uiLocale()];
         if (typeof payload.message === "string" && payload.message.length > 0) {
             return payload.message;
         }
