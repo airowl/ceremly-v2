@@ -1181,6 +1181,21 @@ describe("resend webhook", () => {
         return { status: response.status, payload: (await response.json()) as Record<string, unknown> };
     }
 
+    it("final review M4: 503 + Retry-After in maintenance-readonly and maintenance, nothing written", async () => {
+        const { t } = await bootstrap();
+        for (const mode of ["maintenance-readonly", "maintenance"] as const) {
+            await t.mutation(internal.siteSettings.set, { mode, reason: "test" });
+            const response = await deliver(t, {
+                type: "email.delivered",
+                data: { email_id: "m1", to: ["ada@example.com"] },
+            });
+            expect(response.status).toBe(503);
+            expect(response.payload.code).toBe("SITE_READ_ONLY");
+        }
+        expect(await rows(t, "emailEvents")).toHaveLength(0);
+        expect(await rows(t, "webhookEvents")).toHaveLength(0);
+    });
+
     it("rifiuta una firma non valida con 401", async () => {
         const { t } = await bootstrap();
 

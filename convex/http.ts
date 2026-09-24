@@ -124,10 +124,17 @@ http.route({
 // Task 13 (migration): the signed Resend webhook.
 //
 // Same URL shape as the legacy route (`/api/webhooks/resend` on the Nuxt side, here
-// `/resend/events` on the Convex site). At cutover the Resend dashboard points
-// straight at this URL; during the rehearsal the Worker route forwards the raw body
-// and the `svix-*` headers verbatim, so the signature stays verifiable here — the
-// Convex deployment is the only place holding `RESEND_WEBHOOK_SECRET`.
+// `/resend/events` on the Convex site). The Resend dashboard URL does **not** change
+// at cutover (`docs/migration/cutover.md` §8.2): it stays on the site host, and the
+// Worker route forwards the raw body and the `svix-*` headers verbatim, so the
+// signature stays verifiable here — the Convex deployment is the only place holding
+// `RESEND_WEBHOOK_SECRET`.
+//
+// Final review M4: this route is reachable directly on the `.convex.site` host, so
+// it applies the same site-mode rule as the Worker instead of trusting that nobody
+// points Resend at it: in `maintenance-readonly` (the cutover window) and
+// `maintenance` (Convex not the authority, e.g. after a §A rollback) it answers
+// `503` and Svix retries for about a day.
 //
 // The handler is transport: verify, parse, delegate. Everything that *does*
 // something (suppression, append-only event row, guest open counters, replay
@@ -144,6 +151,14 @@ http.route({
             // A deployment without the secret must refuse loudly: answering 200
             // would tell Resend "delivered" for events nobody can verify.
             return json({ ok: false, code: "RESEND_WEBHOOK_NOT_CONFIGURED" }, 503);
+        }
+
+        const { mode } = await ctx.runQuery(internal.siteSettings.getForWorker, {});
+        if (mode === "maintenance-readonly" || mode === "maintenance") {
+            return new Response(JSON.stringify({ ok: false, code: "SITE_READ_ONLY", mode }), {
+                status: 503,
+                headers: { "content-type": "application/json", "retry-after": "1800" },
+            });
         }
 
         // Raw body, never a re-serialized object: the signature covers the exact bytes.
