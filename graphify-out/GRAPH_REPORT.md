@@ -1,12 +1,12 @@
 # Graph Report - /Users/airowlgasga/coding/project/ceremly-v2  (2026-09-24)
 
 ## Corpus Check
-- 573 files · ~784,070 words
+- 573 files · ~784,740 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 6255 nodes · 6910 edges · 656 communities detected
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 804 edges (avg confidence: 0.8)
+- 6256 nodes · 6912 edges · 656 communities detected
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 805 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -737,27 +737,27 @@ Nodes (220): createBetterAuth(), getAuthSession(), requireAuth(), useServerAuth(
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (123): assertAdminRateLimit(), auditView(), emailOf(), exportView(), jobView(), projectAuditDetails(), safeLeaf(), safeScalar() (+115 more)
+Nodes (170): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, Disaccoppia non sposare (provider abstraction), Strada A (event-driven serverless), EMAIL ARCHITECTURE — Resend nel progetto, Email tracking in audit_log (no email_logs table), Email choke point unico (sendEmail) (+162 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (170): SaaS Boilerplate Build Guide (Strada A), Creem MoR — pezzo a più alto rischio del boilerplate, Laravel-style conventions on Nuxt, Disaccoppia non sposare (provider abstraction), Strada A (event-driven serverless), EMAIL ARCHITECTURE — Resend nel progetto, Email tracking in audit_log (no email_logs table), Email choke point unico (sendEmail) (+162 more)
+Nodes (91): assertAdminRateLimit(), auditView(), emailOf(), exportView(), jobView(), projectAuditDetails(), providerFailure(), safeLeaf() (+83 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
-Nodes (127): Contact Properties, Property fallbackValue, Immutable key and type, Triple-mustache broadcast interpolation, Contacts, Null value deletes property, Segments replaced audiences, Claim a Domain (+119 more)
+Nodes (102): createAuth(), isAtelierSubscription(), getClientIp(), sendContactMessage(), applyInvitePlaceholders(), assertEventNotClosed(), buildGuestInviteLink(), buildGuestPixelUrl() (+94 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.02
-Nodes (55): onUnlock(), changeLinks(), downloadExport(), requestExport(), buildWaMessage(), copyAll(), copyOne(), displayLink() (+47 more)
+Nodes (127): Contact Properties, Property fallbackValue, Immutable key and type, Triple-mustache broadcast interpolation, Contacts, Null value deletes property, Segments replaced audiences, Claim a Domain (+119 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.02
-Nodes (109): analyze_codebase.py script, Authentic Over Template philosophy, Context-aware OG layouts per page type, generate_og_images.py script, Playwright (image rendering), OG Image Creator (README), OG Image Creator (SKILL), 1. Analyze First (+101 more)
+Nodes (113): Pinia Stores Development Skill, Multi-Tenancy pattern (workspace context), Plan Limits pattern, Server guard pattern (process.server), Setup syntax pattern (defineStore composition), Supabase access via useNuxtApp().$supabase, SPA social crawler limitation (SSR/prerender), createSharedComposable (VueUse) (+105 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.02
-Nodes (109): Table of Contents, Two-Phase Authentication Flow, Pinia Stores Development Skill, Multi-Tenancy pattern (workspace context), Plan Limits pattern, Server guard pattern (process.server), Setup syntax pattern (defineStore composition), Supabase access via useNuxtApp().$supabase (+101 more)
+Cohesion: 0.03
+Nodes (53): onUnlock(), changeLinks(), downloadExport(), requestExport(), buildWaMessage(), copyAll(), copyOne(), displayLink() (+45 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.02
@@ -769,27 +769,27 @@ Nodes (91): React Email Skill, react-email CLI (email command), PreviewProps Con
 
 ### Community 9 - "Community 9"
 Cohesion: 0.03
-Nodes (55): auditActions(), bootstrap(), drainJobs(), jobRows(), rows(), signedPost(), bridgeSignatureBase(), canonicalize() (+47 more)
-
-### Community 10 - "Community 10"
-Cohesion: 0.03
 Nodes (86): base Schema (not public), Edge Function Request Lifecycle, authenticateUser() (Legacy), authenticateWithClient() (RLS-enabled), Service Role Client (supabase.ts), Architectural principle: Strada A (event-driven serverless), Architecture, Ceremly Audit Logging (logAudit) (+78 more)
 
-### Community 11 - "Community 11"
+### Community 10 - "Community 10"
 Cohesion: 0.04
 Nodes (83): Alt Text Rule (meaningful vs decorative), 4.5:1 Color Contrast (WCAG AA), Email Accessibility, Single h1 / Heading Hierarchy, lang and dir Attributes, Linked Image Is Never Decorative Rule, title Tag in Head, Skill Enforcement Levels (suggest/block) (+75 more)
 
-### Community 12 - "Community 12"
-Cohesion: 0.05
-Nodes (62): getClientIp(), sendContactMessage(), applyInvitePlaceholders(), assertEventNotClosed(), buildGuestInviteLink(), buildGuestPixelUrl(), buildPreviewLink(), getOrgId() (+54 more)
+### Community 11 - "Community 11"
+Cohesion: 0.04
+Nodes (50): fixtureEmails(), bridgeSignatureBase(), canonicalize(), canonicalJson(), hmacSha256Hex(), sha256Hex(), signBridgeRequest(), toHex() (+42 more)
 
-### Community 13 - "Community 13"
+### Community 12 - "Community 12"
 Cohesion: 0.04
 Nodes (58): deferReason(), findById(), findExisting(), importRecords(), isBlank(), knownColumns(), loadDocument(), sameOrganization() (+50 more)
 
-### Community 14 - "Community 14"
+### Community 13 - "Community 13"
 Cohesion: 0.03
 Nodes (48): formatDateTime(), useCursorPager(), createCeremlyAuthClient(), createConvexTokenFetcher(), setup(), setup(), setup(), installConvex() (+40 more)
+
+### Community 14 - "Community 14"
+Cohesion: 0.03
+Nodes (76): analyze_codebase.py script, Authentic Over Template philosophy, Context-aware OG layouts per page type, generate_og_images.py script, Playwright (image rendering), OG Image Creator (README), OG Image Creator (SKILL), 1. Analyze First (+68 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.03
@@ -800,68 +800,68 @@ Cohesion: 0.03
 Nodes (66): 10. User Onboarding Plan, 11. Testing & QA Strategy, 12. Edge Cases & Open Questions, 13. Stakeholders & Responsibilities, 14. Risks & Assumptions, 1. Overview & Vision, 2. Objectives & Success Metrics, 3. Target Audience & User Personas (+58 more)
 
 ### Community 17 - "Community 17"
+Cohesion: 0.04
+Nodes (33): auditActions(), bootstrap(), drainJobs(), jobRows(), rows(), signedPost(), addUser(), bootstrap() (+25 more)
+
+### Community 18 - "Community 18"
 Cohesion: 0.03
 Nodes (58): Fase 0 — Setup infrastruttura di test (Vitest), Fase 1 — Schema dati, costanti tier, env, mapping prodotto, Fase 2 — Risoluzione tier & enforcement limiti, Fase 3 — Checkout Celebrazione & webhook sblocco/refund, Fase 4 — Cron cleanup eventi conclusi+inattivi, Fase 5 — UI: paywall per-evento + pagina subscription + pricing, Fase 6 — Creazione prodotti Creem & popolamento env (operativo/esterno), Global Constraints (verbatim) (+50 more)
 
-### Community 18 - "Community 18"
+### Community 19 - "Community 19"
 Cohesion: 0.04
 Nodes (56): Admin API requirements (user custom limits), getEffectiveLimits merge (custom over plan), Audit log system requirements, resource.verb audit taxonomy, Email templates requirements, React.createElement .ts templates (avoid Vue JSX conflict), File storage system requirements, Magic-bytes file validation (+48 more)
 
-### Community 19 - "Community 19"
+### Community 20 - "Community 20"
 Cohesion: 0.05
 Nodes (50): Consent Checkboxes (Marketing), Double Opt-In, Email Capture Best Practices, Email Validation (Client + Server), Single Opt-In, Verification Email, CAN-SPAM Act (US), CASL (Canada) (+42 more)
 
-### Community 20 - "Community 20"
+### Community 21 - "Community 21"
 Cohesion: 0.04
 Nodes (45): Additional Component Tests, Additional Pressure Tests, Baseline (Establish Failure), Combined Scenario Tests, Email Client Limitations Tests, File Size & Performance Tests, Internationalization Tests, Pressure Test (Stress Test) (+37 more)
 
-### Community 21 - "Community 21"
+### Community 22 - "Community 22"
 Cohesion: 0.04
 Nodes (45): 1. Crawlability & Indexing, 2. Page-Level Meta Tags, 3. Open Graph & Social, 4. Structured Data, 5. Content & Semantic Structure, 6. Technical Performance, 7. URL Structure, 8. International SEO (if applicable) (+37 more)
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.05
 Nodes (43): 1. Letter/Monogram (Default), 2. Icons (Lucide Integration), 3. Emoji, Anti-Patterns, Available Icons, Available Templates, Content Types, Corner Radius (+35 more)
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.05
 Nodes (39): 1. Guardrail Skills, 1. Session Tracking, 2. Domain Skills, 2. File Markers, 3. Environment Variables, [ADVANCED.md](ADVANCED.md), Anthropic Best Practices, BLOCK (Critical Guardrails) (+31 more)
 
-### Community 24 - "Community 24"
+### Community 25 - "Community 25"
 Cohesion: 0.05
 Nodes (38): 0. Decisioni architetturali, 10. Definition of Done, 1. Design system "Soft Meadow", 2. Schema database (Drizzle, `server/database/schema/`), 3.1 InviteBlock, 3.2 RsvpQuestion, 3.3 Answers, 3.4 Logica condizionale — `shared/utils/rsvpLogic.ts` (+30 more)
 
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.05
 Nodes (36): Admin, App (branding is env-driven), Auth, Configure your .env file (see .env.example for all variables), Copy environment variables, Database, Database (Drizzle ORM + Neon Postgres), Database (Neon) (+28 more)
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.06
 Nodes (35): 1. File Path Doesn't Match Patterns, 1. Hook Not Registered, 1. Keywords Don't Match, 1. Keywords Too Generic, 1. Too Many Patterns, 2. Bash Wrapper Not Executable, 2. Complex Regex, 2. Excluded by pathExclusions (+27 more)
 
-### Community 27 - "Community 27"
+### Community 28 - "Community 28"
 Cohesion: 0.06
 Nodes (34): Best Practices, Best Practices, Best Practices, Best Practices, Best Practices Summary, Common Content Patterns, Common Path Patterns, Common Pattern Examples (+26 more)
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.06
 Nodes (34): 1. Always Use RLS-Enabled Client, 2. Handle CORS for All Endpoints, 3. Validate All Input, 4. Use Standard Response Helpers, 5. Apply Rate Limiting, 6. Check Plan Limits Before Resource Creation, 7. Use Soft Delete Pattern, Anti-Patterns to Avoid (+26 more)
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.06
 Nodes (34): Additional SEO Tags, Advanced Directives, App-Like Behavior, Article-Specific Tags, Author and Publisher, Basic Indexing Control, Bot-Specific Directives, Browser and PWA Tags (+26 more)
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
 Cohesion: 0.06
 Nodes (33): analyze_seo.py, Anti-Patterns to Avoid, Astro, Canonical URLs, Codebase Analysis Workflow, Essential Meta Tags (Every Page), Framework Quick Reference, generate_sitemap.py (+25 more)
 
-### Community 31 - "Community 31"
+### Community 32 - "Community 32"
 Cohesion: 0.06
 Nodes (31): Account Management, Account Update Notifications, Authentication-Focused App, Authentication & Security, Developer Tools / API Platform, E-commerce / Marketplace, E-commerce & Transactions, Email Combinations by App Type (+23 more)
-
-### Community 32 - "Community 32"
-Cohesion: 0.1
-Nodes (21): asNumber(), asString(), json(), optionalNumber(), optionalStrings(), runPublicForm(), auditActions(), deliver() (+13 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.06
@@ -885,35 +885,35 @@ Nodes (29): Actions, Authentication, Best Practices, Computed Getters, Do's, Don
 
 ### Community 38 - "Community 38"
 Cohesion: 0.07
-Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
+Nodes (29): Table of Contents, Two-Phase Authentication Flow, Architecture Overview, Backend Validation, Complete Flow, Complete Implementation, Multi-Tenancy Patterns (pinia-stores resource), Don't Duplicate Workspace ID (+21 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.07
-Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
+Nodes (28): Astro, Astro Sitemap Integration, Dynamic Metadata, Framework-Specific SEO Implementations, Gatsby, gatsby-plugin-react-helmet, Layout Metadata with Template, Layout with SEO Props (+20 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.09
-Nodes (13): fixtureEmails(), decryptJson(), deriveKey(), encryptJson(), sha256Hex(), domainBatchCanonicalPayload(), domainBatchDigest(), createAuthUser() (+5 more)
+Cohesion: 0.07
+Nodes (28): 10. UI, 11. Inventario file impattati, 12. Rischi e mitigazioni, 13. Prerequisiti, 14. Out of scope (YAGNI), 15. Criteri di completamento, 1. Contesto e problema, 2. Decisioni di prodotto (confermate) (+20 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.07
-Nodes (27): Account Deletion, Backend Architecture, Backend Requirements, Current Implementation, Data Protection, Database Functions, Database Schema (`user` table - Drizzle/Better Auth), Dependencies (+19 more)
+Nodes (27): Actions, Add Column Migration, Base Schema Setup, Best Practices, Check Constraint, Commands, Common Patterns, Current Migrations (+19 more)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.07
-Nodes (27): Actions, Add Column Migration, Base Schema Setup, Best Practices, Check Constraint, Commands, Common Patterns, Current Migrations (+19 more)
+Nodes (27): Best Practices, Custom Claim Hook, Debug & Monitoring, Do's, Don'ts, Enable Hook, Event → Guests Cascade, Events Count (+19 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.07
-Nodes (27): Best Practices, Custom Claim Hook, Debug & Monitoring, Do's, Don'ts, Enable Hook, Event → Guests Cascade, Events Count (+19 more)
-
-### Community 44 - "Community 44"
-Cohesion: 0.07
 Nodes (27): Active Views, Overview, Table of Contents, Best Practices, Bypassing Soft Delete Rule, Cascade Soft Delete, Cascade Trigger, Complete Setup (+19 more)
 
-### Community 45 - "Community 45"
+### Community 44 - "Community 44"
 Cohesion: 0.11
 Nodes (28): 500-Line Rule & Progressive Disclosure, Skill System Advanced Topics, Conditional Enforcement (Future), Content Patterns (Regex), database-verification Guardrail Example, Domain Skills, Enforcement Levels (block/suggest/warn), Exit Code 2 Block Mechanism (+20 more)
+
+### Community 45 - "Community 45"
+Cohesion: 0.07
+Nodes (27): Account Deletion, Backend Architecture, Backend Requirements, Current Implementation, Data Protection, Database Functions, Database Schema (`user` table - Drizzle/Better Auth), Dependencies (+19 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.07
@@ -932,12 +932,12 @@ Cohesion: 0.07
 Nodes (26): Anti-Aliasing Techniques, Banding in Gradients, Canvas Performance, Color Space Considerations, Composite Operations, Debugging Visual Issues, Drop Shadow, Effect Implementation Details (+18 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.08
-Nodes (25): Adding to an Existing Project, Additional Resources, Basic Email Template, Before Writing Code, Behavioral Guidelines, CLI Commands, Common Patterns, Convert to HTML (+17 more)
+Cohesion: 0.15
+Nodes (23): clearEventCleanupWarned(), buildInviteEventPayload(), findActiveInviteByToken(), getInvitePreview(), getPublicInvite(), inviteNotFound(), isDeadlinePassed(), submitRsvp() (+15 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.08
-Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL Languages, 4. Fallback Values, 5. Test All Locales, 6. Keep Keys Consistent, 7. Handle Missing Translations, 8. Subject Line Translation (+17 more)
+Nodes (25): Adding to an Existing Project, Additional Resources, Basic Email Template, Before Writing Code, Behavioral Guidelines, CLI Commands, Common Patterns, Convert to HTML (+17 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.08
@@ -945,23 +945,23 @@ Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL La
 
 ### Community 53 - "Community 53"
 Cohesion: 0.08
-Nodes (25): Check Policy Status, Common Issues, Complete Table RLS Setup, Core Function, Debugging RLS, Events Table, Example Permissions, Guests Table (Child of Events) (+17 more)
+Nodes (25): 1. Always Pass Locale, 2. Set HTML Lang Attribute, 3. Support RTL Languages, 4. Fallback Values, 5. Test All Locales, 6. Keep Keys Consistent, 7. Handle Missing Translations, 8. Subject Line Translation (+17 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.08
-Nodes (25): Overview, Plan Limits, Table of Contents, Admin Operations, Audit Log, Best Practices, Checking Limits, Core Tables (+17 more)
+Nodes (25): Check Policy Status, Common Issues, Complete Table RLS Setup, Core Function, Debugging RLS, Events Table, Example Permissions, Guests Table (Child of Events) (+17 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.08
-Nodes (25): 1. Setup Syntax (Composition API), 2. Server Guard (Critical), 3. Supabase Access, 4. TypeScript State Typing, 5. Error Handling Pattern, 6. Parallel Queries (Optimization), Component Usage, Core Patterns (+17 more)
+Nodes (25): Overview, Plan Limits, Table of Contents, Admin Operations, Audit Log, Best Practices, Checking Limits, Core Tables (+17 more)
 
 ### Community 56 - "Community 56"
-Cohesion: 0.09
-Nodes (26): Per-event unlock via metadata.eventId (one-time), max_events → max_organizations rename, FASE 1c — RBAC + middleware + route org (Plan), FASE 1d — Frontend org-centric (Plan), FASE 2 — Driver DB Neon HTTP serverless (Plan), FASE 3 — Deploy Vercel serverless + QStash + Cron (Plan), FASE 4 — Entità-esempio projects CRUD multi-tenant (Plan), FASE 5 — Pulizia documentazione e branding (Plan) (+18 more)
+Cohesion: 0.08
+Nodes (25): 1. Setup Syntax (Composition API), 2. Server Guard (Critical), 3. Supabase Access, 4. TypeScript State Typing, 5. Error Handling Pattern, 6. Parallel Queries (Optimization), Component Usage, Core Patterns (+17 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.16
-Nodes (22): buildInviteEventPayload(), findActiveInviteByToken(), getInvitePreview(), getPublicInvite(), inviteNotFound(), isDeadlinePassed(), submitRsvp(), trackEmailOpen() (+14 more)
+Cohesion: 0.09
+Nodes (26): Per-event unlock via metadata.eventId (one-time), max_events → max_organizations rename, FASE 1c — RBAC + middleware + route org (Plan), FASE 1d — Frontend org-centric (Plan), FASE 2 — Driver DB Neon HTTP serverless (Plan), FASE 3 — Deploy Vercel serverless + QStash + Cron (Plan), FASE 4 — Entità-esempio projects CRUD multi-tenant (Plan), FASE 5 — Pulizia documentazione e branding (Plan) (+18 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.08
@@ -1009,19 +1009,19 @@ Nodes (23): Componenti (delete vs repoint — decisione esplicita per ciascuno),
 
 ### Community 69 - "Community 69"
 Cohesion: 0.09
-Nodes (22): Come iniziare con il boilerplate SaaS (IT), Getting Started with the SaaS Boilerplate (EN), Blog System Requirements, Architecture Notes, Blog System (@nuxt/content v3), Blog System Requirements, Components, Content (+14 more)
+Nodes (22): Available Skills, backend-dev-guidelines, Configuration Format, Creating Your Own Skills, Enforcement Levels, error-tracking, For Claude Code, frontend-dev-guidelines (+14 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.09
-Nodes (22): Available Skills, backend-dev-guidelines, Configuration Format, Creating Your Own Skills, Enforcement Levels, error-tracking, For Claude Code, frontend-dev-guidelines (+14 more)
+Nodes (22): Basic Template, Best Practices, Client-Only Components, Component Organization, Component Patterns, Component Types, Do's, Don'ts (+14 more)
 
 ### Community 71 - "Community 71"
 Cohesion: 0.09
-Nodes (22): Basic Template, Best Practices, Client-Only Components, Component Organization, Component Patterns, Component Types, Do's, Don'ts (+14 more)
+Nodes (22): AI Agent Inbox, API Key, Common Mistakes, Common Setup, Cross-Cutting Concerns, Detect Project Language, Domain Warm-up, Error Handling Quick Reference (+14 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.09
-Nodes (22): AI Agent Inbox, API Key, Common Mistakes, Common Setup, Cross-Cutting Concerns, Detect Project Language, Domain Warm-up, Error Handling Quick Reference (+14 more)
+Nodes (22): Come iniziare con il boilerplate SaaS (IT), Getting Started with the SaaS Boilerplate (EN), Blog System Requirements, Architecture Notes, Blog System (@nuxt/content v3), Blog System Requirements, Components, Content (+14 more)
 
 ### Community 73 - "Community 73"
 Cohesion: 0.09
@@ -4154,12 +4154,12 @@ Nodes (1): Svix-id dedup + env-domain isolation
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDB()` connect `Community 0` to `Community 40`, `Community 57`, `Community 12`, `Community 13`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `initConvexTest()` connect `Community 15` to `Community 4`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `t()` connect `Community 4` to `Community 14`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `logAudit()` connect `Community 0` to `Community 2`, `Community 3`?**
+  _High betweenness centrality (0.009) - this node is a cross-community bridge._
+- **Why does `getDB()` connect `Community 0` to `Community 11`, `Community 50`, `Community 3`, `Community 12`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `get()` connect `Community 12` to `Community 0`, `Community 2`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `getDB()` (e.g. with `main()` and `main()`) actually correct?**
   _`getDB()` has 100 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 34 inferred relationships involving `logAudit()` (e.g. with `logEmailEvent()` and `sendEmail()`) actually correct?**
