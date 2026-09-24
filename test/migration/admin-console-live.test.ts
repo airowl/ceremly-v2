@@ -102,7 +102,14 @@ describe.skipIf(!armed)("admin console · live (Playwright)", () => {
         await page.goto(`${env.baseUrl}/admin/organizations`);
         await field(page, "admin-org-search").fill(env.orgSlug);
         await field(page, "admin-org-search").press("Enter");
-        await page.getByTestId("admin-org-row").first().click();
+        // The exact configured organization, never "the first result": a prefix
+        // search can match several slugs, and this test writes to the one it clicks.
+        const orgRow = page
+            .getByTestId("admin-org-row")
+            .filter({ has: page.getByTestId("admin-org-slug").getByText(env.orgSlug, { exact: true }) });
+        await orgRow.first().waitFor({ timeout: 30_000 });
+        expect(await orgRow.count()).toBe(1);
+        await orgRow.click();
         await page.getByTestId("admin-limits-form").waitFor();
 
         const guestLimit = String(100 + (Date.now() % 50));

@@ -151,6 +151,42 @@ describe("site mode: maintenance-readonly", () => {
     });
 });
 
+describe("site mode: break-glass della console admin (Task 15)", () => {
+    for (const mode of ["maintenance", "waitinglist"] as const) {
+        it(`${mode}: la console e le API di sessione passano, il resto no`, async () => {
+            await setServerSiteMode(mode);
+
+            // La shell della console (ogni locale) e il login diretto alla console.
+            for (const path of ["/admin", "/admin/jobs", "/en/admin/users", "/login?redirect=%2Fadmin", "/en/login?redirect=/en/admin"]) {
+                expect((await call(path)).result, path).toBeUndefined();
+            }
+            // Le API che servono a una sessione.
+            for (const [path, method] of [
+                ["/api/auth/get-session", "GET"],
+                ["/api/auth/convex/token", "GET"],
+                ["/api/auth/sign-in/email", "POST"],
+                ["/api/auth/two-factor/verify-totp", "POST"],
+                ["/api/auth/sign-out", "POST"],
+            ] as const) {
+                expect((await call(path, method)).result, path).toBeUndefined();
+                expect((await call(path, method)).statusCode, path).toBeUndefined();
+            }
+
+            // Non è una porta generica: registrazione, login verso altre pagine, un
+            // path che solo *somiglia* alla console e le altre API restano chiusi.
+            expect((await call("/api/auth/sign-up/email", "POST")).statusCode).toBe(503);
+            expect((await call("/api/projects")).statusCode).toBe(503);
+            const expectedRedirect = mode === "maintenance" ? "/maintenance" : "/";
+            expect((await call("/login")).result).toMatchObject({ redirect: expectedRedirect });
+            expect((await call("/login?redirect=%2Fdashboard")).result).toMatchObject({ redirect: expectedRedirect });
+            expect((await call("/dashboard")).result).toMatchObject({ redirect: expectedRedirect });
+            if (mode === "maintenance") {
+                expect((await call("/administrator")).result).toMatchObject({ redirect: "/maintenance" });
+            }
+        });
+    }
+});
+
 describe("site mode: la modalità letta è quella effettiva", () => {
     it("ogni modalità sopravvive al giro completo set → get", async () => {
         for (const mode of ["active", "waitinglist", "maintenance", "maintenance-readonly"] as const) {

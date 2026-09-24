@@ -10,6 +10,7 @@
  * - active: nessuna restrizione
  */
 import {
+    isAdminBreakGlass,
     isMaintenancePage,
     isWaitingListAllowedPage,
 } from "~~/shared/constants/siteMode";
@@ -19,6 +20,13 @@ export default defineNuxtRouteMiddleware((to) => {
     if (import.meta.server) return;
 
     const { isMaintenanceMode, isWaitingListMode } = useSiteMode();
+
+    // Break-glass della console admin (Task 15): la shell `/admin` e il login
+    // diretto alla console restano raggiungibili in ogni modalità. La pagina non
+    // mostra nulla finché Convex non conferma il ruolo superAdmin.
+    if ((isMaintenanceMode.value || isWaitingListMode.value) && isAdminBreakGlass(to.path, to.query.redirect)) {
+        return;
+    }
 
     // === MANUTENZIONE — priorità assoluta ===
     if (isMaintenanceMode.value) {

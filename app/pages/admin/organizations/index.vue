@@ -67,7 +67,7 @@ const selectedId = ref<Id<"organizations"> | null>(
                         @click="selectedId = organization._id"
                     >
                         <td class="px-3 py-2">{{ organization.name }}</td>
-                        <td class="px-3 py-2 break-all">{{ organization.slug }}</td>
+                        <td class="px-3 py-2 break-all" data-testid="admin-org-slug">{{ organization.slug }}</td>
                         <td class="px-3 py-2">{{ formatDateTime(organization.createdAt, locale) }}</td>
                     </tr>
                     <tr v-if="result && result.page.length === 0">

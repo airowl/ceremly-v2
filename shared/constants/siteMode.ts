@@ -94,7 +94,9 @@ export const WAITINGLIST_BLOCKED_PREFIXES = [
 
 /** True se `path` (qualsiasi locale) è una pagina app/auth da bloccare in waitinglist. */
 export function isWaitingListBlockedPage(path: string): boolean {
-    const p = stripLocale(path);
+    // The server sees `event.path` with its query string: `/login?x=y` is `/login`
+    // (found by the Task 15 break-glass tests — before, a query string walked past).
+    const p = stripLocale(splitPath(path).pathname);
     return WAITINGLIST_BLOCKED_PREFIXES.some(
         (prefix) => p === prefix || p.startsWith(`${prefix}/`)
     );
@@ -121,5 +123,62 @@ export function isWaitingListAllowedPage(path: string): boolean {
 
 /** Path della pagina di manutenzione (locale-agnostico). */
 export function isMaintenancePage(path: string): boolean {
-    return stripLocale(path) === "/maintenance";
+    return stripLocale(splitPath(path).pathname) === "/maintenance";
+}
+
+/**
+ * Admin console break-glass (Task 15, fix round 1).
+ *
+ * The console can put the site in `maintenance`/`waitinglist`; if the same
+ * switch closed the console, it could not undo itself. So in every non-active
+ * mode three things stay reachable, and only these:
+ *
+ * - the console page shell (`/admin/**`, any locale) — it renders nothing
+ *   until Convex confirms the superAdmin role, which is the real gate;
+ * - the login page **only** when it is on its way to the console
+ *   (`/login?redirect=/admin…`), so an expired admin session can be renewed;
+ * - the Better Auth endpoints a session needs (sign-in, 2FA, session read,
+ *   Convex token, sign-out) — sign-up is not among them.
+ *
+ * A non-admin who reaches these gets the console's refusal and nothing else:
+ * every other page and API keeps the mode's rules.
+ */
+export const ADMIN_BREAK_GLASS_AUTH_PREFIXES = [
+    "/api/auth/sign-in/",
+    "/api/auth/two-factor/",
+    "/api/auth/get-session",
+    "/api/auth/convex/",
+    "/api/auth/sign-out",
+] as const;
+
+function splitPath(path: string): { pathname: string; search: string } {
+    const index = path.indexOf("?");
+    return index === -1
+        ? { pathname: path, search: "" }
+        : { pathname: path.slice(0, index), search: path.slice(index + 1) };
+}
+
+/** `/admin`, `/admin/…` in any locale. */
+export function isAdminConsolePage(path: string): boolean {
+    const p = stripLocale(splitPath(path).pathname);
+    return p === "/admin" || p.startsWith("/admin/");
+}
+
+/** `/login` whose `redirect` points at the console (any locale). */
+export function isAdminBreakGlassLogin(path: string, redirect?: unknown): boolean {
+    const { pathname, search } = splitPath(path);
+    if (stripLocale(pathname) !== "/login") return false;
+    const target = typeof redirect === "string" ? redirect : new URLSearchParams(search).get("redirect");
+    return typeof target === "string" && target.startsWith("/") && isAdminConsolePage(target);
+}
+
+/** The session endpoints the console needs (see the list above). */
+export function isAdminBreakGlassAuthApi(path: string): boolean {
+    const { pathname } = splitPath(path);
+    return ADMIN_BREAK_GLASS_AUTH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/** Any of the three: what the site-mode gates must let through outside `active`. */
+export function isAdminBreakGlass(path: string, redirect?: unknown): boolean {
+    return isAdminConsolePage(path) || isAdminBreakGlassLogin(path, redirect) || isAdminBreakGlassAuthApi(path);
 }

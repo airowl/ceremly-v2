@@ -241,6 +241,12 @@ export default defineSchema({
         .index("by_organization", ["organizationId"])
         .index("by_organization_status", ["organizationId", "status"])
         .index("by_organization_created", ["organizationId", "createdAt"])
+        /**
+         * Active-event limit (Task 15 fix round 1): "free events of this org in
+         * `draft`/`active`" as two bounded ranges (`take(limit + 1)`) instead of a
+         * `collect()` of every event of the tenant in the create path.
+         */
+        .index("by_organization_tier_status", ["organizationId", "tier", "status"])
         .index("by_slug", ["slug"])
         .index("by_creem_order_id", ["creemOrderId"])
         .index("by_creem_checkout_id", ["creemCheckoutId"])

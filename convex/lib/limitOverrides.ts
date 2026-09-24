@@ -15,8 +15,21 @@ import type { TierLimits } from "./pricing";
 export const OVERRIDABLE_LIMITS = ["maxGuestsPerEvent", "maxActiveEvents", "maxReminders"] as const;
 export type OverridableLimit = (typeof OVERRIDABLE_LIMITS)[number];
 
-/** Upper bound accepted from the console: large enough, small enough to be a typo guard. */
-export const MAX_LIMIT_VALUE = 1_000_000;
+/**
+ * Upper bound accepted from the console, per limit (fix round 1).
+ *
+ * Not a typo guard only: each enforcement point reads up to `limit + 1`
+ * documents in the transaction that creates the resource, so the bound is what
+ * keeps that read under Convex's per-transaction limits. `maxActiveEvents` reads
+ * events (large documents: the whole invitation) → 500; `maxGuestsPerEvent`
+ * reads the event's guests → 10,000; `maxReminders` → 50. `-1` (unlimited) skips
+ * the count entirely.
+ */
+export const LIMIT_MAXIMA: Record<OverridableLimit, number> = {
+    maxGuestsPerEvent: 10_000,
+    maxActiveEvents: 500,
+    maxReminders: 50,
+};
 
 type ReadCtx = QueryCtx | MutationCtx;
 

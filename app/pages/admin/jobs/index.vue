@@ -103,7 +103,7 @@ function formatSize(bytes: number | null): string {
                         <tr v-for="job in jobs?.page ?? []" :key="job._id" class="border-t border-neutral-100" data-testid="admin-job-row">
                             <td class="px-3 py-2">{{ job.name }}</td>
                             <td class="px-3 py-2 tabular-nums">{{ job.attempt }} / {{ job.maxAttempts }}</td>
-                            <td class="max-w-md px-3 py-2 text-xs break-words text-neutral-600">{{ job.lastError ?? '-' }}</td>
+                            <td class="max-w-md px-3 py-2 text-xs break-words text-neutral-600">{{ job.lastErrorCode ?? '-' }}</td>
                             <td class="px-3 py-2 text-xs text-neutral-600">{{ job.payloadKeys.join(', ') || '-' }}</td>
                             <td class="px-3 py-2">{{ formatDateTime(job.updatedAt, locale) }}</td>
                             <td class="px-3 py-2">
@@ -150,7 +150,7 @@ function formatSize(bytes: number | null): string {
                             <td class="px-3 py-2">{{ formatDateTime(row.createdAt, locale) }}</td>
                             <td class="px-3 py-2">{{ formatSize(row.fileSize) }}</td>
                             <td class="px-3 py-2">{{ formatDateTime(row.expiresAt, locale) }}</td>
-                            <td class="px-3 py-2 text-xs text-red-600">{{ row.errorMessage ?? '' }}</td>
+                            <td class="px-3 py-2 text-xs text-red-600">{{ row.errorCode ?? '' }}</td>
                         </tr>
                         <tr v-if="exports && exports.page.length === 0">
                             <td colspan="5" class="px-3 py-6 text-center text-neutral-500">{{ t('adminConsole.empty') }}</td>

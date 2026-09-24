@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
-import { internalAction, internalMutation, internalQuery, mutation } from "./_generated/server";
-import { requireSuperAdmin } from "./lib/authorization";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { errorCode, requireReason } from "./lib/adminGuards";
 import { writeAudit } from "./lib/audit";
 import {
     FALLBACK_INVITE_BODY,
@@ -171,24 +171,27 @@ export const recordOutcome = internalMutation({
  * budget esaurito lo farebbe morire al primo fallimento — cioè un "retry" che non
  * ritenta. Il numero di tentativi precedenti resta nell'audit.
  */
-export const retryDead = mutation({
-    args: { jobId: v.id("jobExecutions") },
+export const retryDead = internalMutation({
+    args: { jobId: v.id("jobExecutions"), reason: v.string() },
     handler: async (ctx, args): Promise<{ retried: boolean; reason?: string }> => {
-        const appUser = await requireSuperAdmin(ctx);
-        return await retryDeadJob(ctx, appUser, args.jobId, null);
+        // Task 15 fix round 1: the public door is `api.admin.retryJob` (superAdmin
+        // session, reason, audit). This one is the deployment CLI's
+        // (`npx convex run jobs:retryDead`), with the same mandatory reason.
+        return await retryDeadJob(ctx, null, args.jobId, requireReason(args.reason));
     },
 });
 
 /**
- * The `dead → pending` transition, shared by `retryDead` and the admin console
- * (`admin.retryJob`, Task 15), so the two cannot drift. The caller has already
- * checked the superAdmin role; `operatorReason` lands in the audit when given.
+ * The `dead → pending` transition, shared by `retryDead` (CLI) and the admin
+ * console (`admin.retryJob`, Task 15), so the two cannot drift. The caller has
+ * already authorized the operator (`actor === null` means the deployment CLI)
+ * and validated the reason, which lands in the audit.
  */
 export async function retryDeadJob(
     ctx: MutationCtx,
-    actor: Doc<"appUsers">,
+    actor: Doc<"appUsers"> | null,
     jobId: Id<"jobExecutions">,
-    operatorReason: string | null,
+    operatorReason: string,
 ): Promise<{ retried: boolean; reason?: string }> {
     const job = await ctx.db.get(jobId);
     if (!job) throw forbidden("JOB_NOT_FOUND", { jobId });
@@ -212,15 +215,16 @@ export async function retryDeadJob(
 
     await writeAudit(ctx, {
         action: "admin.job_retried",
-        actorAppUserId: actor._id,
-        actorAuthUserId: actor.authUserId,
+        ...(actor ? { actorAppUserId: actor._id, actorAuthUserId: actor.authUserId } : {}),
         targetType: "job",
         targetId: job._id,
         details: {
-            ...(operatorReason === null ? {} : { reason: operatorReason }),
+            reason: operatorReason,
+            source: actor ? "admin_console" : "deployment_cli",
             name: job.name,
             previousAttempts: job.attempt,
-            lastError: job.lastError ?? null,
+            // A code, never the stored text: provider errors may carry personal data.
+            lastErrorCode: errorCode(job.lastError),
         },
     });
 

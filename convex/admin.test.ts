@@ -1,8 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { register } from "@creem_io/convex/test";
 import { api, components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import * as adminModule from "./admin";
+import { creem } from "./billing";
 import { resolveEventLimits } from "./lib/domain";
 import { eventFixture, initConvexTest } from "./test.setup";
 import { getTemplatesByType } from "./lib/inviteTemplates";
@@ -128,10 +131,21 @@ function publicCalls(f: Fixture, jobId: Id<"jobExecutions">, eventId: Id<"events
         retryJob: (s: Session | Test) => s.mutation(api.admin.retryJob, { jobId, reason: "test" }),
         setSiteMode: (s: Session | Test) =>
             s.mutation(api.admin.setSiteMode, { mode: "maintenance", reason: "test" }),
+        reconcileOrganizationBilling: (s: Session | Test) =>
+            s.action(api.admin.reconcileOrganizationBilling, { organizationId: f.userOrgId, reason: "test" }),
+        customerPortalLink: (s: Session | Test) =>
+            s.action(api.admin.customerPortalLink, { organizationId: f.userOrgId, reason: "test" }),
     } as const;
 }
 
-const WRITES = ["setGlobalRole", "setOrganizationLimits", "retryJob", "setSiteMode"] as const;
+const WRITES = [
+    "setGlobalRole",
+    "setOrganizationLimits",
+    "retryJob",
+    "setSiteMode",
+    "reconcileOrganizationBilling",
+    "customerPortalLink",
+] as const;
 
 // ---------------------------------------------------------------------------
 // Authorization matrix
@@ -158,6 +172,38 @@ describe("admin authorization: every export checks superAdmin first", () => {
         };
         expect(bootstrapFn.isInternal).toBe(true);
         expect(bootstrapFn.isPublic).not.toBe(true);
+    });
+
+    it("no public function outside convex/admin.ts checks the superAdmin role (single public door)", () => {
+        // Generic discovery: every Convex source file is scanned for a superAdmin
+        // check. Admin power lives in `convex/admin.ts` (covered by the matrix
+        // below) or behind `internal*` functions (deployment CLI). The one
+        // exception is a domain rule, not an admin entry point, and is listed.
+        const ALLOWED: Record<string, string> = {
+            "convex/admin.ts": "the admin console itself (matrix below)",
+            "convex/lib/authorization.ts": "definition of requireSuperAdmin",
+            "convex/files.ts":
+                "legacy parity: a global admin may delete/sign another member's private file (uploadAuthz, internal)",
+        };
+        const root = join(__dirname);
+        const files: string[] = [];
+        const walk = (dir: string) => {
+            for (const entry of readdirSync(dir)) {
+                const path = join(dir, entry);
+                if (entry === "_generated" || entry === "node_modules") continue;
+                if (statSync(path).isDirectory()) walk(path);
+                else if (/\.ts$/.test(entry) && !/\.test\.ts$/.test(entry)) files.push(path);
+            }
+        };
+        walk(root);
+
+        const offenders = files
+            .map((path) => ({ path: `convex/${relative(root, path)}`, source: readFileSync(path, "utf8") }))
+            .filter(({ source }) => /requireSuperAdmin\(|globalRole\s*[!=]==?\s*"superAdmin"/.test(source))
+            .map(({ path }) => path)
+            .filter((path) => !(path in ALLOWED));
+
+        expect(offenders).toEqual([]);
     });
 
     it("anonymous callers are refused on every export", async () => {
@@ -342,6 +388,14 @@ describe("admin writes require a reason and are audited", () => {
                 f.admin.mutation(api.admin.setSiteMode, { mode: "maintenance", reason }),
                 "REASON_REQUIRED",
             );
+            await expectCode(
+                f.admin.action(api.admin.reconcileOrganizationBilling, { organizationId: f.userOrgId, reason }),
+                "REASON_REQUIRED",
+            );
+            await expectCode(
+                f.admin.action(api.admin.customerPortalLink, { organizationId: f.userOrgId, reason }),
+                "REASON_REQUIRED",
+            );
         }
 
         await expectCode(
@@ -443,9 +497,9 @@ describe("admin writes require a reason and are audited", () => {
         expect((await auditRows(f.t)).filter((row) => row.action === "admin.limits_updated")).toHaveLength(2);
     });
 
-    it("setOrganizationLimits rejects values that are not -1 or a non-negative integer", async () => {
+    it("setOrganizationLimits rejects values that are not -1 or a bounded non-negative integer", async () => {
         const f = await bootstrap();
-        for (const bad of [-2, 1.5, Number.NaN, 1_000_001]) {
+        for (const bad of [-2, 1.5, Number.NaN, 10_001]) {
             await expectCode(
                 f.admin.mutation(api.admin.setOrganizationLimits, {
                     organizationId: f.userOrgId,
@@ -455,6 +509,43 @@ describe("admin writes require a reason and are audited", () => {
                 "INVALID_LIMIT",
             );
         }
+        // The active-event cap bounds the read of the create path: at most 500.
+        await expectCode(
+            f.admin.mutation(api.admin.setOrganizationLimits, {
+                organizationId: f.userOrgId,
+                limits: { maxGuestsPerEvent: null, maxActiveEvents: 501, maxReminders: null },
+                reason: "too many",
+            }),
+            "INVALID_LIMIT",
+        );
+    });
+
+    it("the active-event limit counts only free draft/active events, with a bounded read", async () => {
+        const f = await bootstrap();
+        await f.admin.mutation(api.admin.setOrganizationLimits, {
+            organizationId: f.userOrgId,
+            limits: { maxGuestsPerEvent: null, maxActiveEvents: 2, maxReminders: null },
+            reason: "two events",
+        });
+        await f.t.run(async (ctx) => {
+            // Neither occupies a slot: a closed free event and an unlocked one.
+            await ctx.db.insert("events", eventFixture(f.userOrgId, { status: "closed" }));
+            await ctx.db.insert("events", eventFixture(f.userOrgId, { tier: "celebration", status: "active" }));
+        });
+
+        const create = (title: string) =>
+            f.user.mutation(api.events.create, { input: { type: "matrimonio", templateKey: MATRIMONIO_TEMPLATE, title } });
+        await create("Uno");
+        await create("Due");
+        await expectCode(create("Tre"), "ACTIVE_EVENT_LIMIT_REACHED");
+
+        // Zero means none: the first free event is already refused.
+        await f.admin.mutation(api.admin.setOrganizationLimits, {
+            organizationId: f.userOrgId,
+            limits: { maxGuestsPerEvent: null, maxActiveEvents: 0, maxReminders: null },
+            reason: "frozen",
+        });
+        await expectCode(create("Quattro"), "ACTIVE_EVENT_LIMIT_REACHED");
     });
 
     it("retryJob re-queues a dead job and audits the reason", async () => {
@@ -576,19 +667,25 @@ describe("admin reads", () => {
         await seedDeadJob(f.t);
 
         const overview = await f.admin.query(api.admin.overview, {});
-        expect(overview.users).toMatchObject({ total: 2, superAdmins: 1, capped: false });
-        expect(overview.organizations).toMatchObject({ total: 2, capped: false });
-        expect(overview.jobs.dead).toBe(1);
+        // Every counter carries its own `capped` flag.
+        expect(overview.users).toEqual({ total: 2, capped: false });
+        expect(overview.superAdmins).toEqual({ total: 1, capped: false });
+        expect(overview.organizations).toEqual({ total: 2, capped: false });
+        expect(overview.jobs.dead).toEqual({ total: 1, capped: false });
+        expect(overview.exports.failed).toEqual({ total: 0, capped: false });
         expect(overview.siteMode).toBe("active");
 
         const events = await f.admin.query(api.admin.eventMetrics, {});
-        expect(events.events).toMatchObject({ total: 2, capped: false, celebration: 1, unlocked: 1 });
+        expect(events.events).toMatchObject({ total: 2, capped: false });
         expect(events.events.byStatus).toMatchObject({ draft: 1, active: 1, closed: 0 });
+        expect(events.celebration).toEqual({ total: 1, capped: false });
+        expect(events.unlocked).toEqual({ total: 1, capped: false });
         expect(events.conversionRate).toBeCloseTo(0.5);
         expect(events.rsvp).toMatchObject({ total: 1, yes: 1, no: 0, maybe: 0, capped: false });
 
         const billing = await f.admin.query(api.admin.billingMetrics, {});
-        expect(billing).toMatchObject({ organizationsScanned: 2, atelierActive: 0, capped: false });
+        expect(billing.organizationsScanned).toEqual({ total: 2, capped: false });
+        expect(billing.atelierActive).toEqual({ total: 0, capped: false });
     });
 
     it("returns no secret, hash, token or job payload", async () => {
@@ -611,6 +708,7 @@ describe("admin reads", () => {
                 downloadUrl: "https://r2.example/SIGNED-URL",
                 storageKey: "exports/STORAGE-KEY",
                 downloadToken: "EXPORT-DOWNLOAD-TOKEN",
+                errorMessage: "R2 said: bucket for mario.rossi@example.com unreachable",
                 createdAt: 1,
             });
             await ctx.db.insert("auditLogs", {
@@ -618,7 +716,14 @@ describe("admin reads", () => {
                 category: "user",
                 status: "success",
                 targetId: f.userId,
-                details: { token: "AUDIT-TOKEN", nested: { passwordHash: "AUDIT-HASH", ok: "visible" } },
+                details: {
+                    token: "AUDIT-TOKEN",
+                    status: "visible",
+                    url: "https://leak.example/SIGNED-URL",
+                    message: "PROVIDER-TEXT from Resend",
+                    email: "https://leak.example/path-in-an-allowed-key",
+                    from: { passwordHash: "AUDIT-HASH", role: "member" },
+                },
                 createdAt: 2,
             });
             const id = await ctx.db.insert("events", eventFixture(f.userOrgId, { creemCheckoutId: "chk_1" }));
@@ -645,8 +750,11 @@ describe("admin reads", () => {
         const exportsPage = await f.admin.query(api.admin.listExports, { status: "completed", paginationOpts: PAGE });
         expect(exportsPage.page).toHaveLength(1);
         const auditPage = await f.admin.query(api.admin.listAudit, { paginationOpts: PAGE });
-        const redacted = auditPage.page.find((row) => row.action === "user.profile_updated");
-        expect(redacted!.details).toEqual({ token: "[redacted]", nested: { passwordHash: "[redacted]", ok: "visible" } });
+        const projected = auditPage.page.find((row) => row.action === "user.profile_updated");
+        // Allowlist projection: unknown keys, credential-named keys and URL-like
+        // values are dropped (and counted), whatever key they sit under.
+        expect(projected!.details).toEqual({ status: "visible", from: { role: "member" } });
+        expect(projected!.omittedDetails).toBe(5);
 
         const all = outputs.join("\n") + JSON.stringify(exportsPage) + JSON.stringify(auditPage);
         for (const secret of [
@@ -658,10 +766,17 @@ describe("admin reads", () => {
             "AUDIT-HASH",
             "GUEST-TOKEN",
             "PAYLOAD-SECRET-VALUE",
+            "PROVIDER-TEXT",
+            "mario.rossi",
+            "provider down",
         ]) {
             expect(all, `leaked ${secret}`).not.toContain(secret);
         }
         expect(all).toContain("visible");
+        // Errors are shown as codes, never as stored text.
+        expect(exportsPage.page[0]!.errorCode).toBe("UNCLASSIFIED");
+        const deadJobs = await f.admin.query(api.admin.listJobs, { status: "dead", paginationOpts: PAGE });
+        expect(deadJobs.page[0]!.lastErrorCode).toBe("UNCLASSIFIED");
     });
 
     it("organization detail shows the subscription read-only and the limit override", async () => {
@@ -709,6 +824,148 @@ describe("admin reads", () => {
         expect(JSON.stringify(detail)).not.toContain("METADATA-NOT-SHOWN");
 
         const billing = await f.admin.query(api.admin.billingMetrics, {});
-        expect(billing.atelierActive).toBe(1);
+        expect(billing.atelierActive).toEqual({ total: 1, capped: false });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Billing wrappers (non-destructive)
+// ---------------------------------------------------------------------------
+
+describe("billing wrappers", () => {
+    const saved = { key: process.env.CREEM_API_KEY, server: process.env.CREEM_SERVER };
+    afterEach(() => {
+        vi.restoreAllMocks();
+        if (saved.key === undefined) delete process.env.CREEM_API_KEY;
+        else process.env.CREEM_API_KEY = saved.key;
+        if (saved.server === undefined) delete process.env.CREEM_SERVER;
+        else process.env.CREEM_SERVER = saved.server;
+    });
+
+    async function seedSubscription(f: Fixture, periodEnd: number) {
+        await f.t.run(async (ctx) => {
+            await ctx.runMutation(components.creem.lib.insertCustomer, {
+                id: "cust_1",
+                entityId: f.userOrgId,
+                email: "user@example.com",
+            });
+            await ctx.runMutation(components.creem.lib.createSubscription, {
+                subscription: {
+                    id: "sub_1",
+                    customerId: "cust_1",
+                    productId: process.env.CREEM_PRODUCT_ID_ATELIER!,
+                    status: "active",
+                    amount: 2400,
+                    currency: "EUR",
+                    recurringInterval: "every-month",
+                    currentPeriodStart: new Date(periodEnd - 86_400_000).toISOString(),
+                    currentPeriodEnd: new Date(periodEnd).toISOString(),
+                    cancelAtPeriodEnd: false,
+                    startedAt: new Date(periodEnd - 86_400_000).toISOString(),
+                    endedAt: null,
+                    checkoutId: null,
+                    metadata: {},
+                    createdAt: new Date(periodEnd - 86_400_000).toISOString(),
+                    modifiedAt: null,
+                },
+            });
+        });
+    }
+
+    const billingAudits = async (t: Test) =>
+        (await auditRows(t)).filter((row) => row.action.startsWith("admin.billing_"));
+
+    it("authorize and require the reason before the provider configuration is even read", async () => {
+        const f = await bootstrap();
+        delete process.env.CREEM_API_KEY;
+
+        await expectCode(
+            f.admin.action(api.admin.reconcileOrganizationBilling, { organizationId: f.userOrgId, reason: "check" }),
+            "CREEM_API_KEY_NOT_CONFIGURED",
+        );
+        await expectCode(
+            f.admin.action(api.admin.customerPortalLink, { organizationId: f.userOrgId, reason: "owner asked" }),
+            "CREEM_API_KEY_NOT_CONFIGURED",
+        );
+        expect(await billingAudits(f.t)).toHaveLength(0);
+    });
+
+    it("reconcile compares the mirror with Creem, reports drift, writes nothing but the audit", async () => {
+        const f = await bootstrap();
+        process.env.CREEM_API_KEY = "creem_test_dummy";
+        process.env.CREEM_SERVER = "test";
+        const periodEnd = Date.now() + 10 * 86_400_000;
+        await seedSubscription(f, periodEnd);
+
+        const get = vi.spyOn(creem.sdk.subscriptions, "get").mockResolvedValue({
+            id: "sub_1",
+            status: "canceled",
+            product: process.env.CREEM_PRODUCT_ID_ATELIER!,
+            currentPeriodEndDate: new Date(periodEnd),
+        } as never);
+
+        const result = await f.admin.action(api.admin.reconcileOrganizationBilling, {
+            organizationId: f.userOrgId,
+            reason: "customer says it was canceled",
+        });
+        expect(get).toHaveBeenCalledWith("sub_1");
+        expect(result).toEqual({
+            checked: 1,
+            truncated: false,
+            items: [
+                { subscriptionId: "sub_1", localStatus: "active", remoteStatus: "canceled", drift: ["status"], errorCode: null },
+            ],
+        });
+
+        // Read-only: the mirror still says active (the webhook owns it).
+        const mirror = await f.t.run(async (ctx) =>
+            ctx.runQuery(components.creem.lib.getCurrentSubscription, { entityId: f.userOrgId }),
+        );
+        expect(mirror?.status).toBe("active");
+
+        const [audit] = await billingAudits(f.t);
+        expect(audit).toMatchObject({
+            action: "admin.billing_reconciled",
+            actorAppUserId: f.adminId,
+            organizationId: f.userOrgId,
+            targetId: f.userOrgId,
+        });
+        expect(audit!.details).toEqual({ reason: "customer says it was canceled", subscriptionIds: ["sub_1"] });
+
+        // A provider failure is a code, not the provider's text.
+        get.mockRejectedValue(new Error("Creem 500: internal detail for mario.rossi"));
+        const failed = await f.admin.action(api.admin.reconcileOrganizationBilling, {
+            organizationId: f.userOrgId,
+            reason: "retry",
+        });
+        expect(failed.items[0]).toMatchObject({ errorCode: "PROVIDER_ERROR", remoteStatus: null });
+        expect(JSON.stringify(failed)).not.toContain("mario.rossi");
+    });
+
+    it("portal link: requires a customer, audits before calling the provider", async () => {
+        const f = await bootstrap();
+        process.env.CREEM_API_KEY = "creem_test_dummy";
+        process.env.CREEM_SERVER = "test";
+
+        await expectCode(
+            f.admin.action(api.admin.customerPortalLink, { organizationId: f.userOrgId, reason: "owner asked" }),
+            "BILLING_CUSTOMER_NOT_FOUND",
+        );
+        expect(await billingAudits(f.t)).toHaveLength(0);
+
+        await seedSubscription(f, Date.now() + 86_400_000);
+        const portalUrl = vi.fn(async () => ({ url: "https://portal.creem.test/session" }));
+        vi.spyOn(creem, "customers", "get").mockReturnValue({ portalUrl, retrieve: vi.fn() } as never);
+
+        const link = await f.admin.action(api.admin.customerPortalLink, {
+            organizationId: f.userOrgId,
+            reason: "owner lost the email",
+        });
+        expect(link).toEqual({ url: "https://portal.creem.test/session" });
+        expect(portalUrl).toHaveBeenCalledWith(expect.anything(), { entityId: f.userOrgId });
+
+        const [audit] = await billingAudits(f.t);
+        expect(audit).toMatchObject({ action: "admin.billing_portal_link_created", actorAppUserId: f.adminId });
+        expect(audit!.details).toEqual({ reason: "owner lost the email" });
     });
 });

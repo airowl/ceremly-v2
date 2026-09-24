@@ -462,9 +462,10 @@ describe("job state machine", () => {
         );
 
         // Un utente normale non può: il codice è quello che il client sa distinguere.
+        // (Task 15 fix round 1: la porta pubblica è `api.admin.retryJob`, con motivazione.)
         let caught: unknown;
         try {
-            await s.mutation(api.jobs.retryDead, { jobId });
+            await s.mutation(api.admin.retryJob, { jobId, reason: "retry" });
         } catch (error) {
             caught = error;
         }
@@ -472,7 +473,7 @@ describe("job state machine", () => {
 
         await t.run(async (ctx) => await ctx.db.patch(appUserId, { globalRole: "superAdmin" }));
 
-        const retried = await s.mutation(api.jobs.retryDead, { jobId });
+        const retried = await s.mutation(api.admin.retryJob, { jobId, reason: "provider back" });
         expect(retried.retried).toBe(true);
 
         const job = await t.run(async (ctx) => await ctx.db.get(jobId));
@@ -482,8 +483,42 @@ describe("job state machine", () => {
         expect(await auditActions(t)).toContain("admin.job_retried");
 
         // Un job vivo non è "ripreso": la risposta lo dice invece di duplicarlo.
-        const again = await s.mutation(api.jobs.retryDead, { jobId });
+        const again = await s.mutation(api.admin.retryJob, { jobId, reason: "again" });
         expect(again).toMatchObject({ retried: false, reason: "status_pending" });
+    });
+
+    it("la porta CLI (internal.jobs.retryDead) esige la motivazione e la audita senza attore", async () => {
+        const { t } = await bootstrap();
+        const jobId = await t.run(
+            async (ctx) =>
+                await ctx.db.insert("jobExecutions", {
+                    name: JOB_TYPES.sendInviteEmail,
+                    status: "dead" as const,
+                    attempt: 5,
+                    maxAttempts: 5,
+                    lastError: "Resend 422: invalid to address mario.rossi@example.com",
+                    finishedAt: Date.now(),
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                }),
+        );
+
+        let caught: unknown;
+        try {
+            await t.mutation(internal.jobs.retryDead, { jobId, reason: "  " });
+        } catch (error) {
+            caught = error;
+        }
+        expect((caught as { data?: { code?: string } }).data?.code).toBe("REASON_REQUIRED");
+
+        expect(await t.mutation(internal.jobs.retryDead, { jobId, reason: "incident 42" })).toEqual({ retried: true });
+        const audit = (await t.run(async (ctx) => ctx.db.query("auditLogs").collect())).find(
+            (row) => row.action === "admin.job_retried",
+        );
+        expect(audit!.actorAppUserId).toBeUndefined();
+        expect(audit!.details).toMatchObject({ reason: "incident 42", source: "deployment_cli", lastErrorCode: "HTTP_422" });
+        // The provider text (with the address) is not copied into the audit.
+        expect(JSON.stringify(audit!.details)).not.toContain("mario.rossi");
     });
 
     it("un tipo di job non registrato è un rifiuto, non una riga che nessuno consuma", async () => {

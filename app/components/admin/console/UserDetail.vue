@@ -92,7 +92,7 @@ const roleItems = computed(() => [
                 <ul class="text-sm">
                     <li v-for="row in detail.exports" :key="row._id">
                         {{ formatDateTime(row.createdAt, locale) }} · {{ t(`adminConsole.exports.statuses.${row.status}`) }}
-                        <span v-if="row.errorMessage" class="text-red-600">· {{ row.errorMessage }}</span>
+                        <span v-if="row.errorCode" class="text-red-600">· {{ row.errorCode }}</span>
                     </li>
                     <li v-if="detail.exports.length === 0" class="text-neutral-500">{{ t('adminConsole.empty') }}</li>
                 </ul>

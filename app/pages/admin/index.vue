@@ -42,22 +42,30 @@ const siteModeItems = computed(() =>
     SITE_MODES.map((mode) => ({ label: t(`adminConsole.siteMode.modes.${mode}`), value: mode })),
 );
 
+type Counter = { total: number; capped: boolean };
+const show = (counter: Counter | undefined) => (counter ? formatCount(counter.total, counter.capped) : "…");
+
+// Every counter carries its own `capped` flag: a capped one reads "≥ N".
 const cards = computed(() => {
     const o = overview.value;
     const e = events.value;
     const b = billing.value;
     return [
-        { key: "users", label: t("adminConsole.overview.users"), value: o ? formatCount(o.users.total, o.users.capped) : "…" },
-        { key: "superAdmins", label: t("adminConsole.overview.superAdmins"), value: o ? String(o.users.superAdmins) : "…" },
-        { key: "organizations", label: t("adminConsole.overview.organizations"), value: o ? formatCount(o.organizations.total, o.organizations.capped) : "…" },
-        { key: "events", label: t("adminConsole.overview.events"), value: e ? formatCount(e.events.total, e.events.capped) : "…" },
-        { key: "rsvp", label: t("adminConsole.overview.rsvp"), value: e ? formatCount(e.rsvp.total, e.rsvp.capped) : "…" },
-        { key: "conversion", label: t("adminConsole.overview.conversion"), value: e ? formatPercent(e.conversionRate, locale.value) : "…" },
-        { key: "atelier", label: t("adminConsole.overview.atelier"), value: b ? String(b.atelierActive) : "…" },
-        { key: "jobsDead", label: t("adminConsole.overview.jobsDead"), value: o ? String(o.jobs.dead) : "…" },
-        { key: "jobsRetrying", label: t("adminConsole.overview.jobsRetrying"), value: o ? String(o.jobs.retrying) : "…" },
-        { key: "exportsFailed", label: t("adminConsole.overview.exportsFailed"), value: o ? String(o.exports.failed) : "…" },
-        { key: "scheduled", label: t("adminConsole.overview.scheduledForDeletion"), value: o ? String(o.users.scheduledForDeletion) : "…" },
+        { key: "users", label: t("adminConsole.overview.users"), value: show(o?.users) },
+        { key: "superAdmins", label: t("adminConsole.overview.superAdmins"), value: show(o?.superAdmins) },
+        { key: "organizations", label: t("adminConsole.overview.organizations"), value: show(o?.organizations) },
+        { key: "events", label: t("adminConsole.overview.events"), value: show(e?.events) },
+        { key: "rsvp", label: t("adminConsole.overview.rsvp"), value: show(e?.rsvp) },
+        {
+            key: "conversion",
+            label: t("adminConsole.overview.conversion"),
+            value: e ? `${e.conversionSampled ? "≈ " : ""}${formatPercent(e.conversionRate, locale.value)}` : "…",
+        },
+        { key: "atelier", label: t("adminConsole.overview.atelier"), value: show(b?.atelierActive) },
+        { key: "jobsDead", label: t("adminConsole.overview.jobsDead"), value: show(o?.jobs.dead) },
+        { key: "jobsRetrying", label: t("adminConsole.overview.jobsRetrying"), value: show(o?.jobs.retrying) },
+        { key: "exportsFailed", label: t("adminConsole.overview.exportsFailed"), value: show(o?.exports.failed) },
+        { key: "scheduled", label: t("adminConsole.overview.scheduledForDeletion"), value: show(o?.scheduledForDeletion) },
     ];
 });
 </script>
@@ -88,14 +96,14 @@ const cards = computed(() => {
                     <li v-for="(count, status) in events.events.byStatus" :key="status">
                         {{ t(`adminConsole.events.statuses.${status}`) }}: <span class="tabular-nums">{{ count }}</span>
                     </li>
-                    <li>{{ t('adminConsole.overview.celebration') }}: <span class="tabular-nums">{{ events.events.celebration }}</span></li>
+                    <li>{{ t('adminConsole.overview.celebration') }}: <span class="tabular-nums">{{ formatCount(events.celebration.total, events.celebration.capped) }}</span></li>
                     <li>{{ t('adminConsole.overview.attending') }}: <span class="tabular-nums">{{ events.rsvp.yes }} / {{ events.rsvp.no }} / {{ events.rsvp.maybe }}</span></li>
                 </ul>
             </div>
             <div v-if="billing" class="rounded-lg border border-neutral-200 bg-white p-4">
                 <h2 class="mb-2 font-medium">{{ t('adminConsole.overview.billing') }}</h2>
                 <ul class="space-y-1 text-sm">
-                    <li>{{ t('adminConsole.overview.scannedOrgs') }}: {{ formatCount(billing.organizationsScanned, billing.capped) }}</li>
+                    <li>{{ t('adminConsole.overview.scannedOrgs') }}: {{ formatCount(billing.organizationsScanned.total, billing.organizationsScanned.capped) }}</li>
                     <li>
                         {{ t('adminConsole.overview.subscriptionStatuses') }}:
                         <span v-for="(count, status) in billing.subscriptionStatuses" :key="status" class="mr-2">{{ status }} {{ count }}</span>

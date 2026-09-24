@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import { requireSuperAdmin } from "./lib/authorization";
+import { requireReason } from "./lib/adminGuards";
 import { writeAudit } from "./lib/audit";
 import type { ReadCtx } from "./lib/identity";
 
@@ -28,7 +28,8 @@ import type { ReadCtx } from "./lib/identity";
  *
  * La modalità è pubblica per costruzione (la legge il middleware di ogni
  * richiesta, anche anonima): `getPublic` non richiede identità. A scriverla è
- * solo un superAdmin.
+ * solo un superAdmin dalla console (`api.admin.setSiteMode`) o un operatore del
+ * deployment dalla CLI (`internal.siteSettings.set/clear`), sempre con motivazione.
  */
 
 export const SITE_MODES = [
@@ -90,37 +91,41 @@ export const getForWorker = internalQuery({
     },
 });
 
-export const set = mutation({
-    args: { mode: siteModeValidator },
+/**
+ * Deployment CLI door (`npx convex run siteSettings:set '{"mode":…,"reason":…}'`).
+ *
+ * Task 15 fix round 1: the public door is `api.admin.setSiteMode` (superAdmin
+ * session, reason, audit). This internal one stays because it is the break-glass
+ * that works when no browser session does; the reason is mandatory here too.
+ */
+export const set = internalMutation({
+    args: { mode: siteModeValidator, reason: v.string() },
     handler: async (ctx, args): Promise<{ mode: SiteMode; previous: SiteMode }> => {
-        // Stessa regola dell'endpoint admin legacy: il kill-switch del sito è
-        // un'azione globale, e un ruolo di organizzazione non basta.
-        const appUser = await requireSuperAdmin(ctx);
-        return await writeSiteMode(ctx, appUser, args.mode, null);
+        return await writeSiteMode(ctx, null, args.mode, requireReason(args.reason));
     },
 });
 
-/** Rimuove l'override: il sito torna al valore di default. */
-export const clear = mutation({
-    args: {},
-    handler: async (ctx): Promise<{ mode: SiteMode; previous: SiteMode }> => {
-        const appUser = await requireSuperAdmin(ctx);
-        return await writeSiteMode(ctx, appUser, null, null);
+/** Rimuove l'override (CLI): il sito torna al valore di default. */
+export const clear = internalMutation({
+    args: { reason: v.string() },
+    handler: async (ctx, args): Promise<{ mode: SiteMode; previous: SiteMode }> => {
+        return await writeSiteMode(ctx, null, null, requireReason(args.reason));
     },
 });
 
 /**
  * Writes (or, with `mode === null`, clears) the override and audits it.
  *
- * Shared by `set`/`clear` and the admin console (`admin.setSiteMode`, Task 15)
- * so the audit shape is one. The caller has already checked the superAdmin
- * role; `operatorReason` lands in the audit when given.
+ * Shared by the CLI doors (`set`/`clear`) and the admin console
+ * (`admin.setSiteMode`, Task 15) so the audit shape is one. The caller has
+ * already authorized the operator (`actor === null` means the deployment CLI)
+ * and validated the reason.
  */
 export async function writeSiteMode(
     ctx: MutationCtx,
-    actor: Doc<"appUsers">,
+    actor: Doc<"appUsers"> | null,
     mode: SiteMode | null,
-    operatorReason: string | null,
+    operatorReason: string,
 ): Promise<{ mode: SiteMode; previous: SiteMode }> {
     const existing = await ctx.db
         .query("siteSettings")
@@ -139,12 +144,12 @@ export async function writeSiteMode(
     const next = mode ?? DEFAULT_SITE_MODE;
     await writeAudit(ctx, {
         action: "admin.site_mode_changed",
-        actorAppUserId: actor._id,
-        actorAuthUserId: actor.authUserId,
+        ...(actor ? { actorAppUserId: actor._id, actorAuthUserId: actor.authUserId } : {}),
         targetType: "site_mode",
         targetId: SITE_MODE_KEY,
         details: {
-            ...(operatorReason === null ? {} : { reason: operatorReason }),
+            reason: operatorReason,
+            source: actor ? "admin_console" : "deployment_cli",
             from: previous,
             to: next,
             ...(mode === null ? { cleared: true } : {}),

@@ -338,13 +338,19 @@ export const create = mutation({
             : TIER_LIMITS.free.maxActiveEvents;
         const maxActiveEvents = override?.maxActiveEvents ?? planMaxActive;
         if (maxActiveEvents !== -1) {
-            const active = await ctx.db
-                .query("events")
-                .withIndex("by_organization", (q) => q.eq("organizationId", authz.organizationId))
-                .collect();
-            const activeFree = active.filter(
-                (event) => event.tier === "free" && event.status !== "closed",
-            ).length;
+            // Bounded: at most `maxActiveEvents + 1` documents, over the two
+            // statuses that occupy a slot (a `closed` or unlocked event does not).
+            let activeFree = 0;
+            for (const status of ["draft", "active"] as const) {
+                const rows = await ctx.db
+                    .query("events")
+                    .withIndex("by_organization_tier_status", (q) =>
+                        q.eq("organizationId", authz.organizationId).eq("tier", "free").eq("status", status),
+                    )
+                    .take(maxActiveEvents + 1 - activeFree);
+                activeFree += rows.length;
+                if (activeFree >= maxActiveEvents) break;
+            }
 
             if (activeFree >= maxActiveEvents) {
                 throw forbidden("ACTIVE_EVENT_LIMIT_REACHED", {

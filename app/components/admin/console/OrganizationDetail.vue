@@ -2,14 +2,17 @@
 import { useConvexMutation, useConvexQuery } from "convex-vue";
 import { api } from "~~/convex/_generated/api";
 import type { Id } from "~~/convex/_generated/dataModel";
+import { useConvexAction } from "~/composables/useConvexAction";
 import { formatDateTime, formatLimit } from "~/lib/adminConsole";
 
 /**
  * Organization detail of the admin console (plan Task 15).
  *
- * The subscription is read-only on purpose: Creem is the source of truth and
- * changes happen in its dashboard or the customer portal. The only write is the
- * limit override (`api.admin.setOrganizationLimits`): an empty field means "plan
+ * The subscription is shown read-only: Creem is the source of truth. Two
+ * non-destructive wrappers act on it — a consistency check against Creem and a
+ * customer-portal link to hand to the owner — both with a reason and audited;
+ * cancel, refund and plan changes are not here. The other write is the limit
+ * override (`api.admin.setOrganizationLimits`): an empty field means "plan
  * value", `-1` unlimited; the server validates, requires the reason and audits.
  */
 const props = defineProps<{ organizationId: Id<"organizations"> }>();
@@ -49,6 +52,30 @@ function parseLimit(raw: string): number | null {
 const setLimits = useConvexMutation(api.admin.setOrganizationLimits);
 const { run, pending } = useAdminWrite();
 const canSave = computed(() => limitsReason.value.trim().length > 0 && !pending.value);
+
+const reconcile = useConvexAction(api.admin.reconcileOrganizationBilling);
+const portalLink = useConvexAction(api.admin.customerPortalLink);
+const billingReason = ref("");
+const canRunBilling = computed(() => billingReason.value.trim().length > 0 && !pending.value);
+type ReconcileResult = Awaited<ReturnType<typeof reconcile>>;
+const reconcileResult = ref<ReconcileResult | null>(null);
+const portalUrl = ref<string | null>(null);
+
+async function runReconcile() {
+    const result = await run(
+        () => reconcile({ organizationId: props.organizationId, reason: billingReason.value }),
+        t("adminConsole.organizations.reconcileDone"),
+    );
+    if (result) reconcileResult.value = result;
+}
+
+async function createPortalLink() {
+    const result = await run(
+        () => portalLink({ organizationId: props.organizationId, reason: billingReason.value }),
+        t("adminConsole.organizations.portalLinkCreated"),
+    );
+    if (result) portalUrl.value = result.url;
+}
 
 async function saveLimits() {
     const done = await run(() =>
@@ -115,6 +142,33 @@ async function saveLimits() {
                         {{ t('adminConsole.organizations.noSubscriptions') }}
                     </li>
                 </ul>
+            </div>
+
+            <div class="max-w-xl space-y-3" data-testid="admin-billing-actions">
+                <h3 class="text-sm font-medium">{{ t('adminConsole.organizations.billingActions') }}</h3>
+                <p class="text-xs text-neutral-500">{{ t('adminConsole.organizations.billingActionsHint') }}</p>
+                <UFormField :label="t('adminConsole.reason.label')" :help="t('adminConsole.reason.hint')">
+                    <UInput v-model="billingReason" :placeholder="t('adminConsole.reason.placeholder')" class="w-full" />
+                </UFormField>
+                <div class="flex flex-wrap gap-2">
+                    <UButton size="sm" :disabled="!canRunBilling" :loading="pending" @click="runReconcile">
+                        {{ t('adminConsole.organizations.reconcile') }}
+                    </UButton>
+                    <UButton size="sm" color="neutral" variant="outline" :disabled="!canRunBilling || !detail.customerId" @click="createPortalLink">
+                        {{ t('adminConsole.organizations.portalLink') }}
+                    </UButton>
+                </div>
+                <ul v-if="reconcileResult" class="text-sm">
+                    <li v-for="item in reconcileResult.items" :key="item.subscriptionId">
+                        {{ item.subscriptionId }} · {{ item.localStatus }} → {{ item.remoteStatus ?? item.errorCode }}
+                        <span v-if="item.drift.length" class="text-red-600">· {{ t('adminConsole.organizations.drift') }}: {{ item.drift.join(', ') }}</span>
+                        <span v-else-if="!item.errorCode" class="text-green-700">· {{ t('adminConsole.organizations.inSync') }}</span>
+                    </li>
+                    <li v-if="reconcileResult.items.length === 0" class="text-neutral-500">{{ t('adminConsole.organizations.noSubscriptions') }}</li>
+                </ul>
+                <p v-if="portalUrl" class="text-xs break-all">
+                    <a :href="portalUrl" target="_blank" rel="noopener noreferrer" class="underline">{{ portalUrl }}</a>
+                </p>
             </div>
 
             <div class="space-y-3 border-t border-neutral-100 pt-4" data-testid="admin-limits-form">

@@ -1,17 +1,18 @@
 import { paginationOptsValidator, type PaginationOptions } from "convex/server";
 import { v } from "convex/values";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { isAtelierSubscription } from "./billing";
+import { creem, isAtelierSubscription, requireCreemConfiguration } from "./billing";
 import { retryDeadJob } from "./jobs";
+import { errorCode, requireReason } from "./lib/adminGuards";
 import { writeAudit } from "./lib/audit";
 import { requireSuperAdmin } from "./lib/authorization";
 import { resolveEventLimits } from "./lib/domain";
 import { forbidden, normalizeEmail } from "./lib/identity";
 import {
-    MAX_LIMIT_VALUE,
+    LIMIT_MAXIMA,
     OVERRIDABLE_LIMITS,
     applyLimitOverride,
     findLimitOverride,
@@ -34,16 +35,19 @@ import { DEFAULT_SITE_MODE, SITE_MODE_KEY, resolveSiteMode, writeSiteMode } from
  *    the audit row (`details.reason`) written in the same transaction as the
  *    change, with actor, target and timestamp. Writes are rate limited on the
  *    `admin` bucket (keyed by the superAdmin's appUserId).
- * 3. Reads never return secrets: no invitation hash, no guest token, no export
- *    download token/URL/storage key, no job payload values, no Creem metadata;
- *    audit `details` pass through `redactSecrets`.
+ * 3. Reads never return secrets or free provider text: no invitation hash, no
+ *    guest token, no export download token/URL/storage key, no job payload
+ *    values, no Creem metadata, no stored error message (a code instead:
+ *    `errorCode`); audit `details` pass through an allowlist projection
+ *    (`projectAuditDetails`).
  * 4. Reads are indexed and bounded: lists are paginated with a clamped page
  *    size, searches are prefix ranges on an index, counters read at most the
  *    documented cap (`METRIC_CAPS`) and say `capped: true` when they hit it.
  *
  * Not here on purpose: impersonation, password changes, and any irreversible
- * delete. Billing is read-only: subscription changes stay in the Creem
- * dashboard / customer portal, where the provider is the source of truth.
+ * delete. Billing has two non-destructive wrappers only (a provider consistency
+ * check and a customer-portal link for the owner); cancel, refund and plan
+ * changes stay in the Creem dashboard / customer portal.
  */
 
 // ---------------------------------------------------------------------------
@@ -75,17 +79,6 @@ export const METRIC_CAPS = {
     detailGuests: 2000,
 } as const;
 
-const MAX_REASON_LENGTH = 500;
-
-function requireReason(reason: string): string {
-    const trimmed = reason.trim();
-    if (trimmed.length === 0) throw forbidden("REASON_REQUIRED");
-    if (trimmed.length > MAX_REASON_LENGTH) {
-        throw forbidden("REASON_TOO_LONG", { max: MAX_REASON_LENGTH });
-    }
-    return trimmed;
-}
-
 async function assertAdminRateLimit(ctx: MutationCtx, actor: Doc<"appUsers">): Promise<void> {
     await assertRateLimit(ctx, { bucket: "admin", key: actor._id });
 }
@@ -108,25 +101,114 @@ async function countUpTo(
 }
 
 const SECRET_KEY_PATTERN = /(token|secret|password|hash|signature|api_?key|authorization|cookie)/i;
-const REDACTED = "[redacted]";
 
 /**
- * Audit `details` are free-form, and rows imported from the legacy app were
- * written by code this module does not control: any key that names a credential
- * is masked, at any depth, before it leaves the server.
+ * Audit `details` keys the console may show (fix round 1: an allowlist, not a
+ * denylist). Audit rows are written by every task of the migration and imported
+ * from the legacy app; a key not listed here is dropped and only counted.
  */
-export function redactSecrets(value: unknown, depth = 0): unknown {
-    if (depth > 6) return REDACTED;
-    if (Array.isArray(value)) return value.map((item) => redactSecrets(item, depth + 1));
-    if (value !== null && typeof value === "object") {
-        return Object.fromEntries(
-            Object.entries(value as Record<string, unknown>).map(([key, inner]) => [
-                key,
-                SECRET_KEY_PATTERN.test(key) ? REDACTED : redactSecrets(inner, depth + 1),
-            ]),
-        );
+const AUDIT_DETAIL_KEYS = new Set([
+    "reason",
+    "source",
+    "from",
+    "to",
+    "cleared",
+    "name",
+    "previousAttempts",
+    "lastErrorCode",
+    "email",
+    "targetEmail",
+    "role",
+    "previousRole",
+    "newRole",
+    "status",
+    "tier",
+    "mode",
+    "type",
+    "outcome",
+    "count",
+    "total",
+    "imported",
+    "skipped",
+    "deleted",
+    "memberships",
+    "invitations",
+    "explicitTarget",
+    "eventId",
+    "guestId",
+    "organizationId",
+    "fileId",
+    "jobId",
+    "productId",
+    "subscriptionId",
+    "subscriptionIds",
+    "customerId",
+]);
+
+/** Longest free string shown (the operator's own `reason` has its own cap). */
+const MAX_DETAIL_STRING = 200;
+/** URLs and long opaque runs (tokens, signatures, base64) never leave the server. */
+const UNSAFE_STRING = /(https?:\/\/|[A-Za-z0-9+/_=-]{40,})/;
+
+type DetailScalar = string | number | boolean | null;
+type DetailValue = DetailScalar | DetailScalar[] | Record<string, DetailScalar | DetailScalar[]>;
+
+function safeScalar(value: unknown, maxLength: number): DetailScalar | undefined {
+    if (value === null || typeof value === "boolean") return value;
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value === "string") {
+        if (value.length > maxLength || UNSAFE_STRING.test(value)) return undefined;
+        return value;
     }
-    return value;
+    return undefined;
+}
+
+function safeLeaf(value: unknown): DetailScalar | DetailScalar[] | undefined {
+    if (Array.isArray(value)) {
+        const items = value.slice(0, 20).map((item) => safeScalar(item, MAX_DETAIL_STRING));
+        return items.every((item) => item !== undefined) ? (items as DetailScalar[]) : undefined;
+    }
+    return safeScalar(value, MAX_DETAIL_STRING);
+}
+
+/**
+ * The audit `details` the console shows: allowlisted keys only, primitive values
+ * (one level of nesting for `from`/`to`), no URL or token-like string, and never
+ * a key that names a credential — whatever the writer put in the row.
+ */
+export function projectAuditDetails(details: unknown): { details: Record<string, DetailValue>; omitted: number } {
+    const projected: Record<string, DetailValue> = {};
+    let omitted = 0;
+    if (details === null || typeof details !== "object" || Array.isArray(details)) {
+        return { details: projected, omitted: details === null || details === undefined ? 0 : 1 };
+    }
+
+    for (const [key, value] of Object.entries(details as Record<string, unknown>)) {
+        if (!AUDIT_DETAIL_KEYS.has(key) || SECRET_KEY_PATTERN.test(key)) {
+            omitted += 1;
+            continue;
+        }
+        if (key === "reason") {
+            const reason = safeScalar(value, 500);
+            if (typeof reason === "string") projected.reason = reason;
+            else omitted += 1;
+            continue;
+        }
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+            const nested: Record<string, DetailScalar | DetailScalar[]> = {};
+            for (const [innerKey, innerValue] of Object.entries(value as Record<string, unknown>)) {
+                const leaf = SECRET_KEY_PATTERN.test(innerKey) ? undefined : safeLeaf(innerValue);
+                if (leaf === undefined) omitted += 1;
+                else nested[innerKey] = leaf;
+            }
+            projected[key] = nested;
+            continue;
+        }
+        const leaf = safeLeaf(value);
+        if (leaf === undefined) omitted += 1;
+        else projected[key] = leaf;
+    }
+    return { details: projected, omitted };
 }
 
 // ---------------------------------------------------------------------------
@@ -182,7 +264,8 @@ function exportView(row: Doc<"dataExports">, email: string | null) {
         status: row.status,
         format: row.format,
         fileSize: row.fileSize ?? null,
-        errorMessage: row.errorMessage ?? null,
+        // A code, never the stored text (fix round 1).
+        errorCode: errorCode(row.errorMessage),
         createdAt: row.createdAt,
         completedAt: row.completedAt ?? null,
         expiresAt: row.expiresAt ?? null,
@@ -197,7 +280,8 @@ function jobView(job: Doc<"jobExecutions">) {
         status: job.status,
         attempt: job.attempt,
         maxAttempts: job.maxAttempts,
-        lastError: job.lastError ? job.lastError.slice(0, 500) : null,
+        // A code, never the stored text: provider errors may carry personal data.
+        lastErrorCode: errorCode(job.lastError),
         providerId: job.providerId ?? null,
         // Keys only: payloads are ids by design, but the console has no reason to
         // echo values it does not need.
@@ -216,7 +300,7 @@ async function emailOf(ctx: QueryCtx, userId: Id<"appUsers"> | undefined): Promi
 }
 
 async function auditView(ctx: QueryCtx, row: Doc<"auditLogs">) {
-    const details = redactSecrets(row.details ?? null) as Record<string, unknown> | null;
+    const { details, omitted } = projectAuditDetails(row.details ?? null);
     return {
         _id: row._id,
         action: row.action,
@@ -227,8 +311,9 @@ async function auditView(ctx: QueryCtx, row: Doc<"auditLogs">) {
         organizationId: row.organizationId ?? null,
         targetType: row.targetType ?? null,
         targetId: row.targetId ?? null,
-        reason: typeof details?.reason === "string" ? details.reason : null,
+        reason: typeof details.reason === "string" ? details.reason : null,
         details,
+        omittedDetails: omitted,
         createdAt: row.createdAt,
     };
 }
@@ -281,10 +366,13 @@ export const overview = query({
         await requireSuperAdmin(ctx);
 
         const users = await countUpTo(ctx.db.query("appUsers").take(METRIC_CAPS.users + 1), METRIC_CAPS.users);
-        const superAdmins = await ctx.db
-            .query("appUsers")
-            .withIndex("by_global_role", (q) => q.eq("globalRole", "superAdmin"))
-            .take(METRIC_CAPS.superAdmins);
+        const superAdmins = await countUpTo(
+            ctx.db
+                .query("appUsers")
+                .withIndex("by_global_role", (q) => q.eq("globalRole", "superAdmin"))
+                .take(METRIC_CAPS.superAdmins + 1),
+            METRIC_CAPS.superAdmins,
+        );
         const scheduledForDeletion = await countUpTo(
             ctx.db
                 .query("appUsers")
@@ -309,10 +397,6 @@ export const overview = query({
                 ),
             ),
         );
-        const jobs = Object.fromEntries(jobStatuses.map((status, index) => [status, jobCounts[index]!.total])) as Record<
-            (typeof jobStatuses)[number],
-            number
-        >;
 
         const exportStatuses = ["pending", "processing", "failed"] as const;
         const exportCounts = await Promise.all(
@@ -332,20 +416,22 @@ export const overview = query({
             .withIndex("by_key", (q) => q.eq("key", SITE_MODE_KEY))
             .unique();
 
+        // Every counter is `{ total, capped }`: a capped one is a lower bound.
         return {
-            users: {
-                total: users.total,
-                capped: users.capped,
-                superAdmins: superAdmins.length,
-                scheduledForDeletion: scheduledForDeletion.total,
-            },
+            users,
+            superAdmins,
+            scheduledForDeletion,
             organizations,
-            jobs: { ...jobs, capped: jobCounts.some((count) => count.capped) },
+            jobs: {
+                pending: jobCounts[0]!,
+                running: jobCounts[1]!,
+                retrying: jobCounts[2]!,
+                dead: jobCounts[3]!,
+            },
             exports: {
-                pending: exportCounts[0]!.total,
-                processing: exportCounts[1]!.total,
-                failed: exportCounts[2]!.total,
-                capped: exportCounts.some((count) => count.capped),
+                pending: exportCounts[0]!,
+                processing: exportCounts[1]!,
+                failed: exportCounts[2]!,
             },
             siteMode: siteRow ? resolveSiteMode(siteRow.value) : DEFAULT_SITE_MODE,
             siteModeOverridden: siteRow !== null,
@@ -354,7 +440,11 @@ export const overview = query({
     },
 });
 
-/** Events, RSVP and conversions (free → Celebrazione). Bounded by `METRIC_CAPS`. */
+/**
+ * Events, RSVP and conversions (free → Celebrazione). Bounded by `METRIC_CAPS`.
+ * When `events.capped`, the breakdown and the rate describe the most recent
+ * `METRIC_CAPS.events` events only.
+ */
 export const eventMetrics = query({
     args: {},
     handler: async (ctx) => {
@@ -381,10 +471,11 @@ export const eventMetrics = query({
         }
 
         return {
-            events: { total: sample.length, capped: eventsCapped, byStatus, celebration, unlocked },
-            // Share of the counted events that were unlocked to Celebrazione. Over
-            // the most recent events when capped.
+            events: { total: sample.length, capped: eventsCapped, byStatus },
+            celebration: { total: celebration, capped: eventsCapped },
+            unlocked: { total: unlocked, capped: eventsCapped },
             conversionRate: sample.length === 0 ? 0 : celebration / sample.length,
+            conversionSampled: eventsCapped,
             rsvp: { total: Math.min(responses.length, METRIC_CAPS.rsvpResponses), capped: rsvpCapped, ...rsvp },
         };
     },
@@ -400,6 +491,7 @@ export const billingMetrics = query({
             .query("organizations")
             .order("desc")
             .take(METRIC_CAPS.billingOrganizations + 1);
+        const capped = organizations.length > METRIC_CAPS.billingOrganizations;
         const scanned = organizations.slice(0, METRIC_CAPS.billingOrganizations);
 
         const statuses: Record<string, number> = {};
@@ -420,9 +512,8 @@ export const billingMetrics = query({
         }
 
         return {
-            organizationsScanned: scanned.length,
-            capped: organizations.length > METRIC_CAPS.billingOrganizations,
-            atelierActive,
+            organizationsScanned: { total: scanned.length, capped },
+            atelierActive: { total: atelierActive, capped },
             subscriptionStatuses: statuses,
             recentWebhookOutcomes: webhookOutcomes,
             lastWebhookAt: webhooks[0]?.processedAt ?? null,
@@ -663,8 +754,8 @@ export const setOrganizationLimits = mutation({
         for (const key of OVERRIDABLE_LIMITS) {
             const value = args.limits[key];
             if (value === null) continue;
-            if (!Number.isInteger(value) || value < -1 || value > MAX_LIMIT_VALUE) {
-                throw forbidden("INVALID_LIMIT", { field: key });
+            if (!Number.isInteger(value) || value < -1 || value > LIMIT_MAXIMA[key]) {
+                throw forbidden("INVALID_LIMIT", { field: key, max: LIMIT_MAXIMA[key] });
             }
         }
 
@@ -705,6 +796,165 @@ export const setOrganizationLimits = mutation({
         });
 
         return { organizationId: organization._id, limits: to };
+    },
+});
+
+// ---------------------------------------------------------------------------
+// Billing wrappers (non-destructive): provider check and portal link
+// ---------------------------------------------------------------------------
+
+/** Most subscriptions compared per provider check (one Creem API call each). */
+export const MAX_RECONCILE_SUBSCRIPTIONS = 10;
+
+const BILLING_ADMIN_ACTIONS = v.union(
+    v.literal("admin.billing_reconciled"),
+    v.literal("admin.billing_portal_link_created"),
+);
+
+/**
+ * Authorization for the billing actions. Actions have no `db`: this runs with the
+ * caller's identity (Convex propagates it through `ctx.runQuery`), so the
+ * superAdmin check and the reason check happen before any provider call.
+ */
+export const billingActionContext = internalQuery({
+    args: { organizationId: v.id("organizations"), reason: v.string() },
+    handler: async (ctx, args) => {
+        await requireSuperAdmin(ctx);
+        const reason = requireReason(args.reason);
+        const organization = await ctx.db.get(args.organizationId);
+        if (!organization) throw forbidden("ORGANIZATION_NOT_FOUND", { organizationId: args.organizationId });
+        return { reason };
+    },
+});
+
+/**
+ * Rate limit + audit of a billing action, written **before** the provider call:
+ * a portal link that exists was audited first. Re-checks the role (the identity
+ * is propagated from the action).
+ */
+export const recordBillingAction = internalMutation({
+    args: {
+        organizationId: v.id("organizations"),
+        action: BILLING_ADMIN_ACTIONS,
+        reason: v.string(),
+        subscriptionIds: v.optional(v.array(v.string())),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireSuperAdmin(ctx);
+        const reason = requireReason(args.reason);
+        await assertAdminRateLimit(ctx, admin);
+        await writeAudit(ctx, {
+            action: args.action,
+            actorAppUserId: admin._id,
+            actorAuthUserId: admin.authUserId,
+            organizationId: args.organizationId,
+            targetType: "organization",
+            targetId: args.organizationId,
+            details: {
+                reason,
+                ...(args.subscriptionIds ? { subscriptionIds: args.subscriptionIds } : {}),
+            },
+        });
+    },
+});
+
+interface ReconcileItem {
+    subscriptionId: string;
+    localStatus: string;
+    remoteStatus: string | null;
+    /** Fields whose local mirror disagrees with Creem. */
+    drift: ("status" | "productId" | "currentPeriodEnd")[];
+    errorCode: string | null;
+}
+
+/**
+ * Compares the organization's local subscription mirror with Creem (read-only on
+ * both sides). The mirror is written by the webhook only — this action reports
+ * drift, it does not repair it: the fix for a drift is a webhook redelivery from
+ * the Creem dashboard, which goes through the same idempotent fulfillment path.
+ */
+export const reconcileOrganizationBilling = action({
+    args: { organizationId: v.id("organizations"), reason: v.string() },
+    handler: async (ctx, args): Promise<{ checked: number; truncated: boolean; items: ReconcileItem[] }> => {
+        const { reason } = await ctx.runQuery(internal.admin.billingActionContext, args);
+        requireCreemConfiguration();
+
+        const local = await ctx.runQuery(components.creem.lib.listAllUserSubscriptions, {
+            entityId: args.organizationId,
+        });
+        const subset = local.slice(0, MAX_RECONCILE_SUBSCRIPTIONS);
+
+        await ctx.runMutation(internal.admin.recordBillingAction, {
+            organizationId: args.organizationId,
+            action: "admin.billing_reconciled",
+            reason,
+            subscriptionIds: subset.map((subscription) => subscription.id),
+        });
+
+        const items: ReconcileItem[] = [];
+        for (const subscription of subset) {
+            try {
+                const remote = await creem.sdk.subscriptions.get(subscription.id);
+                const remoteProduct = typeof remote.product === "string" ? remote.product : remote.product.id;
+                const remoteEnd = remote.currentPeriodEndDate ? remote.currentPeriodEndDate.getTime() : null;
+                const localEnd = subscription.currentPeriodEnd ? Date.parse(subscription.currentPeriodEnd) : null;
+
+                const drift: ReconcileItem["drift"] = [];
+                if (remote.status !== subscription.status) drift.push("status");
+                if (remoteProduct !== subscription.productId) drift.push("productId");
+                if (
+                    remoteEnd !== localEnd
+                    && (remoteEnd === null || localEnd === null || Math.abs(remoteEnd - localEnd) > 1000)
+                ) {
+                    drift.push("currentPeriodEnd");
+                }
+
+                items.push({
+                    subscriptionId: subscription.id,
+                    localStatus: subscription.status,
+                    remoteStatus: String(remote.status),
+                    drift,
+                    errorCode: null,
+                });
+            } catch {
+                // The provider's error text is not shown: a code is enough to act on.
+                items.push({
+                    subscriptionId: subscription.id,
+                    localStatus: subscription.status,
+                    remoteStatus: null,
+                    drift: [],
+                    errorCode: "PROVIDER_ERROR",
+                });
+            }
+        }
+
+        return { checked: subset.length, truncated: local.length > subset.length, items };
+    },
+});
+
+/**
+ * A Creem customer-portal link for the organization, to hand to its owner (who
+ * manages or cancels the subscription there). The console itself changes
+ * nothing at the provider.
+ */
+export const customerPortalLink = action({
+    args: { organizationId: v.id("organizations"), reason: v.string() },
+    handler: async (ctx, args): Promise<{ url: string }> => {
+        const { reason } = await ctx.runQuery(internal.admin.billingActionContext, args);
+        requireCreemConfiguration();
+
+        const customer = await ctx.runQuery(components.creem.lib.getCustomerByEntityId, {
+            entityId: args.organizationId,
+        });
+        if (!customer) throw forbidden("BILLING_CUSTOMER_NOT_FOUND");
+
+        await ctx.runMutation(internal.admin.recordBillingAction, {
+            organizationId: args.organizationId,
+            action: "admin.billing_portal_link_created",
+            reason,
+        });
+
+        return await creem.customers.portalUrl(ctx, { entityId: args.organizationId });
     },
 });
 

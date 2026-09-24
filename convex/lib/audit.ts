@@ -113,6 +113,10 @@ const AUDIT_ACTION_CATEGORY = {
     "admin.super_admin_bootstrapped": "admin",
     "admin.role_changed": "admin",
     "admin.limits_updated": "admin",
+    // Billing wrappers (Task 15 fix round 1): non-destructive, audited before the
+    // provider call.
+    "admin.billing_reconciled": "admin",
+    "admin.billing_portal_link_created": "admin",
     // Email (Task 13). I due nomi sono quelli del legacy (`server/utils/email.ts`
     // auditava ogni invio e ogni fallimento con `email.sent`/`email.failed`), quindi
     // i record scritti da Convex e quelli storici restano greppabili insieme.

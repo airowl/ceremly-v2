@@ -33,6 +33,7 @@ import type * as guests from "../guests.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
 import type * as jobs from "../jobs.js";
+import type * as lib_adminGuards from "../lib/adminGuards.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_authorization from "../lib/authorization.js";
 import type * as lib_bridgeHmac from "../lib/bridgeHmac.js";
@@ -100,6 +101,7 @@ declare const fullApi: ApiFromModules<{
   health: typeof health;
   http: typeof http;
   jobs: typeof jobs;
+  "lib/adminGuards": typeof lib_adminGuards;
   "lib/audit": typeof lib_audit;
   "lib/authorization": typeof lib_authorization;
   "lib/bridgeHmac": typeof lib_bridgeHmac;

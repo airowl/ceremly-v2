@@ -1071,7 +1071,7 @@ describe("site settings", () => {
         });
 
         for (const mode of SITE_MODES) {
-            const result = await s.mutation(api.siteSettings.set, { mode });
+            const result = await s.mutation(api.admin.setSiteMode, { mode, reason: "test" });
             expect(result.mode).toBe(mode);
             expect((await t.query(api.siteSettings.getPublic, {})).mode).toBe(mode);
         }
@@ -1088,17 +1088,22 @@ describe("site settings", () => {
     it("requires a superAdmin and audits every change", async () => {
         const { t, s, appUserId } = await bootstrap();
 
-        await expectCode(s.mutation(api.siteSettings.set, { mode: "maintenance" }), "SUPER_ADMIN_REQUIRED");
+        // Task 15 fix round 1: the public door is `api.admin.setSiteMode` (reason
+        // required); `siteSettings.set/clear` are the deployment CLI's.
+        await expectCode(
+            s.mutation(api.admin.setSiteMode, { mode: "maintenance", reason: "x" }),
+            "SUPER_ADMIN_REQUIRED",
+        );
 
         await t.run(async (ctx) => {
             await ctx.db.patch(appUserId, { globalRole: "superAdmin" });
         });
 
-        const result = await s.mutation(api.siteSettings.set, { mode: "maintenance-readonly" });
+        const result = await s.mutation(api.admin.setSiteMode, { mode: "maintenance-readonly", reason: "migration" });
         expect(result).toEqual({ mode: "maintenance-readonly", previous: "active" });
         expect((await t.query(api.siteSettings.getPublic, {})).mode).toBe("maintenance-readonly");
 
-        const cleared = await s.mutation(api.siteSettings.clear, {});
+        const cleared = await s.mutation(api.admin.setSiteMode, { mode: null, reason: "done" });
         expect(cleared).toMatchObject({ mode: "active", previous: "maintenance-readonly" });
         expect(await rows(t, "siteSettings")).toHaveLength(0);
 
@@ -1106,6 +1111,25 @@ describe("site settings", () => {
             (row) => row.action === "admin.site_mode_changed",
         );
         expect(siteAudits).toHaveLength(2);
-        expect(siteAudits[0]!.details).toMatchObject({ from: "active", to: "maintenance-readonly" });
+        expect(siteAudits[0]!.details).toMatchObject({ from: "active", to: "maintenance-readonly", reason: "migration" });
+    });
+
+    it("the CLI break-glass (internal set/clear) requires a reason and audits without an actor", async () => {
+        const { t } = await bootstrap();
+
+        await expectCode(t.mutation(internal.siteSettings.set, { mode: "maintenance", reason: " " }), "REASON_REQUIRED");
+        await t.mutation(internal.siteSettings.set, { mode: "maintenance", reason: "outage" });
+        expect((await t.query(api.siteSettings.getPublic, {})).mode).toBe("maintenance");
+        await t.mutation(internal.siteSettings.clear, { reason: "recovered" });
+        expect((await t.query(api.siteSettings.getPublic, {})).mode).toBe("active");
+
+        const siteAudits = (await rows(t, "auditLogs")).filter(
+            (row) => row.action === "admin.site_mode_changed",
+        );
+        expect(siteAudits.map((row) => row.details)).toEqual([
+            expect.objectContaining({ reason: "outage", source: "deployment_cli", to: "maintenance" }),
+            expect.objectContaining({ reason: "recovered", source: "deployment_cli", cleared: true }),
+        ]);
+        expect(siteAudits.every((row) => row.actorAppUserId === undefined)).toBe(true);
     });
 });

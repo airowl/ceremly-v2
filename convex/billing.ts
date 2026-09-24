@@ -252,7 +252,7 @@ export function resolveCreemServer(
  * so a bad value fails the billing call with a named code instead of taking the
  * whole deployment's function loading down with it.
  */
-function requireCreemConfiguration(): void {
+export function requireCreemConfiguration(): void {
     if (!process.env.CREEM_API_KEY) {
         throw forbidden("CREEM_API_KEY_NOT_CONFIGURED");
     }

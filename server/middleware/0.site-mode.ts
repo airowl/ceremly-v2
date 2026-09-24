@@ -19,8 +19,11 @@
  * MAINTENANCE-READONLY:
  *   - API: solo le scritture 503 (tranne /api/auth/**, che serve a poter leggere)
  *   - Pagine: tutte raggiungibili, /maintenance esclusa
+ * BREAK-GLASS (ogni modalità non-active, Task 15): /admin/**, /login?redirect=/admin…
+ *   e le API di sessione di Better Auth passano (vedi `isAdminBreakGlass`).
  */
 import {
+    isAdminBreakGlass,
     isMaintenancePage,
     isWaitingListBlockedPage,
     isWriteMethod,
@@ -68,6 +71,12 @@ export default defineEventHandler(async (event) => {
         if (isMaintenancePage(path)) return sendRedirect(event, "/", 302);
         return;
     }
+
+    // Break-glass della console admin (Task 15): la shell `/admin`, il login diretto
+    // alla console e le API di sessione restano raggiungibili in ogni modalità,
+    // altrimenti la console non potrebbe annullare la modalità che ha impostato.
+    // Il gate vero è Convex (`requireSuperAdmin`), non questa pagina.
+    if (isAdminBreakGlass(path)) return;
 
     const isApi = path.startsWith("/api/");
 
