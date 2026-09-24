@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, provide, h, resolveComponent  } from 'vue'
+import { ref, computed, h, resolveComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter, useAsyncData } from 'nuxt/app'
+import { useRouter } from 'nuxt/app'
 import type { TableColumn } from '@nuxt/ui'
 import { format } from 'date-fns'
 import { it, enUS } from 'date-fns/locale'
@@ -20,13 +20,8 @@ const UButton = resolveComponent('UButton')
 
 const search = ref('')
 
-await useAsyncData('organizations-list', async () => {
-    if (import.meta.server) return []
-    await orgStore.loadOrganizations()
-    return orgStore.organizations
-}, { server: false })
-
-provide('refreshOrgs', () => orgStore.loadOrganizations())
+// The list is a live Convex query (Task 14, part b): no fetch on mount, no
+// `refreshOrgs` for the create modal — a new organization appears by itself.
 
 const filteredOrgs = computed(() => {
     const all = orgStore.organizations

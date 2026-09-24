@@ -208,6 +208,10 @@ cancellare. Il legacy si comportava allo stesso modo.
   quando il contratto dell'URL sarà deciso l'email è una riga di codice. Va scritto a
   chiare lettere che **fino ad allora un invito creato dal backend Convex è silenzioso**:
   è una divergenza reale fra i due backend, non un dettaglio interno.
+  **Aggiornamento 2026-09-24 (Task 14, part b):** la consegna è chiusa — job
+  `send-org-invite-email`, URL `{SITE_URL}/invite/{token}`, token derivato (HMAC del
+  segreto Better Auth sull'id). Resta aperto solo lo sweep delle scadute. Vedi
+  `docs/migration/frontend-convex.md` §4ter.
 - **`auditLogs.ipAddress`/`userAgent`** restano copiati dal legacy e non popolati dalle
   mutation Convex (una mutation non vede l'IP del chiamante) — invariato dal Task 10.
 - **`G04` e `G10` restano `NOT_RUN`.** La regola del checkpoint dello Step 5 del Task 9

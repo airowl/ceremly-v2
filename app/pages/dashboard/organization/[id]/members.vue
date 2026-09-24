@@ -5,14 +5,12 @@ import { computed, ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'nuxt/app'
 import { useToast } from '@nuxt/ui/composables'
-import { useUserStore } from '~/stores/userStore'
 import { useOrganizationStore, type OrganizationMember, type OrganizationInvitation, type OrgRole } from '~/stores/organizationStore'
 import { useOrganization } from '~/composables/useOrganization'
 
 const { t } = useI18n()
 const toast = useToast()
 const route = useRoute()
-const userStore = useUserStore()
 const orgStore = useOrganizationStore()
 const { canManageMembers } = useOrganization()
 
@@ -20,7 +18,6 @@ const { canManageMembers } = useOrganization()
 definePageMeta({ title: 'Members', layout: 'dashboard' })
 
 const orgId = computed(() => route.params.id as string)
-const currentUserId = computed(() => userStore.user?.id)
 
 const loadError = ref<string | null>(null)
 
@@ -44,11 +41,9 @@ type InviteSchema = z.output<typeof inviteSchema>
 const inviteFormData = reactive<Partial<InviteSchema>>({ email: undefined })
 
 onMounted(async () => {
-    if (orgStore.currentOrganization?.id !== orgId.value) {
-        loadError.value = null
-        const result = await orgStore.setActiveOrganization(orgId.value)
-        if (!result.success) loadError.value = result.error ?? 'Error loading organization'
-    }
+    loadError.value = null
+    const result = await orgStore.ensureActiveOrganization(orgId.value)
+    if (!result.success) loadError.value = result.error
 })
 
 function getRoleLabel(m: OrganizationMember): string {
@@ -63,7 +58,7 @@ function getRoleBadgeColor(m: OrganizationMember): 'success' | 'info' | 'neutral
 
 function canEditMember(m: OrganizationMember): boolean {
     if (m.role === 'owner') return false
-    if (m.userId === currentUserId.value) return false
+    if (m.isSelf) return false
     return canManageMembers.value
 }
 
@@ -93,7 +88,8 @@ async function saveRole() {
     if (!selectedMember.value) return
     isUpdatingRole.value = true
     try {
-        const result = await orgStore.updateMemberRole(selectedMember.value.id, selectedRole.value)
+        // Member writes key on the app user id, not the membership row.
+        const result = await orgStore.updateMemberRole(selectedMember.value.userId, selectedRole.value)
         if (result.success) {
             toast.add({ title: t('members.roleUpdated'), color: 'success' })
             showRoleModal.value = false
@@ -108,7 +104,7 @@ async function saveRole() {
 async function removeMember(m: OrganizationMember) {
     isDeletingMember.value = m.id
     try {
-        const result = await orgStore.removeMember(m.id)
+        const result = await orgStore.removeMember(m.userId)
         if (result.success) toast.add({ title: t('members.memberRemoved'), color: 'success' })
         else toast.add({ title: t('common.error'), description: result.error || t('members.memberRemoveError'), color: 'error' })
     } finally {
@@ -182,7 +178,7 @@ async function cancelInvitation(inv: OrganizationInvitation) {
                                                     <p class="font-medium text-highlighted">{{ m.user.name }}</p>
                                                     <p class="text-sm text-muted">{{ m.user.email }}</p>
                                                 </div>
-                                                <UBadge v-if="m.userId === currentUserId" :label="t('members.you')" variant="subtle" size="xs" />
+                                                <UBadge v-if="m.isSelf" :label="t('members.you')" variant="subtle" size="xs" />
                                             </div>
                                         </td>
                                         <td class="py-4">

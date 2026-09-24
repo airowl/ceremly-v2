@@ -7,12 +7,10 @@ const { t } = useI18n()
 const orgStore = useOrganizationStore()
 const toast = useToast()
 
-const refreshOrgs = inject<() => Promise<void>>('refreshOrgs')
-
 const schema = computed(() => z.object({
     name: z.string().min(2, t('organization.createModal.validation.tooShort')),
     slug: z.string().min(2, t('organization.createModal.validation.tooShort'))
-        .regex(/^[a-z0-9-]+$/, t('organization.createModal.validation.slugFormat'))
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('organization.createModal.validation.slugFormat'))
 }))
 const open = ref(false)
 
@@ -29,7 +27,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     try {
         const result = await orgStore.createOrganization({ name: event.data.name, slug: event.data.slug })
         if (!result.success) throw new Error(result.error || t('organization.createModal.failedToCreate'))
-        await refreshOrgs?.()
         toast.add({
             title: t('organization.createModal.success'),
             description: t('organization.createModal.successDescription', { name: event.data.name }),

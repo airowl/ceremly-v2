@@ -3753,7 +3753,8 @@
       "loading": "Redirecting to payment…",
       "later": "Maybe later",
       "errorTitle": "Something went wrong",
-      "errorDesc": "We could not start the payment. Please try again in a few seconds."
+      "errorDesc": "We could not start the payment. Please try again in a few seconds.",
+      "ownerOnly": "Only the organization owner can start a payment."
     }
   }
 }

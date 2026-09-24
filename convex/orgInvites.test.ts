@@ -27,7 +27,6 @@ import { hashInvitationToken } from "./organizations";
  */
 
 type Test = Awaited<ReturnType<typeof initConvexTestWithAuthComponent>>;
-type Session = ReturnType<Test["withIdentity"]>;
 
 const RESEND_URL = "https://api.resend.com/emails";
 const SITE_URL = "https://app.test";

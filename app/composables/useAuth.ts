@@ -92,8 +92,6 @@ export function useAuth() {
         },
         fetchSession,
         client,
-        creem: client.creem,
         twoFactor: client.twoFactor,
-        organization: client.organization,
     };
 }

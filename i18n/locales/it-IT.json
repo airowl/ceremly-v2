@@ -3753,7 +3753,8 @@
       "loading": "Reindirizzo al pagamento…",
       "later": "Forse dopo",
       "errorTitle": "Qualcosa non ha funzionato",
-      "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo."
+      "errorDesc": "Non siamo riusciti ad avviare il pagamento. Riprova tra qualche secondo.",
+      "ownerOnly": "Solo il proprietario dell'organizzazione può avviare un pagamento."
     }
   }
 }

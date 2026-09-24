@@ -15,10 +15,12 @@ definePageMeta({ title: 'Organization', layout: 'dashboard' })
 const orgId = computed(() => route.params.id as string)
 const loadError = ref<string | null>(null)
 
+// Switch only when the route names another organization: every switch is an
+// audited write, and the page data (name, members) is live once it is active.
 async function activateOrg(id: string) {
     loadError.value = null
-    const result = await orgStore.setActiveOrganization(id)
-    if (!result.success) loadError.value = result.error ?? 'Error loading organization'
+    const result = await orgStore.ensureActiveOrganization(id)
+    if (!result.success) loadError.value = result.error
 }
 
 onMounted(async () => {

@@ -23,7 +23,6 @@ definePageMeta({
 
 const { t } = useI18n();
 const route = useRoute();
-const router = useRouter();
 const eventId = computed(() => String(route.params.id));
 
 // ─── Breadcrumbs + contesto evento sidebar (shape del layout ceremly) ──
@@ -504,25 +503,15 @@ function goToGuests(to: string) {
 
 // ─── Lifecycle ─────────────────────────────────────────────────────────
 
-/**
- * Se l'utente torna dal checkout Creem con ?unlocked=true, riconcilia l'unlock
- * una volta sola (il webhook è fire-and-forget e potrebbe aver perso il lavoro).
- * Resiliente: un errore di rete non blocca il caricamento della pagina.
+/*
+ * No reconcile call on return from the Creem checkout (Task 14, part b). The
+ * legacy needed `POST /api/events/:id/reconcile-unlock` because its webhook
+ * handler always answered 200 and swallowed errors, so a failed unlock was never
+ * retried. The Convex webhook is exactly-once and answers non-2xx on failure, so
+ * Creem retries it (G07), and `eventData` is a live query: the tier flips by
+ * itself when the webhook lands.
  */
-async function maybeReconcileUnlock() {
-    if (route.query.unlocked !== "true") return;
-    // Rimuovi il parametro subito (evita ri-esecuzione su refresh manuale)
-    void router.replace({ query: { ...route.query, unlocked: undefined } });
-    try {
-        // Il tier aggiornato arriva da solo: `eventData` è una query viva.
-        await $fetch(`/api/events/${eventId.value}/reconcile-unlock`, { method: "POST" });
-    } catch {
-        // Silenzioso: la pagina si carica normalmente, il tier sarà aggiornato al prossimo load
-    }
-}
-
 onMounted(() => {
-    void maybeReconcileUnlock();
     tickTimer = setInterval(() => {
         nowTick.value = Date.now();
     }, 1000);

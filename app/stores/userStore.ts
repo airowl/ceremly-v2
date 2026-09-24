@@ -15,16 +15,13 @@ export const useUserStore = defineStore("user", () => {
         return loggedIn.value;
     });
 
-    const getSubscription = computed(() => {
-        if (import.meta.server) return null;
-        const { subscription } = useSubscription();
-        return subscription.value;
-    });
-
     // Aliases
     const user = computed(() => getUser.value);
     const isAuthenticated = computed(() => getIsAuthenticated.value);
-    const subscription = computed(() => getSubscription.value);
+
+    // No `subscription` here any more (Task 14, part b): the plan belongs to the
+    // active organization and is a live Convex query in `useSubscription()`,
+    // which needs a component setup context — it cannot run inside a computed.
 
     // ─── Auth Actions ────────────────────────────────────────────────
 
@@ -92,22 +89,13 @@ export const useUserStore = defineStore("user", () => {
         await signOut({ redirectTo: '/login' });
     }
 
-    async function fetchSubscription() {
-        if (import.meta.server) return null;
-        const { refreshSubscription, subscription } = useSubscription();
-        await refreshSubscription();
-        return subscription.value;
-    }
-
     return {
         // State (computed from useAuth)
         user,
         isAuthenticated,
-        subscription,
         // Getters
         getUser,
         getIsAuthenticated,
-        getSubscription,
         // Auth actions
         initializeAuth,
         login,
@@ -115,6 +103,5 @@ export const useUserStore = defineStore("user", () => {
         signup,
         logout,
         forceLogout,
-        fetchSubscription,
     };
 });

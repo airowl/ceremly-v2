@@ -1,7 +1,9 @@
 <script setup lang="ts">
 
 const { t, locale } = useI18n();
-const { subscription, isAtelier, hasActiveSubscription, openCustomerPortal, refreshSubscription } = useSubscription();
+// Task 14 (part b): the plan is a live Convex query of the active organization;
+// `refreshSubscription` is kept by the composable as a no-op for the sync button.
+const { subscription, isAtelier, hasActiveSubscription, canManageBilling, openCustomerPortal, refreshSubscription } = useSubscription();
 // Task 14: lista eventi da Convex (`events` è una query viva).
 const { events, isLoading: eventsLoading, retry: retryEvents } = useEvents();
 const { fetchSession } = useAuth();
@@ -17,9 +19,9 @@ const currentTierDesc = computed(() => isAtelier.value ? t("subscription.tier.at
 
 // Data rinnovo (solo Atelier)
 const renewalDate = computed(() => {
-    const sub = subscription.value as { periodEnd?: string | Date | null } | null;
-    if (!sub?.periodEnd) return null;
-    return new Date(sub.periodEnd).toLocaleDateString(locale.value === "it" ? "it-IT" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+    const periodEnd = subscription.value?.currentPeriodEnd;
+    if (!periodEnd) return null;
+    return new Date(periodEnd).toLocaleDateString(locale.value === "it" ? "it-IT" : "en-US", { day: "numeric", month: "long", year: "numeric" });
 });
 
 function formatUnlockedDate(iso: string | null): string {
@@ -49,7 +51,6 @@ async function handleSync() {
     finally { isSyncing.value = false; }
 }
 
-onMounted(async () => { await refreshSubscription(); });
 </script>
 
 <template>
@@ -86,7 +87,7 @@ onMounted(async () => { await refreshSubscription(); });
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <UButton v-if="isAtelier && hasActiveSubscription" :loading="isPortalLoading" color="neutral" variant="soft" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">
+                            <UButton v-if="isAtelier && hasActiveSubscription && canManageBilling" :loading="isPortalLoading" color="neutral" variant="soft" size="sm" leading-icon="i-lucide-external-link" @click="handleOpenPortal">
                                 {{ $t('subscription.manageAtelier') }}
                             </UButton>
                             <UButton v-else :to="localePath('/pricing')" color="primary" size="sm" leading-icon="i-lucide-sparkles">

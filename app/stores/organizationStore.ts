@@ -1,232 +1,185 @@
-import { ref, computed } from 'vue';
+import { computed, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { useAuth } from '~/composables/useAuth';
+import { useConvexMutation, useConvexQuery } from 'convex-vue';
+import { api } from '~~/convex/_generated/api';
+import type { Id } from '~~/convex/_generated/dataModel';
+import { convexErrorMessage } from '~/composables/useConvexError';
+import {
+    toOrganizationInvitation,
+    toOrganizationListItem,
+    toOrganizationMember,
+    toOrganizationSummary,
+    type OrganizationInvitation,
+    type OrganizationListItem,
+    type OrganizationMember,
+    type OrganizationSummary,
+    type OrgRole,
+} from '~/lib/organizations';
 
-// ─── Types (allineati al payload del plugin Better Auth org) ───────────
-export type OrgRole = 'owner' | 'admin' | 'member';
+export type {
+    OrganizationInvitation,
+    OrganizationListItem,
+    OrganizationMember,
+    OrganizationSummary,
+    OrgRole,
+};
 
-export interface OrganizationListItem {
-    id: string;
-    name: string;
-    slug: string;
-    logo: string | null;
-    createdAt: string;
-}
+type ActionResult = { success: true } | { success: false; error: string };
 
-export interface OrganizationMember {
-    id: string;            // member row id
-    userId: string;
-    role: OrgRole;
-    createdAt: string;
-    user: {
-        id: string;
-        name: string;
-        email: string;
-        image: string | null;
-    };
-}
-
-export interface OrganizationInvitation {
-    id: string;
-    email: string;
-    role: OrgRole;
-    status: 'pending' | 'accepted' | 'rejected' | 'canceled';
-    expiresAt: string;
-    inviterId: string;
-}
-
-export interface OrganizationDetail extends OrganizationListItem {
-    members: OrganizationMember[];
-    invitations: OrganizationInvitation[];
-}
-
+/**
+ * Organization store — Task 14, part b.
+ *
+ * Before: the Better Auth **organization client plugin** (`client.organization.*`),
+ * which the plan forbids (Better Auth is the identity provider only) and which
+ * the `/api/**` gate could not see. Now: `api.organizations.*`.
+ *
+ * What changed for callers, on purpose:
+ * 1. **Reads are live queries.** Organizations, the active organization, its
+ *    members and pending invitations update by themselves — after a write here,
+ *    after an invitation is accepted in another browser, after a role change by
+ *    another admin. `loadOrganizations`/`loadCurrentOrganization` are gone: there
+ *    is nothing to reload.
+ * 2. **The role is the server's.** It comes from `getActiveOrganization`, which
+ *    re-checks the membership, instead of being looked up in the member list by
+ *    comparing user ids on the client.
+ * 3. **Member writes take the `appUsers` id** (`member.userId`), which is what
+ *    the Convex RBAC functions key on. The organization for every write is the
+ *    caller's active organization, resolved server-side: no write sends an
+ *    `organizationId` except `setActive`, whose target is verified against the
+ *    caller's membership.
+ *
+ * Actions keep the `{ success, error }` shape the pages already handle.
+ */
 export const useOrganizationStore = defineStore('organization', () => {
-    // ─── State ─────────────────────────────────────────────────────────
-    const organizations = ref<OrganizationListItem[]>([]);
-    const currentOrganization = ref<OrganizationDetail | null>(null);
-    const members = ref<OrganizationMember[]>([]);
-    const pendingInvitations = ref<OrganizationInvitation[]>([]);
-    const isLoading = ref(false);
-    const error = ref<string | null>(null);
+    // `server: false`: the dashboard is CSR-only, and a render server has only the
+    // HTTP client (no session to read an organization with).
+    const organizationsQuery = useConvexQuery(api.organizations.listMyOrganizations, {}, { server: false });
+    const activeQuery = useConvexQuery(api.organizations.getActiveOrganization, {}, { server: false });
+    const membersQuery = useConvexQuery(api.organizations.listMembers, {}, { server: false });
+    const invitationsQuery = useConvexQuery(api.organizations.listPendingInvitations, {}, { server: false });
 
-    // ─── Getters ───────────────────────────────────────────────────────
-    // Current user's role in the active org (consumed by gating UI)
-    const role = computed<OrgRole | null>(() => {
-        if (import.meta.server) return null;
-        const { user } = useAuth();
-        const uid = user.value?.id;
-        if (!uid) return null;
-        const m = members.value.find(x => x.userId === uid);
-        return (m?.role as OrgRole) ?? null;
+    const setActiveMutation = useConvexMutation(api.organizations.setActive);
+    const createMutation = useConvexMutation(api.organizations.createOrganization);
+    const deleteMutation = useConvexMutation(api.organizations.deleteOrganization);
+    const inviteMutation = useConvexMutation(api.organizations.inviteMember);
+    const updateRoleMutation = useConvexMutation(api.organizations.updateMemberRole);
+    const removeMemberMutation = useConvexMutation(api.organizations.removeMember);
+    const cancelInvitationMutation = useConvexMutation(api.organizations.cancelInvitation);
+
+    // ─── State (derived from live queries) ─────────────────────────────
+    const organizations = computed<OrganizationListItem[]>(
+        () => (organizationsQuery.data.value ?? []).map(toOrganizationListItem),
+    );
+    const currentOrganization = computed<OrganizationSummary | null>(
+        () => toOrganizationSummary(activeQuery.data.value),
+    );
+    // Members and invitations belong to the active organization: with none active
+    // the queries refuse, and the lists are simply empty.
+    const members = computed<OrganizationMember[]>(() =>
+        currentOrganization.value ? (membersQuery.data.value ?? []).map(toOrganizationMember) : [],
+    );
+    const pendingInvitations = computed<OrganizationInvitation[]>(() =>
+        currentOrganization.value ? (invitationsQuery.data.value ?? []).map(toOrganizationInvitation) : [],
+    );
+
+    const isLoading = computed(() => organizationsQuery.isPending.value || activeQuery.isPending.value);
+
+    const error = computed<string | null>(() => {
+        const failed = organizationsQuery.error.value ?? activeQuery.error.value
+            ?? (currentOrganization.value ? membersQuery.error.value : null);
+        return failed ? convexErrorMessage(failed) : null;
     });
 
-    // ─── Actions: organizations ────────────────────────────────────────
-    async function loadOrganizations() {
-        if (import.meta.server) return;
+    // ─── Getters ───────────────────────────────────────────────────────
+    const role = computed<OrgRole | null>(() => currentOrganization.value?.role ?? null);
+
+    // ─── Actions ───────────────────────────────────────────────────────
+    async function run(action: () => Promise<unknown>, fallback: string): Promise<ActionResult> {
+        if (import.meta.server) return { success: false, error: 'Not available on server' };
         try {
-            isLoading.value = true;
-            error.value = null;
-            const { client } = useAuth();
-            const { data } = await client.organization.list();
-            organizations.value = (data ?? []) as unknown as OrganizationListItem[];
-        } catch (err: any) {
-            error.value = err.message || err.data?.message || 'Error loading organizations';
-            console.error('Error loading organizations:', err);
-        } finally {
-            isLoading.value = false;
+            await action();
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: convexErrorMessage(err, fallback) };
         }
     }
 
-    // Load active org (with members + invitations). Falls back to first org + setActive.
-    async function loadCurrentOrganization() {
-        if (import.meta.server) return;
-        try {
-            isLoading.value = true;
-            error.value = null;
-            const { client } = useAuth();
-
-            let { data } = await client.organization.getFullOrganization();
-
-            // Fallback: no active org → pick first from list and set it active.
-            if (!data) {
-                if (organizations.value.length === 0) await loadOrganizations();
-                const first = organizations.value[0];
-                if (first) {
-                    await client.organization.setActive({ organizationId: first.id });
-                    ({ data } = await client.organization.getFullOrganization());
+    /** Resolves once the active-organization query has answered (with data, `null` or an error). */
+    function activeResolved(): Promise<void> {
+        if (!activeQuery.isPending.value) return Promise.resolve();
+        return new Promise((resolve) => {
+            const stop = watch(activeQuery.isPending, (pending) => {
+                if (!pending) {
+                    stop();
+                    resolve();
                 }
-            }
-
-            if (data) {
-                currentOrganization.value = data as unknown as OrganizationDetail;
-                members.value = (data.members ?? []) as unknown as OrganizationMember[];
-                pendingInvitations.value = ((data.invitations ?? []) as unknown as OrganizationInvitation[])
-                    .filter(i => i.status === 'pending');
-            } else {
-                currentOrganization.value = null;
-                members.value = [];
-                pendingInvitations.value = [];
-            }
-        } catch (err: any) {
-            error.value = err.message || err.data?.message || 'Error loading organization';
-            console.error('Error loading organization:', err);
-        } finally {
-            isLoading.value = false;
-        }
-    }
-
-    async function setActiveOrganization(organizationId: string) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { error: apiErr } = await client.organization.setActive({ organizationId });
-            if (apiErr) throw new Error(apiErr.message || 'Error switching organization');
-            await loadCurrentOrganization();
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error switching organization' };
-        }
-    }
-
-    async function createOrganization(input: { name: string; slug: string }) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            isLoading.value = true;
-            error.value = null;
-            const { client } = useAuth();
-            const { data, error: apiErr } = await client.organization.create({
-                name: input.name,
-                slug: input.slug,
             });
-            if (apiErr) throw new Error(apiErr.message || 'Error creating organization');
-            await loadOrganizations();
-            return { success: true, organization: data };
-        } catch (err: any) {
-            error.value = err.message || err.data?.message || 'Error creating organization';
-            return { success: false, error: error.value };
-        } finally {
-            isLoading.value = false;
-        }
+        });
     }
 
-    async function deleteOrganization(organizationId: string) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { error: apiErr } = await client.organization.delete({ organizationId });
-            if (apiErr) throw new Error(apiErr.message || 'Error deleting organization');
-            organizations.value = organizations.value.filter(o => o.id !== organizationId);
-            if (currentOrganization.value?.id === organizationId) {
-                currentOrganization.value = null;
-                members.value = [];
-                pendingInvitations.value = [];
+    function setActiveOrganization(organizationId: string): Promise<ActionResult> {
+        return run(
+            () => setActiveMutation.mutate({ organizationId: organizationId as Id<'organizations'> }),
+            'Error switching organization',
+        );
+    }
+
+    /**
+     * Makes `organizationId` the active organization only if it is not already.
+     *
+     * The detail pages open on a route id: switching on every mount would write an
+     * `organization.activated` audit row per page view.
+     */
+    async function ensureActiveOrganization(organizationId: string): Promise<ActionResult> {
+        await activeResolved();
+        if (currentOrganization.value?.id === organizationId) return { success: true };
+        return await setActiveOrganization(organizationId);
+    }
+
+    function createOrganization(input: { name: string; slug: string }): Promise<ActionResult> {
+        // Convex also makes the new organization the active one.
+        return run(() => createMutation.mutate({ name: input.name, slug: input.slug }), 'Error creating organization');
+    }
+
+    /**
+     * Deletes an organization. The server deletes the **active** one (owner only),
+     * so a different target is activated first; afterwards the caller lands on
+     * another organization they belong to, if any (legacy fallback: first in list).
+     */
+    async function deleteOrganization(organizationId: string): Promise<ActionResult> {
+        const result = await run(async () => {
+            if (currentOrganization.value?.id !== organizationId) {
+                await setActiveMutation.mutate({ organizationId: organizationId as Id<'organizations'> });
             }
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error deleting organization' };
-        }
+            await deleteMutation.mutate({});
+            const next = organizations.value.find(o => o.id !== organizationId);
+            if (next) await setActiveMutation.mutate({ organizationId: next.id as Id<'organizations'> });
+        }, 'Error deleting organization');
+        return result;
     }
 
-    // ─── Actions: members & invitations (plugin team API) ──────────────
-    async function inviteMember(email: string, role: OrgRole = 'member') {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { data, error: apiErr } = await client.organization.inviteMember({ email, role });
-            if (apiErr) throw new Error(apiErr.message || 'Error inviting member');
-            await loadCurrentOrganization();
-            return { success: true, invitation: data };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error inviting member' };
-        }
+    function inviteMember(email: string, inviteRole: OrgRole = 'member'): Promise<ActionResult> {
+        // The returned token is not used here: the invitation email carries it
+        // (`send-org-invite-email` job), and the inviter must not need to.
+        return run(() => inviteMutation.mutate({ email, role: inviteRole }), 'Error inviting member');
     }
 
-    async function updateMemberRole(memberId: string, role: OrgRole) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { error: apiErr } = await client.organization.updateMemberRole({ memberId, role });
-            if (apiErr) throw new Error(apiErr.message || 'Error updating role');
-            await loadCurrentOrganization();
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error updating role' };
-        }
+    function updateMemberRole(userId: string, newRole: OrgRole): Promise<ActionResult> {
+        return run(
+            () => updateRoleMutation.mutate({ userId: userId as Id<'appUsers'>, role: newRole }),
+            'Error updating role',
+        );
     }
 
-    async function removeMember(memberIdOrEmail: string) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { error: apiErr } = await client.organization.removeMember({ memberIdOrEmail });
-            if (apiErr) throw new Error(apiErr.message || 'Error removing member');
-            await loadCurrentOrganization();
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error removing member' };
-        }
+    function removeMember(userId: string): Promise<ActionResult> {
+        return run(() => removeMemberMutation.mutate({ userId: userId as Id<'appUsers'> }), 'Error removing member');
     }
 
-    async function cancelInvitation(invitationId: string) {
-        if (import.meta.server) return { success: false, error: 'Not available on server' };
-        try {
-            const { client } = useAuth();
-            const { error: apiErr } = await client.organization.cancelInvitation({ invitationId });
-            if (apiErr) throw new Error(apiErr.message || 'Error cancelling invitation');
-            await loadCurrentOrganization();
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, error: err.message || err.data?.message || 'Error cancelling invitation' };
-        }
-    }
-
-    function $reset() {
-        organizations.value = [];
-        currentOrganization.value = null;
-        members.value = [];
-        pendingInvitations.value = [];
-        isLoading.value = false;
-        error.value = null;
+    function cancelInvitation(invitationId: string): Promise<ActionResult> {
+        return run(
+            () => cancelInvitationMutation.mutate({ invitationId: invitationId as Id<'invitations'> }),
+            'Error cancelling invitation',
+        );
     }
 
     return {
@@ -240,15 +193,13 @@ export const useOrganizationStore = defineStore('organization', () => {
         // Getters
         role,
         // Actions
-        loadOrganizations,
-        loadCurrentOrganization,
         setActiveOrganization,
+        ensureActiveOrganization,
         createOrganization,
         deleteOrganization,
         inviteMember,
         updateMemberRole,
         removeMember,
         cancelInvitation,
-        $reset,
     };
 });

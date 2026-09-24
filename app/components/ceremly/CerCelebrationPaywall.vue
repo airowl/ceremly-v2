@@ -4,6 +4,7 @@
 // e fa redirect — vedi useSubscription().unlockEvent.
 import CerIcon from "~/components/ceremly/CerIcon.vue";
 import { CELEBRATION_PRICE_CENTS } from "~~/shared/constants/pricing";
+import { convexErrorCode } from "~/composables/useConvexError";
 
 const props = defineProps<{
     /** Apertura controllata dal genitore (v-model:open). */
@@ -35,9 +36,13 @@ async function onUnlock() {
         // unlockEvent fa redirect al checkout Creem: in caso di successo la
         // pagina cambia e questo codice non prosegue.
         await unlockEvent(props.eventId);
-    } catch {
+    } catch (err) {
         loading.value = false;
-        toast.add({ title: t("ceremly.paywall.errorTitle"), description: t("ceremly.paywall.errorDesc"), color: "error" });
+        // Convex checkout is owner-only (G07): say so instead of "try again".
+        const description = convexErrorCode(err) === "INSUFFICIENT_ROLE"
+            ? t("ceremly.paywall.ownerOnly")
+            : t("ceremly.paywall.errorDesc");
+        toast.add({ title: t("ceremly.paywall.errorTitle"), description, color: "error" });
     }
 }
 </script>

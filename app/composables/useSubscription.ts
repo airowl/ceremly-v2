@@ -1,97 +1,91 @@
+import { computed, ref } from "vue";
+import { useConvexQuery } from "convex-vue";
+import { useConvexAction } from "~/composables/useConvexAction";
+import { api } from "~~/convex/_generated/api";
+import type { Id } from "~~/convex/_generated/dataModel";
+
 /**
- * Composable for managing subscriptions via Creem + Better Auth
+ * Plan and billing of the **active organization** — Task 14, part b.
+ *
+ * Before: the Creem Better Auth client plugin (`creem.hasAccessGranted()`,
+ * `creem.createPortal()`) plus `POST /api/events/:id/unlock`. The billing entity
+ * was whatever the plugin keyed on. Now: `api.billing.*`, where the entity is
+ * always the caller's active organization resolved server-side — no argument here
+ * names an organization, and no Creem secret or product id is needed in the
+ * browser (the tier → product mapping is server configuration).
+ *
+ * The exposed surface is unchanged (`currentTier`, `isAtelier`, `unlockEvent`,
+ * `openCustomerPortal`, `refreshSubscription`, ...) with one behavioural note:
+ * the plan is a **live query**, so it changes by itself when the Creem webhook
+ * lands. `refreshSubscription()` is kept as a resolved no-op for its callers;
+ * there is nothing to re-fetch.
+ *
+ * Every caller gets its own `useConvexQuery`, which is cheap: the Convex client
+ * shares one subscription per (query, args) across all of them.
  */
 export function useSubscription() {
-    const { creem } = useAuth();
-    const runtimeConfig = useRuntimeConfig();
+    const { data: plan, error: planError } = useConvexQuery(
+        api.billing.planForActiveOrganization,
+        {},
+        { server: false },
+    );
+    const createCheckout = useConvexAction(api.billing.checkoutsCreate);
+    const portalUrl = useConvexAction(api.billing.customersPortalUrl);
 
     const isUpdating = ref(false);
-    const subscription = useState<{ productId?: string } | null>("creem:subscription", () => null);
-    const hasAccess = useState<boolean>("creem:hasAccess", () => false);
 
-    /**
-     * Map product ID → tier (free | atelier)
-     */
-    function getTierFromProductId(productId: string | undefined | null): "free" | "atelier" {
-        if (!productId) return "free";
-        const pub = runtimeConfig.public;
-        if (productId === pub.creemProductIdAtelier) return "atelier";
-        return "free";
-    }
+    /** The Creem subscription row mirrored by the webhook, or `null` (legacy shape: `{ productId }`). */
+    const subscription = computed(() => plan.value?.subscription ?? null);
 
-    /**
-     * Has active subscription
-     */
-    const hasActiveSubscription = computed(() => hasAccess.value);
+    /** Atelier is the only recurring access; `celebration` is per event, not a plan. */
+    const hasAccess = computed<boolean>(() => plan.value?.plan === "atelier");
+    const hasActiveSubscription = hasAccess;
 
-    /**
-     * Current tier (free | atelier)
-     */
-    const currentTier = computed<"free" | "atelier">(() => {
-        if (!hasAccess.value) return "free";
-        return getTierFromProductId((subscription.value as { productId?: string } | null)?.productId);
-    });
-
-    /**
-     * True when user is on the Atelier plan
-     */
+    /** `free` while loading or on error: never grant a paid tier the server did not state. */
+    const currentTier = computed<"free" | "atelier">(() => plan.value?.plan ?? "free");
     const isAtelier = computed<boolean>(() => currentTier.value === "atelier");
 
-    /**
-     * Refresh subscription data from Creem
-     */
-    async function refreshSubscription() {
-        if (import.meta.server) return;
+    /** Owner only, answered by the server (checkout and portal refuse everyone else). */
+    const canManageBilling = computed<boolean>(() => plan.value?.canManageBilling ?? false);
 
-        try {
-            const { data: accessData } = await creem.hasAccessGranted();
-            hasAccess.value = !!accessData?.hasAccessGranted;
-
-            if (accessData && 'subscription' in accessData && accessData.subscription) {
-                subscription.value = accessData.subscription;
-            } else {
-                subscription.value = null;
-            }
-        } catch (error) {
-            console.warn("[useSubscription] Error refreshing:", error);
-            hasAccess.value = false;
-            subscription.value = null;
-        }
+    /** Kept for existing callers: the plan query is live, so this resolves immediately. */
+    async function refreshSubscription(): Promise<void> {
+        // Intentionally empty — see the composable's doc comment.
     }
 
     /**
-     * Unlock a single event via checkout.
-     * Calls POST /api/events/[id]/unlock → { url } then redirects to the checkout URL.
+     * Unlock a single event (Celebrazione) via a Creem checkout, then redirect.
+     *
+     * The server validates the event (same organization, still `free`, no Atelier)
+     * before Creem is called. Back from the checkout, the event page needs no
+     * reconcile call: `events.get` is live and the webhook is exactly-once with
+     * provider retries on failure (G07), so the tier flips by itself.
      */
     async function unlockEvent(eventId: string): Promise<void> {
         if (import.meta.server) throw new Error("unlockEvent is not available on server");
-        const { url } = await $fetch<{ url: string }>(`/api/events/${eventId}/unlock`, { method: "POST" });
-        window.location.href = url;
+        isUpdating.value = true;
+        try {
+            const { url } = await createCheckout({
+                tier: "celebration",
+                eventId: eventId as Id<"events">,
+                successUrl: `${window.location.origin}/dashboard/events/${eventId}`,
+            });
+            window.location.href = url;
+        } finally {
+            isUpdating.value = false;
+        }
     }
 
-    /**
-     * Open Creem customer portal for managing subscription (upgrade/downgrade/cancel)
-     */
-    async function openCustomerPortal() {
-        if (import.meta.server) {
-            throw new Error("openCustomerPortal is not available on server");
-        }
-
+    /** Open the Creem customer portal (upgrade/downgrade/cancel) of the active organization. */
+    async function openCustomerPortal(): Promise<{ url: string }> {
+        if (import.meta.server) throw new Error("openCustomerPortal is not available on server");
+        isUpdating.value = true;
         try {
-            const { data, error } = await creem.createPortal();
-
-            if (error) {
-                throw new Error(error.message || "Failed to open customer portal");
-            }
-
-            if (data && 'url' in data && data.url) {
-                window.location.href = data.url;
-            }
-
-            return data;
-        } catch (error) {
-            console.error("openCustomerPortal error:", error);
-            throw error;
+            const result = await portalUrl({});
+            window.location.href = result.url;
+            return result;
+        } finally {
+            isUpdating.value = false;
         }
     }
 
@@ -102,7 +96,9 @@ export function useSubscription() {
         hasAccess,
         currentTier,
         isAtelier,
+        canManageBilling,
         isUpdating,
+        planError,
 
         // Methods
         unlockEvent,

@@ -22,7 +22,7 @@ const { t, locale, setLocale } = useI18n();
 const route = useRoute();
 const userStore = useUserStore();
 const { user } = useAuth();
-const { hasActiveSubscription, isAtelier, refreshSubscription } = useSubscription();
+const { hasActiveSubscription, isAtelier } = useSubscription();
 
 // ─── Nav statica ─────────────────────────────────────────────────────
 // Nota: niente voce 'Home' — /dashboard È la lista eventi, una 'Home'
@@ -118,7 +118,6 @@ onMounted(async () => {
     if (!userStore.isAuthenticated) {
         await userStore.initializeAuth();
     }
-    await refreshSubscription();
 });
 </script>
 

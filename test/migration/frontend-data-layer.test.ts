@@ -16,6 +16,14 @@ import { toProjectItem, toProjectStatus } from "~/composables/useProjects";
 import { toGuestDetail, toGuestWithStatus } from "~/composables/useEventGuests";
 import { toPublicInvitePayload, toPublicRsvpResponse } from "~/lib/publicInvite";
 import { toEventReminderData } from "~/composables/useEventReminders";
+import {
+    isInvitationToken,
+    toInvitationPreview,
+    toOrganizationInvitation,
+    toOrganizationListItem,
+    toOrganizationMember,
+    toOrganizationSummary,
+} from "~/lib/organizations";
 
 /**
  * Task 14, Step 1 — il gate anti-CRUD Nuxt.
@@ -64,7 +72,6 @@ const ALLOWED_API_PATTERNS: readonly RegExp[] = [
  * per questo è elencata a parte e non ha uno step.
  */
 const PENDING: Record<string, string> = {
-    "app/composables/useSubscription.ts": "Step 4 (organizzazione e billing)",
     "app/stores/profileStore.ts": "Step 5 (profilo ed export)",
 };
 
@@ -130,6 +137,9 @@ const isAllowed = (path: string): boolean =>
 const MANUAL_CLIENT_ALLOWED: Record<string, string> = {
     "app/composables/useEvents.ts": "getEventOnce (pagine a form)",
     "app/composables/useEventGuests.ts": "sottoscrizione opzionale del dettaglio (onUpdate)",
+    // Task 14, part b: convex-vue has no action composable; billing is actions
+    // (Creem). The file may only call `client.action` — asserted below.
+    "app/composables/useConvexAction.ts": "azioni Convex (billing: checkout, portal)",
 };
 
 describe("frontend data layer: una strada sola per i dati di dominio", () => {
@@ -211,6 +221,121 @@ describe("frontend data layer: una strada sola per i dati di dominio", () => {
         expect(apiPathsIn("usePublicInvite.ts", source)).toEqual([
             "/api/public/invite/${encodeURIComponent(token)}/rsvp",
         ]);
+    });
+});
+
+/**
+ * Task 14, Step 4 — the second road nobody sees in a `/api/**` scan.
+ *
+ * The organization store never called `$fetch`: it talked to the Better Auth
+ * **organization client plugin** (`client.organization.*`), and billing talked to
+ * the Creem client plugin (`client.creem.*`). Both are HTTP calls to
+ * `/api/auth/*` — the one prefix the scan above allows — so the gate was green
+ * while tenancy and billing still ran on the legacy plugins. The plan is explicit:
+ * Better Auth stays the identity provider, the Organization plugin is not used,
+ * and organizations/billing are Convex functions (`api.organizations.*`,
+ * `api.billing.*`).
+ *
+ * This scan covers all of `app/` (pages, components and layouts too, not only the
+ * data layer), because the invite acceptance page called the plugin directly.
+ * There is no allowlist: after Step 4 there is nothing left to excuse.
+ */
+const APP_DIR = join(PROJECT_ROOT, "app");
+
+function appSourceFiles(dir: string = APP_DIR): { relative: string; source: string }[] {
+    const files: { relative: string; source: string }[] = [];
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const absolute = join(dir, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...appSourceFiles(absolute));
+            continue;
+        }
+        if (!/\.(ts|vue)$/.test(entry.name)) continue;
+        files.push({
+            relative: absolute.slice(PROJECT_ROOT.length + 1),
+            source: readFileSync(absolute, "utf8"),
+        });
+    }
+    return files;
+}
+
+const AUTH_PLUGIN_PATTERNS: readonly { label: string; pattern: RegExp }[] = [
+    // `client.organization.list()`, `authClient.organization.setActive(...)`, ...
+    { label: "organization plugin call", pattern: /\.\s*organization\s*\.\s*[A-Za-z]+\s*\(/ },
+    // `creem.createPortal()`, `client.creem.hasAccessGranted()`, ...
+    { label: "creem plugin call", pattern: /\bcreem\s*\.\s*[A-Za-z]+\s*\(/ },
+    // `const { organization } = useAuth()` / `const { creem } = useAuth()`
+    {
+        label: "plugin namespace taken from useAuth()",
+        pattern: /\{[^}]*\b(organization|creem)\b[^}]*\}\s*=\s*useAuth\s*\(/,
+    },
+    // The client plugins themselves: without them the calls above cannot exist.
+    { label: "client plugin installed", pattern: /\b(organizationClient|creemClient)\s*\(/ },
+];
+
+/** Every Better Auth organization/Creem client-plugin use in a source file. */
+function authPluginUsesIn(source: string): string[] {
+    const cleaned = stripComments(source);
+    return AUTH_PLUGIN_PATTERNS
+        .filter(({ pattern }) => pattern.test(cleaned))
+        .map(({ label }) => label);
+}
+
+describe("frontend: organizations and billing do not go through Better Auth client plugins", () => {
+    it("the action helper only runs actions, never a one-shot read or write", () => {
+        const source = stripComments(readFileSync(join(COMPOSABLES_DIR, "useConvexAction.ts"), "utf8"));
+        expect(source).toMatch(/client\.action\s*\(/);
+        expect(source).not.toMatch(/\.(query|mutation|onUpdate)\s*\(/);
+    });
+
+    it("the organization store and the billing composable read Convex, live", () => {
+        const store = stripComments(readFileSync(join(STORES_DIR, "organizationStore.ts"), "utf8"));
+        for (const read of ["listMyOrganizations", "getActiveOrganization", "listMembers", "listPendingInvitations"]) {
+            expect(store).toMatch(new RegExp(`useConvexQuery\\(api\\.organizations\\.${read}\\b`));
+        }
+        expect(store).toMatch(/api\.organizations\.setActive/);
+
+        const billing = stripComments(readFileSync(join(COMPOSABLES_DIR, "useSubscription.ts"), "utf8"));
+        expect(billing).toMatch(/useConvexQuery\(\s*api\.billing\.planForActiveOrganization/);
+        expect(billing).toMatch(/api\.billing\.checkoutsCreate/);
+        expect(billing).toMatch(/api\.billing\.customersPortalUrl/);
+        // The browser never names the billing entity.
+        expect(billing).not.toMatch(/organizationId/);
+    });
+
+    it("no app file calls the organization or Creem client plugin", () => {
+        const offenders = appSourceFiles()
+            .map(({ relative, source }) => ({ relative, uses: authPluginUsesIn(source) }))
+            .filter(({ uses }) => uses.length > 0);
+
+        expect(
+            offenders,
+            "these files still reach tenancy/billing through a Better Auth client plugin:\n"
+            + offenders.map((o) => `  ${o.relative}: ${o.uses.join(", ")}`).join("\n"),
+        ).toEqual([]);
+    });
+
+    it("the detector sees every shape the legacy code used, and not the Convex API", () => {
+        // Pinned so a "simplified" regex cannot go blind silently (the `{`/`}`
+        // lesson of assertion 2 above).
+        expect(authPluginUsesIn("await client.organization.getFullOrganization()")).toEqual([
+            "organization plugin call",
+        ]);
+        expect(authPluginUsesIn("const { data } = await creem.hasAccessGranted();")).toEqual([
+            "creem plugin call",
+        ]);
+        expect(authPluginUsesIn("const { creem } = useAuth();")).toEqual([
+            "plugin namespace taken from useAuth()",
+        ]);
+        expect(authPluginUsesIn("plugins: [organizationClient(), creemClient()]")).toEqual([
+            "client plugin installed",
+        ]);
+        expect(authPluginUsesIn([
+            "useConvexQuery(api.organizations.listMembers, {});",
+            "useConvexMutation(api.organizations.setActive);",
+            "t('organization.createModal.title')",
+            "// client.organization.list() in a comment is prose, not code",
+        ].join("\n"))).toEqual([]);
     });
 });
 
@@ -471,5 +596,85 @@ describe("frontend data layer: l'install server-side non apre un websocket", () 
         // un `WebSocketManager` che chiama `connect()` → `new WebSocket(uri)`, e su
         // un Worker quel costruttore non esiste nemmeno.
         expect(context!.clientRef.value).toBeUndefined();
+    });
+});
+
+describe("frontend: organization adapters (Task 14, part b)", () => {
+    it("an organization row keeps the UI shape, with ISO dates and the caller's role", () => {
+        expect(toOrganizationListItem({
+            organizationId: "o1",
+            name: "Atelier",
+            slug: "atelier",
+            logo: null,
+            createdAt: Date.parse("2026-09-01T10:00:00.000Z"),
+            role: "admin",
+            isActive: true,
+        })).toEqual({
+            id: "o1",
+            name: "Atelier",
+            slug: "atelier",
+            logo: null,
+            createdAt: "2026-09-01T10:00:00.000Z",
+            role: "admin",
+            isActive: true,
+        });
+        expect(toOrganizationSummary(null)).toBeNull();
+        expect(toOrganizationSummary({ organizationId: "o1", name: "A", slug: "a", logo: null, role: "owner" }))
+            .toEqual({ id: "o1", name: "A", slug: "a", logo: null, role: "owner" });
+    });
+
+    it("a member becomes the plugin-shaped row, keyed by membership, written by app user id", () => {
+        const member = toOrganizationMember({
+            membershipId: "m1",
+            userId: "u1",
+            email: "bob@example.com",
+            name: null,
+            image: null,
+            role: "member",
+            createdAt: Date.parse("2026-09-02T10:00:00.000Z"),
+            isSelf: false,
+        });
+        expect(member).toEqual({
+            id: "m1",
+            userId: "u1",
+            role: "member",
+            createdAt: "2026-09-02T10:00:00.000Z",
+            isSelf: false,
+            // No display name: shown by address, never blank.
+            user: { name: "bob@example.com", email: "bob@example.com", image: null },
+        });
+    });
+
+    it("pending invitations and the /invite preview convert dates and fall back on the inviter email", () => {
+        expect(toOrganizationInvitation({
+            invitationId: "i1",
+            email: "carol@example.com",
+            role: "member",
+            expiresAt: Date.parse("2026-09-03T10:00:00.000Z"),
+        })).toEqual({
+            id: "i1",
+            email: "carol@example.com",
+            role: "member",
+            status: "pending",
+            expiresAt: "2026-09-03T10:00:00.000Z",
+        });
+
+        expect(toInvitationPreview(null)).toBeNull();
+        expect(toInvitationPreview({
+            email: "carol@example.com",
+            role: "member",
+            status: "expired",
+            expiresAt: 0,
+            organizationName: "Atelier",
+            inviterName: null,
+            inviterEmail: "alice@example.com",
+        })).toMatchObject({ status: "expired", organizationName: "Atelier", inviterName: "alice@example.com" });
+    });
+
+    it("the /invite segment is a 64-hex token; a legacy plugin id is not", () => {
+        expect(isInvitationToken("a".repeat(64))).toBe(true);
+        expect(isInvitationToken("A".repeat(64))).toBe(false);
+        expect(isInvitationToken("0198f2c4-7c1e-7d3a-9b2f-1a2b3c4d5e6f")).toBe(false);
+        expect(isInvitationToken("")).toBe(false);
     });
 });

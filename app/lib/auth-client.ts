@@ -1,9 +1,7 @@
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
-import { creemClient } from "@creem_io/better-auth/client";
 import {
     adminClient,
     inferAdditionalFields,
-    organizationClient,
     twoFactorClient,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
@@ -23,9 +21,12 @@ export type { FetchConvexToken };
  *
  * `convexClient()` adds the typed `client.convex.token()` endpoint
  * (`GET /api/auth/convex/token`), the JWT the Convex client presents through
- * `setAuth`. `organizationClient`/`creemClient` are still here because the
- * existing UI calls them on the legacy backend; Tasks 5, 6 and 14 replace them
- * with the Convex organization/billing functions.
+ * `setAuth`. The `organizationClient`/`creemClient` plugins are gone (Task 14,
+ * part b): organizations and billing are Convex functions (`api.organizations.*`,
+ * `api.billing.*`), and the plan forbids the Organization plugin. The *server*
+ * config of the legacy runtime keeps its plugins for the blue-green window; only
+ * the browser stopped calling them. `test/migration/frontend-data-layer.test.ts`
+ * fails if either client plugin comes back.
  */
 export function createCeremlyAuthClient(options: { baseURL: string; headers?: HeadersInit }) {
     return createAuthClient({
@@ -48,8 +49,6 @@ export function createCeremlyAuthClient(options: { baseURL: string; headers?: He
             }),
             adminClient(),
             twoFactorClient(),
-            creemClient(),
-            organizationClient(),
             convexClient(),
         ],
     });
