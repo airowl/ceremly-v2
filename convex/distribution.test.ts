@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { register } from "@creem_io/convex/test";
-import { api, components } from "./_generated/api";
+import { api, components, internal } from "./_generated/api";
 import type { Doc, Id, TableNames } from "./_generated/dataModel";
 import { eventFixture, initConvexTestWithAuthComponent } from "./test.setup";
 import { JOB_TYPES } from "./lib/jobQueue";
@@ -571,6 +571,118 @@ describe("guests.sendTest", () => {
         // The request row goes with the event graph; the job ends, it does not retry.
         expect(await rows(fixture.t, "inviteTestRequests")).toHaveLength(0);
         expect((await testJobs(fixture.t))[0]!.status).toBe("succeeded");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// inviteTestRequests — no row survives any deletion path
+// ---------------------------------------------------------------------------
+
+describe("inviteTestRequests retention", () => {
+    const DAY = 24 * 60 * 60 * 1000;
+
+    async function seedRequest(
+        fixture: Fixture,
+        eventId: Id<"events">,
+        requestedBy: Id<"appUsers"> = fixture.appUserId,
+    ): Promise<Id<"inviteTestRequests">> {
+        return await fixture.t.run(
+            async (ctx) =>
+                await ctx.db.insert("inviteTestRequests", {
+                    organizationId: fixture.organizationId,
+                    eventId,
+                    requestedBy,
+                    subject: "Bozza privata",
+                    body: "Testo non salvato",
+                    createdAt: Date.now(),
+                }),
+        );
+    }
+
+    const requestIds = async (t: Test) => (await rows(t, "inviteTestRequests")).map((row) => row._id);
+
+    it("event delete: the requests go with the event graph", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture);
+        const other = await seedEvent(fixture);
+        await seedRequest(fixture, eventId);
+        const kept = await seedRequest(fixture, other);
+
+        await fixture.s.mutation(api.events.remove, { eventId });
+
+        expect(await requestIds(fixture.t)).toEqual([kept]);
+    });
+
+    it("automatic cleanup of a stale event: the requests are children like the others", async () => {
+        const fixture = await bootstrap();
+        const longAgo = Date.now() - 60 * DAY;
+        const stale = await seedEvent(fixture, {
+            status: "closed",
+            eventDate: longAgo,
+            updatedAt: longAgo,
+            cleanupWarnedAt: Date.now() - 8 * DAY,
+        });
+        await seedRequest(fixture, stale);
+
+        const result = await fixture.t.mutation(internal.jobs.cronCleanupStaleEvents, {});
+
+        expect(result.deleted).toBe(1);
+        expect(await requestIds(fixture.t)).toEqual([]);
+    });
+
+    it("account purge of a sole member: the organization graph takes the requests with it", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture);
+        await seedRequest(fixture, eventId);
+
+        await fixture.t.mutation(internal.profile.purgeApply, {
+            appUserId: fixture.appUserId,
+            authUserId: null,
+            deleteOrganizations: [fixture.organizationId],
+            transferOwnership: [],
+            keepOrganizations: [],
+        });
+
+        expect(await requestIds(fixture.t)).toEqual([]);
+    });
+
+    it("account purge of a member whose organization survives: their requests are deleted, the others' stay", async () => {
+        const fixture = await bootstrap();
+        const bob = await addUser(fixture.t, "bob@example.com", "Bob");
+        // Bob is a member of Alice's organization and requested a test there.
+        await fixture.t.run(async (ctx) => {
+            await ctx.db.insert("memberships", {
+                organizationId: fixture.organizationId,
+                userId: bob.appUserId,
+                role: "member",
+                createdAt: Date.now(),
+            });
+        });
+        const eventId = await seedEvent(fixture);
+        await seedRequest(fixture, eventId, bob.appUserId);
+        const alices = await seedRequest(fixture, eventId);
+
+        await fixture.t.mutation(internal.profile.purgeApply, {
+            appUserId: bob.appUserId,
+            authUserId: null,
+            deleteOrganizations: [bob.organizationId],
+            transferOwnership: [],
+            keepOrganizations: [fixture.organizationId],
+        });
+
+        // Subject/body are the requester's own draft text: deleted, not scrubbed.
+        expect(await requestIds(fixture.t)).toEqual([alices]);
+        expect(await fixture.t.run(async (ctx) => await ctx.db.get(bob.appUserId))).toBeNull();
+    });
+
+    it("organization delete: no request of that organization survives", async () => {
+        const fixture = await bootstrap();
+        const eventId = await seedEvent(fixture);
+        await seedRequest(fixture, eventId);
+
+        await fixture.s.mutation(api.organizations.deleteOrganization, {});
+
+        expect(await requestIds(fixture.t)).toEqual([]);
     });
 });
 

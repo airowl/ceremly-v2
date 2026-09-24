@@ -218,6 +218,18 @@ grafo dell'evento (`deleteEventGraph`). La UI dice "in coda", non "inviata".
 commento della registry (`convex/lib/jobQueue.ts`). E una tabella nuova
 (`inviteTestRequests`), additiva.
 
+`inviteTestRequests` è coperta da **ogni** percorso di cancellazione (fix round 2,
+un test per percorso in `convex/distribution.test.ts`): cancellazione dell'evento,
+cleanup automatico degli eventi stale, purge dell'organizzazione di un utente unico
+membro, purge dell'account in un'organizzazione che sopravvive (le righe con
+`requestedBy` = l'utente si **cancellano**, non si anonimizzano: oggetto e corpo sono
+una sua bozza) ed eliminazione dell'organizzazione. Non entra nell'export GDPR: l'export
+non include nemmeno le righe analoghe per evento (reminder, attività), e la richiesta è
+già tracciata dall'audit `invite.test_requested`, che l'export include (righe con
+l'utente come attore). Debito **preesistente**, non introdotto qui:
+`organizations.deleteOrganization` non cancella gli eventi dell'organizzazione (restano
+orfani con i loro figli); le richieste di test invece ora spariscono.
+
 ### L'anteprima firmata
 
 `rsvp.previewInvite` (query) sostituisce `GET /api/public/preview`. La firma è il port

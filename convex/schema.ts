@@ -394,8 +394,14 @@ export default defineSchema({
      *
      * Esiste perché l'email di test è un effetto esterno e passa dalla macchina a
      * stati dei job, il cui payload è **solo id**: il testo di prova (override non
-     * salvato di oggetto/corpo) vive qui, non nel job. Una riga per richiesta,
-     * cancellata con il grafo dell'evento.
+     * salvato di oggetto/corpo) vive qui, non nel job. Una riga per richiesta.
+     *
+     * Ogni percorso di cancellazione la copre (fix round 2): cancellazione
+     * dell'evento (`deleteEventGraph`), cleanup automatico (`deleteEventChildren`),
+     * purge dell'organizzazione (`deleteOrganizationGraph`), purge dell'account
+     * (righe con `requestedBy` = l'utente, anche se l'organizzazione sopravvive:
+     * oggetto e corpo sono una bozza sua, quindi si cancellano, non si anonimizzano)
+     * ed eliminazione dell'organizzazione.
      */
     inviteTestRequests: defineTable({
         organizationId: v.id("organizations"),
@@ -406,7 +412,9 @@ export default defineSchema({
         createdAt: v.number(),
     })
         .index("by_organization", ["organizationId"])
-        .index("by_event", ["eventId"]),
+        .index("by_event", ["eventId"])
+        // Account purge: the requester's draft text goes with the requester.
+        .index("by_requested_by", ["requestedBy"]),
 
     /** Entità di esempio org-scoped (CRUD completo: `server/api/projects/`). */
     projects: defineTable({

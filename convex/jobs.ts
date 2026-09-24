@@ -1093,6 +1093,15 @@ async function deleteEventChildren(
         removed += 1;
     }
 
+    const testRequests = await ctx.db
+        .query("inviteTestRequests")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .take(batch);
+    for (const row of testRequests) {
+        await ctx.db.delete(row._id);
+        removed += 1;
+    }
+
     const guests = await ctx.db
         .query("guests")
         .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -1116,6 +1125,10 @@ async function deleteEventChildren(
             .take(1),
         await ctx.db
             .query("eventReminders")
+            .withIndex("by_event", (q) => q.eq("eventId", eventId))
+            .take(1),
+        await ctx.db
+            .query("inviteTestRequests")
             .withIndex("by_event", (q) => q.eq("eventId", eventId))
             .take(1),
     ];

@@ -468,6 +468,17 @@ export const purgeApply = internalMutation({
             if (membership) await ctx.db.delete(membership._id);
         }
 
+        // Richieste di email di test (Task 14): oggetto e corpo sono una bozza
+        // dell'utente, quindi spariscono con lui anche nelle organizzazioni che
+        // sopravvivono (cancellate, non anonimizzate: senza richiedente e senza
+        // testo la riga non ha più niente da dire).
+        for (const request of await ctx.db
+            .query("inviteTestRequests")
+            .withIndex("by_requested_by", (q) => q.eq("requestedBy", args.appUserId))
+            .collect()) {
+            await ctx.db.delete(request._id);
+        }
+
         // Export GDPR: documento personale derivato, sparisce con l'account.
         const exports = await ctx.db
             .query("dataExports")
@@ -563,6 +574,13 @@ async function deleteOrganizationGraph(
             .withIndex("by_event", (q) => q.eq("eventId", event._id))
             .collect()) {
             await ctx.db.delete(reminder._id);
+        }
+
+        for (const request of await ctx.db
+            .query("inviteTestRequests")
+            .withIndex("by_event", (q) => q.eq("eventId", event._id))
+            .collect()) {
+            await ctx.db.delete(request._id);
         }
 
         await ctx.db.delete(event._id);

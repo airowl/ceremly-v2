@@ -667,6 +667,15 @@ export const deleteOrganization = mutation({
             await ctx.db.delete(invitation._id);
         }
 
+        // Task 14: le richieste di email di test portano testo scritto dai membri
+        // (bozze non salvate) e non hanno senso senza l'organizzazione.
+        for (const request of await ctx.db
+            .query("inviteTestRequests")
+            .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+            .collect()) {
+            await ctx.db.delete(request._id);
+        }
+
         await ctx.db.delete(organizationId);
         await writeAudit(ctx, {
             action: "organization.deleted",
