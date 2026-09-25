@@ -173,6 +173,11 @@ Before writing or modifying backend code, read `docs/base/STACK-AND-CONVENTIONS.
 - **Commit automatici OK** — quando il lavoro è pronto e verificato, si può committare automaticamente.
 - **Push sempre manuale** — il push sul remoto lo esegue sempre l'utente, mai automatico.
 
+## Linear
+
+- Progetto corrente: [Ceremly](https://linear.app/airowl/project/ceremly-f266d6099c5a/overview) (`P-AIR-2`).
+- Repository collegato nel progetto: `https://github.com/airowl/ceremly-v2`.
+
 ## Conventions
 
 - **Environment files**: `.env` (dev), `.env.prod` (prod) — see `.env.example`
