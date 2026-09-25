@@ -4,6 +4,8 @@
 
 Smart digital invitations and RSVP management for the events that matter — personalized digital invitations, guest management and RSVP for weddings, graduations, christenings and birthdays. Multi-tenant (organizations with owner/admin/member roles); branding is fully env-driven via `NUXT_PUBLIC_APP_NAME`.
 
+> **Migration in progress — Vercel/Neon → Cloudflare Workers + Convex.** Production still runs the legacy stack described below (Vercel + Neon/Drizzle + Upstash). `main` already contains the target stack: Convex backend in `convex/` and a frontend that talks only to Convex, so **`main` must not be deployed to Vercel production** — Vercel prod is built from the `legacy-vercel` branch until cutover. Plan: [`docs/superpowers/plans/2026-09-15-cloudflare-convex-migration-plan.md`](docs/superpowers/plans/2026-09-15-cloudflare-convex-migration-plan.md); status, runbooks and evidence in [`docs/migration/`](docs/migration/) (`gates.md`, `rehearsal.md`, `cutover.md`, `rollback.md`).
+
 ## Tech Stack
 
 - **Framework**: Nuxt 4 + Vue 3 + TypeScript (Nitro, Vercel preset)
@@ -21,6 +23,8 @@ Smart digital invitations and RSVP management for the events that matter — per
 - **Internationalization**: Nuxt i18n (Italian default, English)
 - **SEO**: @nuxtjs/seo (sitemap, robots, schema.org)
 - **Blog**: @nuxt/content (Markdown)
+
+**Target stack (migration, on `main`):** Nuxt on **Cloudflare Workers** (Nitro `cloudflare` preset, Wrangler) as frontend + same-origin `/api/auth/*` proxy; **Convex** as the only application backend (data, authorization, organizations/RBAC, Creem billing state, durable jobs with persisted retry, crons, Resend actions, audit, superAdmin `/admin` console); Better Auth via `@convex-dev/better-auth`; R2 bucket and object keys unchanged, image variants via Cloudflare Images.
 
 ## Features
 
@@ -86,7 +90,7 @@ NUXT_ENV=dev
 # App (branding is env-driven) — public
 NUXT_PUBLIC_BASE_URL=http://localhost:3000
 NUXT_PUBLIC_APP_NAME=YourSaaSName
-NUXT_PUBLIC_SITE_MODE=active                # active | waitinglist | maintenance
+NUXT_PUBLIC_SITE_MODE=active                # active | waitinglist | maintenance | maintenance-readonly
 NUXT_PUBLIC_TWITTER_HANDLE=                 # optional, public
 
 # Optional integrations / error tracking — public, optional
@@ -158,7 +162,7 @@ pnpm preview                # Preview production build
 pnpm lint                   # ESLint
 pnpm test                   # Vitest (single run)
 pnpm test:watch             # Vitest (watch mode)
-pnpm typecheck              # Type checking (vue-tsc)
+pnpm typecheck              # Type checking (vue-tsc) — 23 pre-existing errors (migration baseline)
 
 # Database (requires a configured database)
 pnpm db:generate            # Generate migrations
@@ -176,6 +180,15 @@ pnpm verify:isolation-api
 pnpm verify:plan-limit
 pnpm verify:rate-limit
 pnpm verify:account-purge
+
+# Migration target stack (Cloudflare Workers + Convex)
+pnpm dev:convex             # Convex dev deployment (watches convex/)
+pnpm typecheck:convex       # Convex codegen + tsc
+pnpm test:migration         # Hermetic migration suite (test/migration + convex/)
+pnpm build:cloudflare       # Nuxt build for Cloudflare Workers
+pnpm preview:cloudflare     # Cloudflare build + wrangler dev
+pnpm test:gate:g02          # Live gate checks against staging (g02, g03-g05, g06 … g09)
+pnpm test:e2e:admin         # Live /admin console check on staging
 
 # Docs & assets
 pnpm openapi:generate       # Generate OpenAPI spec
@@ -208,16 +221,22 @@ pnpm og:generate            # Generate OG images
 │   ├── plugins/            # Server plugins
 │   ├── types/              # Server types
 │   └── utils/              # Server utilities (auth, db, permissions, audit)
+├── convex/                 # Convex backend (target stack): schema, domain, jobs/crons, admin, migrations
+│   ├── lib/                # Authorization, audit, write guard, job queue, shared logic
+│   ├── migrations/         # Idempotent auth/domain/billing import
+│   └── emailTemplates/     # React Email templates (single copy, shared with legacy adapter)
 ├── shared/
 │   ├── schemas/            # Zod validation schemas
 │   ├── constants/          # Enums, pricing plans
 │   ├── types/              # Shared types
 │   └── utils/              # Shared utilities
 ├── scripts/                # OpenAPI + OG generation, smoke tests
+├── scripts/migration/      # Encrypted Neon export, Convex import, reconcile, preflight, smoke
 ├── i18n/locales/           # Translation files (it-IT, en-US)
 ├── content/blogs/          # Blog posts (Markdown)
 ├── docs/base/              # Build guide (stack, conventions, phases)
 ├── docs/security/          # Per-secret reference (admin API key, cron secret)
+├── docs/migration/         # Migration gates, evidence, rehearsal, cutover and rollback
 └── drizzle/migrations/     # Generated migration files
 ```
 
@@ -239,7 +258,11 @@ Note:
 
 ## Deployment
 
-Deploy to **Vercel** (Nitro `vercel` preset). The database is **Neon** (serverless Postgres via the HTTP driver), background jobs run on **Upstash QStash** + **Vercel Cron**, and cache/rate-limiting use **Upstash Redis** (HTTP). No persistent process is required. QStash and Cron require a publicly reachable endpoint (`NUXT_PUBLIC_BASE_URL` with no trailing slash, signed into QStash job URLs).
+**Current production (legacy):** deploy to **Vercel** (Nitro `vercel` preset). The database is **Neon** (serverless Postgres via the HTTP driver), background jobs run on **Upstash QStash** + **Vercel Cron**, and cache/rate-limiting use **Upstash Redis** (HTTP). No persistent process is required. QStash and Cron require a publicly reachable endpoint (`NUXT_PUBLIC_BASE_URL` with no trailing slash, signed into QStash job URLs).
+
+**During the migration:** Vercel production is built from the `legacy-vercel` branch, never from `main`. The target stack deploys the Worker with `pnpm deploy:cloudflare:staging` (staging) and Convex with the Convex CLI; the production cutover follows `docs/migration/cutover.md` and requires an explicit human GO after a passing preflight (`scripts/migration/preflight.ts`). Rollback rules are in `docs/migration/rollback.md` (full rollback only before the first Convex write).
+
+**Site mode:** `active | waitinglist | maintenance | maintenance-readonly`, switchable at runtime with `POST /api/admin/site-mode` (`X-Admin-API-Key`). In `maintenance`, guest APIs (`/api/public/*`), jobs and crons keep running by design, and prerendered pages served from the CDN cache (the homepage) stay visible.
 
 ## License
 

@@ -21,14 +21,46 @@ pnpm db:studio              # Drizzle Studio GUI
 pnpm db:seed                # Seed database
 pnpm db:reset               # Reset database
 pnpm auth:schema            # Regenerate Better Auth schema (re-add custom user fields after)
+
+# Migration target stack (Cloudflare Workers + Convex) — see "Migration" below
+pnpm dev:convex             # Convex dev deployment (watches convex/)
+pnpm typecheck:convex       # Convex codegen + tsc on convex/
+pnpm test:migration         # Hermetic migration suite (test/migration + convex/)
+pnpm build:cloudflare       # Nuxt build with Nitro preset cloudflare
+pnpm preview:cloudflare     # Cloudflare build + wrangler dev
+pnpm test:gate:g02 … g09    # Live gate checks against staging (need staging credentials)
+pnpm test:e2e:admin         # Live /admin console check (staging, superAdmin session)
 ```
+
+## Migration: Vercel/Neon → Cloudflare Workers + Convex (IN PROGRESS)
+
+Plan: `docs/superpowers/plans/2026-09-15-cloudflare-convex-migration-plan.md` (spec in `docs/superpowers/specs/2026-09-11-cloudflare-convex-migration-design.md`). Records in `docs/migration/` (`gates.md`, `frontend-convex.md`, `rehearsal.md`, `cutover.md`, `rollback.md`, `evidence/G*.md`). Manual/operator actions and GO blockers: Linear **AIR-93**.
+
+**Status (2026-09-25):**
+- **Production still runs the legacy stack** (Vercel + Neon/Drizzle + QStash + Upstash). The cutover (plan Task 18) has **not** happened; legacy removal (Task 19) only after ≥14 days of observation post-cutover.
+- Production site mode was set to `maintenance` on 2026-09-25 via `POST /api/admin/site-mode` (the prerendered homepage `/`, `/en` is served from the Vercel CDN cache and stays visible; `/api/public/*`, `/api/jobs/*`, `/api/cron/*` keep running by design). Restore with `{"mode":"active"}`.
+- Tasks 1–17 are implemented on `main`: Convex is the full backend (`convex/`), the frontend on `main` talks **only to Convex** (`useConvexQuery`/`useConvexMutation`; `$fetch` only for `/api/auth/*`, the anonymous HMAC Worker bridges and binary downloads — enforced by `test/migration/frontend-data-layer.test.ts`).
+- Gates G04 (Google OAuth) and G10 (cost alerts) are `NOT_RUN`; the live rehearsal (dev Neon → staging Convex `wary-spaniel-466`) has not been executed yet. Cutover GO = **NO**.
+
+**Two stacks, two branches (critical):**
+- `main` = target stack (Cloudflare Worker + Convex). **Never deploy `main` to Vercel production**: its frontend requires Convex and the legacy Better Auth has no `/api/auth/convex/token`.
+- `legacy-vercel` (local branch, `7c01069` + `c4c0b56`) = the blue/legacy stack for Vercel prod during cutover (legacy `$fetch` frontend + server-side `maintenance-readonly`). Vercel prod and the rollback tag are built from it.
+- Default Nitro preset stays `vercel` until the human GO (plan Task 17 Step 5); Cloudflare builds use `pnpm build:cloudflare`.
+
+**Target-stack rules (apply to all new code in `convex/`):**
+- Organizations, memberships, invites, `superAdmin` and active org are **Convex application tables** — do not use the Better Auth organization plugin. Every tenant function resolves identity + membership server-side; never accept `organizationId`, role, plan or billing entity from the browser.
+- Public Convex functions are minimal and go through the shared builders in `convex/lib/functions.ts` (write guard: rejects writes unless `siteSettings.mode === "active"`; `convex/writeGuard.test.ts` enumerates every public function). Side effects, imports and maintenance use `internal*` functions.
+- Every write produces an audit record (`convex/lib/audit.ts`); admin writes require a non-empty `reason` and live in `convex/admin.ts` behind the superAdmin check.
+- Async work = durable Convex jobs (`convex/jobs.ts`: `pending → running → retrying → succeeded | dead`, persisted backoff, ID-only payloads, idempotent). Crons in `convex/crons.ts`. Jobs/crons with external or destructive side effects run only in site mode `active`.
+- No Creem/Resend/R2/Convex secrets in the browser. Migration scripts (`scripts/migration/`) target only `dev:` deployments unless the guarded `--production` mode is used (explicit flag + typed deployment name + signed preflight PASS for the same commit).
+- Never read or use `.env.prod` in migration scripts; `pnpm db:migrate:prod` actually targets DEV (dotenv `override:false`).
 
 ## Architecture
 
 **Multi-tenant SaaS boilerplate** built with Nuxt 4 + Vue 3 + TypeScript. The tenancy model is **B2B-first with B2C as a degenerate case**: every account is an *organization* (Better Auth organization plugin); a B2C user is simply an organization with a single member. Every tenant resource carries an `organizationId` and every query filters by tenant. Role-based access within an organization (owner/admin/member).
 
 ### Architectural principle: Strada A (event-driven serverless)
-The backend runs on **Vercel as serverless functions** — no persistent process. Consequences (mandatory):
+The **legacy/production** backend runs on **Vercel as serverless functions** (the target stack is Cloudflare Workers + Convex — see Migration above) — no persistent process. Consequences (mandatory):
 - No polling workers, no `while(true)`, no long-lived Redis connections.
 - Background/async work is enqueued to an **HTTP queue (Upstash QStash)**. The "worker" is an HTTP route under `server/api/jobs/...` that the queue invokes — an endpoint, not a process.
 - Scheduled tasks are **Vercel Cron** declared in `nuxt.config.ts` (`vercel.config.crons`, Vercel Build Output API — **not** a root `vercel.json`), hitting a `server/api/cron/...` route. Cron does no heavy work: it enqueues or processes small batches.
@@ -63,6 +95,9 @@ The backend runs on **Vercel as serverless functions** — no persistent process
 - `content/blogs/` — Blog posts (Markdown)
 - `docs/base/` — Build guide (stack, conventions, phase-by-phase reference for clones)
 - `docs/saas-prd/` — Ceremly PRD + implementation spec (`SPEC-Ceremly-MVP.md`)
+- `convex/` — Convex backend (target stack): schema, domain functions, jobs/crons, admin, migrations import
+- `docs/migration/` — Migration gates, evidence, rehearsal, cutover and rollback runbooks
+- `scripts/migration/` — Encrypted export/import/reconcile, preflight, smoke
 - `docs/security/` — Per-secret reference docs (`NUXT_ADMIN_API_KEY.md`, `NUXT_CRON_SECRET.md`)
 - `drizzle/migrations/` — Generated migration files
 
@@ -177,6 +212,7 @@ Before writing or modifying backend code, read `docs/base/STACK-AND-CONVENTIONS.
 
 - Progetto corrente: [Ceremly](https://linear.app/airowl/project/ceremly-f266d6099c5a/overview) (`P-AIR-2`).
 - Repository collegato nel progetto: `https://github.com/airowl/ceremly-v2`.
+- Migrazione Cloudflare+Convex — azioni manuali e bloccanti del GO: **AIR-93**.
 
 ## Conventions
 
@@ -191,6 +227,7 @@ Before writing or modifying backend code, read `docs/base/STACK-AND-CONVENTIONS.
 ## Known Issues
 - `sharp-wasm32` error during Nitro build is pre-existing
 - `pnpm db:generate` is interactive when creating new tables (needs TTY)
+- `pnpm typecheck` has 23 pre-existing errors (baseline since the Task 1 dependency pin bump of the migration); new code must not add any. `pnpm typecheck:convex` must stay clean.
 
 ## graphify
 
