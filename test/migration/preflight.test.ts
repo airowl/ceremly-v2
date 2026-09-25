@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+    CONVEX_FRONTEND_COMMIT,
+    LEGACY_READONLY_PORT_COMMIT,
     PREFLIGHT_CHECK_IDS,
     encodeDnsQuery,
     parseDnsAnswerTtls,
@@ -26,6 +28,8 @@ import {
 
 const NOW = new Date("2026-10-01T10:00:00.000Z");
 const HEAD = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0";
+/** The blue build: a `legacy-vercel` commit (final review C1). */
+const LEGACY = "1111111111111111111111111111111111111111";
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString();
 const KEY = Buffer.alloc(32, 7).toString("base64");
 const SITE = "https://ceremly.com";
@@ -71,8 +75,9 @@ const goodEvidence = {
         convexProduction: "prod:happy-otter-123",
         workerVersion: "worker-version-1",
         legacyVercelDeployment: "dpl_legacy",
-        legacyRollbackRef: "legacy-final",
+        legacyRollbackRef: "legacy-vercel-final",
         builtFromCommit: HEAD.slice(0, 12),
+        legacyBuiltFromCommit: LEGACY.slice(0, 12),
     },
 };
 
@@ -95,6 +100,10 @@ interface Fixture {
     corsXml?: string;
     convexMode?: string;
     dirty?: string[];
+    /** ref → full SHA; default: HEAD, LEGACY and the tag. */
+    refs?: Record<string, string | null>;
+    /** `${ancestor}>${descendant}` → answer; default: the legacy-vercel topology. */
+    ancestry?: Record<string, boolean | null>;
 }
 
 const goodCors = `<CORSConfiguration><CORSRule><AllowedOrigin>${SITE}</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod></CORSRule></CORSConfiguration>`;
@@ -142,6 +151,23 @@ function makeDeps(fixture: Fixture = {}) {
         gitHead: () => HEAD,
         changedFilesSince: () => fixture.changedSince ?? ["docs/migration/rehearsal.md", "graphify-out/graph.json"],
         dirtyFiles: () => fixture.dirty ?? [],
+        resolveCommit: (ref) => {
+            const refs: Record<string, string | null> = {
+                [HEAD.slice(0, 12)]: HEAD,
+                [LEGACY.slice(0, 12)]: LEGACY,
+                "legacy-vercel-final": LEGACY,
+                ...fixture.refs,
+            };
+            return ref in refs ? refs[ref]! : null;
+        },
+        isAncestor: (ancestor, descendant) => {
+            const key = `${ancestor}>${descendant}`;
+            if (fixture.ancestry && key in fixture.ancestry) return fixture.ancestry[key]!;
+            // Default topology: main (HEAD) contains the Convex frontend; the legacy
+            // build contains the read-only port and not the Convex frontend.
+            if (descendant === LEGACY) return ancestor === LEGACY_READONLY_PORT_COMMIT;
+            return ancestor === CONVEX_FRONTEND_COMMIT;
+        },
         env: {
             MIGRATION_ENCRYPTION_KEY: KEY,
             NEON_API_KEY: "neon-key",
@@ -263,6 +289,36 @@ describe("preflight: each failing check is exit 1", () => {
         ["convexSiteUrl of another deployment", { evidence: { ...goodEvidence, convexSiteUrl: "https://wary-spaniel-466.eu-west-1.convex.site" } }, "convexReadOnly"],
         ["convexSiteUrl not a .convex.site host", { evidence: { ...goodEvidence, convexSiteUrl: "https://happy-otter-123.example.com" } }, "convexReadOnly"],
         ["evidence for another environment", { evidence: { ...goodEvidence, environment: "staging" } }, "deploymentIds"],
+        // Final review C1: the blue stack is checked against its own commit.
+        [
+            "Vercel production built from main (contains the Convex-only frontend)",
+            {
+                evidence: { ...goodEvidence, deployments: { ...goodEvidence.deployments, legacyBuiltFromCommit: HEAD.slice(0, 12) } },
+                refs: { "legacy-vercel-final": HEAD },
+            },
+            "deploymentIds",
+        ],
+        [
+            "legacy build cannot be proven free of the Convex frontend (git cannot answer)",
+            { ancestry: { [`${CONVEX_FRONTEND_COMMIT}>${LEGACY}`]: null } },
+            "deploymentIds",
+        ],
+        [
+            "legacy build without the read-only port",
+            { ancestry: { [`${LEGACY_READONLY_PORT_COMMIT}>${LEGACY}`]: false } },
+            "deploymentIds",
+        ],
+        [
+            "rollback tag is not the commit Vercel production was built from",
+            { refs: { "legacy-vercel-final": "2222222222222222222222222222222222222222" } },
+            "deploymentIds",
+        ],
+        ["rollback tag missing", { refs: { "legacy-vercel-final": null } }, "deploymentIds"],
+        [
+            "legacy commit unknown",
+            { evidence: { ...goodEvidence, deployments: { ...goodEvidence.deployments, legacyBuiltFromCommit: "deadbeef0000" } } },
+            "deploymentIds",
+        ],
     ];
 
     for (const [name, fixture, check] of cases) {

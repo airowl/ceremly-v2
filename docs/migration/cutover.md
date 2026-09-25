@@ -16,7 +16,20 @@ login e letture pubbliche restano su, ogni scrittura riceve `503` + `Retry-After
 Rollback: [`rollback.md`](./rollback.md). Il punto di non ritorno automatico è la **prima write
 Convex** (definita lì in modo misurabile).
 
----
+> **⚠️ `main` NON va MAI deployato sulla produzione Vercel (final review C1).** Da `e6bfe5d`
+> ("move the projects UI to Convex") il frontend di `main` è solo-Convex: su Vercel non esiste
+> `/api/auth/convex/token`, quindi ogni schermata di organizzazione, evento, ospiti, billing,
+> profilo ed export fallirebbe con `UNAUTHENTICATED`, e il rollback verso quel build non
+> funzionerebbe. **Due stack, due sorgenti:**
+>
+> | Stack | Sorgente del build | Campo evidenze |
+> |---|---|---|
+> | Blu — Vercel produzione (e target del rollback) | branch **`legacy-vercel`** (da `7c01069`, ultimo frontend `$fetch`, + port lato server della read-only del Task 17, `c4c0b56`) | `deployments.legacyBuiltFromCommit`, tag `legacy-vercel-final` |
+> | Verde — Worker Cloudflare + Convex | **`main` HEAD** | `deployments.builtFromCommit` |
+>
+> **`origin/main` contiene già `e6bfe5d`.** Finché la produzione Vercel costruisce da `main`, un
+> push di `main` (o un redeploy) mette in produzione il frontend rotto: **non pushare `main`** prima
+> del passo 0.0.
 
 ## 0. Prerequisiti (prima del GO)
 
@@ -33,15 +46,39 @@ aperti al 2026-09-25.
 | ~~B4~~ | Read-only sul verde. **Chiuso (fix round 1):** ogni mutation/action pubblica Convex passa dai builder di `convex/lib/functions.ts`, che rifiutano con `SITE_READ_ONLY` secondo la matrice di `convex/lib/writeGuard.ts` (`domain` solo in `active`; `guest` — RSVP — in `active` e `waitinglist`; il cambio di modalità del superAdmin in ogni modalità, break-glass). Un test **enumera** le funzioni pubbliche e fallisce su una senza guardia (`convex/writeGuard.test.ts`). Anche **ogni endpoint Better Auth** chiamato direttamente sull'host `.convex.site` (fix round 2: `hooks.before` con la stessa allowlist del Worker — login password, verifica TOTP, logout e letture; sign-up, modifiche account, 2FA, OAuth, verifica email → `503`, provato attraverso il vero handler) e i form pubblici HTTP seguono la stessa matrice. Il passo 10 è quindi il vero interruttore | chiuso |
 | B5 | Approvazione umana del runbook (GO) e della finestra | **BLOCCANTE** — Task 18 |
 
+### 0.0 Controllo dell'operatore: da quale branch costruisce la produzione Vercel (PRIMA di tutto)
+
+Non verificabile da questo repository (serve la dashboard Vercel): **da fare a mano e registrare
+nel Registro di esecuzione**, prima di qualunque push.
+
+1. Vercel → progetto → Settings → Git: annotare il **Production Branch**. Se è `main` (o `dev`, o
+   qualunque branch che contiene `e6bfe5d`: `git merge-base --is-ancestor e6bfe5d <branch>` →
+   exit 0), cambiarlo in **`legacy-vercel`** *prima* di pushare `main`/`dev`.
+2. Vercel → Deployments → Production: annotare il commit del deployment corrente. Se contiene già
+   `e6bfe5d` (stesso comando), la produzione è **già** rotta: ridistribuire subito da
+   `legacy-vercel` (il deploy e il push restano manuali, dell'utente).
+3. `git push origin legacy-vercel` (manuale) e deploy di produzione Vercel da quel branch.
+
 ### 0.2 Prerequisiti operativi (verificati dal preflight o dalla checklist)
 
-1. **Deploy legacy con la read-only del Task 17.** La produzione Vercel deve eseguire un build
-   del commit di cutover con i flag legacy (`NUXT_NITRO_PRESET` assente → `vercel`,
+1. **Deploy legacy con la read-only del Task 17, dal branch `legacy-vercel`** (final review C1).
+   La produzione Vercel deve eseguire un build del branch **`legacy-vercel`** — mai di `main` — con
+   i flag legacy (`NUXT_NITRO_PRESET` assente → `vercel`,
    `NUXT_AUTH_BACKEND`/`NUXT_PUBLIC_FORMS_BACKEND`/`NUXT_SITE_MODE_BACKEND`/`NUXT_EMAIL_BACKEND`
-   assenti → `legacy`). Una produzione che non contiene il middleware aggiornato **non ha** la
-   modalità del passo 1: lì `maintenance-readonly` lascerebbe passare RSVP e job. Registrare
-   l'id del deployment e taggare il commit (`git tag legacy-vercel-final <sha>`): è il target del
-   rollback (`deployments.legacyVercelDeployment` / `legacyRollbackRef` nel blocco evidenze).
+   assenti → `legacy`). Il branch parte da `7c01069` (ultimo commit con il frontend `$fetch`) e
+   porta solo la parte server del Task 17 (`c4c0b56`): read-only chiusa per default e valutata
+   prima delle esenzioni, login password/TOTP in read-only senza audit né self-heal (anche in
+   `maintenance`), tracking d'apertura servito senza scrivere; **nessun break-glass admin** (la
+   console Convex non esiste sul blu: in `maintenance` ogni API di auth, 2FA compresa, è `503`).
+   Verificato su quel branch: `NUXT_NITRO_PRESET=vercel pnpm build` exit 0 (localmente va spostata
+   una `.output/` di un build `node-server` precedente, che il prerender del preset `vercel`
+   scambia per asset pubblici) e i test della read-only verdi. Una produzione che non contiene il
+   port **non ha** la modalità del passo 1: lì `maintenance-readonly` lascerebbe passare RSVP e job.
+   Registrare l'id del deployment, il commit (`deployments.legacyBuiltFromCommit`) e taggarlo
+   (`git tag legacy-vercel-final <sha di legacy-vercel>`): è il target del rollback
+   (`deployments.legacyVercelDeployment` / `legacyRollbackRef`). Il preflight (`deploymentIds`)
+   rifiuta un build blu che contiene `e6bfe5d`, che non contiene il port `c4c0b56`, o il cui tag
+   non è il commit costruito; il verde invece va confrontato con HEAD di `main`.
 2. **Build del Worker di produzione.** Variabili di build/runtime:
    `NUXT_NITRO_PRESET=cloudflare`, `NUXT_AUTH_BACKEND=convex`, `NUXT_SITE_MODE_BACKEND=convex`,
    `NUXT_EMAIL_BACKEND=convex` e **`NUXT_PUBLIC_FORMS_BACKEND=convex` insieme al frontend
@@ -152,10 +189,11 @@ SHA" letterale: sono ammessi commit che toccano solo `docs/`, `graphify-out/`, `
 non terminali nelle ultime 72 h e DLQ vuota), `webhookSecrets`, `authSecretParity`, `dnsTtl`
 (TTL **autoritativo** di A e CNAME, interrogando direttamente i name server della zona: il
 resolver ricorsivo risponderebbe col TTL residuo della cache), `googleCallbacks`, `costAlerts`,
-`r2Cors`, `deploymentIds` (anche: i build deployati — `builtFromCommit` — non differiscono in
-codice da HEAD), `convexReadOnly` (il target Convex risponde `maintenance-readonly`). Un controllo che non riesce a
+`r2Cors`, `deploymentIds` (verde: Worker e Convex — `builtFromCommit` — non differiscono in
+codice da HEAD di `main`; blu, final review C1: `legacyBuiltFromCommit` = commit del tag
+`legacyRollbackRef`, **non** discende da `e6bfe5d`, discende dal port `c4c0b56`), `convexReadOnly` (il target Convex risponde `maintenance-readonly`). Un controllo che non riesce a
 *provare* la propria condizione fallisce; un fallimento è `exit 1`. Rete solo in GET (guardia
-`readOnlyFetch`), sottoprocessi solo `git rev-parse`/`git diff --name-only`/`convex env list`,
+`readOnlyFetch`), sottoprocessi solo `git rev-parse`/`git diff --name-only`/`git merge-base --is-ancestor`/`convex env list`,
 nessuna scrittura (nemmeno locale: il report va su stdout). Il report è firmato
 (`hmac-sha256`, chiave derivata HKDF dalla chiave di migrazione) e contiene commit e id dei
 deployment, mai segreti. La firma prova integrità e freschezza rispetto a chi detiene la chiave di
@@ -196,7 +234,8 @@ Compilato dall'operatore il giorno del cutover; `null` = non ancora vero (il pre
     "workerVersion": null,
     "legacyVercelDeployment": null,
     "legacyRollbackRef": null,
-    "builtFromCommit": null
+    "builtFromCommit": null,
+    "legacyBuiltFromCommit": null
   }
 }
 ```
@@ -226,9 +265,11 @@ Cosa resta aperto (`READONLY_ALLOWED_WRITES` in `shared/constants/siteMode.ts`):
 `/api/admin/site-mode` (rollback), `POST /api/jobs/*` (drain), il webhook Creem (verità del
 provider, finestra di retry corta), login password + TOTP e logout. Il login in read-only **non**
 scrive `audit_log` (diventa una riga di log strutturata) e **non** esegue il self-heal
-dell'organizzazione (`server/utils/authAudit.ts`): resta solo la sessione, effimera. Lo stesso
-vale in `maintenance` (final review I2: il blu dopo il passo 10), dove il break-glass ammette solo
-i path di login esatti — mai 2FA enable/disable, OAuth o sign-up. Il webhook
+dell'organizzazione (`server/utils/authAudit.ts`): resta solo la sessione, effimera. In
+`maintenance` (final review I2: il blu dopo il passo 10) il blu (`legacy-vercel`) non ha
+break-glass: ogni API di auth, 2FA enable/disable comprese, è `503`, e l'audit/self-heal sono
+soppressi comunque. Sul verde (codice di `main`) il break-glass della console ammette solo i path
+di login esatti — mai 2FA enable/disable, OAuth o sign-up. Il webhook
 Resend risponde `503`: Svix ritenta per circa un giorno, quindi gli eventi arrivano allo stack
 servito dal DNS dopo la finestra invece di essere scritti dopo il watermark. Tutto il resto che scrive —
 RSVP, checkout, upload, profilo, account, org, admin, cron, OAuth, verifica email — è `503`.
@@ -373,6 +414,16 @@ pnpm tsx scripts/migration/smoke-production.ts --write-canary --base-url "https:
 
 Da qui vale solo `rollback.md` §B.
 
+> **Aperto, da decidere prima del GO (trovato durante i fix della final review):** in
+> `maintenance` il middleware legacy lascia passare `/api/cron/*` e `/api/jobs/*` (esenzioni
+> storiche, anche su `legacy-vercel`). Dopo questo passo i Vercel Cron del blu continuerebbero a
+> girare su Neon: `send-reminders` (email agli ospiti **doppie** rispetto al cron Convex),
+> `cleanup-files` (delete sul bucket R2 **condiviso**) e `cleanup-stale-events`. È lo specchio
+> della C2 sul blu. Opzioni: lasciare il blu in `maintenance-readonly` invece che in `maintenance`
+> (cron `503`, job solo drain; costo: chi ha ancora il DNS vecchio vede dati stantii in sola
+> lettura), oppure chiudere `/api/cron/*` in `maintenance` sul branch `legacy-vercel`. Non
+> applicato: è una scelta di comportamento del blu, non coperta dalle ruling di questo giro.
+
 ### 11. Monitor intensivo (≥ 2 h, poi 24 h ridotto)
 
 - error rate e latenza del Worker (Cloudflare observability), log Convex (funzioni in errore);
@@ -387,8 +438,9 @@ Da qui vale solo `rollback.md` §B.
 ## Step 5 del piano — default Cloudflare **solo dopo GO** (in attesa di GO)
 
 Non applicato: il piano lo lega all'approvazione manuale del runbook, che non esiste. La modifica
-esatta da applicare dopo il GO (e dopo aver taggato `legacy-vercel-final`, che resta deployabile
-su Vercel con `NUXT_NITRO_PRESET=vercel`):
+esatta da applicare **su `main`** dopo il GO (e dopo aver taggato `legacy-vercel-final` sul branch
+`legacy-vercel`, che resta deployabile su Vercel con il preset di default `vercel`; `main` non lo è
+mai stato da `e6bfe5d`):
 
 1. in `nuxt.config.ts`, una costante sola decide il target, con default Cloudflare:
    ```ts

@@ -25,7 +25,8 @@ import { parseMigrationKey } from "./crypto";
  * - **Read-only by construction.** The checks receive read primitives only
  *   (`PreflightDeps`): network through `readOnlyFetch` (anything but GET/HEAD is
  *   refused before it leaves the process), subprocesses limited to
- *   `git rev-parse`, `git diff --name-only` and `convex env list`, and the report
+ *   `git rev-parse`, `git diff --name-only`, `git merge-base --is-ancestor` and
+ *   `convex env list`, and the report
  *   goes to stdout — the file writes nothing, not even locally. The test pins all
  *   three (`test/migration/preflight.test.ts`).
  *
@@ -88,6 +89,14 @@ export interface PreflightDeps {
     gitHead: () => string;
     /** Files changed between `sha` and HEAD (`git diff --name-only`). */
     changedFilesSince: (sha: string) => string[];
+    /** Full SHA of a ref/tag/short SHA (`git rev-parse --verify`), or `null`. */
+    resolveCommit: (ref: string) => string | null;
+    /**
+     * `git merge-base --is-ancestor ancestor descendant`: `true`/`false`, or
+     * `null` when git cannot answer (unknown commit, shallow clone) — callers
+     * treat `null` as "not proven" (fail closed).
+     */
+    isAncestor: (ancestor: string, descendant: string) => boolean | null;
     /** Uncommitted paths in the working tree (`git status --porcelain`). */
     dirtyFiles: () => string[];
     env: Record<string, string | undefined>;
@@ -191,8 +200,13 @@ const evidenceSchema = z.object({
     }),
     costAlerts: z.object({ convex: z.boolean(), cloudflare: z.boolean(), resend: z.boolean(), ...attestation }),
     deployments: z.object({
-        /** Commit the deployed Worker and Convex builds were made from. */
+        /** Commit the deployed Worker and Convex builds were made from (`main`). */
         builtFromCommit: z.string().regex(/^[0-9a-f]{7,40}$/),
+        /**
+         * Commit the production Vercel (blue) build was made from: the
+         * `legacy-vercel` branch, never `main` (final review C1).
+         */
+        legacyBuiltFromCommit: z.string().regex(/^[0-9a-f]{7,40}$/),
         convexProduction: z.string().min(1),
         workerVersion: z.string().min(1),
         legacyVercelDeployment: z.string().min(1),
@@ -208,6 +222,15 @@ type EvidenceKey = keyof Evidence;
 
 const DAY_MS = 24 * 3_600_000;
 const REQUIRED_GATES = Array.from({ length: 10 }, (_, i) => `G${String(i + 1).padStart(2, "0")}`);
+
+/**
+ * Final review C1. From this commit on, `main` ships a Convex-only frontend that
+ * cannot run on Vercel (no `/api/auth/convex/token` there): a blue build that
+ * contains it is an outage and a rollback target that does not work.
+ */
+export const CONVEX_FRONTEND_COMMIT = "e6bfe5d3c3754d3859902a9e324d987fc58b7b43";
+/** The `legacy-vercel` commit that ports the Task 17 read-only mode to the blue stack. */
+export const LEGACY_READONLY_PORT_COMMIT = "c4c0b568cea3fc7f24dd39e70ada1bb7de07358f";
 
 /** Paths a docs-only commit may touch after the rehearsal without invalidating it. */
 const NON_CODE_PREFIXES = ["docs/", "graphify-out/", ".superpowers/"];
@@ -486,16 +509,45 @@ const CHECKS: Record<PreflightCheckId, Check> = {
             return fail(`evidence block is for ${environment}, preflight run for ${ctx.environment}`, "attested");
         }
         const d = ctx.evidence("deployments");
-        // The deployed builds must be the rehearsed code: no code change between
-        // the commit they were built from and HEAD.
+        // Green (Worker + Convex): the rehearsed code, no code change between the
+        // commit they were built from and HEAD (`main`).
         const code = ctx.deps
             .changedFilesSince(d.builtFromCommit)
             .filter((file) => !NON_CODE_PREFIXES.some((prefix) => file.startsWith(prefix)));
         if (code.length) {
             return fail(`deployed builds (${d.builtFromCommit}) differ from HEAD in code: ${code.slice(0, 5).join(", ")}`, "attested");
         }
+
+        // Blue (Vercel production), final review C1: built from `legacy-vercel`,
+        // checked against its own expected commit, never against HEAD.
+        const legacyBuilt = ctx.deps.resolveCommit(d.legacyBuiltFromCommit);
+        if (!legacyBuilt) return fail(`legacyBuiltFromCommit ${d.legacyBuiltFromCommit} is not a known commit`, "attested");
+        const rollback = ctx.deps.resolveCommit(d.legacyRollbackRef);
+        if (!rollback) return fail(`legacyRollbackRef ${d.legacyRollbackRef} does not resolve to a commit`, "attested");
+        if (rollback !== legacyBuilt) {
+            return fail(
+                `the rollback ref ${d.legacyRollbackRef} (${rollback.slice(0, 12)}) is not the commit Vercel production was built from (${legacyBuilt.slice(0, 12)})`,
+                "attested",
+            );
+        }
+        if (ctx.deps.isAncestor(CONVEX_FRONTEND_COMMIT, legacyBuilt) !== false) {
+            return fail(
+                `Vercel production (${legacyBuilt.slice(0, 12)}) contains (or cannot be proven free of) the Convex-only frontend (${CONVEX_FRONTEND_COMMIT.slice(0, 7)}): build it from the legacy-vercel branch, never from main`,
+                "attested",
+            );
+        }
+        if (ctx.deps.isAncestor(LEGACY_READONLY_PORT_COMMIT, legacyBuilt) !== true) {
+            return fail(
+                `Vercel production (${legacyBuilt.slice(0, 12)}) lacks the read-only port (${LEGACY_READONLY_PORT_COMMIT.slice(0, 7)}): step 1 would not close writes`,
+                "attested",
+            );
+        }
+        const green = ctx.deps.resolveCommit(d.builtFromCommit);
+        if (green && green === legacyBuilt) {
+            return fail("Worker/Convex and Vercel production are built from the same commit", "attested");
+        }
         return pass(
-            `convex=${d.convexProduction} worker=${d.workerVersion} legacy=${d.legacyVercelDeployment} rollbackRef=${d.legacyRollbackRef}`,
+            `convex=${d.convexProduction} worker=${d.workerVersion} (${d.builtFromCommit}) legacy=${d.legacyVercelDeployment} (${legacyBuilt.slice(0, 12)}) rollbackRef=${d.legacyRollbackRef}`,
             "attested",
         );
     },
@@ -727,6 +779,22 @@ function realDeps(environment: Environment): PreflightDeps {
             execFileSync("git", ["diff", "--name-only", `${sha}..HEAD`], { encoding: "utf8" })
                 .split("\n")
                 .filter(Boolean),
+        resolveCommit: (ref) => {
+            try {
+                return execFileSync("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`], { encoding: "utf8" }).trim() || null;
+            } catch {
+                return null;
+            }
+        },
+        isAncestor: (ancestor, descendant) => {
+            try {
+                execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], { stdio: "ignore" });
+                return true;
+            } catch (error) {
+                // Exit 1 is git's "no"; anything else is "cannot tell".
+                return (error as { status?: number }).status === 1 ? false : null;
+            }
+        },
         dirtyFiles: () =>
             execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" })
                 .split("\n")

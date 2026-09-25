@@ -51,7 +51,10 @@ checklist manuale fallita, smoke read-only `exit 1`, finestra oltre 30 min.
 Ordine (inverso rispetto al runbook, ognuno registrato con ora UTC):
 
 1. **DNS**: il record di `ceremly.com` torna al target Vercel registrato
-   (`deployments.legacyVercelDeployment`). La propagazione è bounded dal TTL approvato.
+   (`deployments.legacyVercelDeployment`, build del branch `legacy-vercel`, commit
+   `deployments.legacyBuiltFromCommit` = tag `legacy-vercel-final`). **Mai** un redeploy da `main`:
+   dal commit `e6bfe5d` il suo frontend è solo-Convex e su Vercel non funziona (final review C1).
+   La propagazione è bounded dal TTL approvato.
 2. **Webhook Creem**: endpoint di nuovo su `https://ceremly.com/api/auth/creem/webhook` con il
    segreto legacy. Eventi arrivati a Convex nel frattempo (se il passo 8.2 era fatto) sono **write
    Convex** → non si è in §A: ricontrollare la misura.
@@ -69,7 +72,7 @@ Ordine (inverso rispetto al runbook, ognuno registrato con ora UTC):
    curl -s -o /dev/null -w '%{http_code}\n' -X POST "$LEGACY/api/public/invite/x/rsvp"   # non più 503
    ```
    Con la modalità `active` tornano le scritture, l'enqueue QStash e i cron Vercel (il deploy
-   legacy li ha ancora: `legacy-vercel-final`). Solo quando il DNS è propagato si ripete la
+   legacy li ha ancora: `legacy-vercel-final`, sul branch `legacy-vercel`). Solo quando il DNS è propagato si ripete la
    verifica anche sull'host pubblico.
 5. **Convex** va in `maintenance` (`npx convex run --prod siteSettings:set
    '{"mode":"maintenance","reason":"rollback <ticket>"}'`) e **non** è authority: i dati
@@ -97,8 +100,10 @@ con dati divergenti).
 
 ## Cosa rende possibile il rollback (da tenere vivo fino al Task 19)
 
-- il commit/tag `legacy-vercel-final` deployabile su Vercel (preset `vercel`, cron Vercel inclusi:
-  lo Step 5 del piano li rimuove **solo** dal target);
+- il branch `legacy-vercel` e il tag `legacy-vercel-final` (un suo commit, **mai** un commit di
+  `main`: final review C1) deployabili su Vercel (preset `vercel`, cron Vercel inclusi: lo Step 5
+  del piano li rimuove **solo** da `main`); il preflight verifica che il tag sia il commit costruito
+  e che non contenga `e6bfe5d`;
 - il deployment Vercel di produzione non cancellato, le env Vercel intatte;
 - il branch Neon di produzione intatto più il branch di backup pre-cutover;
 - il toggle legacy `/api/admin/site-mode` sempre raggiungibile: in `maintenance-readonly` è una
