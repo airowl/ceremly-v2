@@ -195,12 +195,14 @@ type GuestFieldsInput = {
     notes?: string | null;
 };
 
-function invalidGuestInput(field: string, extra: Record<string, unknown> = {}): ConvexError<Record<string, unknown>> {
-    return new ConvexError({ code: "INVALID_INPUT", field, ...extra });
+type ErrorDetails = Record<string, string | number>;
+
+function invalidGuestInput(field: string, extra: ErrorDetails = {}): ConvexError<ErrorDetails> {
+    return new ConvexError<ErrorDetails>({ code: "INVALID_INPUT", field, ...extra });
 }
 
 /** `required`: names must be present (create/import); on update only what is sent is checked. */
-function assertGuestFields(input: GuestFieldsInput, required: boolean, extra: Record<string, unknown> = {}): void {
+function assertGuestFields(input: GuestFieldsInput, required: boolean, extra: ErrorDetails = {}): void {
     for (const field of ["firstName", "lastName"] as const) {
         const value = input[field];
         if (value === undefined) {
